@@ -10,7 +10,7 @@ export function activateFlow(round) {
   const slot = availableFlow(round);
   if (slot < 0) return false;
   round.flowTaken.push(slot);
-  round.flowMs = 5000;
+  round.flowMs = round.rules.flowDurationMs;
   return true;
 }
 

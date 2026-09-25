@@ -17,7 +17,7 @@ export function cycleAt(elapsedMs) {
 
 export function awardClosePass(round) {
   if (round.ended) return 0;
-  const points = 15 * cycleAt(60000 - round.remainingMs).bonus;
+  const points = round.rules.closePassPoints * cycleAt(60000 - round.remainingMs).bonus;
   round.score += points;
   round.closePasses++;
   return points;
