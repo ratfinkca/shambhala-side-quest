@@ -2,9 +2,9 @@
 
 A tiny, unofficial festival-inspired game: wander a glowing forest, collect good vibes, and chase your personal best in 60-second rounds.
 
-## Festival Run preview
+## Festival Run
 
-The `codex/festival-run` branch adds a title screen, wardrobe, independent music/effects volume controls, and local arcade scores. The public Pages link continues to serve `main` until this preview is accepted and merged.
+The game includes a title screen, wardrobe, independent music/effects volume controls, and local arcade scores. Play either mode using the GitHub Pages link above.
 
 - **Quick Rush** keeps the original one-minute score chase.
 - **Festival Run** has three one-minute stages: Living Forest (20 sparks), Neon Grove (25), and Sunrise Clearing (30). Qualification counts raw spark pickups in that stage. Play the whole minute, then choose an upgrade if you qualify. Scores accumulate across the run.
