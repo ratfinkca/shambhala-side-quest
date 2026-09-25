@@ -17,7 +17,7 @@ export function cycleAt(elapsedMs) {
 
 export function awardClosePass(round) {
   if (round.ended) return 0;
-  const points = 15 * cycleAt(60000 - round.remainingMs).bonus;
+  const points = round.rules.closePassPoints * cycleAt(60000 - round.remainingMs).bonus;
   round.score += points;
   round.closePasses++;
   return points;
@@ -45,6 +45,9 @@ export function updateEncounter(encounter, player, dancer, elapsedMs) {
   const nearest = sweptDistance(previous, relative);
   const travel = encounter.previousPlayer ? Math.hypot(player.x - encounter.previousPlayer.x, player.y - encounter.previousPlayer.y) : 0;
   const bumped = nearest < 27;
+  const contactStarted = bumped && !encounter.touching;
+  const contactEnded = !bumped && !!encounter.touching;
+  encounter.touching = bumped;
   let closePass = false;
   if (nearest <= 48 && !encounter.active) {
     encounter.active = true;
@@ -63,19 +66,27 @@ export function updateEncounter(encounter, player, dancer, elapsedMs) {
   }
   encounter.previousPlayer = { x: player.x, y: player.y };
   encounter.previousDancer = { x: dancer.x, y: dancer.y };
-  return { bumped, closePass };
+  return { bumped, closePass, contactStarted, contactEnded };
 }
 
 const SPOTS = [[235,250],[385,255],[565,235],[735,260],[300,365],[665,365],[225,490],[410,490],[585,495],[750,485]];
 
-export function crowdPosition(index, elapsedMs) {
+export function crowdPosition(index, elapsedMs, anchors = SPOTS) {
   // Integrate the extra drop speed; multiplying the timestamp would teleport dancers.
   const extraMs = DROP_STARTS.reduce((sum, start) => sum + Math.max(0, Math.min(4000, elapsedMs - start)) * 0.65, 0);
   const t = (elapsedMs + extraMs) / 1000;
-  const [x, y] = SPOTS[index % SPOTS.length];
+  const [x, y] = anchors[index % anchors.length];
   const wander = index % 3 === 0;
   return {
     x: x + Math.sin(t * (wander ? .65 : .9) + index * 1.8) * (wander ? 52 : 15),
     y: y + Math.sin(t * .47 + index * 2.1) * (wander ? 30 : 12),
   };
+}
+
+export function applyBump(round,encounter,hit){
+ if(hit.contactEnded)encounter.protected=false;
+ if(!hit.bumped)return false;
+ if(hit.contactStarted&&round.shieldsRemaining>0){round.shieldsRemaining--;encounter.protected=true;}
+ if(!encounter.protected){round.slowedMs=600;return true;}
+ return false;
 }
