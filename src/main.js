@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { setupResponsiveLayout } from './layout.js';
 import '../styles.css';
 import { GameScene } from './GameScene.js';
 import { createAudio } from './audio.js';
@@ -25,6 +26,17 @@ const game = new Phaser.Game({
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   render: { antialias: true }, audio: { noAudio: true }, banner: false,
 });
+const refreshLayout = setupResponsiveLayout(game);
+const fullscreen = $('#fullscreen');
+fullscreen.hidden = !document.fullscreenEnabled;
+fullscreen.addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch { toast('Fullscreen is unavailable in this browser.'); }
+});
+document.addEventListener('fullscreenchange', () => { fullscreen.textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen'; });
+
 game.events.on('forest:ready', value => { scene = value; $('#play').disabled = false; });
 
 function overlay(label, title, copy, button, hint) {
@@ -60,6 +72,8 @@ $('#play').addEventListener('click', () => {
   clearToast();
   const resuming = state === 'paused';
   state = 'playing';
+  document.body.dataset.mode = 'game';
+  refreshLayout();
   if (resuming) scene.resumeRound(); else scene.startRound();
   $('#game').focus({ preventScroll: true });
 });
@@ -91,6 +105,8 @@ game.events.on('round:update', round => {
   $('#phase-detail').textContent = cycle.phase === 'ended' ? 'ROUND COMPLETE' : cycle.phase === 'drop' ? `2× ALL POINTS · ${count}s` : cycle.phase === 'build' ? `IN ${count}…` : count ? `${count}s` : 'MAKE IT COUNT';
   const progress = cycle.phase === 'drop' ? cycle.remainingMs / 4000 : cycle.phase === 'build' ? 1 - cycle.remainingMs / 3000 : 1 - cycle.remainingMs / 15000;
   $('#phase-fill').style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
+  $('#flow-status').textContent = round.flowMs > 0 && !round.ended ? `✦ FLOW ${Math.ceil(round.flowMs / 1000)}s` : '◇ FIND FLOW';
+  $('#flow-status').classList.toggle('active', round.flowMs > 0 && !round.ended);
   $('#passes').textContent = round.closePasses;
   $('#crowd-tip').textContent = round.slowedMs > 0 && !round.ended ? 'Gentle bump · keep moving' : `Clean close passes = +${15 * cycle.bonus}`;
   if (state === 'playing') audio.sync(round);
@@ -99,6 +115,8 @@ game.events.on('round:phase', phase => {
   if (phase === 'build') toast('Feel that? Here comes the drop.', 2300);
   else if (phase === 'drop') { audio.drop(); toast('BASS DROP · DOUBLE VIBES', 2500); }
 });
+game.events.on('round:flow', () => { audio.celebrate(); toast('FLOW STATE · Sparks come to you', 2000); });
+
 game.events.on('round:closepass', () => audio.closePass());
 game.events.on('round:bump', () => {
   if (scene.phase === 'cruise') toast('Easy does it. Keep your flow.', 1100);
@@ -122,6 +140,6 @@ game.events.on('round:end', round => {
   $('#result-stats').replaceChildren();
   const score = document.createElement('strong'); score.textContent = `${round.score} vibes`;
   const passes = `${round.closePasses} smooth ${round.closePasses === 1 ? 'pass' : 'passes'}`;
-  $('#result-stats').append(score, `${round.pickups} sparks · ${passes} · ${round.bestMultiplier}× best combo`);
+  $('#result-stats').append(score, `${round.pickups} sparks · ${passes} · ${round.bestMultiplier}× best combo · Personal best ${saved.best}`);
   $('#announcement').textContent = `Round complete. ${round.score} points. ${passes}. Personal best ${saved.best}.`;
 });

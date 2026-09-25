@@ -45,7 +45,7 @@ export function createAudio() {
       const step = Math.floor(elapsed / 250);
       if (step === lastStep) return;
       lastStep = step;
-      for (const voice of beatVoices(step, cycleAt(elapsed).phase, round.multiplier)) {
+      for (const voice of beatVoices(step, cycleAt(elapsed).phase, round.multiplier, round.flowMs > 0)) {
         tone(voice.frequency, voice.duration, 0, voice.type, voice.volume, voice.endFrequency);
       }
     },

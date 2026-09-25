@@ -13,3 +13,9 @@ test('build includes rising notes and ended rounds are silent', () => {
   assert.ok(beatVoices(49,'build',1).some(v=>v.kind==='build'));
   assert.deepEqual(beatVoices(240,'ended',5),[]);
 });
+
+test('Flow State adds its own musical layer and stops when inactive', () => {
+  assert.ok(beatVoices(1, 'cruise', 1, true).some(v => v.kind === 'flow'));
+  assert.ok(!beatVoices(1, 'cruise', 1, false).some(v => v.kind === 'flow'));
+  assert.deepEqual(beatVoices(240, 'ended', 5, true), []);
+});

@@ -1,4 +1,4 @@
-export function beatVoices(step, phase, multiplier) {
+export function beatVoices(step, phase, multiplier, flowActive = false) {
   if (phase === 'ended') return [];
   const voices = [];
   const drop = phase === 'drop';
@@ -13,5 +13,6 @@ export function beatVoices(step, phase, multiplier) {
     voices.push({ kind: 'melody', frequency: [261.63, 311.13, 392, 466.16][Math.floor(step / 2) % 4], duration: .22, type: 'sine', volume: .025 });
   }
   if (phase === 'build') voices.push({ kind: 'build', frequency: 180 + (step % 60 - 48) * 35, duration: .08, type: 'sine', volume: .024 });
+  if (flowActive) voices.push({ kind: 'flow', frequency: [523.25, 622.25, 783.99, 932.33][step % 4], duration: .3, type: 'sine', volume: .022 });
   return voices;
 }
