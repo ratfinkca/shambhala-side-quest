@@ -2,6 +2,10 @@ import Phaser from 'phaser';
 import { createRound, advanceRound, collect, movePlayer, moveToward } from './game.js';
 import { cycleAt } from './festival.js';
 import { availableFlow, activateFlow, attractSpark } from './flow.js';
+import { StageRenderer } from './StageRenderer.js';
+import { createAvatar, setOutfit } from './Avatar.js';
+import { STAGES } from './stages.js';
+import { moveInArena, findSpawn, movementFactor, isOpen } from './geometry.js';
 import { Crowd } from './Crowd.js';
 
 const W = 960, H = 640;
@@ -11,7 +15,10 @@ export class GameScene extends Phaser.Scene {
   constructor() { super('Forest'); this.running = false; this.round = createRound(); }
   create() {
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.drawForest();
+    this.stage = STAGES[0];
+    this.background = new StageRenderer(this);
+    this.background.show(this.stage);
+    this.fireflies = this.background.fireflies;
     this.dropWash = this.add.rectangle(W / 2, H / 2, W, H, 0xb2efbd, 1).setDepth(1).setAlpha(0);
     this.crowd = new Crowd(this);
     this.effects = this.add.group();
@@ -21,13 +28,8 @@ export class GameScene extends Phaser.Scene {
     this.halo = this.add.circle(0, 0, 26, 0xcfffad, .09);
     this.dancer.add(this.halo);
     this.dancer.add(this.add.circle(0, 0, 17, 0x92dfb2, .15));
-    const body = this.add.graphics();
-    body.lineStyle(4, 0xf4efc5).lineBetween(-4, 8, -7, 16).lineBetween(4, 8, 7, 16);
-    body.fillStyle(0xc8f68c).fillRoundedRect(-8, -5, 16, 18, 5);
-    body.fillStyle(0xffdab7).fillCircle(0, -11, 7);
-    body.fillStyle(0xb997d7).fillEllipse(0, -16, 23, 7).fillRoundedRect(-7, -23, 14, 8, 3);
-    body.lineStyle(3, 0xc8f68c).lineBetween(-7, 0, -14, -4).lineBetween(7, 0, 14, -4);
-    this.dancer.add(body);
+    this.avatar = createAvatar(this);
+    this.dancer.add(this.avatar);
     this.flowPickup = this.add.container(0, 0).setDepth(15).setVisible(false);
     this.flowPickup.add(this.add.circle(0, 0, 30, 0xffd886, .12));
     this.flowPickup.add(this.add.star(0, 0, 4, 9, 20, 0xffd886).setStrokeStyle(2, 0xfff8d9));
@@ -45,52 +47,6 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointermove', pointer => { if (pointer.pointerType !== 'touch' || pointer.isDown) point(pointer); });
     this.game.events.emit('forest:ready', this);
   }
-  drawForest() {
-    const g = this.add.graphics();
-    g.fillGradientStyle(0x102430, 0x162036, 0x183c37, 0x153133).fillRect(0, 0, W, H);
-    // A soft clearing, hand-drawn terrain rings, and a ribbon of river.
-    for (let i = 10; i > 0; i--) g.fillStyle(0x76b6a0, .012).fillEllipse(505, 335, i * 78, i * 45);
-    g.fillStyle(0x0b2534, .8).fillPoints([{x:0,y:60},{x:110,y:180},{x:76,y:310},{x:190,y:485},{x:144,y:640},{x:0,y:640}], true);
-    g.lineStyle(2, 0x477d88, .25);
-    for (let i = 0; i < 17; i++) { const y = 130 + i * 29; const x = 35 + Math.sin(i * .7) * 28 + i * 4; g.lineBetween(x, y, x + 22 + i % 4 * 7, y - 3); }
-    g.lineStyle(1, 0x92b8a7, .055);
-    for (let i = 0; i < 5; i++) g.strokeEllipse(515, 357, 360 + i * 78, 220 + i * 51);
-    const rnd = new Phaser.Math.RandomDataGenerator(['sidequest-forest']);
-    for (let i = 0; i < 260; i++) { const x = rnd.between(0, W), y = rnd.between(80, H); g.fillStyle(i % 3 ? 0x90a998 : 0xc0b796, rnd.realInRange(.04, .13)).fillCircle(x, y, rnd.realInRange(.6, 1.6)); }
-    // The small geometric stage sits between two banks of trees.
-    g.fillStyle(0x091b23).fillRoundedRect(351, 29, 258, 101, 8);
-    g.lineStyle(2, 0x83b9a6, .35).strokeTriangle(345, 99, 480, 12, 615, 99);
-    g.lineStyle(1, 0xa8dbaf, .3).strokeTriangle(379, 98, 480, 31, 581, 98);
-    g.fillStyle(0xc2b5e7, .13).fillTriangle(480, 64, 228, 446, 388, 446);
-    g.fillStyle(0x9beec2, .10).fillTriangle(480, 64, 574, 446, 734, 446);
-    g.fillStyle(0xd7a3cb, .065).fillTriangle(480, 64, 303, 402, 643, 402);
-    g.fillStyle(0x344c48).fillRoundedRect(395, 98, 170, 23, 3);
-    for (const x of [369, 565]) { g.fillStyle(0x101d25).fillRoundedRect(x, 66, 25, 51, 3); g.lineStyle(1, 0x708985, .5).strokeCircle(x + 12, 80, 7).strokeCircle(x + 12, 103, 8); }
-    g.lineStyle(2, 0xe4d8a6, .7).strokeCircle(480, 66, 22).strokeTriangle(480, 48, 464, 76, 496, 76);
-    this.add.text(480, 137, 'THE LIVING FOREST', { fontFamily: 'Arial', fontSize: '9px', color: '#b4c6ac', letterSpacing: 4 }).setOrigin(.5).setAlpha(.6);
-    const tree = (x, y, s, color) => {
-      g.fillStyle(0x071c21, .35).fillEllipse(x + 8, y + 6, s * .85, s * .23);
-      g.fillStyle(0x34443b).fillRect(x - 2, y - s * .26, 4, s * .33);
-      g.fillStyle(color).fillTriangle(x, y - s, x - s * .4, y - s * .12, x + s * .4, y - s * .12);
-      g.fillStyle(0x719582, .08).fillTriangle(x, y - s, x - s * .32, y - s * .19, x, y - s * .19);
-      g.fillStyle(color).fillTriangle(x, y - s * 1.12, x - s * .29, y - s * .43, x + s * .29, y - s * .43);
-    };
-    for (let i = 0; i < 25; i++) { const x = i * 43 - 25; if (x > 325 && x < 635) continue; tree(x, rnd.between(105, 180), rnd.between(100, 165), i % 2 ? 0x1b3c3d : 0x173035); }
-    for (let i = 0; i < 11; i++) { tree(rnd.between(-12, 58), 230 + i * 45, rnd.between(65, 110), 0x183a36); tree(rnd.between(907, 973), 205 + i * 48, rnd.between(70, 120), 0x1d3d38); }
-    for (let i = 0; i < 14; i++) tree(i * 78 - 18, 685 + rnd.between(-5, 15), rnd.between(65, 110), 0x102d29);
-    for (const [x,y] of [[202,242],[783,200],[811,481],[239,516],[680,556],[126,373]]) {
-      g.fillStyle(0xf3c4aa,.7).fillRoundedRect(x-2,y,4,12,2);
-      g.fillStyle(0xd695b9,.75).fillEllipse(x,y,19,10);
-      g.fillStyle(0xffe7c5,.8).fillCircle(x-3,y-1,1.5).fillCircle(x+4,y,1.5);
-    }
-    // Lantern strings bridge the canopy.
-    for (const side of [-1, 1]) {
-      const points = Array.from({length:25},(_,i)=>({x:480+side*i*20,y:24+Math.sin(i/24*Math.PI)*32}));
-      g.lineStyle(1,0xa9bc95,.25).strokePoints(points);
-      points.filter((_,i)=>i%3===0).forEach(p=>{g.fillStyle(0xf9ce8c,.06).fillCircle(p.x,p.y+4,13);g.fillStyle(0xf9dcaa,.8).fillCircle(p.x,p.y+4,2);});
-    }
-    this.fireflies = Array.from({length:28},()=>this.add.circle(rnd.between(85,875),rnd.between(140,585),rnd.realInRange(.7,1.7),0xccebab,.3));
-  }
   makeSpark(i) {
     const color = COLORS[i % COLORS.length];
     const spark = this.add.container(0, 0).setDepth(10);
@@ -103,17 +59,14 @@ export class GameScene extends Phaser.Scene {
     return spark;
   }
   placeSpark(spark) {
-    for (let attempts = 0; attempts < 30; attempts++) {
-      spark.x = Phaser.Math.Between(160, 810); spark.y = Phaser.Math.Between(180, 565);
-      const awayFromPlayer = !this.dancer || Phaser.Math.Distance.Between(spark.x,spark.y,this.dancer.x,this.dancer.y) > 80;
-      const awayFromCrowd = this.crowd.people.every(person => Phaser.Math.Distance.Between(spark.x,spark.y,person.node.x,person.node.y) > 38);
-      if (awayFromPlayer && awayFromCrowd) break;
-    }
+    const avoid = this.crowd.people.map(p=>({x:p.node.x,y:p.node.y,radius:38}));
+    if(this.dancer)avoid.push({x:this.dancer.x,y:this.dancer.y,radius:80});
+    const pos=findSpawn(this.stage,Math.random,avoid);spark.setPosition(pos.x,pos.y);
   }
   clearInput() { this.target = null; this.input.keyboard.resetKeys(); }
   startRound() {
     this.round = createRound(); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll();
-    this.dancer.setPosition(480, 380); this.dancer.setRotation(0);
+    this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
     this.crowd.reset();
     this.flowSlot = -1; this.flowPickup.setVisible(false);
     this.phase = 'cruise';
@@ -149,16 +102,19 @@ export class GameScene extends Phaser.Scene {
       this.phase = cycle.phase;
       this.game.events.emit('round:phase', cycle.phase);
     }
+    this.background.update(60000-this.round.remainingMs,cycle.phase,this.reducedMotion);
     this.dropWash.setAlpha(this.reducedMotion ? 0 : cycle.phase === 'drop' ? .045 : 0);
-    const movementDelta = Math.min(delta, 50) * (this.round.slowedMs > 0 ? .5 : 1);
+    const movementDelta = Math.min(delta, 50) * movementFactor(this.dancer,this.stage.mud,this.round.slowedMs);
     const k=this.keys;
     let direction={x:Number(k.D.isDown||k.RIGHT.isDown)-Number(k.A.isDown||k.LEFT.isDown),y:Number(k.S.isDown||k.DOWN.isDown)-Number(k.W.isDown||k.UP.isDown)};
     if(direction.x||direction.y) {
       this.target=null;
-      movePlayer(this.dancer,direction,movementDelta,{width:W,height:H});
+      moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,obstacles:this.stage.obstacles});
     } else if(this.target) {
       direction={x:this.target.x-this.dancer.x,y:this.target.y-this.dancer.y};
-      if(moveToward(this.dancer,this.target,movementDelta,{width:W,height:H})) this.target=null;
+      const distance=Math.hypot(direction.x,direction.y),step=Math.min(movementDelta,distance/300*1000);
+      moveInArena(this.dancer,direction,step,{width:W,height:H,obstacles:this.stage.obstacles});
+      if(Math.hypot(this.target.x-this.dancer.x,this.target.y-this.dancer.y)<1)this.target=null;
     }
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
     if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
@@ -167,7 +123,7 @@ export class GameScene extends Phaser.Scene {
     if (slot !== this.flowSlot) {
       this.flowSlot = slot;
       this.flowPickup.setVisible(slot >= 0);
-      if (slot >= 0) this.flowPickup.setPosition(slot === 0 ? 410 : 650, slot === 0 ? 290 : 440);
+      if (slot >= 0) this.flowPickup.setPosition(this.stage.flowSpawns[slot].x,this.stage.flowSpawns[slot].y);
     }
     if (slot >= 0 && Phaser.Math.Distance.Between(this.dancer.x, this.dancer.y, this.flowPickup.x, this.flowPickup.y) < 29 && activateFlow(this.round)) {
       this.flowPickup.setVisible(false);
@@ -177,7 +133,7 @@ export class GameScene extends Phaser.Scene {
     this.halo.setRadius(this.round.flowMs > 0 ? 42 : 26);
     this.halo.setFillStyle(this.round.flowMs > 0 ? 0xffd886 : this.round.slowedMs > 0 ? 0xf2b59b : cycle.phase === 'drop' ? 0xe5ff8c : 0xcfffad, this.round.flowMs > 0 ? .2 : this.round.slowedMs > 0 ? .2 : .09);
     this.sparks.forEach(spark => {
-      if (this.round.flowMs > 0) attractSpark(spark, this.dancer, delta);
+      if (this.round.flowMs > 0) { const old={x:spark.x,y:spark.y};attractSpark(spark,this.dancer,delta);if(!isOpen(spark,8,this.stage.obstacles))spark.setPosition(old.x,old.y); }
       spark.setAlpha(cycle.phase === 'drop' ? 1 : .85);
       if (this.reducedMotion) spark.setScale(cycle.phase === 'drop' ? 1.15 : 1);
     });

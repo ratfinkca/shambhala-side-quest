@@ -1,11 +1,18 @@
-import { awardClosePass, createEncounter, crowdPosition, updateEncounter } from './festival.js';
+import { STAGES } from './stages.js';
+import { applyBump, awardClosePass, createEncounter, crowdPosition, updateEncounter } from './festival.js';
 
 const CLOTHES = [0xb59bdd, 0xdd9d83, 0x87bacc, 0xd09bb7, 0xa1b58a];
 
 export class Crowd {
   constructor(scene) {
     this.scene = scene;
-    this.people = Array.from({ length: 10 }, (_, index) => {
+    this.configure(STAGES[0]);
+  }
+  configure(stage) {
+    this.people?.forEach(p=>p.node.destroy());
+    this.stage = stage;
+    const scene = this.scene;
+    this.people = Array.from({ length: stage.crowdAnchors.length }, (_, index) => {
       const node = scene.add.container(0, 0).setDepth(15);
       const ring = scene.add.circle(0, 0, 42).setStrokeStyle(1, 0xbad9c5, .16).setAlpha(0);
       node.add(ring);
@@ -36,7 +43,7 @@ export class Crowd {
 
   reset() {
     this.people.forEach((person, index) => {
-      const position = crowdPosition(index, 0);
+      const position = crowdPosition(index, 0, this.stage.crowdAnchors);
       person.node.setPosition(position.x, position.y);
       person.body.setRotation(0);
       person.ring.setAlpha(0);
@@ -48,14 +55,13 @@ export class Crowd {
   update(player, round, reducedMotion) {
     const elapsed = 60000 - round.remainingMs;
     this.people.forEach((person, index) => {
-      const position = crowdPosition(index, elapsed);
+      const position = crowdPosition(index, elapsed, this.stage.crowdAnchors);
       person.node.setPosition(position.x, position.y);
       person.body.rotation = reducedMotion ? 0 : Math.sin(elapsed * .005 + index) * .14;
       const distance = Math.hypot(player.x - position.x, player.y - position.y);
       person.ring.setAlpha(distance < 100 ? .7 : 0);
       const encounter = updateEncounter(person.encounter, player, position, elapsed);
-      if (encounter.bumped) {
-        round.slowedMs = 600;
+      if (applyBump(round, person.encounter, encounter)) {
         person.ring.setStrokeStyle(2, 0xf2b59b, .45);
         if (elapsed - this.lastBumpAt > 1600) {
           this.scene.game.events.emit('round:bump');
