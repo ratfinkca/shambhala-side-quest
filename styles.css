@@ -23,3 +23,28 @@
   .game-frame[data-phase="drop"] .phase-copy { min-width:153px; }
   .toast { top:15%; font-size:16px; }
 }
+/* Fit the complete game into the visible viewport, including browser chrome. */
+.shell{max-width:none;height:100dvh;display:flex;flex-direction:column;padding:12px 24px;overflow:hidden}
+.masthead{flex:none;padding-bottom:10px;min-height:48px}
+.intro{flex:none;padding:14px 0}
+.intro h1{font-size:32px}
+.game-frame{flex:none;align-self:center;margin:auto 0;max-width:100%;container-type:inline-size}
+.page-footer{flex:none;padding-top:6px}
+body[data-mode="game"] .intro,body[data-mode="game"] .page-footer{display:none}
+.arena-wrap{container-type:size}
+#flow-status{font-size:9px;white-space:nowrap;color:#bdaf88}
+#flow-status.active{color:#ffe2a0;font-weight:bold}
+[hidden]{display:none!important}
+@container(max-width:600px){
+ .hud{height:58px;padding:8px 12px}.hud-score,.hud-time{min-width:48px}.hud span{font-size:7px;letter-spacing:.5px}.combo{width:100px}.hud strong{font-size:22px}
+ .beat-bar{gap:8px;padding:8px 10px}.phase-copy,.game-frame[data-phase="drop"] .phase-copy{min-width:0;gap:5px}.phase-copy span,.passes-label{font-size:7px;letter-spacing:0}.phase-copy strong{font-size:8px}.passes-label{display:none}.phase-track{min-width:8px}#flow-status{font-size:8px}
+ .game-footer{padding:8px 10px;font-size:7px}.game-footer>span:last-child{font-size:8px}
+}
+@container(max-height:310px){
+ .overlay{padding:8px;overflow:auto}.ornament,.scene-label,.overlay-hint,.arena-caption{display:none}.overlay h2{font-size:26px;margin:5px 0}.overlay-card>p:not(.scene-label):not(.overlay-hint){font-size:10px;line-height:1.4;margin:6px 0}.primary-button{margin-top:6px;padding:10px 14px;min-width:150px;font-size:12px}.result-stats{font-size:10px}.result-stats strong{font-size:25px}.toast{font-size:16px;top:8%}
+}
+@media(max-height:700px){.intro,.page-footer{display:none}.game-footer{display:none}.hud{height:52px}.shell{padding:8px 16px}}
+@media(max-width:620px){.shell{padding:8px}.masthead{padding-bottom:8px}.header-actions{gap:4px}.quiet-button{padding:8px 6px;font-size:9px}.wordmark{font-size:10px;letter-spacing:1px;grid-template-columns:24px auto}.brand-star{font-size:24px}.wordmark-sub{font-size:7px;letter-spacing:2px}.intro h1{font-size:27px}.intro{padding:12px 0}.intro p{font-size:10px}}
+/* Chrome height must stay constant as the arena width adapts. */
+.hud{height:58px;padding:8px 12px}.beat-bar{height:34px;padding:8px 10px}.game-footer{height:30px;padding:8px 10px}
+@media(max-height:700px){.hud{height:52px}}

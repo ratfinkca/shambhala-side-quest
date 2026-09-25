@@ -1,12 +1,13 @@
 import { cycleAt } from './festival.js';
 
 export function createRound() {
-  return { remainingMs: 60000, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, sincePickupMs: Infinity, ended: false };
+  return { remainingMs: 60000, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, flowMs: 0, flowTaken: [], sincePickupMs: Infinity, ended: false };
 }
 
 export function advanceRound(round, dtMs) {
   if (round.ended) return;
   round.remainingMs = Math.max(0, round.remainingMs - Math.max(0, dtMs));
+  round.flowMs = Math.max(0, round.flowMs - Math.max(0, dtMs));
   round.sincePickupMs += Math.max(0, dtMs);
   round.slowedMs = Math.max(0, round.slowedMs - Math.max(0, dtMs));
   if (round.sincePickupMs > 2000) { round.chain = 0; round.multiplier = 1; }

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { createRound, advanceRound, collect, movePlayer, moveToward } from './game.js';
 import { cycleAt } from './festival.js';
+import { availableFlow, activateFlow, attractSpark } from './flow.js';
 import { Crowd } from './Crowd.js';
 
 const W = 960, H = 640;
@@ -27,6 +28,11 @@ export class GameScene extends Phaser.Scene {
     body.fillStyle(0xb997d7).fillEllipse(0, -16, 23, 7).fillRoundedRect(-7, -23, 14, 8, 3);
     body.lineStyle(3, 0xc8f68c).lineBetween(-7, 0, -14, -4).lineBetween(7, 0, 14, -4);
     this.dancer.add(body);
+    this.flowPickup = this.add.container(0, 0).setDepth(15).setVisible(false);
+    this.flowPickup.add(this.add.circle(0, 0, 30, 0xffd886, .12));
+    this.flowPickup.add(this.add.star(0, 0, 4, 9, 20, 0xffd886).setStrokeStyle(2, 0xfff8d9));
+    this.flowPickup.add(this.add.text(0, 32, 'FLOW', {fontFamily:'Arial',fontSize:'12px',color:'#ffe3a3'}).setOrigin(.5));
+    this.flowSlot = -1;
     this.target = null;
     this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
     this.input.keyboard.removeCapture(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT']);
@@ -109,6 +115,7 @@ export class GameScene extends Phaser.Scene {
     this.round = createRound(); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll();
     this.dancer.setPosition(480, 380); this.dancer.setRotation(0);
     this.crowd.reset();
+    this.flowSlot = -1; this.flowPickup.setVisible(false);
     this.phase = 'cruise';
     this.dropWash.setAlpha(0);
     this.sparks.forEach(s=>this.placeSpark(s));
@@ -154,10 +161,23 @@ export class GameScene extends Phaser.Scene {
       if(moveToward(this.dancer,this.target,movementDelta,{width:W,height:H})) this.target=null;
     }
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
-    if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,3,0xbdeca6,.25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
+    if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
     this.crowd.update(this.dancer, this.round, this.reducedMotion);
-    this.halo.setFillStyle(this.round.slowedMs > 0 ? 0xf2b59b : cycle.phase === 'drop' ? 0xe5ff8c : 0xcfffad, this.round.slowedMs > 0 ? .2 : .09);
+    const slot = availableFlow(this.round);
+    if (slot !== this.flowSlot) {
+      this.flowSlot = slot;
+      this.flowPickup.setVisible(slot >= 0);
+      if (slot >= 0) this.flowPickup.setPosition(slot === 0 ? 410 : 650, slot === 0 ? 290 : 440);
+    }
+    if (slot >= 0 && Phaser.Math.Distance.Between(this.dancer.x, this.dancer.y, this.flowPickup.x, this.flowPickup.y) < 29 && activateFlow(this.round)) {
+      this.flowPickup.setVisible(false);
+      this.effect(this.dancer.x, this.dancer.y, 0xffd886, 0, true, 'FLOW STATE');
+      this.game.events.emit('round:flow');
+    }
+    this.halo.setRadius(this.round.flowMs > 0 ? 42 : 26);
+    this.halo.setFillStyle(this.round.flowMs > 0 ? 0xffd886 : this.round.slowedMs > 0 ? 0xf2b59b : cycle.phase === 'drop' ? 0xe5ff8c : 0xcfffad, this.round.flowMs > 0 ? .2 : this.round.slowedMs > 0 ? .2 : .09);
     this.sparks.forEach(spark => {
+      if (this.round.flowMs > 0) attractSpark(spark, this.dancer, delta);
       spark.setAlpha(cycle.phase === 'drop' ? 1 : .85);
       if (this.reducedMotion) spark.setScale(cycle.phase === 'drop' ? 1.15 : 1);
     });
