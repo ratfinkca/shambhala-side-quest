@@ -25,8 +25,13 @@ test('boards validate, rank, bound and deduplicate entries',()=>{
 });
 test('storage failure keeps session scores and returns a clear persistence result',()=>{
   const s=createStorage({getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}});
-  assert.deepEqual(s.submitScore('rush',entry('one')),{accepted:true,persisted:false});
+  assert.deepEqual(s.submitScore('rush',entry('one')),{accepted:true,persisted:false,ranked:true});
   assert.equal(s.profile.boards.rush.length,1);
   s.saveAudio({enabled:false,music:.2,effects:.7});assert.equal(s.sound,false);
   const copy=s.profile;copy.boards.rush.length=0;assert.equal(s.profile.boards.rush.length,1);
+});
+
+test('submission reports when a valid score misses an already full top ten',()=>{
+ const s=createStorage(memory());for(let i=0;i<10;i++)s.submitScore('rush',entry('high'+i,100+i));
+ const result=s.submitScore('rush',entry('low',1));assert.equal(result.ranked,false);assert.equal(s.profile.boards.rush.some(e=>e.id==='low'),false);
 });

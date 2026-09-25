@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { createRound, advanceRound, collect, movePlayer, moveToward } from './game.js';
+import { createRound, advanceRound, collect } from './game.js';
 import { cycleAt } from './festival.js';
 import { availableFlow, activateFlow, attractSpark } from './flow.js';
 import { StageRenderer } from './StageRenderer.js';
@@ -64,8 +64,11 @@ export class GameScene extends Phaser.Scene {
     const pos=findSpawn(this.stage,Math.random,avoid);spark.setPosition(pos.x,pos.y);
   }
   clearInput() { this.target = null; this.input.keyboard.resetKeys(); }
-  startRound() {
-    this.round = createRound(); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll();
+  startRound({stage = STAGES[0], rules = {}, outfit} = {}) {
+    this.stage = stage;
+    this.background.show(stage); this.fireflies = this.background.fireflies;
+    this.crowd.configure(stage); setOutfit(this.avatar, outfit);
+    this.round = createRound(rules); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
     this.crowd.reset();
     this.flowSlot = -1; this.flowPickup.setVisible(false);
@@ -89,12 +92,12 @@ export class GameScene extends Phaser.Scene {
     }
   }
   update(time, delta) {
-    if (!this.reducedMotion && this.running) {
+    if (!this.reducedMotion && (this.running || this.menuAmbient)) {
       this.sparks.forEach(s=>s.setScale(1+Math.sin(time*.003+s.phase)*.12));
       this.fireflies.forEach((f,i)=>f.setAlpha(.2+Math.sin(time*.001+i)*.15));
       this.halo.setScale(1+Math.sin(time*.004)*.08);
     }
-    if (!this.running) return;
+    if (!this.running) { if(this.menuAmbient)this.background.update(time,'cruise',this.reducedMotion);return; }
     advanceRound(this.round, delta);
     if (this.round.ended) { this.running=false; this.clearInput(); this.game.events.emit('round:update',this.round); this.game.events.emit('round:end',this.round); return; }
     const cycle = cycleAt(60000 - this.round.remainingMs);

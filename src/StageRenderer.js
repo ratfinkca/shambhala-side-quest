@@ -3,7 +3,7 @@ const W=960,H=640;
 export class StageRenderer {
  constructor(scene){this.scene=scene;this.objects=[];}
  show(stage){
-  this.destroy();const before=new Set(this.scene.children.list);this.drawForest();
+  this.destroy();this.stageName=stage.name;const before=new Set(this.scene.children.list);this.drawForest();
   if(stage.id!=='forest')this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
   this.beams=[this.scene.add.triangle(340,240,0,0,140,420,280,0,stage.palette.accent,.035).setDepth(.2),this.scene.add.triangle(630,240,0,0,140,420,280,0,stage.palette.accent,.035).setDepth(.2)];
   for(const o of stage.mud){this.scene.add.rectangle(o.x+o.width/2,o.y+o.height/2,o.width,o.height,0x89684f,.7).setStrokeStyle(2,0xcfaa72,.7).setDepth(2);this.scene.add.text(o.x+o.width/2,o.y+o.height/2,'MUD',{fontFamily:'Arial',fontSize:'11px',color:'#ffe0ad'}).setOrigin(.5).setDepth(3);}
@@ -34,7 +34,7 @@ export class StageRenderer {
     g.fillStyle(0x344c48).fillRoundedRect(395, 98, 170, 23, 3);
     for (const x of [369, 565]) { g.fillStyle(0x101d25).fillRoundedRect(x, 66, 25, 51, 3); g.lineStyle(1, 0x708985, .5).strokeCircle(x + 12, 80, 7).strokeCircle(x + 12, 103, 8); }
     g.lineStyle(2, 0xe4d8a6, .7).strokeCircle(480, 66, 22).strokeTriangle(480, 48, 464, 76, 496, 76);
-    this.scene.add.text(480, 137, 'THE LIVING FOREST', { fontFamily: 'Arial', fontSize: '9px', color: '#b4c6ac', letterSpacing: 4 }).setOrigin(.5).setAlpha(.6);
+    this.scene.add.text(480, 137, this.stageName.toUpperCase(), { fontFamily: 'Arial', fontSize: '9px', color: '#b4c6ac', letterSpacing: 4 }).setOrigin(.5).setAlpha(.6);
     const tree = (x, y, s, color) => {
       g.fillStyle(0x071c21, .35).fillEllipse(x + 8, y + 6, s * .85, s * .23);
       g.fillStyle(0x34443b).fillRect(x - 2, y - s * .26, 4, s * .33);
