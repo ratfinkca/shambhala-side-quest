@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101917"><title>Shambhala Side Quest</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ctext y='32' font-size='32'%3E✦%3C/text%3E%3C/svg%3E"></head>
+<body>
+  <main class="shell">
+    <header class="masthead"><a class="wordmark" href="./" aria-label="Shambhala Side Quest home"><span class="brand-star">✳</span> SHAMBHALA<span class="wordmark-sub">SIDE QUEST</span></a><div class="header-actions"><button id="sound" class="quiet-button" aria-pressed="false">Sound off</button><button id="pause" class="quiet-button" disabled>Pause <kbd>Esc</kbd></button></div></header>
+    <section class="intro"><div><h1>A little lost.<br><em>A lot of good vibes.</em></h1><p>One minute in the forest. See what you find.</p></div><div class="personal-best"><span>PERSONAL BEST</span><strong id="best">000</strong><small>good vibes, collected</small></div></section>
+    <section class="game-frame" aria-label="Side Quest game">
+      <div class="hud"><div class="hud-score"><span>GOOD VIBES</span><strong id="score">000</strong></div><div class="combo"><div><span id="combo-label">FIND YOUR FLOW</span><strong id="multiplier">1×</strong></div><div class="combo-track"><div id="combo-fill"></div></div></div><div class="hud-time"><span>TIME LEFT</span><strong id="time">1:00</strong></div></div>
+      <div class="beat-bar"><div class="phase-copy"><span id="phase-title">NEXT DROP</span><strong id="phase-detail">15s</strong></div><div class="phase-track"><div id="phase-fill"></div></div><span class="passes-label"><b id="passes">0</b> SMOOTH PASSES</span></div>
+      <div class="arena-wrap"><div id="game" tabindex="0" role="application" aria-label="Forest game. Move with arrow keys, WASD, mouse, or touch. Skim past dancers for bonus points; bumps slow you. Bass drops double rewards. Escape pauses."></div>
+        <div id="overlay" class="overlay"><div class="overlay-card"><span class="ornament" aria-hidden="true">✧</span><p class="scene-label" id="overlay-label">MEET YOU IN THE FOREST</p><h2 id="overlay-title">Find your people.</h2><p id="overlay-copy">Catch sparks. Skim past dancers. Ride the drop.<br>Clean passes pay. Bumps slow you. Drops double points.</p><div id="result-stats" class="result-stats" hidden></div><button id="play" class="primary-button">Let’s get lost <span aria-hidden="true">↗</span></button><p id="overlay-hint" class="overlay-hint">Turn sound on for the full forest frequency.</p></div></div>
+        <div id="toast" class="toast" aria-live="polite"></div>
+        <div class="arena-caption" aria-hidden="true"><span>THE FOREST IS CALLING</span><span>✦ FOLLOW THE GLOW</span></div>
+      </div>
+      <div class="game-footer"><span><span class="live-dot"></span> ALL GOOD VIBES HERE</span><span id="crowd-tip">Clean close passes = +15</span></div>
+    </section>
+    <footer class="page-footer"><p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>or arrows to wander</span><i></i><span>Mouse or touch to follow</span></p><span>Made for the “one more” crowd. <small>Unofficial fan game.</small></span></footer>
+    <p id="announcement" class="sr-only" aria-live="polite"></p>
+  </main><script type="module" src="/src/main.js"></script>
+</body></html>
