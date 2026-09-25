@@ -1,8 +1,10 @@
 import { cycleAt } from './festival.js';
 import { beatVoices } from './music.js';
 
-export function createAudio() {
-  let context, enabled = false, lastStep = -1;
+export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)()) {
+  let context, musicBus, effectsBus, enabled = false, lastStep = -1;
+  let volumes = { music: .45, effects: .65 };
+  function applyVolumes() { if (context) { musicBus.gain.setValueAtTime(volumes.music, context.currentTime); effectsBus.gain.setValueAtTime(volumes.effects, context.currentTime); } }
   const nodes = new Set();
 
   function stop() {
@@ -11,7 +13,7 @@ export function createAudio() {
     lastStep = -1;
   }
 
-  function tone(frequency, duration = .12, delay = 0, type = 'sine', volume = .06, endFrequency) {
+  function tone(frequency, duration = .12, delay = 0, type = 'sine', volume = .06, endFrequency, channel = 'effects') {
     if (!enabled || !context || context.state !== 'running') return;
     try {
       const oscillator = context.createOscillator(), gain = context.createGain();
@@ -22,7 +24,7 @@ export function createAudio() {
       gain.gain.setValueAtTime(0, at);
       gain.gain.linearRampToValueAtTime(volume, at + .008);
       gain.gain.exponentialRampToValueAtTime(.001, at + duration);
-      oscillator.connect(gain); gain.connect(context.destination);
+      oscillator.connect(gain); gain.connect(channel === 'music' ? musicBus : effectsBus);
       nodes.add(oscillator);
       oscillator.onended = () => { nodes.delete(oscillator); oscillator.disconnect(); gain.disconnect(); };
       oscillator.start(at); oscillator.stop(at + duration + .02);
@@ -30,11 +32,12 @@ export function createAudio() {
   }
 
   return {
+    setVolumes(value) { for (const key of ['music', 'effects']) if (Number.isFinite(value[key])) volumes[key] = Math.max(0, Math.min(1, value[key])); applyVolumes(); },
     setEnabled(value) {
       enabled = value;
       if (!value) { stop(); return; }
       try {
-        context ??= new (window.AudioContext || window.webkitAudioContext)();
+        if (!context) { context = contextFactory(); musicBus = context.createGain(); effectsBus = context.createGain(); musicBus.connect(context.destination); effectsBus.connect(context.destination); applyVolumes(); }
         context.resume().catch(() => {});
       } catch {}
     },
@@ -46,7 +49,7 @@ export function createAudio() {
       if (step === lastStep) return;
       lastStep = step;
       for (const voice of beatVoices(step, cycleAt(elapsed).phase, round.multiplier, round.flowMs > 0)) {
-        tone(voice.frequency, voice.duration, 0, voice.type, voice.volume, voice.endFrequency);
+        tone(voice.frequency, voice.duration, 0, voice.type, voice.volume, voice.endFrequency, 'music');
       }
     },
     pickup(multiplier) { tone([523.25, 622.25, 783.99, 932.33, 1046.5][multiplier - 1], .12, 0, 'sine', .04); },
