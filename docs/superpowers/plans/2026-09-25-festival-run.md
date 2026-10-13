@@ -1,5 +1,7 @@
 # Festival Run Implementation Plan
 
+Status: historical plan for the milestone shipped in PR #2 (`4fb9fab`). The checklists below are preserved planning history, not outstanding implementation tasks. Start with [the project handoff](../../PROJECT-HANDOFF.md) for current work and [validation evidence](../festival-run-validation.md) for coverage and limits.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans or superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox syntax for tracking.
 
 **Goal:** Deliver a local playable Festival Run preview while preserving Quick Rush.

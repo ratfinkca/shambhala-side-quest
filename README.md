@@ -4,7 +4,7 @@ A tiny, unofficial festival-inspired game: wander a glowing forest, collect good
 
 ## Festival Run
 
-The game includes a title screen, wardrobe, independent music/effects volume controls, and local arcade scores. Play either mode using the GitHub Pages link above.
+The game includes a title screen, wardrobe, independent music/effects volume controls, and local arcade scores. Play either mode using the GitHub Pages link below.
 
 - **Quick Rush** keeps the original one-minute score chase.
 - **Festival Run** has three one-minute stages: Living Forest (20 sparks), Neon Grove (25), and Sunrise Clearing (30). Qualification counts raw spark pickups in that stage. Play the whole minute, then choose an upgrade if you qualify. Scores accumulate across the run.
@@ -21,14 +21,20 @@ For development-only transition checks, run Vite and open `/?rehearsal`. The vis
 
 ## Run
 
+For current project status, architecture, remaining validation and proposed milestones, start with [Project handoff and roadmap](docs/PROJECT-HANDOFF.md).
+
 Use Node.js 24 for development and tests (the GitHub Actions workflow also uses Node 24).
 
 ```sh
-npm install
+git clone https://github.com/ratfinkca/shambhala-side-quest.git
+cd shambhala-side-quest
+npm ci
 npm run dev
 ```
 
 Open the local address printed by Vite (normally http://127.0.0.1:5173).
+
+No environment file, API keys or backend setup is required. Browser saves stay on the device/browser where they were created; cloning the repository does not transfer player scores or settings.
 
 ## Play
 

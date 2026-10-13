@@ -1,6 +1,6 @@
 # Festival Run preview validation — 2026-09-25
 
-Branch: `codex/festival-run`. Main/Pages unchanged; preview is awaiting user playtesting.
+Release update (2026-10-13): the user accepted the preview; PR #2 was merged to `main` as `4fb9fab`, and GitHub Pages deployment succeeded. The live title and Festival Run start were checked without console errors. The evidence below records preview validation; remaining balance/device checks are tracked in [the project handoff](../PROJECT-HANDOFF.md).
 
 ## Automated checks
 
@@ -29,6 +29,6 @@ Branch: `codex/festival-run`. Main/Pages unchanged; preview is awaiting user pla
 
 ## Preview limits and next decision
 
-Spark thresholds remain the proposed 20/25/30. The rehearsal proves transitions, not difficulty balance; a sustained human three-stage playthrough is the acceptance check before merging. No claim is made that these targets are optimally balanced. Reduced-motion paths remain implemented; a device-level reduced-motion visual pass and additional touch-device testing are useful before public release. Audio routing is tested, but subjective mix quality should be judged while playing.
+Spark thresholds shipped at 20/25/30. The rehearsal proves transitions, not difficulty balance. The user accepted the preview, but no detailed human three-stage balance results were recorded here. No claim is made that these targets are optimally balanced. Reduced-motion paths remain implemented; a device-level reduced-motion visual pass and additional touch-device testing remain useful follow-up checks. Audio routing is tested, but subjective mix quality should be judged while playing.
 
-This milestone intentionally has local scores only, starter cosmetics rather than a currency/shop, and no persistent power upgrades. No deployment was performed.
+This milestone intentionally has local scores only, starter cosmetics rather than a currency/shop, and no persistent power upgrades. Deployment is complete as recorded above.

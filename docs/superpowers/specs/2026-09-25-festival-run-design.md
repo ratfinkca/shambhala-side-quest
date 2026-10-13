@@ -1,6 +1,6 @@
 # Festival Run: first playable milestone
 
-Status: proposed design for user review. Implementation has not started.
+Status: approved and shipped in PR #2 (`4fb9fab`). This is the historical design for the first Festival Run milestone. See [the project handoff](../../PROJECT-HANDOFF.md) for current status and proposed next milestones.
 
 ## Intent and scope
 
