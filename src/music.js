@@ -1,3 +1,4 @@
+export const BEAT_MS=500; // 120 BPM; audio and visual bass share this clock.
 export function beatVoices(step, phase, multiplier, flowActive = false) {
   if (phase === 'ended') return [];
   const voices = [];

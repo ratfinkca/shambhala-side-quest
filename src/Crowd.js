@@ -1,4 +1,6 @@
 import { STAGES } from './stages.js';
+import {bassOffset} from './bass-motion.js';
+import {cycleAt} from './festival.js';
 import { applyBump, awardClosePass, createEncounter, crowdPosition, updateEncounter } from './festival.js';
 
 const CLOTHES = [0xb59bdd, 0xdd9d83, 0x87bacc, 0xd09bb7, 0xa1b58a];
@@ -46,6 +48,7 @@ export class Crowd {
       const position = crowdPosition(index, 0, this.stage.crowdAnchors);
       person.node.setPosition(position.x, position.y);
       person.body.setRotation(0);
+      person.body.setPosition(0,0);
       person.ring.setAlpha(0);
       person.encounter = createEncounter();
     });
@@ -58,6 +61,8 @@ export class Crowd {
       const position = crowdPosition(index, elapsed, this.stage.crowdAnchors);
       person.node.setPosition(position.x, position.y);
       person.body.rotation = reducedMotion ? 0 : Math.sin(elapsed * .005 + index) * .14;
+      const shake=bassOffset(position,this.stage.obstacles,elapsed,cycleAt(elapsed).phase,reducedMotion);
+      person.body.setPosition(shake.x,shake.y);
       const distance = Math.hypot(player.x - position.x, player.y - position.y);
       person.ring.setAlpha(distance < 100 ? .7 : 0);
       const encounter = updateEncounter(person.encounter, player, position, elapsed);

@@ -1,13 +1,14 @@
 # Project handoff and roadmap
 
-Updated 2026-10-13. This is the starting point for continuing development on another machine. Historical specs and plans describe shipped work; do not restart their unchecked task lists.
+Updated 2026-10-14. This is the starting point for continuing development on another machine. Historical specs and plans describe shipped work; do not restart their unchecked task lists.
 
 ## Current release
 
 - Public repository: https://github.com/ratfinkca/shambhala-side-quest
 - Live game: https://ratfinkca.github.io/shambhala-side-quest/
-- Festival Run shipped in [PR #2](https://github.com/ratfinkca/shambhala-side-quest/pull/2), merged as `4fb9fab`. The user accepted the preview, Pages deployment succeeded, and the live title/first-stage start were checked without console errors.
+- Festival Run originally shipped in [PR #2](https://github.com/ratfinkca/shambhala-side-quest/pull/2), merged as `4fb9fab`. The user accepted the preview, Pages deployment succeeded, and the live title/first-stage start were checked without console errors.
 - Shipped: responsive arena, Quick Rush, three-stage Festival Run, stage obstacles/mud, four run-only perks, title/wardrobe/settings, procedural audio with independent volume controls, and separate local arcade top tens.
+- Gameplay update: click/tap destinations (no hover or drag steering), organic polygon mud, staggered speaker clusters, circular bass slowdown zones with beat-synced visual vibration, and rare wrapped candy with temporary effects. See [gameplay validation](superpowers/gameplay-update-validation.md) for evidence and limits.
 - Not implemented: currency, shop, permanent cosmetic rewards, endless mode, online rankings or cross-device saves.
 
 ## Start on another machine
@@ -38,11 +39,12 @@ Keep Phaser 3.90, Vite, plain JavaScript modules and static Pages hosting unless
 | Arena, crowd, collisions and Flow | `GameScene.js`, `Crowd.js`, `festival.js`, `geometry.js`, `flow.js` |
 | Shared player/preview art and scenery | `Avatar.js`, `StageRenderer.js`, `wardrobe.js` |
 | Profile validation and persistence | `profile.js`, `storage.js` |
-| Audio synthesis and beat definitions | `audio.js`, `music.js` |
+| Audio synthesis and beat definitions | `audio.js`, `music.js`, `bass-motion.js` |
+| Mystery candy rules and presentation | `mystery.js`, `MysteryRenderer.js` |
 | Responsive sizing and controls | `layout.js`, `input.js` |
 | Development-only transition fixtures | `rehearsal.js` |
 
-For meaningful rule changes, update the Node tests in `tests/`; run `npm test` and `npm run build` before a PR. The last release passed 46 tests. Phaser's bundle-size advisory is known. Browser-check affected flows, viewport sizes, pause/resume, persistence and console output. `/?rehearsal` on the dev server exposes stage qualify/fail fixtures with scoring disabled; it is excluded from production and cannot establish difficulty balance.
+For meaningful rule changes, update the Node tests in `tests/`; run `npm test` and `npm run build` before a PR. The gameplay update passes 55 tests. Phaser's bundle-size advisory is known. Browser-check affected flows, viewport sizes, pause/resume, persistence and console output. `/?rehearsal` on the dev server exposes stage qualify/fail fixtures with scoring disabled; it is excluded from production and cannot establish difficulty balance.
 
 Open a PR against `main`. `.github/workflows/pages.yml` runs install/tests/build on PRs. Merging to `main` runs checks and deploys Pages; verify the deployment and live game before calling a release complete. Keep credentials and private festival data out of this public repository.
 

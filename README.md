@@ -8,7 +8,7 @@ The game includes a title screen, wardrobe, independent music/effects volume con
 
 - **Quick Rush** keeps the original one-minute score chase.
 - **Festival Run** has three one-minute stages: Living Forest (20 sparks), Neon Grove (25), and Sunrise Clearing (30). Qualification counts raw spark pickups in that stage. Play the whole minute, then choose an upgrade if you qualify. Scores accumulate across the run.
-- Later stages add more dancers, solid speaker islands, and marked mud that slows movement. Click around speakers; pointer controls do not automatically find a route around obstacles.
+- Later stages add more dancers, solid speaker islands, and marked mud that slows movement. Click around speakers; pointer controls do not automatically find a route around obstacles. Amber bass zones reduce speed from 50% at the edge to 20% near the cabinets. Mud and bumps never multiply this slowdown. Three existing sparks prefer safe positions near the bins; Flow can pull them from outside the zone. Bass rings, cones, and nearby character/pickup artwork vibrate on the 120 BPM beat, more strongly near speakers and during drops. The outer boundary and collision positions stay fixed. Reduced motion keeps the zone markings and artwork static.
 - Between qualifying stages, choose Disco Boots (+10 base close-pass points), Pool Noodle (one protected bump per stage), Moth Charm (seven-second Flow), or Friendship Bracelet (three-second combo grace). Perks reset for each new run.
 - Three onesies, three hats and three totem choices are free. Cosmetics do not change the hitbox or abilities.
 - Sound defaults on for new players and begins on a Play interaction. An existing mute preference is preserved. Settings offer independent music/effects sliders; opening them during play pauses the game and requires explicit Resume.
@@ -38,13 +38,14 @@ No environment file, API keys or backend setup is required. Browser saves stay o
 
 ## Play
 
-- Move with WASD / arrows, point with your mouse, or tap and drag on the arena.
+- Move with WASD / arrows, or click / tap a destination on the arena. Each click or tap sets a new destination; hovering and dragging do not steer.
 - Pick up glowing sparks. Collect within two seconds to keep your combo.
 - Every five consecutive sparks raises your multiplier, up to 5×.
 - Every fifteen total sparks earns a celebration.
 - Thread through ten dancers: a clean close pass earns 15 points (30 during a drop). The faint ring shows the sweet spot. Bumping someone briefly halves your speed without subtracting points. Pass bonuses have a three-second cooldown per dancer and require you to move.
 - A three-second build leads into drops at 15, 30, and 45 seconds. Each drop lasts four seconds: all rewards double and the crowd moves faster.
 - The optional original 120 BPM synthesized groove follows the round. Higher combos add melody, and drops deepen the bass. Pause, mute, and round end stop the audio immediately.
+- Mystery ground-scores look like wrapped candy with varied colours and patterns. Each round/stage has an 80% chance of one appearance, between 12 and 40 active seconds; it disappears after 10 seconds. Walk over it for a random five-second Sugar Rush (2.5× speed), Dizzy steering wobble, or Wavy Colours effect. No direct points or spark credit, no stacking, and Flow never attracts candy. The footer shows the effect countdown. Pause freezes it; stage changes and round end clear it. Reduced motion uses a static tint instead of moving colour ribbons.
 - Escape or Pause takes a breather. Leaving the window pauses automatically; resume explicitly.
 - Sound is optional. Scores and the sound preference save in this browser when storage is available.
 

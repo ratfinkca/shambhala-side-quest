@@ -9,6 +9,8 @@ import { cycleAt } from './festival.js';
 import { setupResponsiveLayout } from './layout.js';
 import { createRun, startStage, finishStage, chooseUpgrade, upgradeChoices } from './run.js';
 import { STAGES } from './stages.js';
+import { bassFactor } from './geometry.js';
+import {MYSTERY_EFFECTS} from './mystery.js';
 import { createScreenState, transition, createScreens } from './screens.js';
 const $=s=>document.querySelector(s);
 let local;try{local=window.localStorage}catch{}
@@ -28,6 +30,7 @@ function render(){
  const playing=screen.name==='playing';document.body.dataset.mode='game';
  $('.game-frame').dataset.menu=screen.name;$('#game').inert=!playing;
  if(scene)scene.menuAmbient=['title','wardrobe'].includes(screen.name);
+ if(scene&&!playing)scene.mysteryView.waves.setVisible(false);
  for(const el of document.querySelectorAll('.hud,.beat-bar,.game-footer'))el.setAttribute('aria-hidden',String(!playing));
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
  $('#avatar-preview').hidden=!['title','wardrobe'].includes(screen.name);
@@ -99,11 +102,20 @@ game.events.on('round:update',round=>{
  $('#flow-status').textContent=round.flowMs>0&&!round.ended?`✦ FLOW ${Math.ceil(round.flowMs/1000)}s`:'◇ FIND FLOW';$('#flow-status').classList.toggle('active',round.flowMs>0&&!round.ended);
  $('#passes').textContent=round.closePasses;$('#spark-goal').textContent=run?.mode==='festival'?`✦ ${round.pickups} / ${STAGES[run.stageIndex].target} sparks`:`✦ ${round.pickups} sparks`;
  $('#shield-status').textContent=round.shieldsRemaining?'◌ SHIELD READY':'';
- $('#crowd-tip').textContent=round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
+ const mystery=round.mystery;
+ $('#effect-status').hidden=!mystery.effect;
+ $('#effect-status').textContent=mystery.effect?`${MYSTERY_EFFECTS[mystery.effect].name} · ${Math.ceil(mystery.effectMs/1000)}s`:'';
+ const bass=scene?bassFactor(scene.dancer,scene.stage.obstacles):1;
+ $('#crowd-tip').textContent=bass<1&&!round.ended?`Bass pressure · ${Math.round(bass*100)}% speed`:round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
  if(screen.name==='playing')audio.sync(round);
 });
 game.events.on('round:phase',phase=>{if(phase==='build')toast('Feel that? Here comes the drop.',2300);if(phase==='drop'){audio.drop();toast('BASS DROP · DOUBLE VIBES',2500)}});
 game.events.on('round:flow',()=>{audio.celebrate();toast('FLOW STATE · Sparks come to you')});
+game.events.on('round:mystery',effect=>{
+ const info=MYSTERY_EFFECTS[effect];
+ toast(`${info.name} · ${info.hint}`,1800);
+ $('#announcement').textContent=`Mystery candy: ${info.name}. ${info.hint}. Five seconds.`;
+});
 game.events.on('round:closepass',()=>audio.closePass());game.events.on('round:bump',()=>{if(scene.phase==='cruise')toast('Easy does it. Keep your flow.',1100)});
 game.events.on('round:pickup',({multiplier,celebrate})=>{audio.pickup(multiplier);if(celebrate){audio.celebrate();if(scene.phase==='cruise')toast('You found your people.')}});
 game.events.on('round:end',round=>{
