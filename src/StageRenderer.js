@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import {BASS_RADIUS,BASS_CORE,speakerCones} from './geometry.js';
+import {bassBeat} from './bass-motion.js';
 const W=960,H=640;
 export class StageRenderer {
  constructor(scene){this.scene=scene;this.objects=[];}
@@ -6,11 +8,50 @@ export class StageRenderer {
   this.destroy();this.stageName=stage.name;const before=new Set(this.scene.children.list);this.drawForest();
   if(stage.id!=='forest')this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
   this.beams=[this.scene.add.triangle(340,240,0,0,140,420,280,0,stage.palette.accent,.035).setDepth(.2),this.scene.add.triangle(630,240,0,0,140,420,280,0,stage.palette.accent,.035).setDepth(.2)];
-  for(const o of stage.mud){this.scene.add.rectangle(o.x+o.width/2,o.y+o.height/2,o.width,o.height,0x89684f,.7).setStrokeStyle(2,0xcfaa72,.7).setDepth(2);this.scene.add.text(o.x+o.width/2,o.y+o.height/2,'MUD',{fontFamily:'Arial',fontSize:'11px',color:'#ffe0ad'}).setOrigin(.5).setDepth(3);}
-  for(const o of stage.obstacles){const g=this.scene.add.graphics().setDepth(4);g.fillStyle(0x071820).fillRoundedRect(o.x,o.y,o.width,o.height,7);g.lineStyle(2,stage.palette.accent,.65).strokeRoundedRect(o.x,o.y,o.width,o.height,7);g.lineStyle(3,0x6c8990,.7).strokeCircle(o.x+o.width/2,o.y+o.height/2,20).strokeCircle(o.x+o.width/2,o.y+o.height/2,9);}
+  for(const o of stage.mud){
+   const g=this.scene.add.graphics().setDepth(2),cx=o.x+o.width/2,cy=o.y+o.height/2;
+   g.fillStyle(0x89684f,.8).fillPoints(o.points,true);
+   g.lineStyle(2,0xcfaa72,.7).strokePoints(o.points,true);
+   const inner=o.points.map(p=>({x:cx+(p.x-cx)*.7,y:cy+(p.y-cy)*.65}));
+   g.fillStyle(0x594b3c,.45).fillPoints(inner,true);
+   g.lineStyle(1,0xe1bd88,.3);
+   for(const [dx,dy,w] of [[-22,-13,15],[12,15,19],[25,-9,10]])g.lineBetween(cx+dx,cy+dy,cx+dx+w,cy+dy-2);
+  }
+  this.bassPulses=[];this.speakerCones=[];
+  for(const o of stage.obstacles){
+   for(const {x,y} of speakerCones(o)){
+    const zone=this.scene.add.graphics().setDepth(1);
+    zone.fillStyle(0xf0b96b,.018).fillCircle(x,y,BASS_RADIUS);
+    zone.lineStyle(1,0xf0c986,.18).strokeCircle(x,y,BASS_RADIUS);
+    zone.lineStyle(1,0xf0c986,.07).strokeCircle(x,y,BASS_CORE);
+    const pulse=this.scene.add.graphics().setPosition(x,y).setDepth(1.1);
+    pulse.fillStyle(0xefac68,.025).fillCircle(0,0,BASS_CORE);
+    pulse.lineStyle(1,0xf0c986,.14).strokeCircle(0,0,BASS_CORE);
+    pulse.lineStyle(1,0xf0c986,.07).strokeCircle(0,0,80);
+    this.bassPulses.push(pulse);
+   }
+   const g=this.scene.add.graphics().setDepth(4);
+   g.fillStyle(0x071820).fillRoundedRect(o.x,o.y,o.width,o.height,4);
+   g.lineStyle(2,stage.palette.accent,.65).strokeRoundedRect(o.x,o.y,o.width,o.height,4);
+   const bins=o.width>=90?2:1,binWidth=o.width/bins;
+   for(let i=0;i<bins;i++){
+    const {x:cx,y:cy,radius:r}=speakerCones(o)[i];
+    g.lineStyle(2,0x6c8990,.7).strokeCircle(cx,cy,r);
+    const cone=this.scene.add.graphics().setPosition(cx,cy).setDepth(4.1);
+    cone.lineStyle(2,0x9cb9bb,.8).strokeCircle(0,0,r*.65).strokeCircle(0,0,r*.3);
+    this.speakerCones.push(cone);
+    g.fillStyle(0x344b54).fillRoundedRect(cx-binWidth*.28,o.y+8,binWidth*.56,5,2);
+    if(i)g.lineStyle(1,0x6c8990,.4).lineBetween(o.x+i*binWidth,o.y+4,o.x+i*binWidth,o.y+o.height-4);
+   }
+  }
   this.objects=this.scene.children.list.filter(o=>!before.has(o));
  }
- update(elapsed,phase,reduced){this.beams?.forEach((b,i)=>{b.rotation=reduced?0:Math.sin(elapsed*.0004+i)*.18;b.setAlpha(reduced?.035:phase==='drop'?.12:.05)});}
+ update(elapsed,phase,reduced){
+  this.beams?.forEach((b,i)=>{b.rotation=reduced?0:Math.sin(elapsed*.0004+i)*.18;b.setAlpha(reduced?.035:phase==='drop'?.12:.05)});
+  const pulse=bassBeat(elapsed),strength=phase==='drop'?1.5:1;
+  this.bassPulses?.forEach(p=>{p.setAlpha(reduced?1:.35+pulse*.65);p.setScale(reduced?1:1+pulse*.09*strength)});
+  this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
+ }
  destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];}
   drawForest() {
     const g = this.scene.add.graphics();

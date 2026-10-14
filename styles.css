@@ -69,3 +69,5 @@ body[data-mode="game"] .intro,body[data-mode="game"] .page-footer{display:none}
 }
 @media(max-height:500px){#avatar-preview{display:none!important}.screen-layer .menu-card{margin-right:0!important}}
 .game-frame:not([data-menu="playing"]) .hud,.game-frame:not([data-menu="playing"]) .beat-bar,.game-frame:not([data-menu="playing"]) .game-footer{visibility:hidden}
+
+.game-footer{gap:6px}#effect-status{color:#f1d0ef;font-weight:700;font-size:9px;letter-spacing:0;white-space:nowrap}

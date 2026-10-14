@@ -4,6 +4,36 @@ import {moveInArena,isOpen,findSpawn,movementFactor} from '../src/geometry.js';
 import {STAGES} from '../src/stages.js';
 import {crowdPosition,createEncounter,updateEncounter,applyBump} from '../src/festival.js';
 import {createRound} from '../src/game.js';
+test('bass slows progressively, never stacks with mud or bumps, and allows escape',()=>{
+ const speakers=[{x:100,y:100,width:60,height:60}],mud=[{x:0,y:0,width:300,height:300}];
+ assert.equal(movementFactor({x:181,y:134},[],0,speakers),.2);
+ assert.equal(movementFactor({x:240,y:134},[],0,speakers),.5);
+ assert.equal(movementFactor({x:241,y:134},[],0,speakers),1);
+ assert.equal(movementFactor({x:210,y:214},[],0,speakers),1);
+ assert.equal(movementFactor({x:130,y:244},[],0,speakers),.5);
+ assert.equal(movementFactor({x:181,y:134},mud,600,[...speakers,...speakers]),.2);
+ assert.ok(movementFactor({x:210,y:134},[],0,speakers)>.2);
+ const p={x:174,y:134};
+ for(let i=0;i<200;i++)moveInArena(p,{x:1,y:0},16*movementFactor(p,[],0,speakers),{obstacles:speakers});
+ assert.ok(p.x>240);assert.equal(movementFactor(p,[],0,speakers),1);
+});
+test('bass-biased sparks stay accessible near speakers and fall back when occupied',()=>{
+ const stage={obstacles:[{x:300,y:300,width:60,height:60}],spawn:{x:480,y:410}};
+ const p=findSpawn(stage,()=>.5,[],true);
+ assert.ok(isOpen(p,24,stage.obstacles));
+ assert.ok(movementFactor(p,[],0,stage.obstacles)<1);
+ const blocked=findSpawn(stage,()=>.5,[{x:330,y:330,radius:160}],true);
+ assert.ok(Math.hypot(blocked.x-330,blocked.y-330)>160);
+});
+test('mud follows its visible polygon, including edges and concave gaps, without stacking slowdown',()=>{
+ const mud=[{points:[{x:0,y:0},{x:20,y:0},{x:20,y:8},{x:8,y:8},{x:8,y:20},{x:0,y:20}]}];
+ for(const p of [{x:4,y:4},{x:16,y:4},{x:4,y:16},{x:8,y:12},{x:0,y:0}]){
+  assert.equal(movementFactor(p,mud,0),.5);
+  assert.equal(movementFactor(p,mud,600),.5);
+ }
+ for(const p of [{x:16,y:16},{x:-1,y:4},{x:21,y:4}])assert.equal(movementFactor(p,mud,0),1);
+ assert.equal(movementFactor({x:16,y:16},mud,600),.5);
+});
 test('wall collision slides and long frames cannot tunnel or escape bounds',()=>{
  const obstacles=[{x:100,y:50,width:30,height:200}],p={x:80,y:100};
  for(let i=0;i<30;i++)moveInArena(p,{x:1,y:1},1000,{width:300,height:300,obstacles,speed:300});

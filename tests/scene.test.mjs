@@ -7,10 +7,14 @@ registerHooks({resolve(s,c,next){return s==='phaser'?{url:'test:phaser',shortCir
 const {GameScene}=await import('../src/GameScene.js');
 test('scene start configures stage, outfit, rules and resets transient state',()=>{
  const scene=new GameScene(),calls=[];
+ scene.mysteryView={reset(){calls.push(['mysteryReset'])}};
  const node=new Proxy({},{get:(_,key)=> (...args)=>{calls.push([key,...args]);return node}});
  Object.assign(scene,{background:{show(s){calls.push(['stage',s.id])},fireflies:[]},crowd:{configure(s){calls.push(['crowd',s.crowdAnchors.length])},reset(){}},avatar:{art:node},clearInput(){},effects:{clear(){}},tweens:{paused:true,killAll(){},resumeAll(){this.paused=false}},dancer:node,flowPickup:node,dropWash:node,sparks:[],game:{events:{emit(){}}}});
  scene.startRound({stage:STAGES[1],rules:rulesFor(['moth','noodle']),outfit:{onesie:'moth',hat:'wizard',totem:'star'}});
  assert.equal(scene.tweens.paused,false);assert.equal(scene.stage.id,'neon');assert.equal(scene.round.rules.flowDurationMs,7000);assert.equal(scene.round.shieldsRemaining,1);assert.equal(scene.round.remainingMs,60000);assert.equal(scene.running,true);
  assert.ok(calls.some(c=>c[0]==='stage'&&c[1]==='neon'));assert.ok(calls.some(c=>c[0]==='crowd'&&c[1]===14));assert.ok(calls.some(c=>c[0]==='fillTriangle'));
+ scene.round.mystery.effect='speed';scene.round.mystery.effectMs=4000;
  scene.startRound();assert.equal(scene.stage.id,'forest');assert.equal(scene.round.shieldsRemaining,0);
+ assert.equal(scene.round.mystery.effect,null);assert.equal(scene.round.mystery.effectMs,0);
+ assert.equal(calls.filter(c=>c[0]==='mysteryReset').length,2);
 });

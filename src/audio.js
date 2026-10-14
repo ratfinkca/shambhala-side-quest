@@ -1,5 +1,5 @@
 import { cycleAt } from './festival.js';
-import { beatVoices } from './music.js';
+import { beatVoices, BEAT_MS } from './music.js';
 
 export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)()) {
   let context, musicBus, effectsBus, enabled = false, lastStep = -1;
@@ -45,7 +45,7 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
     sync(round) {
       if (!enabled || !context || context.state !== 'running' || round.ended) return;
       const elapsed = 60000 - round.remainingMs;
-      const step = Math.floor(elapsed / 250);
+      const step = Math.floor(elapsed / (BEAT_MS/2));
       if (step === lastStep) return;
       lastStep = step;
       for (const voice of beatVoices(step, cycleAt(elapsed).phase, round.multiplier, round.flowMs > 0)) {
