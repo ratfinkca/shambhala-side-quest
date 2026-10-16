@@ -61,3 +61,12 @@ test('noodle protects a whole contact, not just one frame, and cannot earn a pas
  applyBump(round,e,updateEncounter(e,{x:200,y:100},d,216));
  applyBump(round,e,updateEncounter(e,{x:100,y:100},d,232));assert.equal(round.slowedMs,600);
 });
+
+test('bass override preserves mud and bump penalties',()=>{
+ const speakers=[{x:100,y:100,width:60,height:60}],p={x:130,y:134};
+ assert.equal(movementFactor(p,[],0,speakers,1),1);
+ assert.equal(movementFactor(p,[],0,speakers),.2);
+ assert.equal(movementFactor(p,[],100,speakers,1),.5);
+ assert.equal(movementFactor(p,[{x:100,y:100,width:60,height:60}],0,speakers,1),.5);
+ assert.equal(movementFactor({x:500,y:500},[],0,speakers,1),1);
+});

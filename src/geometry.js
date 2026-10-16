@@ -23,9 +23,9 @@ export function bassFactor(p,speakers=[]){
  }
  return factor;
 }
-export function movementFactor(p,mud,slowedMs,speakers=[]){
+export function movementFactor(p,mud,slowedMs,speakers=[],bassOverride=null){
  const terrain=slowedMs>0||mud.some(o=>o.points?pointInPolygon(p,o.points):!isOpen(p,0,[o]))?.5:1;
- return Math.min(terrain,bassFactor(p,speakers));
+ return Math.min(terrain,bassOverride??bassFactor(p,speakers));
 }
 export function moveInArena(p,d,dt,{width=960,height=640,obstacles=[],speed=300}={}){
  const length=Math.hypot(d.x,d.y);if(!length)return;

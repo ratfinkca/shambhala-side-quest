@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
 import '../styles.css';
+import './themes.css';
+import {resolveTheme} from './themes.js';
+import {applyTheme} from './theme-view.js';
 import { GameScene } from './GameScene.js';
 import { createAvatar, setOutfit } from './Avatar.js';
 import { createAudio } from './audio.js';
@@ -9,6 +12,7 @@ import { cycleAt } from './festival.js';
 import { setupResponsiveLayout } from './layout.js';
 import { createRun, startStage, finishStage, chooseUpgrade, upgradeChoices } from './run.js';
 import { STAGES } from './stages.js';
+import {bassMovementFactor} from './bass-head.js';
 import { bassFactor } from './geometry.js';
 import {MYSTERY_EFFECTS} from './mystery.js';
 import { createScreenState, transition, createScreens } from './screens.js';
@@ -16,6 +20,7 @@ const $=s=>document.querySelector(s);
 let local;try{local=window.localStorage}catch{}
 const rehearsal=import.meta.env.DEV && new URLSearchParams(location.search).has('rehearsal');
 const saved=createStorage(local),audio=createAudio();audio.setVolumes(saved.profile.audio);
+let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,previewAvatar,previewReady=false;
 const fmt=n=>String(n).padStart(3,'0');
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:960,height:640,backgroundColor:'#102430',scene:GameScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},audio:{noAudio:true},banner:false});
@@ -32,10 +37,12 @@ function render(){
  if(scene)scene.menuAmbient=['title','wardrobe'].includes(screen.name);
  if(scene&&!playing)scene.mysteryView.waves.setVisible(false);
  for(const el of document.querySelectorAll('.hud,.beat-bar,.game-footer'))el.setAttribute('aria-hidden',String(!playing));
+ $('#bass-head').hidden=!playing||!scene?.stage.obstacles.length;
+ $('#bass-head').disabled=!playing||!scene||scene.round.bass.chargeMs<10000||scene.round.bass.activeMs>0;
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
- $('#avatar-preview').hidden=!['title','wardrobe'].includes(screen.name);
+ $('#avatar-preview').hidden=screen.name!=='wardrobe';
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
- menus.show(screen.name,{profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ menus.show(screen.name,{themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage;$('#initials').value=run.initials;$('#initials').disabled=true;}
  if(rehearsal&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
  if(screen.name==='title'&&!scene)$('#menu-content').querySelectorAll('button').forEach(b=>b.disabled=true);
@@ -43,12 +50,12 @@ function render(){
 }
 function go(type,extra={}){const next=transition(screen,{type,...extra});if(next===screen)return false;screen=next;clearToast();render();return true}
 function pause(type='PAUSE'){if(screen.name!=='playing')return;scene.pauseRound();audio.stop();go(type)}
-function newRun(mode){run=createRun(mode,crypto.randomUUID());summary=null;resultSnapshot=null;}
+function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);summary=null;resultSnapshot=null;}
 function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
- go('START');scene.startRound({...config,outfit:saved.profile.outfit});
+ go('START');scene.startRound({...config,outfit:saved.profile.outfit});refreshLayout();
  $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}/3 · ${config.stage.name.toUpperCase()}`;
 }
 function action(name,value){
@@ -59,6 +66,16 @@ function action(name,value){
   case 'resume':if(screen.name!=='paused')return;audio.setEnabled(saved.sound);scene.resumeRound();go('RESUME');break;
   case 'settings':if(screen.name==='playing'){scene.pauseRound();audio.stop()}go('SETTINGS');break;
   case 'mute':saved.saveSound(!saved.sound);audio.setEnabled(saved.sound);render();break;
+  case 'style':go('STYLE');break;
+  case 'theme':{
+   if(screen.name!=='style')return;
+   const result=saved.saveTheme(value);if(!result.accepted)return;
+   if(value!=='surprise')activeTheme=applyTheme(value);
+   render();
+   requestAnimationFrame(()=>document.querySelector(`[data-action=theme][data-value="${value}"]`)?.focus({preventScroll:true}));
+   $('#style-feedback').textContent=result.persisted?'Your festival style is saved.':'Style selected for this session. Browser storage is unavailable.';
+   break;
+  }
   case 'wardrobe':go('WARDROBE');break;
   case 'scores':go('SCORES');break;
   case 'back':go('BACK');break;
@@ -81,6 +98,7 @@ function action(name,value){
 function volume(key,value){const settings={...saved.profile.audio,[key]:value};saved.saveAudio(settings);audio.setVolumes(settings);audio.setEnabled(settings.enabled);$(`#value-${key}`).textContent=`${Math.round(value*100)}%`;if(key==='effects')audio.pickup(1)}
 function outfit(key,value){saved.saveOutfit({...saved.profile.outfit,[key]:value});if(previewAvatar)setOutfit(previewAvatar,saved.profile.outfit)}
 game.events.on('forest:ready',value=>{scene=value;render()});
+$('#bass-head').addEventListener('click',()=>{if(screen.name==='playing'){scene.activateBassHead();$('#game').focus({preventScroll:true});}});
 $('#pause').addEventListener('click',()=>pause());$('#settings').addEventListener('click',()=>action('settings'));
 $('#sound').addEventListener('click',()=>{saved.saveSound(!saved.sound);audio.setEnabled(saved.sound);soundLabel();if(screen.name==='settings')render()});
 const fullscreen=$('#fullscreen');fullscreen.hidden=!document.fullscreenEnabled;
@@ -88,7 +106,8 @@ fullscreen.addEventListener('click',async()=>{try{if(document.fullscreenElement)
 document.addEventListener('fullscreenchange',()=>{fullscreen.textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen'});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause('HIDDEN')});window.addEventListener('blur',()=>pause('HIDDEN'));
 window.addEventListener('keydown',e=>{
- if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores'].includes(screen.name))action('back');else if(screen.name==='confirmExit')action('cancel')}
+ if(e.key.toLowerCase()==='b'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&screen.name==='playing'){scene.activateBassHead();e.preventDefault();}
+ if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores','style'].includes(screen.name))action('back');else if(screen.name==='confirmExit')action('cancel')}
  if(preventGameKeyDefault(e.key,screen.name==='playing',document.activeElement===$('#game')))e.preventDefault();
 });
 game.events.on('round:update',round=>{
@@ -105,11 +124,18 @@ game.events.on('round:update',round=>{
  const mystery=round.mystery;
  $('#effect-status').hidden=!mystery.effect;
  $('#effect-status').textContent=mystery.effect?`${MYSTERY_EFFECTS[mystery.effect].name} · ${Math.ceil(mystery.effectMs/1000)}s`:'';
+ const ability=round.bass,button=$('#bass-head');
+ button.hidden=screen.name!=='playing'||!scene?.stage.obstacles.length;
+ button.disabled=screen.name!=='playing'||round.ended||ability.activeMs>0||ability.chargeMs<10000;
+ button.textContent=ability.activeMs>0?`Bass Head · ${Math.ceil(ability.activeMs/1000)}s`:ability.chargeMs>=10000?'Bass Head · Activate [B]':`Bass Head · ${Math.floor(ability.chargeMs/100)}%`;
+ button.style.setProperty('--bass-charge',`${ability.chargeMs/100}%`);
+ button.classList.toggle('ready',ability.chargeMs>=10000);
  const bass=scene?bassFactor(scene.dancer,scene.stage.obstacles):1;
- $('#crowd-tip').textContent=bass<1&&!round.ended?`Bass pressure · ${Math.round(bass*100)}% speed`:round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
+ $('#crowd-tip').textContent=bass<1&&!round.ended?`Bass pressure · ${Math.round(bassMovementFactor(round.bass,bass)*100)}% speed`:round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
  if(screen.name==='playing')audio.sync(round);
 });
 game.events.on('round:phase',phase=>{if(phase==='build')toast('Feel that? Here comes the drop.',2300);if(phase==='drop'){audio.drop();toast('BASS DROP · DOUBLE VIBES',2500)}});
+game.events.on('round:bass',()=>{toast('BASS HEAD · Bass immunity + 2× zone sparks');$('#announcement').textContent='Bass Head active for six seconds.';});
 game.events.on('round:flow',()=>{audio.celebrate();toast('FLOW STATE · Sparks come to you')});
 game.events.on('round:mystery',effect=>{
  const info=MYSTERY_EFFECTS[effect];

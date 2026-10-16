@@ -48,18 +48,18 @@ For meaningful rule changes, update the Node tests in `tests/`; run `npm test` a
 
 Open a PR against `main`. `.github/workflows/pages.yml` runs install/tests/build on PRs. Merging to `main` runs checks and deploys Pages; verify the deployment and live game before calling a release complete. Keep credentials and private festival data out of this public repository.
 
-## Proposed next milestones
+## Approved direction — 2026-10-14
 
-This sequence is a recommendation, not an approved implementation specification or dated commitment. Agree on scope before building a new milestone.
+The user approved prioritizing features, atmosphere and rewards over further candy timing/bass escape tuning. Implement and preview these as separate small releases:
 
-| Order | Milestone | Completion criteria |
-| --- | --- | --- |
-| 1 | Balance and device polish | Play normal three-stage runs with keyboard and real touch input; record spark totals, failed stages and collision friction. Check reduced-motion mode and subjective audio mix. Adjust targets/geometry only from evidence; keep Quick Rush working. |
-| 2 | Persistent cosmetic rewards | Define how runs earn cosmetic rewards, then add an understandable unlock/store flow and versioned save migration. Existing starter outfits stay available; permanent rewards remain cosmetic so scores remain comparable. Currency name, prices and earning rates need design approval. |
-| 3 | More replay variety | Design additional stage layouts, hazards and meaningful run perk choices; consider endless mode after the finite run is balanced. Establish difficulty scaling and scoring rules before implementation. |
-| 4 | Shared arcade leaderboard | Choose backend/hosting, submission validation, abuse controls, initials moderation and privacy/cost expectations. Define how rule versions affect rankings. Current local boards remain usable if the service is unavailable. |
+1. **Bass Head special and perk progression.** Revised with the user: Bass Head is charged by ten accumulated seconds in bass, spent manually (button/B) for six seconds of bass immunity and double zone-spark points. Exposure builds over six seconds; leaving restores speed immediately and cools exposure over three seconds. Unspent charge carries between stages; no charging while active. Offer all available unowned perks, with persistent rave-experience unlocks deferred to the progression milestone. Endless-mode perk limits remain undecided. Local implementation is pending playtest/deployment.
+2. **Visual identity.** Explore a handmade psychedelic forest-festival poster direction: playful display typography, readable score numbers, illustrated perk cards, festival signage menus, souvenir-ticket results and a dressing-tent wardrobe. Review a title/HUD/perk concept before applying it throughout. Verify phone readability and reduced motion.
+3. **Music and concert lighting.** Prototype one stage's richer original arrangement and synchronized lighting, then extend to Living Forest (warm/spacious), Neon Grove (heavier/rhythmic) and Sunrise (bright/uplifting). Shared timing drives builds, drops, beams and speaker ripples. Decide whether sampled instruments/authored loops are needed after listening to the prototype. Verify pause, mute, reduced motion and phone performance.
+4. **Wardrobe and achievement unlocks.** Proposed first collection: three onesies, three hats and four totems. Explore disco mushroom, moon, jellyfish lantern and speaker-stack designs. Start with achievement rewards, locked previews, progress and post-run reveals. Preserve starter outfits and existing saves; cosmetics have no permanent power advantage. Final artwork and achievement thresholds need design refinement.
 
-Suggested next task: conduct and document milestone 1 playtests, then propose a small evidence-based balance/polish change. Current raw spark qualification targets are 20/25/30, with crowd counts 10/14/18. Qualifying early does not end a stage; every stage runs for 60 active seconds. Rehearsal success is not proof these targets are balanced.
+Input labels can accompany a future results update. Currency/shop, more stages, endless mode, online boards and cross-device saves remain deferred. Candy timing and general bass escape tuning can wait; test correctness and regressions during each feature release. The existing stage targets remain 20/25/30.
+
+This is the approved sequence, not a final implementation specification for every subsystem. Refine each larger milestone with a focused design and playable preview.
 
 ## Supporting history
 
@@ -67,3 +67,21 @@ Suggested next task: conduct and document milestone 1 playtests, then propose a 
 - [Historical implementation plan](superpowers/plans/2026-09-25-festival-run.md): development breakdown, not a current backlog.
 - [Validation evidence and limits](superpowers/festival-run-validation.md): automated/manual coverage and remaining device/balance checks.
 - [README](../README.md): controls, mechanics, commands and publishing workflow.
+
+## Forest Freakout local implementation — 2026-10-16
+
+Built on `codex/forest-freakout`, not deployed: original title and four perk illustrations, forest menu backdrop, locally bundled fonts, themed HUD/supporting screens, and saved Festival Style preference. Surprise resolves once per new run; only Forest is complete. Moonlit and Neon remain labelled upcoming previews. Earlier uncommitted Bass Head work is preserved.
+
+65 automated tests and production build pass. Browser checks cover desktop title/style/perks/HUD and stage/pause/settings/results/replay, phone title/perks, and short-landscape title/Quick Rush. See [visual QA](../design-qa.md) for evidence and limits. Next visual work: implement Moonlit and Neon using the registry, then richer music/reactive lighting. Candy feel tuning stays deferred.
+
+## Moonlit Mycelium local implementation — 2026-10-16
+
+Moonlit is now a completed selectable theme alongside Forest Freakout. It includes its own title, backdrop, four perk illustrations, masthead moth, midnight palette, silver borders, serif headings and readable sans-serif HUD numbers. Shared surfaces now use theme tokens; title preloading follows the active theme. Surprise chooses from both completed styles once per run. Neon remains the sole upcoming preview. Existing save and gameplay behavior is preserved.
+
+66 tests pass; production build and desktop/portrait/landscape browser checks pass. Fixed-theme persistence, two-way switching, Surprise, stage/perk transitions, pause/settings, results/replay and Quick Rush were checked. Full evidence/limits are in `design-qa.md`. Still local and uncommitted with the prior Forest/Bass Head work; no release performed. Next theme: Neon Field Trip, then richer music/reactive concert lighting.
+
+## Three-theme milestone complete locally — 2026-10-16
+
+Neon Field Trip now joins Forest Freakout and Moonlit Mycelium as a selectable completed theme. New title, backdrop, four perk illustrations and masthead moth; acid lime/hot pink sticker cards and purple HUD/menu palette. All three saved choices switch immediately, and Surprise samples all three once per new run. No gameplay, scoring or audio changes in this pass.
+
+68 tests, production build and browser checks pass; independent review found no issues. Visual evidence and coverage limits in `design-qa.md`. All theme/Bass Head work remains local on the existing feature branch, not deployed. Next agreed feature track: richer music and reactive concert lighting, then wardrobe/totem expansion and unlocks; candy feel tuning remains deferred.
