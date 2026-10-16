@@ -71,3 +71,10 @@ body[data-mode="game"] .intro,body[data-mode="game"] .page-footer{display:none}
 .game-frame:not([data-menu="playing"]) .hud,.game-frame:not([data-menu="playing"]) .beat-bar,.game-frame:not([data-menu="playing"]) .game-footer{visibility:hidden}
 
 .game-footer{gap:6px}#effect-status{color:#f1d0ef;font-weight:700;font-size:9px;letter-spacing:0;white-space:nowrap}
+
+#bass-head { min-height:44px; flex-shrink:0; font-size:11px; }
+#bass-head.ready { border-color:#ffcc77; color:#ffcc77; }
+.game-footer { flex-wrap:wrap; gap:8px; }
+
+#bass-head { background:linear-gradient(to right, #ffcc7726 var(--bass-charge,0%), transparent var(--bass-charge,0%)); }
+.game-footer { display:flex; height:auto; min-height:30px; align-items:center; }

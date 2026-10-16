@@ -15,7 +15,9 @@ export function setupResponsiveLayout(game) {
     const width = shell.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     const height = shell.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - outside.reduce((sum, el) => sum + el.getBoundingClientRect().height, 0);
     const chrome = inside.reduce((sum, el) => sum + el.getBoundingClientRect().height, 0);
-    frame.style.width = `${fitGameWidth(width, height, chrome)}px`;
+    const menu=frame.dataset.menu!=='playing';
+    frame.style.height=menu?`${Math.max(180,height)}px`:'';
+    frame.style.width = `${menu?width:fitGameWidth(width, height, chrome)}px`;
     game.scale.refresh();
   };
   const schedule = () => { if (!pending) { pending = true; requestAnimationFrame(resize); } };

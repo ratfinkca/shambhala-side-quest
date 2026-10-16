@@ -1,3 +1,4 @@
+import {createBass,advanceBass,activateBass,bassMovementFactor} from './bass-head.js';
 import Phaser from 'phaser';
 import { createRound, advanceRound, collect } from './game.js';
 import { cycleAt } from './festival.js';
@@ -5,7 +6,7 @@ import { availableFlow, activateFlow, attractSpark } from './flow.js';
 import { StageRenderer } from './StageRenderer.js';
 import { createAvatar, setOutfit } from './Avatar.js';
 import { STAGES } from './stages.js';
-import { moveInArena, findSpawn, movementFactor, isOpen } from './geometry.js';
+import { moveInArena, findSpawn, movementFactor, bassFactor, isOpen } from './geometry.js';
 import { Crowd } from './Crowd.js';
 import {MysteryRenderer} from './MysteryRenderer.js';
 import {collectMystery,findCandySpawn,mysteryDirection,mysterySpeed} from './mystery.js';
@@ -68,11 +69,11 @@ export class GameScene extends Phaser.Scene {
     const pos=findSpawn(this.stage,Math.random,avoid,spark.preferBass);spark.setPosition(pos.x,pos.y);spark.art.setPosition(0,0);
   }
   clearInput() { this.target = null; this.input.keyboard.resetKeys(); }
-  startRound({stage = STAGES[0], rules = {}, outfit} = {}) {
+  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0} = {}) {
     this.stage = stage;
     this.background.show(stage); this.fireflies = this.background.fireflies;
     this.crowd.configure(stage); setOutfit(this.avatar, outfit);
-    this.round = createRound(rules); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
+    this.round = createRound(rules); this.round.bass=createBass(bassChargeMs); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
     this.mysteryView.reset(this.round.mystery.wrapper);
     this.avatar.art.setPosition(0,0);
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
@@ -84,6 +85,7 @@ export class GameScene extends Phaser.Scene {
     this.running = true; this.lastTrail = 0;
     this.game.events.emit('round:update', this.round);
   }
+  activateBassHead(){if(!this.running||!activateBass(this.round))return false;this.game.events.emit('round:bass');return true;}
   pauseRound() { this.running = false; this.clearInput(); this.tweens.pauseAll(); }
   resumeRound() { if (!this.round.ended) { this.running = true; this.clearInput(); this.tweens.resumeAll(); } }
   effect(x,y,color,points,celebrate,label) {
@@ -104,6 +106,7 @@ export class GameScene extends Phaser.Scene {
       this.halo.setScale(1+Math.sin(time*.004)*.08);
     }
     if (!this.running) { if(this.menuAmbient)this.background.update(time,'cruise',this.reducedMotion);return; }
+    advanceBass(this.round,Math.min(delta,this.round.remainingMs),bassFactor(this.dancer,this.stage.obstacles)<1);
     advanceRound(this.round, delta);
     if (this.round.ended) { this.running=false; this.clearInput(); this.mysteryView.update(this.round.mystery,this.reducedMotion); this.game.events.emit('round:update',this.round); this.game.events.emit('round:end',this.round); return; }
     const cycle = cycleAt(60000 - this.round.remainingMs);
@@ -113,7 +116,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.background.update(60000-this.round.remainingMs,cycle.phase,this.reducedMotion);
     this.dropWash.setAlpha(this.reducedMotion ? 0 : cycle.phase === 'drop' ? .045 : 0);
-    const movementDelta = Math.min(delta, 50) * movementFactor(this.dancer,this.stage.mud,this.round.slowedMs,this.stage.obstacles);
+    const movementDelta = Math.min(delta, 50) * movementFactor(this.dancer,this.stage.mud,this.round.slowedMs,this.stage.obstacles,bassMovementFactor(this.round.bass,bassFactor(this.dancer,this.stage.obstacles)));
     const speed=mysterySpeed(this.round.mystery);
     const k=this.keys;
     let direction={x:Number(k.D.isDown||k.RIGHT.isDown)-Number(k.A.isDown||k.LEFT.isDown),y:Number(k.S.isDown||k.DOWN.isDown)-Number(k.W.isDown||k.UP.isDown)};
@@ -155,13 +158,14 @@ export class GameScene extends Phaser.Scene {
       this.game.events.emit('round:flow');
     }
     this.halo.setRadius(this.round.flowMs > 0 ? 42 : 26);
+    this.halo.setStrokeStyle(this.round.bass.activeMs>0 && bassFactor(this.dancer,this.stage.obstacles)<1 ? 2 : 0,0xffcc77,.8);
     this.halo.setFillStyle(this.round.flowMs > 0 ? 0xffd886 : this.round.slowedMs > 0 ? 0xf2b59b : cycle.phase === 'drop' ? 0xe5ff8c : 0xcfffad, this.round.flowMs > 0 ? .2 : this.round.slowedMs > 0 ? .2 : .09);
     this.sparks.forEach(spark => {
       if (this.round.flowMs > 0) { const old={x:spark.x,y:spark.y};attractSpark(spark,this.dancer,delta);if(!isOpen(spark,8,this.stage.obstacles))spark.setPosition(old.x,old.y); }
       spark.setAlpha(cycle.phase === 'drop' ? 1 : .85);
       if (this.reducedMotion) spark.setScale(cycle.phase === 'drop' ? 1.15 : 1);
     });
-    for(const spark of this.sparks){if(Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,spark.x,spark.y)<25){const result=collect(this.round);this.effect(spark.x,spark.y,spark.color,result.points,result.celebrate);this.game.events.emit('round:pickup',{...result,multiplier:this.round.multiplier,pickups:this.round.pickups});this.placeSpark(spark);}}
+    for(const spark of this.sparks){if(Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,spark.x,spark.y)<25){const result=collect(this.round,{playerInBass:bassFactor(this.dancer,this.stage.obstacles)<1,sparkInBass:bassFactor(spark,this.stage.obstacles)<1});this.effect(spark.x,spark.y,spark.color,result.points,result.celebrate);this.game.events.emit('round:pickup',{...result,multiplier:this.round.multiplier,pickups:this.round.pickups});this.placeSpark(spark);}}
     const elapsed=60000-this.round.remainingMs;
     const shakeArt=(position,art)=>{const offset=bassOffset(position,this.stage.obstacles,elapsed,cycle.phase,this.reducedMotion);art.setPosition(offset.x,offset.y)};
     shakeArt(this.dancer,this.avatar.art);

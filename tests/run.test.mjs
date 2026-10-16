@@ -10,9 +10,9 @@ test('stage thresholds, populations and exactly-once transition guards',()=>{
  assert.deepEqual(STAGES.map(s=>s.target),[20,25,30]);assert.deepEqual(STAGES.map(s=>s.crowdAnchors.length),[10,14,18]);
  const run=createRun('festival','one');assert.ok(startStage(run));assert.equal(startStage(run),null);
  assert.equal(finishStage(run,{...completed(20),ended:false,remainingMs:1}),null);
- assert.ok(finishStage(run,completed(20)).qualified);assert.equal(run.totalScore,100);assert.equal(finishStage(run,completed(20)),null);
+ assert.ok(finishStage(run,completed(20),()=>.999).qualified);assert.equal(run.totalScore,100);assert.equal(finishStage(run,completed(20)),null);
  assert.equal(chooseUpgrade(run,'bad'),false);assert.equal(chooseUpgrade(run,'moth'),true);assert.equal(chooseUpgrade(run,'boots'),false);
- assert.equal(run.stageIndex,1);assert.equal(upgradeChoices(run).length,3);assert.ok(!upgradeChoices(run).includes('moth'));
+ assert.equal(run.stageIndex,1);assert.deepEqual(upgradeChoices(run),[]);
  startStage(run);finishStage(run,completed(25));chooseUpgrade(run,upgradeChoices(run)[0]);startStage(run);finishStage(run,completed(30));
  assert.equal(run.status,'ended');assert.equal(run.stagesCleared,3);assert.equal(run.totalScore,300);
 });
