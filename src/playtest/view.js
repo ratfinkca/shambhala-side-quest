@@ -1,0 +1,5 @@
+export function renderPlaytestConsent(choice,available) {
+  if(!available)return '<p class="menu-footnote">Playtest sharing is not enabled in this build. No playtest data is sent.</p>';
+  const button=(action,text)=>`<button type="button" class="menu-button" data-action="playtest-${action}">${text}</button>`;
+  return `<section aria-label="Optional playtest sharing"><h3>Help shape the next night?</h3><p class="menu-footnote">Optional playtest sharing sends gameplay totals, choices, control type and menu actions with a random identifier. No pointer recordings, names or emails. Raw data is kept for 30 days; summary counts are kept longer. You can stop in settings. Changes apply to your next run; stopping takes effect now.</p><p class="menu-footnote">${choice==='accepted'?'Sharing is on.':'Sharing is off.'} Playing and saving scores never require sharing.</p><div class="menu-actions horizontal">${choice==='accepted'?button('decline','Stop sharing'):button('accept','Share playtest data')+button('decline','No thanks')}</div><button type="button" class="menu-button" data-action="playtest-notice">About playtest data</button></section>`;
+}

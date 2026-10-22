@@ -6,6 +6,7 @@ export function createStorage(storage){
  function persist(){try{if(!storage)return false;storage.setItem(PROFILE_KEY,JSON.stringify(profile));return true;}catch{return false;}}
  return {
   get profile(){return structuredClone(profile)},get best(){return profile.bestRush},get sound(){return profile.audio.enabled},
+  savePlaytestConsent(value,identity=null){if(!['accepted','declined'].includes(value))return {accepted:false,persisted:false};profile.playtestConsent=value;profile.playtestIdentity=value==='accepted'?identity:null;return {accepted:true,persisted:persist()};},
   saveBest(value){if(Number.isSafeInteger(value)&&value>profile.bestRush)profile.bestRush=value;persist();return profile.bestRush},
   saveSound(value){profile.audio.enabled=Boolean(value);return {accepted:true,persisted:persist()}},
   saveAudio(value){profile.audio=normalizeAudio(value);return {accepted:true,persisted:persist()}},
