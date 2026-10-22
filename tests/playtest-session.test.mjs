@@ -16,3 +16,9 @@ test('normal lifecycle deduplicates end, records mixed input, never emits initia
  const {s,batches}=setup();s.setConsent('accepted');s.start(run);s.stageStart(0);s.input('touch');s.input('keyboard');s.record('tick',{activeMs:60000,bassMs:0,chargeMs:0});s.finishStage(0,{score:50,qualified:true});s.end(run);s.end(run);await s.flush();
  assert.equal(batches.filter(e=>e.type==='run_end').length,1);assert.equal(batches.find(e=>e.type==='run_end').inputType,'mixed');assert.equal(batches.some(e=>'initials' in e),false);
 });
+test('stale measurements and completion cannot contaminate a replay',async()=>{
+ const {s,batches}=setup();s.setConsent('accepted');s.start(run);s.stageStart(0);const replay={...run,id:id(100),totalScore:0};s.start(replay,true);s.stageStart(0);
+ s.record('pickup',{runId:run.id,chain:9});s.end(run);s.finishStage(0,{score:0,qualified:true});s.end(replay);await s.flush();
+ const stage=batches.find(e=>e.type==='stage_end');assert.equal(stage.payload.pickups,0);
+ const ending=batches.find(e=>e.type==='run_end');assert.equal(ending.runId,replay.id);assert.equal(ending.payload.totalScore,0);
+});

@@ -25,3 +25,19 @@ test('private SQL rejects public access, deduplicates uploads, limits traffic an
   await db.exec('select public.maintain_playtest();');assert.deepEqual((await db.query('select * from playtest_private.daily order by metric')).rows,before);
  }finally{await db.close();}
 });
+test('hourly cleanup schedule limits hashes to at most 25 hours',async()=>{
+ const db=new PGlite();
+ try{
+  await db.exec('create role anon;create role authenticated;create role service_role;');
+  await db.exec(await readFile(new URL('../supabase/migrations/202610200001_playtest.sql',import.meta.url),'utf8'));
+  // Stub only the unavailable scheduler, then execute the actual scheduled SQL.
+  await db.exec(`create schema cron;create table cron.job(jobname text,schedule text,command text);create function cron.schedule(text,text,text) returns bigint language sql as 'insert into cron.job values($1,$2,$3);select 1::bigint';`);
+  const sql=await readFile(new URL('../supabase/migrations/202610200002_playtest_schedule.sql',import.meta.url),'utf8');
+  await db.exec(sql.replace('create extension if not exists pg_cron;',''));
+  const jobs=(await db.query("select * from cron.job where jobname='playtest-rate-cleanup'")).rows;
+  assert.equal(jobs.length,1);assert.equal(jobs[0].schedule,'10 * * * *');
+  await db.exec("insert into playtest_private.rate_limits values('old',now()-interval '25 hours',1),('recent',now()-interval '23 hours',1)");
+  await db.exec(jobs[0].command);
+  assert.deepEqual((await db.query('select bucket from playtest_private.rate_limits')).rows,[{bucket:'recent'}]);
+ }finally{await db.close();}
+});

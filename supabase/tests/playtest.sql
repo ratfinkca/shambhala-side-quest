@@ -1,5 +1,5 @@
 begin;
-select plan(8);
+select plan(9);
 select ok(not has_schema_privilege('anon','playtest_private','USAGE'),'anonymous cannot access private schema');
 select ok(not has_function_privilege('anon','public.ingest_playtest(jsonb,text)','EXECUTE'),'anonymous cannot bypass endpoint');
 select ok(not has_function_privilege('authenticated','public.maintain_playtest()','EXECUTE'),'signed-in callers cannot purge data');
@@ -13,5 +13,6 @@ select is((select count(*)::int from playtest_private.events),0,'old raw records
 select public.maintain_playtest();
 select is((select sum(value)::int from playtest_private.daily where metric='unknown_completions'),1,'archived aggregate survives rerun');
 select is((select count(*)::int from cron.job where jobname='playtest-daily-maintenance'),1,'one retention job is scheduled');
+select is((select count(*)::int from cron.job where jobname='playtest-rate-cleanup' and schedule='10 * * * *'),1,'hourly hash cleanup is scheduled');
 select * from finish();
 rollback;

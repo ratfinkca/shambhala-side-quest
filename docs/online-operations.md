@@ -32,7 +32,7 @@ The user selected GitHub issues as the public contact route; the notice warns th
 
 ## Retention and reports
 
-Cron runs `public.maintain_playtest()` at 00:10 UTC daily. It replaces daily aggregate rows only for days still represented by raw events, then removes whole UTC days older than the rolling cutoff: raw retention is 29–30 days. Aggregates contain day, mode, input category, scoring version, metric and total; no installation/session/run IDs. Unknown completion means no end event observed at aggregation time, not a confirmed quit.
+Cron runs `public.maintain_playtest()` at 00:10 UTC daily. A separate hourly job deletes rate-limit hashes older than 24 hours, bounding retention to roughly 24–25 hours. It replaces daily aggregate rows only for days still represented by raw events, then removes whole UTC days older than the rolling cutoff: raw retention is 29–30 days. Aggregates contain day, mode, input category, scoring version, metric and total; no installation/session/run IDs. Unknown completion means no end event observed at aggregation time, not a confirmed quit.
 
 Run `supabase/reports/playtest.sql` in the owner SQL editor. Show run/stage sample sizes and unknown completions alongside outcomes. Replay counts are events, not unique-player retention. Input on completed runs uses the terminal label; unfinished runs can remain unknown. Delayed data/closed tabs/ad blockers mean coverage is incomplete. Duplicate event IDs are suppressed while raw records remain retained.
 

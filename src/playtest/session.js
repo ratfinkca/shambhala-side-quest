@@ -24,14 +24,14 @@ export function createPlaytestSession({config,consent,send,uuid=()=>crypto.rando
    summary=createRunSummary({runId:run.id,mode:run.mode,buildId:config.buildId||'dev',scoringVersion:'arcade-v1'});
    emit('run_start',{});if(replay)emit('replay',{});
   },
-  input:kind=>input.recordInput(kind),
+  input:(kind,runId=run?.id)=>{if(runId===run?.id)input.recordInput(kind);},
   inputType:()=>input.inputType(),
   stageStart(index){if(!summary)return;summary.record('start',{runId:run.id,stageIndex:index});emit('stage_start',{stageIndex:index});},
-  record(type,payload={}){summary?.record(type,{...payload,runId:run.id});},
+  record(type,payload={}){if(payload.runId&&payload.runId!==run?.id)return;summary?.record(type,{...payload,runId:run.id});},
   perk(perk){if(!summary)return;summary.record('perk',{runId:run.id,perk});emit('perk',{perk});},
   finishStage(index,result){const stage=summary?.finishStage(index,result);if(stage)emit('stage_end',stage);},
   end(value,outcome='complete'){
-   if(!summary||ended)return;ended=true;summary.record(outcome==='exit'?'exit':'complete',{runId:run.id});
+   if(!summary||ended||value.id!==run?.id)return;ended=true;summary.record(outcome==='exit'?'exit':'complete',{runId:run.id});
    emit('run_end',{outcome,stagesCleared:value.stagesCleared,totalScore:value.totalScore});
   },
   menu(action,theme){emit('menu',{action},theme);},

@@ -64,7 +64,7 @@ function begin(){
  if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;}
  playtest.stageStart(run.stageIndex);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
- go('START');scene.startRound({...config,outfit:saved.profile.outfit});refreshLayout();
+ go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});refreshLayout();
  $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}/3 · ${config.stage.name.toUpperCase()}`;
 }
 function action(name,value){
@@ -126,14 +126,14 @@ window.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores','style'].includes(screen.name))action('back');else if(screen.name==='confirmExit')action('cancel')}
  if(preventGameKeyDefault(e.key,screen.name==='playing',document.activeElement===$('#game')))e.preventDefault();
 });
-game.events.on('round:input',kind=>playtest.input(kind));
+game.events.on('round:input',({kind,runId})=>playtest.input(kind,runId));
 game.events.on('round:measure',data=>playtest.record('tick',data));
-game.events.on('round:contact',()=>playtest.record('bump'));
+game.events.on('round:contact',data=>playtest.record('bump',data));
 game.events.on('round:closepass',data=>playtest.record('closepass',data));
 game.events.on('round:pickup',data=>playtest.record('pickup',data));
-game.events.on('round:flow',()=>playtest.record('flow'));
-game.events.on('round:bass',()=>playtest.record('bass'));
-game.events.on('round:mystery',effect=>playtest.record('candy',{effect}));
+game.events.on('round:flow',data=>playtest.record('flow',data));
+game.events.on('round:bass',data=>playtest.record('bass',data));
+game.events.on('playtest:candy',data=>playtest.record('candy',data));
 game.events.on('round:update',round=>{
  $('#score').textContent=fmt((run?.totalScore??0)+round.score);
  const seconds=Math.ceil(round.remainingMs/1000);$('#time').textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;$('#time').style.color=seconds<=10?'#f5b3bd':'';
@@ -169,7 +169,7 @@ game.events.on('round:mystery',effect=>{
 game.events.on('round:closepass',()=>audio.closePass());game.events.on('round:bump',()=>{if(scene.phase==='cruise')toast('Easy does it. Keep your flow.',1100)});
 game.events.on('round:pickup',({multiplier,celebrate})=>{audio.pickup(multiplier);if(celebrate){audio.celebrate();if(scene.phase==='cruise')toast('You found your people.')}});
 game.events.on('round:end',round=>{
- if(!run)return;const result=finishStage(run,round);if(!result)return;
+ if(!run||round.runId!==run.id)return;const result=finishStage(run,round);if(!result)return;
  playtest.finishStage(run.stageIndex,{score:round.score,qualified:result.qualified});
  if(run.status==='ended')playtest.end(run);
  void playtest.flush();
