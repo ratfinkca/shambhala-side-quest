@@ -46,6 +46,7 @@ export class GameScene extends Phaser.Scene {
     const point = pointer => {
       if (!this.running || pointer.event?.target !== this.game.canvas || pointer.x < 0 || pointer.y < 0 || pointer.x > W || pointer.y > H) return;
       this.target = { x: pointer.x, y: pointer.y };
+      this.game.events.emit('round:input',pointer.wasTouch?'touch':'mouse');
       document.querySelector('#game').focus({ preventScroll: true });
     };
     this.input.on('pointerdown', point);
@@ -106,7 +107,9 @@ export class GameScene extends Phaser.Scene {
       this.halo.setScale(1+Math.sin(time*.004)*.08);
     }
     if (!this.running) { if(this.menuAmbient)this.background.update(time,'cruise',this.reducedMotion);return; }
-    advanceBass(this.round,Math.min(delta,this.round.remainingMs),bassFactor(this.dancer,this.stage.obstacles)<1);
+    const activeMs=Math.max(0,Math.min(delta,this.round.remainingMs)),inBass=bassFactor(this.dancer,this.stage.obstacles)<1,chargeBefore=this.round.bass.chargeMs;
+    advanceBass(this.round,activeMs,inBass);
+    this.game.events.emit('round:measure',{activeMs,bassMs:inBass?activeMs:0,chargeMs:Math.max(0,this.round.bass.chargeMs-chargeBefore)});
     advanceRound(this.round, delta);
     if (this.round.ended) { this.running=false; this.clearInput(); this.mysteryView.update(this.round.mystery,this.reducedMotion); this.game.events.emit('round:update',this.round); this.game.events.emit('round:end',this.round); return; }
     const cycle = cycleAt(60000 - this.round.remainingMs);
@@ -121,6 +124,7 @@ export class GameScene extends Phaser.Scene {
     const k=this.keys;
     let direction={x:Number(k.D.isDown||k.RIGHT.isDown)-Number(k.A.isDown||k.LEFT.isDown),y:Number(k.S.isDown||k.DOWN.isDown)-Number(k.W.isDown||k.UP.isDown)};
     if(direction.x||direction.y) {
+      this.game.events.emit('round:input','keyboard');
       this.target=null;
       direction=mysteryDirection(this.round.mystery,direction);
       moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,obstacles:this.stage.obstacles,speed});
@@ -165,7 +169,7 @@ export class GameScene extends Phaser.Scene {
       spark.setAlpha(cycle.phase === 'drop' ? 1 : .85);
       if (this.reducedMotion) spark.setScale(cycle.phase === 'drop' ? 1.15 : 1);
     });
-    for(const spark of this.sparks){if(Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,spark.x,spark.y)<25){const result=collect(this.round,{playerInBass:bassFactor(this.dancer,this.stage.obstacles)<1,sparkInBass:bassFactor(spark,this.stage.obstacles)<1});this.effect(spark.x,spark.y,spark.color,result.points,result.celebrate);this.game.events.emit('round:pickup',{...result,multiplier:this.round.multiplier,pickups:this.round.pickups});this.placeSpark(spark);}}
+    for(const spark of this.sparks){if(Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,spark.x,spark.y)<25){const result=collect(this.round,{playerInBass:bassFactor(this.dancer,this.stage.obstacles)<1,sparkInBass:bassFactor(spark,this.stage.obstacles)<1});this.effect(spark.x,spark.y,spark.color,result.points,result.celebrate);this.game.events.emit('round:pickup',{...result,chain:this.round.chain,multiplier:this.round.multiplier,pickups:this.round.pickups});this.placeSpark(spark);}}
     const elapsed=60000-this.round.remainingMs;
     const shakeArt=(position,art)=>{const offset=bassOffset(position,this.stage.obstacles,elapsed,cycle.phase,this.reducedMotion);art.setPosition(offset.x,offset.y)};
     shakeArt(this.dancer,this.avatar.art);
