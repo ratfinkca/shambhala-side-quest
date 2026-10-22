@@ -66,6 +66,7 @@ export class Crowd {
       const distance = Math.hypot(player.x - position.x, player.y - position.y);
       person.ring.setAlpha(distance < 100 ? .7 : 0);
       const encounter = updateEncounter(person.encounter, player, position, elapsed);
+      if(encounter.contactStarted)this.scene.game.events.emit('round:contact',{runId:round.runId});
       if (applyBump(round, person.encounter, encounter)) {
         person.ring.setStrokeStyle(2, 0xf2b59b, .45);
         if (elapsed - this.lastBumpAt > 1600) {
@@ -76,7 +77,7 @@ export class Crowd {
       if (encounter.closePass) {
         const points = awardClosePass(round);
         this.scene.effect(position.x, position.y, 0x93ffd6, points, false, `SMOOTH +${points}`);
-        this.scene.game.events.emit('round:closepass', { points });
+        this.scene.game.events.emit('round:closepass', { points,runId:round.runId,clearance:encounter.clearance });
       }
     });
   }

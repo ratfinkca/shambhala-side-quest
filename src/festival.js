@@ -52,9 +52,11 @@ export function updateEncounter(encounter, player, dancer, elapsedMs) {
   if (nearest <= 48 && !encounter.active) {
     encounter.active = true;
     encounter.travel = 0;
+    encounter.nearest = nearest;
     encounter.spoiled = elapsedMs < encounter.cooldownUntil;
   }
   if (encounter.active) {
+    encounter.nearest = Math.min(encounter.nearest, nearest);
     encounter.travel += travel;
     encounter.spoiled ||= bumped;
     if (distance > 58) {
@@ -66,7 +68,7 @@ export function updateEncounter(encounter, player, dancer, elapsedMs) {
   }
   encounter.previousPlayer = { x: player.x, y: player.y };
   encounter.previousDancer = { x: dancer.x, y: dancer.y };
-  return { bumped, closePass, contactStarted, contactEnded };
+  return { bumped, closePass, contactStarted, contactEnded, clearance: closePass ? encounter.nearest - 27 : null };
 }
 
 const SPOTS = [[235,250],[385,255],[565,235],[735,260],[300,365],[665,365],[225,490],[410,490],[585,495],[750,485]];

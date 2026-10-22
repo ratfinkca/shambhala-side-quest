@@ -2,3 +2,9 @@ node_modules/
 dist/
 .superpowers/
 .qa/
+
+.env
+.env.local
+.env.*.local
+supabase/.temp/
+supabase/.branches/

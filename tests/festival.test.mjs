@@ -74,3 +74,10 @@ test('bump slowdown expires without taking points or a pickup chain', () => {
   assert.equal(fresh.slowedMs,0);
   assert.equal(fresh.closePasses,0);
 });
+
+test('completed pass reports closest clearance without changing awards',()=>{
+ const e=createEncounter(),d={x:0,y:0};
+ updateEncounter(e,{x:-60,y:30},d,0);updateEncounter(e,{x:0,y:30},d,100);
+ const hit=updateEncounter(e,{x:60,y:30},d,200);assert.equal(hit.closePass,true);assert.equal(hit.clearance,3);
+ const spoiled=createEncounter();updateEncounter(spoiled,{x:0,y:0},d,0);assert.equal(updateEncounter(spoiled,{x:80,y:0},d,200).clearance,null);
+});

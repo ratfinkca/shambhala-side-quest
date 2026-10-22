@@ -1,3 +1,7 @@
+import {createConsent} from './playtest/consent.js';
+import {createPlaytestSession} from './playtest/session.js';
+import {createPlaytestSender} from './playtest/transport.js';
+import {readOnlineConfig} from './online/config.js';
 import Phaser from 'phaser';
 import '../styles.css';
 import './themes.css';
@@ -20,6 +24,9 @@ const $=s=>document.querySelector(s);
 let local;try{local=window.localStorage}catch{}
 const rehearsal=import.meta.env.DEV && new URLSearchParams(location.search).has('rehearsal');
 const saved=createStorage(local),audio=createAudio();audio.setVolumes(saved.profile.audio);
+const onlineConfig=rehearsal?{enabled:false}:readOnlineConfig(import.meta.env);
+const playtest=createPlaytestSession({config:onlineConfig,consent:createConsent({storage:saved}),send:onlineConfig.enabled?createPlaytestSender(onlineConfig.endpoint):async()=>false});
+let replayPending=false;
 let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,previewAvatar,previewReady=false;
 const fmt=n=>String(n).padStart(3,'0');
@@ -42,7 +49,7 @@ function render(){
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
  $('#avatar-preview').hidden=screen.name!=='wardrobe';
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
- menus.show(screen.name,{themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ menus.show(screen.name,{playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage;$('#initials').value=run.initials;$('#initials').disabled=true;}
  if(rehearsal&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
  if(screen.name==='title'&&!scene)$('#menu-content').querySelectorAll('button').forEach(b=>b.disabled=true);
@@ -54,14 +61,21 @@ function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePre
 function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
+ if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;}
+ playtest.stageStart(run.stageIndex);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
- go('START');scene.startRound({...config,outfit:saved.profile.outfit});refreshLayout();
+ go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});refreshLayout();
  $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}/3 · ${config.stage.name.toUpperCase()}`;
 }
 function action(name,value){
  switch(name){
+  case 'playtest-accept':case 'playtest-decline':{
+   const result=playtest.setConsent(name==='playtest-accept'?'accepted':'declined');render();
+   $('#announcement').textContent=result.persisted?'Playtest sharing preference saved.':'Preference applies for this session; browser storage is unavailable.';break;
+  }
+  case 'playtest-notice':if(onlineConfig.enabled)window.open(onlineConfig.notice,'_blank','noopener,noreferrer');break;
   case 'rush':if(screen.name!=='title')return;newRun('rush');begin();break;
-  case 'festival':if(screen.name!=='title')return;newRun('festival');go('RULES');break;
+  case 'festival':if(screen.name!=='title')return;newRun('festival');playtest.menu('instructions',activeTheme);go('RULES');break;
   case 'start':begin();break;
   case 'resume':if(screen.name!=='paused')return;audio.setEnabled(saved.sound);scene.resumeRound();go('RESUME');break;
   case 'settings':if(screen.name==='playing'){scene.pauseRound();audio.stop()}go('SETTINGS');break;
@@ -71,6 +85,7 @@ function action(name,value){
    if(screen.name!=='style')return;
    const result=saved.saveTheme(value);if(!result.accepted)return;
    if(value!=='surprise')activeTheme=applyTheme(value);
+   playtest.menu('theme',activeTheme);
    render();
    requestAnimationFrame(()=>document.querySelector(`[data-action=theme][data-value="${value}"]`)?.focus({preventScroll:true}));
    $('#style-feedback').textContent=result.persisted?'Your festival style is saved.':'Style selected for this session. Browser storage is unavailable.';
@@ -81,10 +96,10 @@ function action(name,value){
   case 'back':go('BACK');break;
   case 'exit':go('EXIT');break;
   case 'cancel':go('CANCEL');break;
-  case 'confirm':if(screen.name!=='confirmExit')return;scene.pauseRound();audio.stop();run=null;go('CONFIRM');break;
+  case 'confirm':if(screen.name!=='confirmExit')return;scene.pauseRound();audio.stop();playtest.end(run,'exit');void playtest.flush();run=null;go('CONFIRM');break;
   case 'upgrade':go('UPGRADE');break;
-  case 'choose':if(screen.name==='upgrade'&&chooseUpgrade(run,value))go('CHOOSE');break;
-  case 'replay':if(screen.name!=='results')return;newRun(run.mode);go('REPLAY');break;
+  case 'choose':if(screen.name==='upgrade'&&chooseUpgrade(run,value)){playtest.perk(value);go('CHOOSE');}break;
+  case 'replay':if(screen.name!=='results')return;replayPending=true;newRun(run.mode);go('REPLAY');break;
   case 'title':go('TITLE');break;
   case 'submit':{
    if(rehearsal||screen.name!=='results'||!run||run.submitted||!resultSnapshot)return;
@@ -98,18 +113,27 @@ function action(name,value){
 function volume(key,value){const settings={...saved.profile.audio,[key]:value};saved.saveAudio(settings);audio.setVolumes(settings);audio.setEnabled(settings.enabled);$(`#value-${key}`).textContent=`${Math.round(value*100)}%`;if(key==='effects')audio.pickup(1)}
 function outfit(key,value){saved.saveOutfit({...saved.profile.outfit,[key]:value});if(previewAvatar)setOutfit(previewAvatar,saved.profile.outfit)}
 game.events.on('forest:ready',value=>{scene=value;render()});
-$('#bass-head').addEventListener('click',()=>{if(screen.name==='playing'){scene.activateBassHead();$('#game').focus({preventScroll:true});}});
+$('#bass-head').addEventListener('click',e=>{if(screen.name==='playing'){if(scene.activateBassHead())playtest.input(e.pointerType==='touch'?'touch':e.detail===0?'keyboard':'mouse');$('#game').focus({preventScroll:true});}});
 $('#pause').addEventListener('click',()=>pause());$('#settings').addEventListener('click',()=>action('settings'));
 $('#sound').addEventListener('click',()=>{saved.saveSound(!saved.sound);audio.setEnabled(saved.sound);soundLabel();if(screen.name==='settings')render()});
 const fullscreen=$('#fullscreen');fullscreen.hidden=!document.fullscreenEnabled;
 fullscreen.addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{toast('Fullscreen is unavailable in this browser.')}});
 document.addEventListener('fullscreenchange',()=>{fullscreen.textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen'});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pause('HIDDEN')});window.addEventListener('blur',()=>pause('HIDDEN'));
+document.addEventListener('visibilitychange',()=>{if(document.hidden){pause('HIDDEN');void playtest.flush();}});
+setInterval(()=>{if(screen.name==='playing')void playtest.flush();},30000);window.addEventListener('blur',()=>pause('HIDDEN'));
 window.addEventListener('keydown',e=>{
- if(e.key.toLowerCase()==='b'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&screen.name==='playing'){scene.activateBassHead();e.preventDefault();}
+ if(e.key.toLowerCase()==='b'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&screen.name==='playing'){if(scene.activateBassHead())playtest.input('keyboard');e.preventDefault();}
  if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores','style'].includes(screen.name))action('back');else if(screen.name==='confirmExit')action('cancel')}
  if(preventGameKeyDefault(e.key,screen.name==='playing',document.activeElement===$('#game')))e.preventDefault();
 });
+game.events.on('round:input',({kind,runId})=>playtest.input(kind,runId));
+game.events.on('round:measure',data=>playtest.record('tick',data));
+game.events.on('round:contact',data=>playtest.record('bump',data));
+game.events.on('round:closepass',data=>playtest.record('closepass',data));
+game.events.on('round:pickup',data=>playtest.record('pickup',data));
+game.events.on('round:flow',data=>playtest.record('flow',data));
+game.events.on('round:bass',data=>playtest.record('bass',data));
+game.events.on('playtest:candy',data=>playtest.record('candy',data));
 game.events.on('round:update',round=>{
  $('#score').textContent=fmt((run?.totalScore??0)+round.score);
  const seconds=Math.ceil(round.remainingMs/1000);$('#time').textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;$('#time').style.color=seconds<=10?'#f5b3bd':'';
@@ -145,7 +169,10 @@ game.events.on('round:mystery',effect=>{
 game.events.on('round:closepass',()=>audio.closePass());game.events.on('round:bump',()=>{if(scene.phase==='cruise')toast('Easy does it. Keep your flow.',1100)});
 game.events.on('round:pickup',({multiplier,celebrate})=>{audio.pickup(multiplier);if(celebrate){audio.celebrate();if(scene.phase==='cruise')toast('You found your people.')}});
 game.events.on('round:end',round=>{
- if(!run)return;const result=finishStage(run,round);if(!result)return;
+ if(!run||round.runId!==run.id)return;const result=finishStage(run,round);if(!result)return;
+ playtest.finishStage(run.stageIndex,{score:round.score,qualified:result.qualified});
+ if(run.status==='ended')playtest.end(run);
+ void playtest.flush();
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
  if(run.status==='ended')resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,outfit:saved.profile.outfit,completedAt:Date.now()};
  go('END',{qualified:run.status==='upgrade'});$('#announcement').textContent=`Stage complete. ${round.pickups} sparks. ${run.totalScore} total points.`;

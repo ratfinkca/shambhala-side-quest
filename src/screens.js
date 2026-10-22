@@ -1,3 +1,4 @@
+import {renderPlaytestConsent} from './playtest/view.js';
 import {renderTitle,renderFestivalStyles,renderPerks} from './theme-screens.js';
 import { WARDROBE } from './wardrobe.js';
 import { PERKS } from './run.js';
@@ -47,6 +48,7 @@ export function createScreens(root,callbacks) {
       if(name==='upgrade')html=renderPerks(data.choices,data.themeId);
       if(name==='results')html=header(data.run.mode==='festival'&&data.run.stagesCleared===3?'YOU MADE IT TO SUNRISE':'THAT WAS A GOOD WANDER',data.run.mode==='festival'&&data.run.stagesCleared===3?'What a night.':'Same time, same forest?',data.run.mode==='festival'?`${data.run.stagesCleared} / 3 stages cleared · Last stage: ${data.summary.pickups} / ${data.summary.target} sparks`:'A minute well wasted.')+`<p class="result-total">${data.run.totalScore}<small>good vibes${data.run.mode==='rush'?` · personal best ${profile.bestRush}`:''}</small></p><div class="score-entry"><label for="initials">Your arcade initials</label><input id="initials" maxlength="3" pattern="[A-Z0-9]{3}" value="AAA" autocomplete="off" aria-describedby="score-note"><button class="menu-button" data-action="submit" ${data.run.submitted?'disabled':''}>${data.run.submitted?'Entry submitted':'Save score'}</button><small id="score-note">Saved on this device · optional</small></div><p id="save-feedback" role="status"></p><div class="menu-actions horizontal">${button('replay','One more run ↗',true)}${button('scores','View scores')}${button('title','Title screen')}</div>`;
       if(name==='scores')html=header('THE ONE MORE CROWD','Local arcade scores','Saved on this device. Quick Rush and Festival Run have separate boards.')+`<div class="score-boards">${['rush','festival'].map(mode=>`<section><h3>${mode==='rush'?'Quick Rush':'Festival Run'}</h3><ol id="board-${mode}" class="score-list"></ol></section>`).join('')}</div>`+button('back','Back',true);
+      if(name==='settings'||name==='title'&&data.playtestAvailable&&profile.playtestConsent==='unknown')html+=renderPlaytestConsent(profile.playtestConsent,!!data.playtestAvailable);
       content.innerHTML=html;
       if(name==='scores')for(const mode of ['rush','festival']){
         const list=content.querySelector(`#board-${mode}`),entries=profile.boards[mode];

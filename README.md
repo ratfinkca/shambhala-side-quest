@@ -75,3 +75,7 @@ Reduced-motion mode disables ambient pulses, decorative dancer swaying, trails, 
 ## Festival styles
 
 Forest Freakout is the first implemented style: illustrated title, perk cards, forest menu backdrop, warm HUD and local typography. Choose **Festival Style** from the title screen. The saved **Surprise me each run** option chooses only completed styles once per new run and keeps that choice across stages. Moonlit Mycelium is also available, with luminous storybook art, serif headings and midnight-blue menus. Neon Field Trip completes the trio with electric sticker art, bright perk cards and a purple HUD. Surprise can choose any of the three styles. Existing scores, outfits and audio settings are preserved.
+
+### Optional playtest sharing (not yet enabled publicly)
+
+The tracking feature is off by default. When a verified endpoint and data notice are configured, players can opt into compact gameplay summaries and stop sharing in settings. Local scores and gameplay do not require consent. See [operations and setup](docs/online-operations.md). Online arcade scores remain a separate planned feature.

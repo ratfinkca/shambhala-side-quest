@@ -34,6 +34,11 @@ jobs:
       - name: Run tests
         run: npm test
       - name: Build game
+        env:
+          VITE_BUILD_ID: ${{ github.sha }}
+          VITE_PLAYTEST_ENABLED: ${{ vars.PLAYTEST_ENABLED || 'false' }}
+          VITE_PLAYTEST_URL: ${{ vars.PLAYTEST_URL }}
+          VITE_PLAYTEST_NOTICE_URL: ${{ vars.PLAYTEST_NOTICE_URL }}
         run: npm run build
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
