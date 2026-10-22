@@ -85,3 +85,7 @@ Moonlit is now a completed selectable theme alongside Forest Freakout. It includ
 Neon Field Trip now joins Forest Freakout and Moonlit Mycelium as a selectable completed theme. New title, backdrop, four perk illustrations and masthead moth; acid lime/hot pink sticker cards and purple HUD/menu palette. All three saved choices switch immediately, and Surprise samples all three once per new run. No gameplay, scoring or audio changes in this pass.
 
 68 tests, production build and browser checks pass; independent review found no issues. Visual evidence and coverage limits in `design-qa.md`. All theme/Bass Head work remains local on the existing feature branch, not deployed. Next agreed feature track: richer music and reactive concert lighting, then wardrobe/totem expansion and unlocks; candy feel tuning remains deferred.
+
+### 2026-10-22 — Optional playtest tracking implementation
+
+On `codex/playtest-tracking`: consent and persistent preferences; opt-in run/stage summaries; input labels; bounded transport; strict ingestion schema; private database migration, retention/reporting, and backend integration workflow. Public collection remains off pending owner Supabase setup, staged gateway/cron validation, and final data-notice details. The owner chose GitHub issues as the contact route. No arcade board implementation or publishing in this change. See `docs/online-operations.md` and the two 2026-10-20 plans.
