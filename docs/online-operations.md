@@ -1,8 +1,12 @@
 # Playtest operations
 
-Public collection is disabled by default. No Supabase project has been provisioned. The arcade board is a separate future implementation.
+Public collection is disabled. The owner created Supabase project `hziafdynblkyxywythqg` (Side-Quest, East US / North Virginia); it was linked on 2026-10-22. Both tracking migrations and the `playtest` function are deployed. The receiver currently permits only `http://127.0.0.1:5174` for local verification, not the public game origin. The arcade board is a separate future implementation.
+
+Hosted smoke checks on 2026-10-22 confirmed valid synthetic ingestion and duplicate retry responses (200), preflight (204), disallowed production origin (403), invalid payload (400), and oversized body (413). Synthetic event `404e6e42-170e-403e-a26d-596499148cfc`, build `hosted-smoke-20261022`, was used for database verification and subsequently deleted. A successful retry response alone does not verify the stored row count. Subsequent results for cleanup, access, rate limits, and hosting retention are recorded below. No production frontend release or collection enablement occurred.
 
 ## Local verification
+
+Additional hosted access checks on 2026-10-22 used the project's public publishable key: private-schema reads and writes both returned 406 (`PGRST106`, schema not exposed); direct ingestion and cleanup RPC calls both returned 401 (`42501`, permission denied). CLI authentication was renewed after the previous login became unavailable. Public collection remains disabled.
 
 `npm ci`, `npm test`, and `npm run build` cover consent, measurement, transport, request validation and an embedded Postgres instance. The embedded database runs the actual data migration and tests roles, duplicate batches, limits, retention and aggregate reruns. It does not exercise Supabase's gateway, Deno wrapper or pg_cron.
 
@@ -45,3 +49,14 @@ Missing/invalid frontend config disables collection and the invitation. Opt-out 
 To stop ingestion immediately, remove all allowed origins or disable the deployed function; then deploy with `VITE_PLAYTEST_ENABLED=false`. Gameplay and local saves keep working. Do not drop tables as a rollback. Preserve migration history; schema changes require reviewed forward migrations.
 
 References checked during implementation: [Edge Function auth](https://supabase.com/docs/guides/functions/auth), [local development](https://supabase.com/docs/guides/local-development/cli/getting-started), [scheduled SQL](https://supabase.com/docs/guides/cron).
+
+## Hosted verification completed 2026-10-22
+
+- Owner queries confirm anonymous schema access and direct ingestion execution are denied.
+- Both cron jobs are active. Recent hourly cleanup executions succeeded. The daily maintenance function ran successfully on demand; its scheduled execution has not yet been observed.
+- A rollback-isolated test aged the synthetic event by 31 days and confirmed maintenance removed it.
+- 125 duplicate requests returned 120 successes and five 429s. Two further requests with different forged `x-forwarded-for` values also returned 429. The database still contained one synthetic event; the current rate bucket counted 127 requests. This validates the tested hosted gateway path, not a universal guarantee for future gateways.
+- Dashboard confirms Free plan and no included project backups. The current official pricing page lists one day of API/database log retention. The public notice now describes these settings without promising deletion from all provider operational systems.
+- Codex Supabase MCP added with project scope and OAuth authentication verified. The current running tool inventory has not yet exposed its tools; CLI access remains usable.
+
+The synthetic event and its generated summary were removed with a guarded transaction; zero events remain. All 90 tests and the production build pass (existing large-bundle warning only). Remaining release work: commit/review the updated notice, configure the production origin and Pages variables, and publish the consent UI. Until that rollout, public collection stays off.
