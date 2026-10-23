@@ -1,0 +1,17 @@
+begin;
+select plan(7);
+select ok(not has_schema_privilege('anon','arcade_private','USAGE'),'private arcade schema denied');
+select ok(not has_function_privilege('anon','public.arcade_submit(text,text,jsonb,text)','EXECUTE'),'direct submissions denied');
+select public.arcade_ticket(repeat('a',64),'00000000-0000-4000-8000-000000000001','rush','arcade-v1','test',repeat('b',64));
+update arcade_private.tickets set issued_at=now()-interval '1 minute' where hash=repeat('a',64);
+select public.arcade_submit(repeat('a',64),'same','{"runId":"00000000-0000-4000-8000-000000000001","mode":"rush","scoringVersion":"arcade-v1","buildId":"test","initials":"ABC","totalScore":0,"stagesCleared":1,"inputType":"unknown","stages":[{}]}',repeat('b',64));
+select public.arcade_submit(repeat('a',64),'same','{}',repeat('b',64));
+select is((select count(*)::int from arcade_private.scores where ticket_hash=repeat('a',64)),1,'exact retry deduplicates');
+select is(public.arcade_submit(repeat('a',64),'different','{}',repeat('b',64))->>'code','conflict','conflicting retry denied');
+update arcade_private.tickets set expires_at=now()-interval '1 hour' where hash=repeat('a',64);
+select is(public.arcade_submit(repeat('a',64),'same','{}',repeat('b',64))->>'accepted','true','successful receipt remains retryable after expiry');
+update arcade_private.scores set hidden=true where ticket_hash=repeat('a',64);
+select is(jsonb_array_length(public.arcade_board('rush','arcade-v1')),0,'hidden entry excluded');
+select is((select count(*)::int from cron.job where jobname='arcade-maintenance'),1,'cleanup scheduled');
+select * from finish();
+rollback;

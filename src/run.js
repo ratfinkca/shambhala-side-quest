@@ -7,11 +7,12 @@ export const PERKS={
  bracelet:{name:'Friendship Bracelet',icon:'◎',description:'Keep your combo for 3 seconds instead of 2.'},
 };
 export function rulesFor(perks=[]){return {comboGraceMs:perks.includes('bracelet')?3000:2000,flowDurationMs:perks.includes('moth')?7000:5000,closePassPoints:perks.includes('boots')?25:15,bumpShields:perks.includes('noodle')?1:0};}
-export function createRun(mode,id,themeId=THEME_DEFAULT){return {id,themeId:resolveTheme(themeId),mode:mode==='festival'?'festival':'rush',stageIndex:0,totalScore:0,stagesCleared:0,perks:[],bassChargeMs:0,status:'ready',submitted:false};}
+export function createRun(mode,id,themeId=THEME_DEFAULT){return {id,themeId:resolveTheme(themeId),mode:mode==='festival'?'festival':'rush',stageIndex:0,totalScore:0,stagesCleared:0,perks:[],scoreStages:[],bassChargeMs:0,status:'ready',submitted:false};}
 export function startStage(run){if(run.status!=='ready')return null;run.status='playing';return {stage:STAGES[run.stageIndex],rules:rulesFor(run.perks),bassChargeMs:run.bassChargeMs};}
 export function finishStage(run,round){
  if(run.status!=='playing'||!round.ended||round.remainingMs!==0)return null;
  const qualified=run.mode==='rush'||round.pickups>=STAGES[run.stageIndex].target;
+ run.scoreStages.push({stageIndex:run.stageIndex,activeMs:60000,pickups:round.pickups,closePasses:round.closePasses,score:round.score,perks:[...run.perks],sparks:[...round.scoreComponents.sparks],passes:[...round.scoreComponents.passes]});
  run.totalScore+=round.score;if(qualified)run.stagesCleared++;
  run.status=run.mode==='festival'&&qualified&&run.stageIndex<2?'upgrade':'ended';
  run.bassChargeMs=round.bass.chargeMs;

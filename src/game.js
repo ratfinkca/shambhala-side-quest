@@ -5,7 +5,7 @@ import {createMystery,advanceMystery} from './mystery.js';
 
 export function createRound(options = {}) {
   const rules = {...rulesFor([]), ...options};
-  return { rules, bass:createBass(), mystery:createMystery(), shieldsRemaining: rules.bumpShields, remainingMs: 60000, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, flowMs: 0, flowTaken: [], sincePickupMs: Infinity, ended: false };
+  return { scoreComponents:{sparks:Array(20).fill(0),passes:[0,0]}, rules, bass:createBass(), mystery:createMystery(), shieldsRemaining: rules.bumpShields, remainingMs: 60000, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, flowMs: 0, flowTaken: [], sincePickupMs: Infinity, ended: false };
 }
 
 export function advanceRound(round, dtMs) {
@@ -27,6 +27,8 @@ export function collect(round,{playerInBass=false,sparkInBass=false}={}) {
   round.multiplier = Math.min(5, 1 + Math.floor(round.chain / 5));
   round.bestMultiplier = Math.max(round.bestMultiplier, round.multiplier);
   const points = 10 * round.multiplier * cycleAt(60000 - round.remainingMs).bonus * (round.bass.activeMs>0&&playerInBass&&sparkInBass?2:1);
+  const drop=cycleAt(60000-round.remainingMs).bonus,bass=round.bass.activeMs>0&&playerInBass&&sparkInBass?2:1;
+  round.scoreComponents.sparks[(round.multiplier-1)*4+(drop-1)*2+bass-1]++;
   round.score += points;
   return { points, celebrate: round.pickups % 15 === 0 };
 }
