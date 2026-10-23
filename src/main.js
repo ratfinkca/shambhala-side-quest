@@ -1,3 +1,7 @@
+import {createOnlineClient,readArcadeConfig} from './online/client.js';
+import {createSubmission} from './online/submission.js';
+import {createBoard} from './online/board.js';
+import {SCORING_VERSION} from './online/version.js';
 import {createConsent} from './playtest/consent.js';
 import {createPlaytestSession} from './playtest/session.js';
 import {createPlaytestSender} from './playtest/transport.js';
@@ -26,6 +30,10 @@ const rehearsal=import.meta.env.DEV && new URLSearchParams(location.search).has(
 const saved=createStorage(local),audio=createAudio();audio.setVolumes(saved.profile.audio);
 const onlineConfig=rehearsal?{enabled:false}:readOnlineConfig(import.meta.env);
 const playtest=createPlaytestSession({config:onlineConfig,consent:createConsent({storage:saved}),send:onlineConfig.enabled?createPlaytestSender(onlineConfig.endpoint):async()=>false});
+const arcadeConfig=rehearsal?{}:readArcadeConfig(import.meta.env);
+const arcade=createOnlineClient(arcadeConfig),board=createBoard(p=>arcade.getBoard(p));
+let submission=null;
+async function loadBoard(mode){const pending=board.select(mode,SCORING_VERSION);render();if(await pending&&screen.name==='scores')render();}
 let replayPending=false;
 let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,previewAvatar,previewReady=false;
@@ -49,19 +57,22 @@ function render(){
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
  $('#avatar-preview').hidden=screen.name!=='wardrobe';
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
- menus.show(screen.name,{playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ menus.show(screen.name,{onlineSubmission:submission,onlineInput:playtest.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage;$('#initials').value=run.initials;$('#initials').disabled=true;}
+ if(screen.name==='results'&&submission?.initials){$('#initials').value=submission.initials;$('#initials').disabled=true;}
  if(rehearsal&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
  if(screen.name==='title'&&!scene)$('#menu-content').querySelectorAll('button').forEach(b=>b.disabled=true);
  refreshLayout();if(playing)$('#game').focus({preventScroll:true});
 }
 function go(type,extra={}){const next=transition(screen,{type,...extra});if(next===screen)return false;screen=next;clearToast();render();return true}
 function pause(type='PAUSE'){if(screen.name!=='playing')return;scene.pauseRound();audio.stop();go(type)}
-function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);summary=null;resultSnapshot=null;}
+function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);summary=null;resultSnapshot=null;submission=null;}
 function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
- if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;}
+ if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;
+  if(arcadeConfig.baseUrl){const owner=run.id,current=createSubmission(owner);submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId}).then(result=>{if(run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);if(screen.name==='results')render();});}
+ }
  playtest.stageStart(run.stageIndex);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
  go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});refreshLayout();
@@ -92,7 +103,14 @@ function action(name,value){
    break;
   }
   case 'wardrobe':go('WARDROBE');break;
-  case 'scores':go('SCORES');break;
+  case 'scores':if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
+  case 'online-board':if(screen.name==='scores'&&['rush','festival'].includes(value))void loadBoard(value);break;
+  case 'post-online':{
+   if(rehearsal||screen.name!=='results'||!run||!submission)return;
+   const initials=$('#initials').value.toUpperCase();if(!/^[A-Z0-9]{3}$/.test(initials)){toast('Enter three letters or digits first.');return;}
+   const owner=run.id,current=submission;const pending=current.post({initials,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId,inputType:playtest.inputType(),totalScore:run.totalScore,stagesCleared:run.stagesCleared,stages:run.scoreStages},p=>arcade.submitScore(p));render();
+   void pending.then(()=>{if(run?.id===owner&&submission===current&&screen.name==='results')render();});break;
+  }
   case 'back':go('BACK');break;
   case 'exit':go('EXIT');break;
   case 'cancel':go('CANCEL');break;
@@ -174,7 +192,7 @@ game.events.on('round:end',round=>{
  if(run.status==='ended')playtest.end(run);
  void playtest.flush();
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
- if(run.status==='ended')resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,outfit:saved.profile.outfit,completedAt:Date.now()};
+ if(run.status==='ended')resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,inputType:playtest.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};
  go('END',{qualified:run.status==='upgrade'});$('#announcement').textContent=`Stage complete. ${round.pickups} sparks. ${run.totalScore} total points.`;
 });
 render();

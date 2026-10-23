@@ -1,7 +1,7 @@
 name: Playtest backend integration
 on:
   pull_request:
-    paths: ['supabase/**', 'tests/playtest-*.mjs', '.github/workflows/playtest-backend.yml']
+    paths: ['supabase/**', 'tests/playtest-*.mjs', 'tests/score-*.mjs', 'tests/online-*.mjs', '.github/workflows/playtest-backend.yml']
   workflow_dispatch:
 permissions:
   contents: read

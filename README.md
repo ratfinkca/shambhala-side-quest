@@ -79,3 +79,5 @@ Forest Freakout is the first implemented style: illustrated title, perk cards, f
 ### Optional playtest sharing (not yet enabled publicly)
 
 The tracking feature is off by default. When a verified endpoint and data notice are configured, players can opt into compact gameplay summaries and stop sharing in settings. Local scores and gameplay do not require consent. See [operations and setup](docs/online-operations.md). Online arcade scores remain a separate planned feature.
+
+Online arcade implementation is available behind `VITE_ARCADE_ENABLED` and `VITE_ARCADE_URL`. It uses three-character initials, separate Rush/Festival top-50 boards, and explicit posting independent of optional analytics. It remains disabled until its backend release checks and rollout are completed; see `docs/online-operations.md`.

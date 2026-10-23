@@ -60,3 +60,15 @@ References checked during implementation: [Edge Function auth](https://supabase.
 - Codex Supabase MCP added with project scope and OAuth authentication verified. The current running tool inventory has not yet exposed its tools; CLI access remains usable.
 
 The synthetic event and its generated summary were removed with a guarded transaction; zero events remain. All 90 tests and the production build pass (existing large-bundle warning only). Remaining release work: commit/review the updated notice, configure the production origin and Pages variables, and publish the consent UI. Until that rollout, public collection stays off.
+
+## Arcade board (prepared; not publicly enabled)
+
+Use `VITE_ARCADE_ENABLED=true` and `VITE_ARCADE_URL=https://<project>.supabase.co/functions/v1` only after deploying migrations 202610220001/2 and functions `run-ticket`, `submit-score`, `leaderboard`. Configure separate server secrets `ARCADE_ORIGINS` and `ARCADE_RATE_SECRET` (random 32 bytes or more). Keep development on its own local backend. Rehearsal disables both clients. Public arcade configuration does not depend on playtest consent or its configuration.
+
+Tickets last 24 hours and permit pauses. Issuance allows 60/hour per rotating network hash; submission allows 120/hour. Exact successful retries work after expiry, but conflicting reuse does not. Accepted receipts persist with scores for deduplication. Hourly cleanup removes expired unused tickets and network hashes older than 24 hours. Score records and receipts persist until owner removal; they contain initials and run claims, never the analytics installation identifier. No external backup or logging additions are made by this feature.
+
+The board is casual: component checks and elapsed-time checks cannot prove legitimate movement in a client-controlled game. Moderate privately via `select id,initials,score from arcade_private.scores order by received_at desc;`, then `update arcade_private.scores set hidden=true where id=<reviewed-id>;` (set false to restore). Do not grant players direct table access. Public clients cache boards for 30 seconds; hidden entries can remain in an already loaded view until refreshed.
+
+Rank order is score descending, stages cleared descending, server receipt time ascending, then internal ID. Public output has initials, score, stagesCleared, inputType, mode, scoringVersion and receivedAt only. Initials are not unique identities. Score-affecting releases must add a supported scoring version in the server validator and client constant; cosmetic releases retain arcade-v1. Older boards remain available through the leaderboard endpoint's scoringVersion filter, although the first UI shows the current version only.
+
+Before release, run backend CI, validate the deployed origins/permissions and synthetic moderation flow, then enable repository variables `ARCADE_ENABLED` and `ARCADE_URL`. A declined-tracking run must post successfully without adding analytics rows. Disable the frontend variable or clear `ARCADE_ORIGINS` to stop public access without removing data.

@@ -89,3 +89,5 @@ Neon Field Trip now joins Forest Freakout and Moonlit Mycelium as a selectable c
 ### 2026-10-22 — Optional playtest tracking implementation
 
 On `codex/playtest-tracking`: consent and persistent preferences; opt-in run/stage summaries; input labels; bounded transport; strict ingestion schema; private database migration, retention/reporting, and backend integration workflow. Public collection remains off pending owner Supabase setup, staged gateway/cron validation, and final data-notice details. The owner chose GitHub issues as the contact route. No arcade board implementation or publishing in this change. See `docs/online-operations.md` and the two 2026-10-20 plans.
+
+Arcade board implementation: `codex/arcade-board`, separate online client and score counters, guest tickets, strict score validation, atomic receipts and private moderation. Production remains disabled. See `docs/superpowers/arcade-board-validation.md` for validation and remaining rollout checks.
