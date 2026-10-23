@@ -17,3 +17,7 @@ Development uses a disposable in-memory Postgres-backed HTTP service on localhos
 - Lost-response retry, duplicate prevention, stale board results, ticket timeout, expiry, forged strings and permission checks have automated coverage. Browser fault injection, all-theme keyboard walkthrough, real-device touch, true concurrent hosted transactions, and hosted Deno/cron integration are still release verification work. Public endpoints remain disabled; no production score requests were made.
 
 Local preview: http://127.0.0.1:5175/ (local backend http://127.0.0.1:54331). Its database is disposable and in memory. Screenshot: /tmp/sidequest-online-arcade.png.
+
+## Hosted release verification
+
+Both arcade migrations and all three endpoints deployed to the existing project before frontend activation. Synthetic hosted ticket/submission checks passed: simultaneous retries yielded one stored score; conflicting retry and tampered total rejected; public response valid; anonymous direct schema/RPC privileges denied; test run produced zero analytics rows. Moderation hide check passed and synthetic records were removed. Cleanup job is active. PR #6 frontend and real Supabase database integration checks passed. Production repository configuration enables arcade-v1 on release. Earlier local-only status above describes the implementation checkpoint.

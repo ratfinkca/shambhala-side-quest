@@ -61,7 +61,7 @@ References checked during implementation: [Edge Function auth](https://supabase.
 
 The synthetic event and its generated summary were removed with a guarded transaction; zero events remain. All 90 tests and the production build pass (existing large-bundle warning only). Remaining release work: commit/review the updated notice, configure the production origin and Pages variables, and publish the consent UI. Until that rollout, public collection stays off.
 
-## Arcade board (prepared; not publicly enabled)
+## Arcade board
 
 Use `VITE_ARCADE_ENABLED=true` and `VITE_ARCADE_URL=https://<project>.supabase.co/functions/v1` only after deploying migrations 202610220001/2 and functions `run-ticket`, `submit-score`, `leaderboard`. Configure separate server secrets `ARCADE_ORIGINS` and `ARCADE_RATE_SECRET` (random 32 bytes or more). Keep development on its own local backend. Rehearsal disables both clients. Public arcade configuration does not depend on playtest consent or its configuration.
 
