@@ -25,3 +25,10 @@ test('award counters reconcile real spark/drop/bass and boots points, including 
  const p={...fixture(),mode:'festival',totalScore:run.totalScore,stagesCleared:3,stages:run.scoreStages};assert.equal(validateScore(p).ok,true);
  p.stages[2].perks=['boots','boots'];assert.equal(validateScore(p).ok,false);
 });
+test('multipliers must be earned, including multiple combo chains after resets',()=>{
+ const p=fixture();p.stages[0].sparks=Array(20).fill(0);p.stages[0].sparks[16]=1;p.stages[0].score=p.totalScore=50;assert.equal(validateScore(p).ok,false);
+ const stage=p.stages[0];stage.sparks=Array(20).fill(0);
+ for(const [i,n] of [[0,8],[4,10],[8,10],[12,10],[16,2]])stage.sparks[i]=n;
+ stage.pickups=40;stage.score=p.totalScore=8*10+10*20+10*30+10*40+2*50;assert.equal(validateScore(p).ok,true);
+ stage.sparks[0]=4;stage.pickups-=4;stage.score=p.totalScore-=40;assert.equal(validateScore(p).ok,false);
+});

@@ -13,6 +13,10 @@ export function validateScore(p,ticket){
   if(!exact(s,['stageIndex','activeMs','pickups','closePasses','score','perks','sparks','passes'])||s.stageIndex!==i||s.activeMs!==60000||![s.pickups,s.closePasses,s.score].every(integer)||!Array.isArray(s.perks)||s.perks.length!==i||new Set(s.perks).size!==i||!s.perks.every(k=>['boots','noodle','moth','bracelet'].includes(k))||!previous.every((v,j)=>s.perks[j]===v)||!Array.isArray(s.sparks)||s.sparks.length!==20||!s.sparks.every(integer)||!Array.isArray(s.passes)||s.passes.length!==2||!s.passes.every(integer))return fail('invalid');
   let points=0,pickups=0;
   s.sparks.forEach((n,index)=>{const multiplier=Math.floor(index/4)+1,drop=Math.floor(index%4/2)+1,bass=index%2+1;points+=n*10*multiplier*drop*bass;pickups+=n;});
+  // Each chain spends four pickups at 1x, then five at each of 2x–4x.
+  // At 5x a chain can continue indefinitely; resets require a fresh lower-tier climb.
+  const counts=Array.from({length:5},(_,m)=>s.sparks.slice(m*4,m*4+4).reduce((a,b)=>a+b,0));
+  if(counts[4]>0&&counts[3]<5||counts[2]<5*Math.ceil(counts[3]/5)||counts[1]<5*Math.ceil(counts[2]/5)||counts[0]<4*Math.ceil(counts[1]/5))return fail('invalid');
   points+=(s.perks.includes('boots')?25:15)*(s.passes[0]+2*s.passes[1]);
   if(!Number.isSafeInteger(points)||points!==s.score||pickups!==s.pickups||s.passes[0]+s.passes[1]!==s.closePasses)return fail('invalid');
   const qualified=p.mode==='rush'||s.pickups>=[20,25,30][i];
