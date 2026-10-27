@@ -26,3 +26,18 @@ test('consent view is nonblocking and unavailable service cannot solicit consent
  const invite=renderPlaytestConsent('unknown',true);assert.match(invite,/data-action="playtest-accept"/);assert.match(invite,/data-action="playtest-decline"/);assert.doesNotMatch(invite,/primary-button/);
  assert.match(renderPlaytestConsent('accepted',true),/Stop sharing/);
 });
+
+import {renderPlaytestShortcut} from '../src/playtest/view.js';
+test('title sharing stays discoverable after either choice without silently opting in',()=>{
+ for(const choice of ['unknown','declined']){
+  const html=renderPlaytestShortcut(choice,true);
+  assert.match(html,/currently off/);
+  assert.match(html,/data-action="playtest-accept"/);
+  assert.match(html,/<details/);
+ }
+ const on=renderPlaytestShortcut('accepted',true);
+ assert.match(on,/Playtest sharing: on/);
+ assert.match(on,/data-action="playtest-decline"/);
+ assert.doesNotMatch(on,/data-action="playtest-accept"/);
+ assert.equal(renderPlaytestShortcut('unknown',false),'');
+});
