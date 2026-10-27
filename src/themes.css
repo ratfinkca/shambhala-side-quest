@@ -172,3 +172,7 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 [data-theme='neon-field-trip'] .game-frame[data-phase='drop'] .beat-bar{background:#483154}
 [data-theme='neon-field-trip'] .style-option[aria-pressed='true'],[data-theme='neon-field-trip'] .surprise-option[aria-pressed='true']{border-color:var(--accent)}
 [data-theme='neon-field-trip'] .setting-row select,[data-theme='neon-field-trip'] .score-entry input{border-color:var(--border)}
+
+.title-sharing summary { cursor: pointer; }
+.title-sharing summary small { display: block; margin-top: .25rem; font-family: sans-serif; font-size: .75rem; font-weight: 400; }
+.title-sharing section { padding: .5rem 0; }

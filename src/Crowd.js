@@ -18,6 +18,9 @@ export class Crowd {
       const node = scene.add.container(0, 0).setDepth(15);
       const ring = scene.add.circle(0, 0, 42).setStrokeStyle(1, 0xbad9c5, .16).setAlpha(0);
       node.add(ring);
+      const smoothRings = [27, 37, 48].map(radius => scene.add.circle(0, 0, radius).setStrokeStyle(1.5, 0x93ffd6, .8));
+      const smooth = scene.add.container(0, 0, smoothRings).setAlpha(0);
+      node.add(smooth);
       node.add(scene.add.ellipse(0, 13, 29, 11, 0x031619, .45));
       const body = scene.add.graphics();
       const color = CLOTHES[index % CLOTHES.length];
@@ -38,7 +41,7 @@ export class Crowd {
         body.lineStyle(1, color).lineBetween(13, -53, 13, -41).lineBetween(13, -46, 8, -42).lineBetween(13, -46, 18, -42);
       }
       node.add(body);
-      return { node, body, ring, encounter: createEncounter() };
+      return { node, body, ring, smooth, smoothAt: -Infinity, smoothStrength: 0, encounter: createEncounter() };
     });
     this.reset();
   }
@@ -50,6 +53,8 @@ export class Crowd {
       person.body.setRotation(0);
       person.body.setPosition(0,0);
       person.ring.setAlpha(0);
+      person.smooth.setAlpha(0).setScale(1);
+      person.smoothAt = -Infinity;
       person.encounter = createEncounter();
     });
     this.lastBumpAt = -Infinity;
@@ -75,10 +80,16 @@ export class Crowd {
         }
       } else person.ring.setStrokeStyle(1, 0xbad9c5, .16);
       if (encounter.closePass) {
+        person.smoothAt = elapsed;
+        person.smoothStrength = 1 - Math.min(21, Math.max(0, encounter.clearance)) / 21;
         const points = awardClosePass(round);
         this.scene.effect(position.x, position.y, 0x93ffd6, points, false, `SMOOTH +${points}`);
         this.scene.game.events.emit('round:closepass', { points,runId:round.runId,clearance:encounter.clearance });
       }
+      // Round time freezes on pause and resets between stages: no orphaned tweens.
+      const progress = Math.min(1, Math.max(0, (elapsed - person.smoothAt) / 650));
+      person.smooth.setAlpha((.3 + person.smoothStrength * .5) * (1 - progress));
+      person.smooth.setScale(reducedMotion ? 1 : 1 + progress * .14);
     });
   }
 }
