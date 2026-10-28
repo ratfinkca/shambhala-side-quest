@@ -31,3 +31,15 @@ test('forest percussion is deduplicated per step and all music stops on pause or
  a.setEnabled(false);const mutedCount=f.voices.length;a.sync({...round,remainingMs:59000},'forest');
  assert.equal(f.voices.length,mutedCount);assert.ok(f.voices.every(v=>v.stopped));
 });
+
+test('stage transitions select their own instrument voices and stop previous sources',()=>{
+ const f=fake(),audio=createAudio(()=>f.ctx);audio.setEnabled(true);
+ const round={remainingMs:60000,multiplier:1,flowMs:0};
+ for(const [stage,kick] of [['forest',120],['neon',140],['sunrise',105]]){
+  audio.stop();const before=f.voices.length;audio.sync(round,stage);
+  assert.equal(f.voices[before].frequency.value,kick);
+  // Each arrangement begins with its own kick; one tick cannot duplicate voices.
+  const count=f.voices.length;audio.sync(round,stage);assert.equal(f.voices.length,count);
+  audio.stop();assert.ok(f.voices.every(v=>v.stopped));
+ }
+});

@@ -39,3 +39,30 @@ test('concert lighting is bounded and static under reduced motion across a full 
  }
  assert.ok(concertLighting(16000).spread>concertLighting(1000).spread);
 });
+
+import {stageVoices} from '../src/music.js';
+test('each stage has a distinct complete phrase, silent ending and optional Flow layer',()=>{
+ const phrases=['forest','neon','sunrise'].map(stage=>{
+  assert.deepEqual(stageVoices(stage,240,'ended',5,true),[]);
+  const phrase=Array.from({length:64},(_,i)=>stageVoices(stage,i,'cruise',1)).flat();
+  for(const kind of ['kick','bass','hat','pad','melody'])assert.ok(phrase.some(v=>v.kind===kind),`${stage} ${kind}`);
+  assert.ok(Array.from({length:16},(_,i)=>stageVoices(stage,i,'drop',3,true)).flat().some(v=>v.kind==='flow'));
+  for(const v of phrase){assert.ok(v.duration>0);assert.ok(v.volume>0&&v.volume<=.15);if(!v.noise)assert.ok(v.frequency>0);}
+  return phrase;
+ });
+ assert.notDeepEqual(phrases[0],phrases[1]);assert.notDeepEqual(phrases[1],phrases[2]);
+ assert.deepEqual(stageVoices('forest',0,'cruise',1),forestVoices(0,'cruise',1));
+});
+test('stage lighting differs while remaining bounded, continuous and static with reduced motion',()=>{
+ for(const stage of ['forest','neon','sunrise']){
+  const fixed=concertLighting(0,true,stage);
+  for(let t=0;t<=60000;t+=50){
+   assert.deepEqual(concertLighting(t,true,stage),fixed);
+   const a=concertLighting(t,false,stage),b=concertLighting(t+16,false,stage);
+   assert.ok(a.alpha>=0&&a.alpha<=.1);assert.ok(Math.abs(a.alpha-b.alpha)<.004);
+   assert.ok(Math.abs(a.sweep-b.sweep)<.02);
+  }
+  assert.ok(concertLighting(16000,false,stage).spread>concertLighting(1000,false,stage).spread);
+ }
+ assert.notDeepEqual(concertLighting(3000,false,'neon'),concertLighting(3000,false,'sunrise'));
+});

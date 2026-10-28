@@ -1,5 +1,5 @@
 import { cycleAt } from './festival.js';
-import { beatVoices, forestVoices, BEAT_MS } from './music.js';
+import { stageVoices, BEAT_MS } from './music.js';
 
 export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)()) {
   let noiseBuffer;
@@ -68,8 +68,7 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
       const step = Math.floor(elapsed / (BEAT_MS/2));
       if (step === lastStep) return;
       lastStep = step;
-      const arrange=stageId==='forest'?forestVoices:beatVoices;
-      for (const voice of arrange(step, cycleAt(elapsed).phase, round.multiplier, round.flowMs > 0)) {
+      for (const voice of stageVoices(stageId,step, cycleAt(elapsed).phase, round.multiplier, round.flowMs > 0)) {
         if(voice.noise)percussion(voice);
         else tone(voice.frequency, voice.duration, 0, voice.type, voice.volume, voice.endFrequency, 'music',voice.attack);
       }

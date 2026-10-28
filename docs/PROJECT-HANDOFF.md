@@ -101,3 +101,10 @@ Arcade board implementation: `codex/arcade-board`, separate online client and sc
 ## Music, lighting and progression release — 2026-10-28
 
 Rave XP and six ranks now persist on-device, alongside six cumulative achievements. New players unlock expanded wardrobe pieces and two additional perk choices through play; existing profiles keep all previously available cosmetics/perks. Three new cosmetic flourishes (fireflies, stardust, prismatic aura) require earning for everyone, with locked previews and static reduced-motion rendering. Completed stages show XP/reward reveals; rehearsal awards no progression. Approved for release alongside the Living Forest music/lighting update. All 112 tests and the production build pass; final independent review found no blockers. Browser checks verified rank-up reward reveals, locked and unlocked wardrobe choices, flourish previews, and XP surviving reload. See [progression validation](superpowers/progression-validation.md) for rules, save limits and coverage.
+
+
+## Stage atmosphere expansion — 2026-10-28
+
+Neon Grove now has a minor-key bass/synth arrangement and faster pink/cyan crossing beams. Sunrise Clearing has major harmony, rising bell phrases, a gentle rolling groove and broader amber/rose fans. Both retain the shared 120 BPM clock, build/drop timing, optional Flow layers, pause/mute cleanup and static reduced-motion lighting. Living Forest remains the baseline show. Lighting is selected by stage, independently of the chosen menu theme.
+
+115 tests and production build pass; independent review found no blockers. Rehearsal browser checks cover both stage transitions, Neon pause/resume and Sunrise rendering, with no console errors. Rehearsal does not award XP or save scores. Subjective audio mix, phone speakers and sustained phone performance still need playtesting. Approved for release after listening feedback; final review found no blockers.
