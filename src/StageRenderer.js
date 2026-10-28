@@ -1,13 +1,32 @@
 import Phaser from 'phaser';
+import {concertLighting} from './concert-lighting.js';
 import {BASS_RADIUS,BASS_CORE,speakerCones} from './geometry.js';
 import {bassBeat} from './bass-motion.js';
 const W=960,H=640;
 export class StageRenderer {
  constructor(scene){this.scene=scene;this.objects=[];}
  show(stage){
-  this.destroy();this.stageName=stage.name;const before=new Set(this.scene.children.list);this.drawForest();
+  this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);this.drawForest();
   if(stage.id!=='forest')this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
   this.beams=[this.scene.add.triangle(340,240,0,0,140,420,280,0,stage.palette.accent,.035).setDepth(.2),this.scene.add.triangle(630,240,0,0,140,420,280,0,stage.palette.accent,.035).setDepth(.2)];
+  this.concertBeams=[];this.lamps=[];this.canopyLights=[];
+  if(stage.id==='forest'){
+    this.beams.forEach(b=>b.setVisible(false));
+    for(const [i,x] of [330,390,450,510,570,630].entries()){
+      const color=[0xffd494,0x93dcc4,0xbca2ef,0xff99c8,0x93dcc4,0xffd494][i];
+      const beam=this.scene.add.graphics().setPosition(x,92).setDepth(.2);
+      beam.fillStyle(color,.55).fillTriangle(0,0,-160,760,160,760);
+      beam.fillStyle(color,.45).fillTriangle(0,0,-45,760,45,760).setAlpha(.045);
+      this.concertBeams.push(beam);
+      this.lamps.push(this.scene.add.circle(x,92,5,color,.3).setDepth(.3));
+    }
+    for(const [i,x,y] of [[0,95,240],[1,865,240],[2,135,510],[3,825,510]]){
+      const pool=this.scene.add.graphics().setPosition(x,y).setDepth(.15);
+      const color=[0x79e6bc,0xc19cff,0xffb678,0x91bfff][i];
+      for(let r=5;r>0;r--)pool.fillStyle(color,.025).fillEllipse(0,0,r*65,r*95);
+      this.canopyLights.push(pool);
+    }
+  }
   for(const o of stage.mud){
    const g=this.scene.add.graphics().setDepth(2),cx=o.x+o.width/2,cy=o.y+o.height/2;
    g.fillStyle(0x89684f,.8).fillPoints(o.points,true);
@@ -48,6 +67,12 @@ export class StageRenderer {
  }
  update(elapsed,phase,reduced){
   this.beams?.forEach((b,i)=>{b.rotation=reduced?0:Math.sin(elapsed*.0004+i)*.18;b.setAlpha(reduced?.035:phase==='drop'?.12:.05)});
+  if(this.stageId==='forest'){
+    const light=concertLighting(elapsed,reduced);
+    this.concertBeams.forEach((b,i)=>{b.rotation=(i-2.5)*.17*light.spread+light.sweep*(i%2?1:-1);b.setAlpha(light.alpha);b.setScale(1+light.fan*.25,1);});
+    this.lamps.forEach(l=>l.setAlpha(light.glow));
+    this.canopyLights.forEach((l,i)=>{l.setAlpha(reduced?.65:.65+.25*Math.sin(elapsed*.0007+i*1.5));l.setScale(reduced?1:1+.09*Math.sin(elapsed*.0004+i));});
+  }
   const pulse=bassBeat(elapsed),strength=phase==='drop'?1.5:1;
   this.bassPulses?.forEach(p=>{p.setAlpha(reduced?1:.35+pulse*.65);p.setScale(reduced?1:1+pulse*.09*strength)});
   this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
@@ -69,9 +94,11 @@ export class StageRenderer {
     g.fillStyle(0x091b23).fillRoundedRect(351, 29, 258, 101, 8);
     g.lineStyle(2, 0x83b9a6, .35).strokeTriangle(345, 99, 480, 12, 615, 99);
     g.lineStyle(1, 0xa8dbaf, .3).strokeTriangle(379, 98, 480, 31, 581, 98);
+    if(this.stageId!=='forest'){
     g.fillStyle(0xc2b5e7, .13).fillTriangle(480, 64, 228, 446, 388, 446);
     g.fillStyle(0x9beec2, .10).fillTriangle(480, 64, 574, 446, 734, 446);
     g.fillStyle(0xd7a3cb, .065).fillTriangle(480, 64, 303, 402, 643, 402);
+    }
     g.fillStyle(0x344c48).fillRoundedRect(395, 98, 170, 23, 3);
     for (const x of [369, 565]) { g.fillStyle(0x101d25).fillRoundedRect(x, 66, 25, 51, 3); g.lineStyle(1, 0x708985, .5).strokeCircle(x + 12, 80, 7).strokeCircle(x + 12, 103, 8); }
     g.lineStyle(2, 0xe4d8a6, .7).strokeCircle(480, 66, 22).strokeTriangle(480, 48, 464, 76, 496, 76);

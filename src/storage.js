@@ -1,3 +1,4 @@
+import {awardStage,requirement} from './progression.js';
 import {isThemePreference} from './themes.js';
 import {readProfile,PROFILE_KEY,normalizeAudio,rankScores,validScore} from './profile.js';
 import {normalizeOutfit} from './wardrobe.js';
@@ -11,7 +12,8 @@ export function createStorage(storage){
   saveSound(value){profile.audio.enabled=Boolean(value);return {accepted:true,persisted:persist()}},
   saveAudio(value){profile.audio=normalizeAudio(value);return {accepted:true,persisted:persist()}},
   saveTheme(value){if(!isThemePreference(value))return {accepted:false,persisted:false};profile.themePreference=value;return {accepted:true,persisted:persist()};},
-  saveOutfit(value){profile.outfit=normalizeOutfit(value);return {accepted:true,persisted:persist()}},
+  saveOutfit(value){const next=normalizeOutfit(value);if(Object.entries(next).some(([key,id])=>requirement(profile.progress,`${key}:${id}`)))return {accepted:false,persisted:false};profile.outfit=next;return {accepted:true,persisted:persist()}},
+  awardProgress(stage){const result=awardStage(profile.progress,stage);profile.progress=result.progress;return {...result,persisted:persist()};},
   submitScore(mode,entry){if(!['rush','festival'].includes(mode)||!validScore(entry)||submitted.has(entry.id))return {accepted:false,persisted:false};submitted.add(entry.id);profile.boards[mode]=rankScores([...profile.boards[mode],entry]);return {accepted:true,persisted:persist(),ranked:profile.boards[mode].some(e=>e.id===entry.id)};},
  };
 }

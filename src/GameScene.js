@@ -4,7 +4,7 @@ import { createRound, advanceRound, collect } from './game.js';
 import { cycleAt } from './festival.js';
 import { availableFlow, activateFlow, attractSpark } from './flow.js';
 import { StageRenderer } from './StageRenderer.js';
-import { createAvatar, setOutfit } from './Avatar.js';
+import { createAvatar, setOutfit, animateAvatar } from './Avatar.js';
 import { STAGES } from './stages.js';
 import { moveInArena, findSpawn, movementFactor, bassFactor, isOpen } from './geometry.js';
 import { Crowd } from './Crowd.js';
@@ -137,6 +137,7 @@ export class GameScene extends Phaser.Scene {
     }
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
     if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
+    animateAvatar(this.avatar,60000-this.round.remainingMs,this.reducedMotion);
     this.crowd.update(this.dancer, this.round, this.reducedMotion);
     const mystery=this.round.mystery;
     if(mystery.phase==='available'&&!this.mysteryView.placed){

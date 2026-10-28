@@ -176,3 +176,11 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 .title-sharing summary { cursor: pointer; }
 .title-sharing summary small { display: block; margin-top: .25rem; font-family: sans-serif; font-size: .75rem; font-weight: 400; }
 .title-sharing section { padding: .5rem 0; }
+
+.passport { margin-top: 1.2rem; padding: 1rem; border: 1px solid currentColor; border-radius: 16px; text-align: left; }
+.passport h3 { margin: 0 0 .5rem; }
+.passport progress { width: 100%; accent-color: #bce8ad; }
+.passport summary,.unlock-list summary { cursor: pointer; padding: .7rem 0; }
+.passport li,.unlock-list li { margin-bottom: .6rem; }
+.passport small { opacity: .8; }
+.reward-reveal { background: #8de8ba12; }
