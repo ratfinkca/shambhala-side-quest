@@ -25,6 +25,6 @@ test('bass points require active ability and both locations in bass; pickup coun
 });
 test('charge carries to next stage, exposure and active effect do not; perks list is complete',()=>{
  const run=createRun('festival','a');startStage(run);const r=createRound();r.bass.chargeMs=7500;r.pickups=20;r.ended=true;r.remainingMs=0;
- finishStage(run,r);assert.deepEqual(upgradeChoices(run),['boots','noodle','moth','bracelet']);assert.equal(chooseUpgrade(run,'basshead'),false);chooseUpgrade(run,'boots');
+ finishStage(run,r);assert.deepEqual(upgradeChoices(run),['boots','noodle','moth','bracelet','surfer','battery','encore','sweet']);assert.equal(chooseUpgrade(run,'basshead'),false);chooseUpgrade(run,'boots');
  assert.equal(startStage(run).bassChargeMs,7500);assert.equal(startStage(createRun('festival','b')).bassChargeMs,0);
 });

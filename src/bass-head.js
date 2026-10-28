@@ -1,11 +1,13 @@
 export const BASS_CHARGE_MS=10000, BASS_ACTIVE_MS=6000, BASS_EXPOSURE_MS=6000;
 export function createBass(chargeMs=0){return {chargeMs:Math.max(0,Math.min(BASS_CHARGE_MS,chargeMs)),exposureMs:0,activeMs:0};}
 export function advanceBass(round,dt,inBass){
- if(round.ended)return;
- const b=round.bass,elapsed=Math.max(0,dt),chargingTime=Math.max(0,elapsed-b.activeMs);
+ if(round.ended)return 0;
+ const b=round.bass,before=b.chargeMs,rate=round.rules?.bassChargeRate??1,elapsed=Math.max(0,dt),chargingTime=Math.max(0,elapsed-b.activeMs);
  b.activeMs=Math.max(0,b.activeMs-elapsed);
  b.exposureMs=inBass?Math.min(BASS_EXPOSURE_MS,b.exposureMs+elapsed):Math.max(0,b.exposureMs-elapsed*2);
- if(inBass)b.chargeMs=Math.min(BASS_CHARGE_MS,b.chargeMs+chargingTime);
+ if(inBass)b.chargeMs=Math.min(BASS_CHARGE_MS,b.chargeMs+chargingTime*rate);
+ // Analytics records active time spent charging, not the perk-amplified charge amount.
+ return Math.max(0,b.chargeMs-before)/rate;
 }
 export function activateBass(round){
  const b=round.bass;

@@ -20,7 +20,7 @@ export function advanceMystery(m,dt,ended=false){
 export function collectMystery(round,rng=Math.random){
  const m=round.mystery;
  if(round.ended||m.phase!=='available'||m.effectMs>0)return null;
- m.phase='spent';m.effect=Object.keys(MYSTERY_EFFECTS)[Math.min(2,Math.floor(rng()*3))];m.effectMs=5000;
+ m.phase='spent';m.effect=Object.keys(MYSTERY_EFFECTS)[Math.min(2,Math.floor(rng()*3))];m.effectMs=round.rules?.candyDurationMs??5000;
  return m.effect;
 }
 export function mysterySpeed(m){return m.effect==='speed'&&m.effectMs>0?750:300;}

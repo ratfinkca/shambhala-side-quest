@@ -5,8 +5,12 @@ export const PERKS={
  noodle:{name:'Pool Noodle',icon:'◡',description:'Ignore the slowdown from your first bump each stage.'},
  moth:{name:'Moth Charm',icon:'✦',description:'Flow State lasts 7 seconds instead of 5.'},
  bracelet:{name:'Friendship Bracelet',icon:'◎',description:'Keep your combo for 3 seconds instead of 2.'},
+ surfer:{name:'Crowd Surfer',icon:'↝',description:'Clean passes give +25% speed for 1.2 seconds. Refreshes without stacking.'},
+ battery:{name:'Bass Battery',icon:'ϟ',description:'Charge Bass Head 50% faster while in bass zones.'},
+ encore:{name:'Encore',icon:'☀',description:'Your first Flow pickup each stage lasts 3 seconds longer. Combines with Moth Charm.'},
+ sweet:{name:'Sweet Tooth',icon:'◇',description:'All candy effects last 7 seconds instead of 5. More magic, more mayhem.'},
 };
-export function rulesFor(perks=[]){return {comboGraceMs:perks.includes('bracelet')?3000:2000,flowDurationMs:perks.includes('moth')?7000:5000,closePassPoints:perks.includes('boots')?25:15,bumpShields:perks.includes('noodle')?1:0};}
+export function rulesFor(perks=[]){return {comboGraceMs:perks.includes('bracelet')?3000:2000,flowDurationMs:perks.includes('moth')?7000:5000,closePassPoints:perks.includes('boots')?25:15,bumpShields:perks.includes('noodle')?1:0,surferDurationMs:perks.includes('surfer')?1200:0,bassChargeRate:perks.includes('battery')?1.5:1,firstFlowBonusMs:perks.includes('encore')?3000:0,candyDurationMs:perks.includes('sweet')?7000:5000};}
 export function createRun(mode,id,themeId=THEME_DEFAULT){return {id,themeId:resolveTheme(themeId),mode:mode==='festival'?'festival':'rush',stageIndex:0,totalScore:0,stagesCleared:0,perks:[],scoreStages:[],bassChargeMs:0,status:'ready',submitted:false};}
 export function startStage(run){if(run.status!=='ready')return null;run.status='playing';return {stage:STAGES[run.stageIndex],rules:rulesFor(run.perks),bassChargeMs:run.bassChargeMs};}
 export function finishStage(run,round){

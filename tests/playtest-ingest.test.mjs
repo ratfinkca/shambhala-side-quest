@@ -7,3 +7,21 @@ test('ingestion validates allowed schema and rejects identifiers/coordinates and
  for(const modify of [e=>e.initials='ABC',e=>e.payload.x=5,e=>e.payload.score=NaN,e=>e.eventId='bad',e=>e.type='arbitrary',e=>e.payload.candies.secret=1,e=>e.payload.clearanceBins=[1,2],e=>e.payload.activeMs=60001]){const e=event();modify(e);assert.equal(validatePlaytestBatch([e]).ok,false);}
  assert.equal(validatePlaytestBatch(Array.from({length:21},event)).ok,false);
 });
+
+test('playtest ingestion accepts the eight known perks and rejects unknown IDs',async()=>{
+ const {PERKS}=await import('../src/run.js');
+ for(const perk of [...Object.keys(PERKS),'unknown']){
+  const e={...event(),type:'perk',payload:{perk}};
+  assert.equal(validatePlaytestBatch([e]).ok,perk!=='unknown');
+ }
+});
+
+test('Bass Battery reports real charging time within bass exposure and remains ingestible',async()=>{
+ const {createRound}=await import('../src/game.js');const {rulesFor}=await import('../src/run.js');
+ const {advanceBass,activateBass}=await import('../src/bass-head.js');
+ const round=createRound(rulesFor(['battery']));
+ const chargeMs=advanceBass(round,6000,true);assert.equal(round.bass.chargeMs,9000);assert.equal(chargeMs,6000);
+ const e=event();e.payload.bassMs=6000;e.payload.chargeMs=chargeMs;assert.equal(validatePlaytestBatch([e]).ok,true);
+ const final=advanceBass(round,1000,true);assert.ok(final<=1000);assert.equal(round.bass.chargeMs,10000);
+ activateBass(round);assert.equal(advanceBass(round,6000,true),0);
+});

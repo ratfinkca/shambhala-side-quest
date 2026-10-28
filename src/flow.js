@@ -9,8 +9,9 @@ export function availableFlow(round) {
 export function activateFlow(round) {
   const slot = availableFlow(round);
   if (slot < 0) return false;
+  const first=round.flowTaken.length===0;
   round.flowTaken.push(slot);
-  round.flowMs = round.rules.flowDurationMs;
+  round.flowMs = round.rules.flowDurationMs+(first?(round.rules.firstFlowBonusMs||0):0);
   return true;
 }
 
