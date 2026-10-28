@@ -1,15 +1,20 @@
 # Project handoff and roadmap
 
-Updated 2026-10-14. This is the starting point for continuing development on another machine. Historical specs and plans describe shipped work; do not restart their unchecked task lists.
+Updated 2026-10-28. This is the starting point for continuing development on another machine. Historical specs and plans describe shipped work; do not restart their unchecked task lists.
 
 ## Current release
 
-- Public repository: https://github.com/ratfinkca/shambhala-side-quest
-- Live game: https://ratfinkca.github.io/shambhala-side-quest/
-- Festival Run originally shipped in [PR #2](https://github.com/ratfinkca/shambhala-side-quest/pull/2), merged as `4fb9fab`. The user accepted the preview, Pages deployment succeeded, and the live title/first-stage start were checked without console errors.
-- Shipped: responsive arena, Quick Rush, three-stage Festival Run, stage obstacles/mud, four run-only perks, title/wardrobe/settings, procedural audio with independent volume controls, and separate local arcade top tens.
-- Gameplay update: click/tap destinations (no hover or drag steering), organic polygon mud, staggered speaker clusters, circular bass slowdown zones with beat-synced visual vibration, and rare wrapped candy with temporary effects. See [gameplay validation](superpowers/gameplay-update-validation.md) for evidence and limits.
-- Not implemented: currency, shop, permanent cosmetic rewards, endless mode, online rankings or cross-device saves.
+PR #7 is deployed to [GitHub Pages](https://ratfinkca.github.io/shambhala-side-quest/) as `8811981` (2026-10-27). Shipped features include:
+
+- Quick Rush and three-stage Festival Run, four run perks, candy, organic mud, bass pressure and earned Bass Head special.
+- Forest Freakout, Moonlit Mycelium and Neon Field Trip, with saved selection and Surprise each run.
+- Optional Supabase playtest tracking and a persistent title-screen sharing control; tracking remains opt-in.
+- Initials-based online Rush/Festival arcade boards, separate from local scores and analytics consent.
+- Nine choices per wardrobe category (729 combinations), all immediately available, and proximity-scaled clean-pass rings.
+
+Next agreed track: richer music and reactive concert lighting, starting with a Living Forest prototype for listening/playtesting before extending to other stages. Then persistent rave experience, perk availability and achievement-based cosmetic rewards. Preserve already available cosmetics. Candy feel/balance tuning remains deferred; endless mode and its perk limits, currency/shop and cross-device saves remain future work.
+
+112 automated tests cover the current working prototype. The sections below dated October 14–22 are historical planning/implementation snapshots; their pending-release statements are superseded by this release summary.
 
 ## Start on another machine
 
@@ -91,3 +96,8 @@ Neon Field Trip now joins Forest Freakout and Moonlit Mycelium as a selectable c
 On `codex/playtest-tracking`: consent and persistent preferences; opt-in run/stage summaries; input labels; bounded transport; strict ingestion schema; private database migration, retention/reporting, and backend integration workflow. Public collection remains off pending owner Supabase setup, staged gateway/cron validation, and final data-notice details. The owner chose GitHub issues as the contact route. No arcade board implementation or publishing in this change. See `docs/online-operations.md` and the two 2026-10-20 plans.
 
 Arcade board implementation: `codex/arcade-board`, separate online client and score counters, guest tickets, strict score validation, atomic receipts and private moderation. Backend deployed and hosted checks passed; production frontend rollout authorized. See `docs/superpowers/arcade-board-validation.md` for validation and remaining rollout checks.
+
+
+## Music, lighting and progression release — 2026-10-28
+
+Rave XP and six ranks now persist on-device, alongside six cumulative achievements. New players unlock expanded wardrobe pieces and two additional perk choices through play; existing profiles keep all previously available cosmetics/perks. Three new cosmetic flourishes (fireflies, stardust, prismatic aura) require earning for everyone, with locked previews and static reduced-motion rendering. Completed stages show XP/reward reveals; rehearsal awards no progression. Approved for release alongside the Living Forest music/lighting update. All 112 tests and the production build pass; final independent review found no blockers. Browser checks verified rank-up reward reveals, locked and unlocked wardrobe choices, flourish previews, and XP surviving reload. See [progression validation](superpowers/progression-validation.md) for rules, save limits and coverage.

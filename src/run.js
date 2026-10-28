@@ -18,5 +18,5 @@ export function finishStage(run,round){
  run.bassChargeMs=round.bass.chargeMs;
  return {qualified,pickups:round.pickups,target:STAGES[run.stageIndex].target,score:round.score,totalScore:run.totalScore};
 }
-export function upgradeChoices(run){return run.status==='upgrade'?Object.keys(PERKS).filter(id=>!run.perks.includes(id)):[];}
+export function upgradeChoices(run){return run.status==='upgrade'?Object.keys(PERKS).filter(id=>!run.perks.includes(id)&&(!run.availablePerks||run.availablePerks.includes(id))):[];}
 export function chooseUpgrade(run,id){if(run.status!=='upgrade'||!upgradeChoices(run).includes(id))return false;run.perks.push(id);run.stageIndex++;run.status='ready';return true;}

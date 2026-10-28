@@ -1,3 +1,5 @@
+import {availablePerks} from './progression.js';
+import {WARDROBE} from './wardrobe.js';
 import {createOnlineClient,readArcadeConfig} from './online/client.js';
 import {createSubmission} from './online/submission.js';
 import {createBoard} from './online/board.js';
@@ -12,7 +14,7 @@ import './themes.css';
 import {resolveTheme} from './themes.js';
 import {applyTheme} from './theme-view.js';
 import { GameScene } from './GameScene.js';
-import { createAvatar, setOutfit } from './Avatar.js';
+import { createAvatar, setOutfit, animateAvatar } from './Avatar.js';
 import { createAudio } from './audio.js';
 import { createStorage } from './storage.js';
 import { preventGameKeyDefault } from './input.js';
@@ -36,11 +38,11 @@ let submission=null;
 async function loadBoard(mode){const pending=board.select(mode,SCORING_VERSION);render();if(await pending&&screen.name==='scores')render();}
 let replayPending=false;
 let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
-let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,previewAvatar,previewReady=false;
+let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,progressReward,previewAvatar,previewReady=false;
 const fmt=n=>String(n).padStart(3,'0');
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:960,height:640,backgroundColor:'#102430',scene:GameScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},audio:{noAudio:true},banner:false});
 const refreshLayout=setupResponsiveLayout(game);
-const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'avatar-preview',width:180,height:180,transparent:true,audio:{noAudio:true},banner:false,fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,saved.profile.outfit);previewAvatar.setPosition(90,135).setScale(2);previewReady=true;}}});
+const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'avatar-preview',width:180,height:180,transparent:true,audio:{noAudio:true},banner:false,fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,saved.profile.outfit);previewAvatar.setPosition(90,135).setScale(2);previewReady=true;},update(time){if(previewAvatar)animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches)}}});
 const menus=createScreens($('#menu'),{action,volume,outfit});
 function clearToast(){clearTimeout(toastTimer);$('#toast').textContent=''}
 function toast(text,duration=2000){clearToast();$('#toast').textContent=text;toastTimer=setTimeout(clearToast,duration)}
@@ -57,7 +59,7 @@ function render(){
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
  $('#avatar-preview').hidden=screen.name!=='wardrobe';
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
- menus.show(screen.name,{onlineSubmission:submission,onlineInput:playtest.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ menus.show(screen.name,{progressReward,onlineSubmission:submission,onlineInput:playtest.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage;$('#initials').value=run.initials;$('#initials').disabled=true;}
  if(screen.name==='results'&&submission?.initials){$('#initials').value=submission.initials;$('#initials').disabled=true;}
  if(rehearsal&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
@@ -66,7 +68,7 @@ function render(){
 }
 function go(type,extra={}){const next=transition(screen,{type,...extra});if(next===screen)return false;screen=next;clearToast();render();return true}
 function pause(type='PAUSE'){if(screen.name!=='playing')return;scene.pauseRound();audio.stop();go(type)}
-function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);summary=null;resultSnapshot=null;submission=null;}
+function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);run.availablePerks=availablePerks(saved.profile.progress);summary=null;progressReward=null;resultSnapshot=null;submission=null;}
 function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
@@ -102,6 +104,11 @@ function action(name,value){
    $('#style-feedback').textContent=result.persisted?'Your festival style is saved.':'Style selected for this session. Browser storage is unavailable.';
    break;
   }
+  case 'preview-outfit':{
+   if(screen.name!=='wardrobe')return;
+   const [key,id]=value.split(':');const item=WARDROBE[key]?.find(o=>o.id===id);if(!item)return;
+   setOutfit(previewAvatar,{...saved.profile.outfit,[key]:id});$('#outfit-feedback').textContent=`Previewing ${item.name} · not equipped. Choose an available item to return to your outfit.`;break;
+  }
   case 'wardrobe':go('WARDROBE');break;
   case 'scores':if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
   case 'online-board':if(screen.name==='scores'&&['rush','festival'].includes(value))void loadBoard(value);break;
@@ -129,7 +136,7 @@ function action(name,value){
  }
 }
 function volume(key,value){const settings={...saved.profile.audio,[key]:value};saved.saveAudio(settings);audio.setVolumes(settings);audio.setEnabled(settings.enabled);$(`#value-${key}`).textContent=`${Math.round(value*100)}%`;if(key==='effects')audio.pickup(1)}
-function outfit(key,value){saved.saveOutfit({...saved.profile.outfit,[key]:value});if(previewAvatar)setOutfit(previewAvatar,saved.profile.outfit)}
+function outfit(key,value){const result=saved.saveOutfit({...saved.profile.outfit,[key]:value});if(result.accepted&&previewAvatar){setOutfit(previewAvatar,saved.profile.outfit);$('#outfit-feedback').textContent=result.persisted?'Outfit saved.':'Selected for this session; browser storage is unavailable.'}}
 game.events.on('forest:ready',value=>{scene=value;render()});
 $('#bass-head').addEventListener('click',e=>{if(screen.name==='playing'){if(scene.activateBassHead())playtest.input(e.pointerType==='touch'?'touch':e.detail===0?'keyboard':'mouse');$('#game').focus({preventScroll:true});}});
 $('#pause').addEventListener('click',()=>pause());$('#settings').addEventListener('click',()=>action('settings'));
@@ -174,10 +181,10 @@ game.events.on('round:update',round=>{
  button.classList.toggle('ready',ability.chargeMs>=10000);
  const bass=scene?bassFactor(scene.dancer,scene.stage.obstacles):1;
  $('#crowd-tip').textContent=bass<1&&!round.ended?`Bass pressure · ${Math.round(bassMovementFactor(round.bass,bass)*100)}% speed`:round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
- if(screen.name==='playing')audio.sync(round);
+ if(screen.name==='playing')audio.sync(round,scene.stage.id);
 });
 game.events.on('round:phase',phase=>{if(phase==='build')toast('Feel that? Here comes the drop.',2300);if(phase==='drop'){audio.drop();toast('BASS DROP · DOUBLE VIBES',2500)}});
-game.events.on('round:bass',()=>{toast('BASS HEAD · Bass immunity + 2× zone sparks');$('#announcement').textContent='Bass Head active for six seconds.';});
+game.events.on('round:bass',()=>{scene.round.bassUses=(scene.round.bassUses||0)+1;toast('BASS HEAD · Bass immunity + 2× zone sparks');$('#announcement').textContent='Bass Head active for six seconds.';});
 game.events.on('round:flow',()=>{audio.celebrate();toast('FLOW STATE · Sparks come to you')});
 game.events.on('round:mystery',effect=>{
  const info=MYSTERY_EFFECTS[effect];
@@ -191,6 +198,8 @@ game.events.on('round:end',round=>{
  playtest.finishStage(run.stageIndex,{score:round.score,qualified:result.qualified});
  if(run.status==='ended')playtest.end(run);
  void playtest.flush();
+ progressReward=rehearsal?null:saved.awardProgress({id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3});
+ run.availablePerks=availablePerks(saved.profile.progress);
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
  if(run.status==='ended')resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,inputType:playtest.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};
  go('END',{qualified:run.status==='upgrade'});$('#announcement').textContent=`Stage complete. ${round.pickups} sparks. ${run.totalScore} total points.`;

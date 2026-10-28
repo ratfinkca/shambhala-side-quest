@@ -1,7 +1,8 @@
 import { cycleAt } from './festival.js';
-import { beatVoices, BEAT_MS } from './music.js';
+import { beatVoices, forestVoices, BEAT_MS } from './music.js';
 
 export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)()) {
+  let noiseBuffer;
   let context, musicBus, effectsBus, enabled = false, lastStep = -1;
   let volumes = { music: .45, effects: .65 };
   function applyVolumes() { if (context) { musicBus.gain.setValueAtTime(volumes.music, context.currentTime); effectsBus.gain.setValueAtTime(volumes.effects, context.currentTime); } }
@@ -13,7 +14,7 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
     lastStep = -1;
   }
 
-  function tone(frequency, duration = .12, delay = 0, type = 'sine', volume = .06, endFrequency, channel = 'effects') {
+  function tone(frequency, duration = .12, delay = 0, type = 'sine', volume = .06, endFrequency, channel = 'effects', attack = .008) {
     if (!enabled || !context || context.state !== 'running') return;
     try {
       const oscillator = context.createOscillator(), gain = context.createGain();
@@ -22,13 +23,32 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
       oscillator.frequency.setValueAtTime(frequency, at);
       if (endFrequency) oscillator.frequency.exponentialRampToValueAtTime(endFrequency, at + duration);
       gain.gain.setValueAtTime(0, at);
-      gain.gain.linearRampToValueAtTime(volume, at + .008);
+      gain.gain.linearRampToValueAtTime(volume, at + attack);
       gain.gain.exponentialRampToValueAtTime(.001, at + duration);
       oscillator.connect(gain); gain.connect(channel === 'music' ? musicBus : effectsBus);
       nodes.add(oscillator);
       oscillator.onended = () => { nodes.delete(oscillator); oscillator.disconnect(); gain.disconnect(); };
       oscillator.start(at); oscillator.stop(at + duration + .02);
     } catch { /* Audio is optional; gameplay continues without it. */ }
+  }
+
+  function percussion(voice) {
+    if(!enabled||!context||context.state!=='running')return;
+    try {
+      if(!noiseBuffer){
+        noiseBuffer=context.createBuffer(1,context.sampleRate,context.sampleRate);
+        const samples=noiseBuffer.getChannelData(0);
+        for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
+      }
+      const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();
+      source.buffer=noiseBuffer;filter.type='highpass';filter.frequency.value=voice.filter;
+      const at=context.currentTime;
+      gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(voice.volume,at+.003);
+      gain.gain.exponentialRampToValueAtTime(.001,at+voice.duration);
+      source.connect(filter);filter.connect(gain);gain.connect(musicBus);nodes.add(source);
+      source.onended=()=>{nodes.delete(source);source.disconnect();filter.disconnect();gain.disconnect()};
+      source.start(at);source.stop(at+voice.duration+.02);
+    }catch { /* Optional audio must never interrupt a run. */ }
   }
 
   return {
@@ -42,14 +62,16 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
       } catch {}
     },
     // Active game time drives the groove; no independent timer survives pause.
-    sync(round) {
+    sync(round,stageId) {
       if (!enabled || !context || context.state !== 'running' || round.ended) return;
       const elapsed = 60000 - round.remainingMs;
       const step = Math.floor(elapsed / (BEAT_MS/2));
       if (step === lastStep) return;
       lastStep = step;
-      for (const voice of beatVoices(step, cycleAt(elapsed).phase, round.multiplier, round.flowMs > 0)) {
-        tone(voice.frequency, voice.duration, 0, voice.type, voice.volume, voice.endFrequency, 'music');
+      const arrange=stageId==='forest'?forestVoices:beatVoices;
+      for (const voice of arrange(step, cycleAt(elapsed).phase, round.multiplier, round.flowMs > 0)) {
+        if(voice.noise)percussion(voice);
+        else tone(voice.frequency, voice.duration, 0, voice.type, voice.volume, voice.endFrequency, 'music',voice.attack);
       }
     },
     pickup(multiplier) { tone([523.25, 622.25, 783.99, 932.33, 1046.5][multiplier - 1], .12, 0, 'sine', .04); },

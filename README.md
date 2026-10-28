@@ -4,21 +4,25 @@ A tiny, unofficial festival-inspired game: wander a glowing forest, collect good
 
 ## Festival Run
 
-The game includes a title screen, wardrobe, independent music/effects volume controls, and local arcade scores. Play either mode using the GitHub Pages link below.
+The game includes a title screen, wardrobe, independent music/effects volume controls, and local plus optional online arcade scores. Play either mode using the GitHub Pages link below.
 
 - **Quick Rush** keeps the original one-minute score chase.
 - **Festival Run** has three one-minute stages: Living Forest (20 sparks), Neon Grove (25), and Sunrise Clearing (30). Qualification counts raw spark pickups in that stage. Play the whole minute, then choose an upgrade if you qualify. Scores accumulate across the run.
 - Later stages add more dancers, solid speaker islands, and marked mud that slows movement. Click around speakers; pointer controls do not automatically find a route around obstacles. At full exposure, amber bass zones reduce speed from 50% at the edge to 20% near the cabinets. Mud and bumps never multiply this slowdown. Three existing sparks prefer safe positions near the bins; Flow can pull them from outside the zone. Bass rings, cones, and nearby character/pickup artwork vibrate on the 120 BPM beat, more strongly near speakers and during drops. The outer boundary and collision positions stay fixed. Reduced motion keeps the zone markings and artwork static.
-- Between qualifying stages, choose any available unowned perk: Disco Boots (+10 base close-pass points), Pool Noodle (one protected bump per stage), Moth Charm (seven-second Flow), or Friendship Bracelet (three-second combo grace). Perks reset each run; rave-experience unlocks are planned for later.
+- Between qualifying stages, choose any available unowned perk: Disco Boots (+10 base close-pass points), Pool Noodle (one protected bump per stage), Moth Charm (seven-second Flow), or Friendship Bracelet (three-second combo grace). Perks reset each run; new players earn Pool Noodle at 100 Rave XP and Moth Charm at 300 XP. Existing players retain all four choices.
 - Bass Head is an earned special, not a selected perk. Bass exposure builds from 90% speed toward the distance-based 20–50% floor over six seconds. Outside bass, movement recovers immediately and exposure fades fully over three seconds. Ten accumulated seconds in bass earns one charge; press B or tap Bass Head to spend it for six seconds of bass immunity and 2× spark points when both you and the spark are inside bass. Mud/bumps still apply. Combo/drop bonuses stack; each spark still counts once toward qualification. No charging during activation. Unspent charge carries between stages, while exposure and active effects reset; a new run clears everything.
-- Three onesies, three hats and three totem choices are free. Cosmetics do not change the hitbox or abilities.
+- The wardrobe offers nine onesies, nine hats and nine totems, plus three earnable visual flourishes. New players unlock expanded choices with Rave Experience and achievements; existing saves retain all previously available pieces. Cosmetics do not change the hitbox or abilities.
 - Sound defaults on for new players and begins on a Play interaction. An existing mute preference is preserved. Settings offer independent music/effects sliders; opening them during play pauses the game and requires explicit Resume.
-- Results offer optional three-character arcade initials. Quick Rush and Festival Run each have a local top ten, stored only in this browser. No online leaderboard or cross-device sync is included. Historical best scores migrate; reloading abandons an unfinished run.
-- Permanent cosmetic unlocks, currency/store, online rankings and endless mode are later milestones.
+- Results offer optional three-character arcade initials. Quick Rush and Festival Run each have a local top ten, stored only in this browser. An optional initials-based online board offers separate Quick Rush and Festival Run rankings; playtest sharing is independent and opt-in. Cross-device profile sync is not included. Historical best scores migrate; reloading abandons an unfinished run.
+- Rave Experience, cosmetic achievements and device-local progression are included; currency/store, endless mode and cloud profile sync remain later milestones.
 
 For development-only transition checks, run Vite and open `/?rehearsal`. The visible rehearsal controls can finish a stage with a qualifying or failing fixture. Scores and historical-best updates are disabled in that mode. Its module is excluded from production builds. Use normal play for difficulty/balance feedback.
 
 [Play on GitHub Pages](https://ratfinkca.github.io/shambhala-side-quest/)
+
+## Music and lighting
+
+Living Forest now previews a richer procedural arrangement with soft chords, syncopated bass, noise-based percussion and four stage-mounted moving beams. Builds and drops share the game clock; reduced motion uses static lighting. Other stages retain their existing music/lighting. Reward pacing, audio mix and sustained phone performance remain playtest targets.
 
 ## Run
 

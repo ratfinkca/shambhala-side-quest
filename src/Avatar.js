@@ -1,9 +1,9 @@
 import { normalizeOutfit } from './wardrobe.js';
 export function createAvatar(scene,outfit) {
-  const node=scene.add.container(0,0);node.art=scene.add.graphics();node.add(node.art);setOutfit(node,outfit);return node;
+  const node=scene.add.container(0,0);node.flourish=scene.add.graphics();node.art=scene.add.graphics();node.add([node.flourish,node.art]);setOutfit(node,outfit);return node;
 }
 export function setOutfit(node,value) {
-  const outfit=normalizeOutfit(value),g=node.art;g.clear();
+  const outfit=normalizeOutfit(value),g=node.art;node.outfit=outfit;g.clear();animateAvatar(node,0,true);
   const color=({lime:0xc8f68c,moth:0xb39ae7,rainbow:0xffb59b,tiger:0xffaa65,frog:0x69d69c,cosmic:0x6256a6,bee:0xffdc65,skeleton:0x283d50,patchwork:0xef83bd})[outfit.onesie];
   g.lineStyle(4,0xf4efc5).lineBetween(-4,8,-7,16).lineBetween(4,8,7,16);
   if(outfit.onesie==='moth'){g.fillStyle(0x9e77c7,.8).fillTriangle(-4,-6,-22,3,-8,12).fillTriangle(4,-6,22,3,8,12);g.fillStyle(0xf1c68d).fillCircle(-14,3,3).fillCircle(14,3,3);}
@@ -96,4 +96,27 @@ export function setOutfit(node,value) {
       g.fillStyle(0xffee99).fillCircle(9,-48,2).fillCircle(18,-47,2).fillCircle(27,-48,2);
     }
   }
+}
+
+// A fixed number of decorative marks: no spawned particles, hitboxes or scoring effects.
+export function animateAvatar(node,time,reduced=false){
+ const g=node.flourish;if(!g)return;g.clear();
+ const flair=node.outfit?.flair;if(!flair||flair==='none')return;
+ const t=reduced?0:time/1000;
+ if(flair==='prism'){
+   const colours=[0xf4a3d8,0xa9a1ff,0x8bf0df,0xf5de8d];
+   for(let i=0;i<4;i++){
+     const phase=(t/4+i)%4,a=colours[Math.floor(phase)],b=colours[(Math.floor(phase)+1)%4],mix=phase%1;
+     const colour=[16,8,0].reduce((rgb,shift)=>rgb|(Math.round(((a>>shift)&255)*(1-mix)+((b>>shift)&255)*mix)<<shift),0);
+     g.lineStyle(1.5,colour,.55).strokeEllipse(0,0,26+i*5,32+i*5);
+   }
+   return;
+ }
+ const colours=flair==='fireflies'?[0xcaff95,0xffe69c]:[0xfbe4ae,0xc8bcff];
+ for(let i=0;i<8;i++){
+   const angle=i*Math.PI/4+t*(flair==='stardust'?.5:.2);
+   const radius=22+Math.sin(t+i)*4,x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*.7;
+   g.fillStyle(colours[i%2],reduced?.6:.45+.35*(1+Math.sin(t*1.5+i))/2).fillCircle(x,y,i%3===0?1.8:1);
+   if(flair==='stardust'&&i%2===0)g.lineStyle(1,colours[i%2],.55).lineBetween(x-3,y,x+3,y).lineBetween(x,y-3,x,y+3);
+ }
 }
