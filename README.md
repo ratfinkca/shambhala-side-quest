@@ -22,7 +22,7 @@ For development-only transition checks, run Vite and open `/?rehearsal`. The vis
 
 ## Music and lighting
 
-Living Forest now previews a richer procedural arrangement with soft chords, syncopated bass, noise-based percussion and four stage-mounted moving beams. Builds and drops share the game clock; reduced motion uses static lighting. Other stages retain their existing music/lighting. Reward pacing, audio mix and sustained phone performance remain playtest targets.
+Each stage has its own procedural arrangement and six stage-mounted moving beams. Living Forest uses spacious minor chords and soft percussion; Neon Grove uses offbeat bass, clipped synths and narrow pink/cyan sweeps; Sunrise Clearing uses major chords, rising bells and broad amber/rose fans. Builds and drops share the game clock; reduced motion uses static lighting. Reward pacing, audio mix and sustained phone performance remain playtest targets.
 
 ## Run
 
