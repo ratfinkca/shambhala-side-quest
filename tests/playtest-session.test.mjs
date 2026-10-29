@@ -22,3 +22,9 @@ test('stale measurements and completion cannot contaminate a replay',async()=>{
  const stage=batches.find(e=>e.type==='stage_end');assert.equal(stage.payload.pickups,0);
  const ending=batches.find(e=>e.type==='run_end');assert.equal(ending.runId,replay.id);assert.equal(ending.payload.totalScore,0);
 });
+
+test('Endless keeps input classification local without emitting unsupported analytics',async()=>{
+ const {s,batches}=setup();s.setConsent('accepted');s.start({...run,mode:'endless'});
+ s.input('touch');s.stageStart(30);s.record('tick',{activeMs:60000,bassMs:0,chargeMs:0});s.perk('boots');s.finishStage(30,{score:50,qualified:true});s.end({...run,mode:'endless'});await s.flush();
+ assert.equal(batches.length,0);assert.equal(s.inputType(),'touch');
+});

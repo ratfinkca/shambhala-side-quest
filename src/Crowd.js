@@ -63,7 +63,7 @@ export class Crowd {
   update(player, round, reducedMotion) {
     const elapsed = 60000 - round.remainingMs;
     this.people.forEach((person, index) => {
-      const position = crowdPosition(index, elapsed, this.stage.crowdAnchors);
+      const position = crowdPosition(index, elapsed, this.stage.crowdAnchors,this.stage.crowdSpeed??1);
       person.node.setPosition(position.x, position.y);
       person.body.rotation = reducedMotion ? 0 : Math.sin(elapsed * .005 + index) * .14;
       const shake=bassOffset(position,this.stage.obstacles,elapsed,cycleAt(elapsed).phase,reducedMotion);

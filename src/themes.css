@@ -188,3 +188,9 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 .perk-art { display:block; width:100%; height:auto; aspect-ratio:1; margin:8px 0 12px; color:var(--accent); }
 .perk-art .perk-back { fill:var(--secondary); opacity:.12; }
 .perk-art .perk-solid { fill:var(--secondary); stroke:var(--accent); }
+
+.endless-play { margin-top:12px; }
+.endless-play small { display:block; margin-top:4px; font:500 11px/1.4 var(--body); }
+.equipped-perks { padding:12px; border:1px solid var(--secondary); border-radius:12px; margin-bottom:16px; }
+.equipped-perks h3 { margin:0 0 6px; }
+.equipped-perks p { margin:0; color:var(--paper); }
