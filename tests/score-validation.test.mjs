@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {validateScore} from '../supabase/functions/_shared/score.js';
-export const fixture=()=>({runId:'00000000-0000-4000-8000-000000000001',ticket:'a'.repeat(64),initials:'ABC',mode:'rush',scoringVersion:'arcade-v1',buildId:'test',inputType:'mixed',totalScore:10,stagesCleared:1,stages:[{stageIndex:0,activeMs:60000,pickups:1,closePasses:0,score:10,perks:[],sparks:[1,...Array(19).fill(0)],passes:[0,0]}]});
+import {fixture,endlessFixture} from './helpers/score-fixtures.mjs';
 test('valid Rush accepts pauses and rejects tampering, unknown fields and early submission',()=>{
  const p=fixture();assert.equal(validateScore(p).ok,true);
  assert.equal(validateScore(p,{mode:'rush',scoringVersion:'arcade-v1',runId:p.runId,elapsedMs:7200000}).ok,true);
@@ -48,4 +48,35 @@ test('every new perk can appear in a valid scored Festival and unknown perks sti
   assert.equal(validateScore(p).ok,true);
   p.stages[1].perks=['unknown'];assert.equal(validateScore(p).ok,false);
  }
+});
+
+test('Endless submits real scaled stages with four perks, a swap, keeps and a final failed stage',async()=>{
+ const p=await endlessFixture();assert.equal(p.stages.length,9);assert.equal(p.stagesCleared,8);
+ assert.equal(validateScore(p).ok,true);
+ assert.equal(validateScore(p,{mode:'endless',scoringVersion:'arcade-v1',runId:p.runId,elapsedMs:540000}).ok,true);
+ assert.equal(validateScore(p,{mode:'endless',scoringVersion:'arcade-v1',runId:p.runId,elapsedMs:534000}).ok,false);
+ for(const mutate of [q=>q.stagesCleared++,q=>q.stages[3].perks.push('sweet'),q=>q.stages[5].perks=['sweet','battery','encore','noodle'],q=>q.stages[5].perks.push('boots'),q=>q.stages[5].perks[1]='boots',q=>q.stages[0].perks=['boots'],q=>q.stages[7].stageIndex=8]){
+  const q=structuredClone(p);mutate(q);assert.equal(validateScore(q).ok,false);
+ }
+ const unfinished=structuredClone(p);unfinished.stages.pop();unfinished.stagesCleared=8;
+ assert.equal(validateScore(unfinished).ok,false);
+ // Stage four requires23, not20. Dropping to20 must prevent later stages.
+ const q=structuredClone(p);q.stages[3].pickups=20;q.stages[3].sparks=Array(20).fill(0);q.stages[3].sparks[0]=20;q.stages[3].score=200;q.totalScore=q.stages.reduce((n,s)=>n+s.score,0);
+ assert.equal(validateScore(q).ok,false);
+});
+test('Endless online history is bounded without ending gameplay',async()=>{
+ const {createRun,startStage,finishStage,keepPerks}=await import('../src/run.js');const {createRound}=await import('../src/game.js');
+ const run=createRun('endless','bounded');
+ for(let i=0;i<1442;i++){const config=startStage(run),r=createRound(config.rules);r.pickups=config.stage.target;r.remainingMs=0;r.ended=true;finishStage(run,r);keepPerks(run);}
+ assert.equal(run.stageIndex,1442);assert.equal(run.scoreStages.length,1440);assert.equal(run.scoreOverflow,true);
+});
+
+test('Endless accepts capped45 targets and rejects unfinished, oversized and skipped-award histories',async()=>{
+ const p=await endlessFixture();const prior=p.stages[7],failed=p.stages.at(-1);p.stages=p.stages.slice(0,-1);
+ while(p.stages.length<40){const s=structuredClone(prior);s.stageIndex=p.stages.length;s.pickups=45;s.sparks=Array(20).fill(0);s.sparks[0]=45;s.score=450;p.stages.push(s);}
+ failed.stageIndex=40;p.stages.push(failed);p.stagesCleared=40;p.totalScore=p.stages.reduce((n,s)=>n+s.score,0);
+ assert.equal(validateScore(p).ok,true);
+ const low=structuredClone(p);low.stages[39].pickups=44;low.stages[39].sparks[0]=44;low.stages[39].score=440;low.totalScore-=10;assert.equal(validateScore(low).ok,false);
+ const oversized=structuredClone(p);oversized.stages=Array(1441).fill(failed);assert.equal(validateScore(oversized).ok,false);
+ const chain=structuredClone(p);chain.stages[40].sparks[16]=1;chain.stages[40].pickups=1;chain.stages[40].score=50;chain.totalScore+=50;assert.equal(validateScore(chain).ok,false);
 });

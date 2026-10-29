@@ -1,3 +1,4 @@
+import {MAX_ONLINE_STAGES} from '../supabase/functions/_shared/score.js';
 import {endlessStage} from './endless.js';
 import {THEME_DEFAULT,resolveTheme} from './themes.js';
 import {STAGES} from './stages.js';
@@ -24,7 +25,8 @@ export function startStage(run){if(run.status!=='ready')return null;run.status='
 export function finishStage(run,round){
  if(run.status!=='playing'||!round.ended||round.remainingMs!==0)return null;
  const qualified=run.mode==='rush'||round.pickups>=stageFor(run).target;
- if(run.mode!=='endless')run.scoreStages.push({stageIndex:run.stageIndex,activeMs:60000,pickups:round.pickups,closePasses:round.closePasses,score:round.score,perks:[...run.perks],sparks:[...round.scoreComponents.sparks],passes:[...round.scoreComponents.passes]});
+ if(run.scoreStages.length<MAX_ONLINE_STAGES)run.scoreStages.push({stageIndex:run.stageIndex,activeMs:60000,pickups:round.pickups,closePasses:round.closePasses,score:round.score,perks:[...run.perks],sparks:[...round.scoreComponents.sparks],passes:[...round.scoreComponents.passes]});
+ else run.scoreOverflow=true;
  run.totalScore+=round.score;if(qualified)run.stagesCleared++;
  run.status=qualified&&(run.mode==='endless'||run.mode==='festival'&&run.stageIndex<2)?'upgrade':'ended';
  run.bassChargeMs=round.bass.chargeMs;

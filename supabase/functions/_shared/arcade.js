@@ -15,7 +15,7 @@ export function createArcadeHandler({kind,origins,secret,rpc}){
   if(!request.headers.get('content-type')?.startsWith('application/json'))return reply(415,{code:'invalid'});
   let p;try{
    const reader=request.body?.getReader();if(!reader)throw Error();let bytes=0,text='';const decoder=new TextDecoder();
-   for(;;){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>32768){await reader.cancel();return reply(413,{code:'invalid'});}text+=decoder.decode(value,{stream:true});}p=JSON.parse(text+decoder.decode());
+   for(;;){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>(kind==='submit-score'?1048576:32768)){await reader.cancel();return reply(413,{code:'invalid'});}text+=decoder.decode(value,{stream:true});}p=JSON.parse(text+decoder.decode());
   }catch{return reply(400,{code:'invalid'});}
   if(kind==='run-ticket'&&!validRun(p)||kind==='submit-score'&&!validateScore(p).ok||kind==='leaderboard'&&(!p||Object.keys(p).length!==2||!MODES.includes(p.mode)||!/^arcade-v[1-9][0-9]{0,3}$/.test(p.scoringVersion)))return reply(400,{code:'invalid'});
   try{

@@ -19,7 +19,7 @@ test('four perk slots support safe swapping, keeping and endless continuation wi
  assert.equal(chooseUpgrade(r,'surfer'),false);assert.equal(chooseUpgrade(r,'surfer','bad'),false);
  assert.equal(chooseUpgrade(r,'surfer','moth'),true);assert.ok(!r.perks.includes('moth'));assert.equal(r.perks.length,4);
  clear(r);assert.equal(keepPerks(r),true);assert.equal(keepPerks(r),false);assert.equal(r.stageIndex,6);
- assert.equal(r.scoreStages.length,0);
+ assert.equal(r.scoreStages.length,6);
 });
 test('early limited perk pools can keep going; failure ends; stage resets preserve only Bass charge and perks',()=>{
  const r=createRun('endless','one');r.availablePerks=['boots'];clear(r);chooseUpgrade(r,'boots');clear(r);
@@ -44,7 +44,7 @@ test('long Endless runs keep bounded histories and reject unavailable or duplica
  for(let i=0;i<100;i++){
   clear(run);if(i<4)chooseUpgrade(run,run.availablePerks[i]);else keepPerks(run);
  }
- assert.equal(run.stageIndex,100);assert.equal(run.perks.length,4);assert.equal(run.scoreStages.length,0);
+ assert.equal(run.stageIndex,100);assert.equal(run.perks.length,4);assert.equal(run.scoreStages.length,100);
  clear(run);assert.equal(chooseUpgrade(run,'battery','boots'),false);assert.equal(chooseUpgrade(run,'moth','boots'),false);
  assert.ok(chooseUpgrade(run,'surfer','boots'));assert.equal(new Set(run.perks).size,4);
 });

@@ -26,3 +26,29 @@ test('unsubmitted tickets expire and ticket issuance rate is bounded',async()=>{
  await db.exec('select maintain_arcade()');assert.equal((await db.query('select count(*)::int n from arcade_private.tickets')).rows[0].n,0);
  }finally{await db.close();}
 });
+
+test('Endless migration preserves existing boards, allows tickets and ranks survival first with stable ties',async()=>{
+ const db=new PGlite();try{
+ await db.exec('create role anon;create role authenticated;create role service_role;');
+ await db.exec(await readFile(new URL('../supabase/migrations/202610220001_scores.sql',import.meta.url),'utf8'));
+ // Existing Rush data survives the additive migration.
+ await db.exec(`insert into arcade_private.tickets(hash,run_id,mode,version,build) values(repeat('f',64),'00000000-0000-4000-8000-000000000001','rush','arcade-v1','test');
+ insert into arcade_private.scores(ticket_hash,initials,score,stages_cleared,record,input_type,mode,version) values(repeat('f',64),'OLD',99,1,'{}','mouse','rush','arcade-v1');`);
+ await db.exec(await readFile(new URL('../supabase/migrations/202610290001_endless_scores.sql',import.meta.url),'utf8'));
+ for(const [i,initials,clears,score,age] of [[1,'LOW',4,9999,4],[2,'TOP',5,200,3],[3,'TIE',5,200,2],[4,'NEW',5,100,1],[5,'HID',99,99999,5]]){
+  const hash=String(i).repeat(64),bucket='b'.repeat(64),run=`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`;
+  const ticket=await db.query("select arcade_ticket($1,$2,'endless','arcade-v1','test',$3) value",[hash,run,bucket]);assert.ok(ticket.rows[0].value.expiresAt);
+  await db.query("update arcade_private.tickets set issued_at=now()-interval '2 hours' where hash=$1",[hash]);
+  const record={runId:run,mode:'endless',scoringVersion:'arcade-v1',buildId:'test',initials,totalScore:score,stagesCleared:clears,inputType:'touch',stages:Array(clears+1).fill({})};
+  const submit=()=>db.query('select arcade_submit($1,$2,$3,$4) value',[hash,'same',JSON.stringify(record),bucket]);
+  assert.equal((await submit()).rows[0].value.accepted,true);assert.equal((await submit()).rows[0].value.accepted,true);
+  await db.query("update arcade_private.scores set received_at=now()-$1*interval '1 minute',hidden=$2 where ticket_hash=$3",[age,initials==='HID',hash]);
+ }
+ const board=()=>db.query("select arcade_board('endless','arcade-v1') value");
+ assert.deepEqual((await board()).rows[0].value.map(r=>r.initials),['TOP','TIE','NEW','LOW']);
+ assert.equal((await db.query("select arcade_board('rush','arcade-v1') value")).rows[0].value[0].initials,'OLD');
+ assert.deepEqual((await db.query("select arcade_board('endless','other') value")).rows[0].value,[]);
+ for(const role of ['anon','authenticated']){await db.exec(`set role ${role}`);await assert.rejects(board(),/permission denied/);await assert.rejects(db.query('select * from arcade_private.scores'),/permission denied/);await db.exec('reset role');}
+ await db.exec('set role service_role');assert.equal((await board()).rows[0].value.length,4);
+ }finally{await db.close();}
+});
