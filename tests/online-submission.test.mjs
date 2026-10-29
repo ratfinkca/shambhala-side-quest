@@ -12,3 +12,18 @@ test('configuration is independent and rejects credentials/insecure public endpo
  assert.ok(readArcadeConfig({VITE_ARCADE_ENABLED:'true',VITE_ARCADE_URL:'https://example.com'}).baseUrl);
  const client=createOnlineClient({baseUrl:'https://example.com',timeoutMs:5,fetch:()=>new Promise(()=>{})});assert.equal((await client.startRun({})).code,'unavailable');
 });
+
+test('Endless has its own online tab, survival-first details and explicit initials posting',()=>{
+ const html=renderOnlineBoard({mode:'endless',status:'ready',rows:[{initials:'WIN',score:100,stagesCleared:12,inputType:'touch'}]});
+ assert.match(html,/data-value="endless" aria-pressed="true"/);assert.match(html,/Stages cleared first/);assert.match(html,/12 cleared · 100 vibes/);
+ const state=createSubmission('endless-run');state.setTicket('endless-run',{ticket:'a'.repeat(64)});
+ const run={mode:'endless',totalScore:100,stagesCleared:12};const posting=renderSubmission(state,run,'touch');assert.match(posting,/Endless Festival/);assert.match(posting,/Post online/);
+ assert.doesNotMatch(renderSubmission(state,{...run,scoreOverflow:true},'touch'),/data-action="post-online"/);
+});
+test('Endless board accepts more than three clears and stays isolated from earlier board responses',async()=>{
+ const row={initials:'AAA',score:100,stagesCleared:12,inputType:'mouse',mode:'endless',scoringVersion:'arcade-v1',receivedAt:'2026-10-29T10:00:00Z'};
+ const client=createOnlineClient({baseUrl:'https://example.com',fetch:async()=>({ok:true,json:async()=>[row]})});assert.equal((await client.getBoard({mode:'endless',scoringVersion:'arcade-v1'})).ok,true);
+ assert.equal((await client.getBoard({mode:'rush',scoringVersion:'arcade-v1'})).ok,false);
+ const pending={};const board=createBoard(({mode})=>new Promise(resolve=>pending[mode]=resolve));const old=board.select('festival','arcade-v1'),current=board.select('endless','arcade-v1');
+ pending.endless({ok:true,data:[row]});await current;pending.festival({ok:true,data:[]});await old;assert.equal(board.rows[0].stagesCleared,12);assert.equal(board.mode,'endless');
+});

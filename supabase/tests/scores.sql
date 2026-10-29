@@ -1,5 +1,5 @@
 begin;
-select plan(7);
+select plan(10);
 select ok(not has_schema_privilege('anon','arcade_private','USAGE'),'private arcade schema denied');
 select ok(not has_function_privilege('anon','public.arcade_submit(text,text,jsonb,text)','EXECUTE'),'direct submissions denied');
 select public.arcade_ticket(repeat('a',64),'00000000-0000-4000-8000-000000000001','rush','arcade-v1','test',repeat('b',64));
@@ -13,5 +13,11 @@ select is(public.arcade_submit(repeat('a',64),'same','{}',repeat('b',64))->>'acc
 update arcade_private.scores set hidden=true where ticket_hash=repeat('a',64);
 select is(jsonb_array_length(public.arcade_board('rush','arcade-v1')),0,'hidden entry excluded');
 select is((select count(*)::int from cron.job where jobname='arcade-maintenance'),1,'cleanup scheduled');
+select ok(public.arcade_ticket(repeat('c',64),'00000000-0000-4000-8000-000000000002','endless','arcade-v1','test',repeat('b',64)) ? 'expiresAt','Endless tickets supported');
+select public.arcade_ticket(repeat('d',64),'00000000-0000-4000-8000-000000000003','endless','arcade-v1','test',repeat('b',64));
+insert into arcade_private.scores(ticket_hash,initials,score,stages_cleared,record,input_type,mode,version) values
+(repeat('c',64),'LOW',9999,4,'{}','touch','endless','arcade-v1'),(repeat('d',64),'TOP',100,5,'{}','mouse','endless','arcade-v1');
+select is(public.arcade_board('endless','arcade-v1')->0->>'initials','TOP','Endless ranks cleared stages first');
+select is(jsonb_array_length(public.arcade_board('rush','arcade-v1')),0,'Endless entries do not leak into Rush');
 select * from finish();
 rollback;

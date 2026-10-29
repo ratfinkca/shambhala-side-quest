@@ -73,7 +73,7 @@ function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
  if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;
-  if(arcadeConfig.baseUrl&&run.mode!=='endless'){const owner=run.id,current=createSubmission(owner);submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId}).then(result=>{if(run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);if(screen.name==='results')render();});}
+  if(arcadeConfig.baseUrl){const owner=run.id,current=createSubmission(owner);submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId}).then(result=>{if(run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);if(screen.name==='results')render();});}
  }
  playtest.stageStart(run.stageIndex);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
@@ -111,10 +111,10 @@ function action(name,value){
    setOutfit(previewAvatar,{...saved.profile.outfit,[key]:id});$('#outfit-feedback').textContent=`Previewing ${item.name} · not equipped. Choose an available item to return to your outfit.`;break;
   }
   case 'wardrobe':go('WARDROBE');break;
-  case 'scores':if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode==='festival'?'festival':'rush');break;
-  case 'online-board':if(screen.name==='scores'&&['rush','festival'].includes(value))void loadBoard(value);break;
+  case 'scores':if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
+  case 'online-board':if(screen.name==='scores'&&['rush','festival','endless'].includes(value))void loadBoard(value);break;
   case 'post-online':{
-   if(rehearsal||screen.name!=='results'||!run||run.mode==='endless'||!submission)return;
+   if(rehearsal||screen.name!=='results'||!run||run.scoreOverflow||!submission)return;
    const initials=$('#initials').value.toUpperCase();if(!/^[A-Z0-9]{3}$/.test(initials)){toast('Enter three letters or digits first.');return;}
    const owner=run.id,current=submission;const pending=current.post({initials,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId,inputType:playtest.inputType(),totalScore:run.totalScore,stagesCleared:run.stagesCleared,stages:run.scoreStages},p=>arcade.submitScore(p));render();
    void pending.then(()=>{if(run?.id===owner&&submission===current&&screen.name==='results')render();});break;
