@@ -20,7 +20,7 @@ export function createPlaytestSession({config,consent,send,uuid=()=>crypto.rando
   },
   start(value,replay=false){
    run={...value};ended=false;input=createInputTracker();summary=null;
-   if(!enabled())return;
+   if(!enabled()||run.mode==='endless')return;
    summary=createRunSummary({runId:run.id,mode:run.mode,buildId:config.buildId||'dev',scoringVersion:'arcade-v1'});
    emit('run_start',{});if(replay)emit('replay',{});
   },

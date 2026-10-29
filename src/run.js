@@ -1,3 +1,4 @@
+import {endlessStage} from './endless.js';
 import {THEME_DEFAULT,resolveTheme} from './themes.js';
 import {STAGES} from './stages.js';
 export const PERKS={
@@ -11,16 +12,31 @@ export const PERKS={
  sweet:{name:'Sweet Tooth',icon:'◇',description:'All candy effects last 7 seconds instead of 5. More magic, more mayhem.'},
 };
 export function rulesFor(perks=[]){return {comboGraceMs:perks.includes('bracelet')?3000:2000,flowDurationMs:perks.includes('moth')?7000:5000,closePassPoints:perks.includes('boots')?25:15,bumpShields:perks.includes('noodle')?1:0,surferDurationMs:perks.includes('surfer')?1200:0,bassChargeRate:perks.includes('battery')?1.5:1,firstFlowBonusMs:perks.includes('encore')?3000:0,candyDurationMs:perks.includes('sweet')?7000:5000};}
-export function createRun(mode,id,themeId=THEME_DEFAULT){return {id,themeId:resolveTheme(themeId),mode:mode==='festival'?'festival':'rush',stageIndex:0,totalScore:0,stagesCleared:0,perks:[],scoreStages:[],bassChargeMs:0,status:'ready',submitted:false};}
-export function startStage(run){if(run.status!=='ready')return null;run.status='playing';return {stage:STAGES[run.stageIndex],rules:rulesFor(run.perks),bassChargeMs:run.bassChargeMs};}
+export function createRun(mode,id,themeId=THEME_DEFAULT){return {id,themeId:resolveTheme(themeId),mode:['festival','endless'].includes(mode)?mode:'rush',stageIndex:0,totalScore:0,stagesCleared:0,perks:[],scoreStages:[],bassChargeMs:0,status:'ready',submitted:false};}
+const endlessStages=new WeakMap();
+export function stageFor(run){
+ if(run.mode!=='endless')return STAGES[run.stageIndex];
+ let cached=endlessStages.get(run);
+ if(cached?.index!==run.stageIndex){cached={index:run.stageIndex,stage:endlessStage(run.stageIndex)};endlessStages.set(run,cached);}
+ return cached.stage;
+}
+export function startStage(run){if(run.status!=='ready')return null;run.status='playing';return {stage:stageFor(run),rules:rulesFor(run.perks),bassChargeMs:run.bassChargeMs};}
 export function finishStage(run,round){
  if(run.status!=='playing'||!round.ended||round.remainingMs!==0)return null;
- const qualified=run.mode==='rush'||round.pickups>=STAGES[run.stageIndex].target;
- run.scoreStages.push({stageIndex:run.stageIndex,activeMs:60000,pickups:round.pickups,closePasses:round.closePasses,score:round.score,perks:[...run.perks],sparks:[...round.scoreComponents.sparks],passes:[...round.scoreComponents.passes]});
+ const qualified=run.mode==='rush'||round.pickups>=stageFor(run).target;
+ if(run.mode!=='endless')run.scoreStages.push({stageIndex:run.stageIndex,activeMs:60000,pickups:round.pickups,closePasses:round.closePasses,score:round.score,perks:[...run.perks],sparks:[...round.scoreComponents.sparks],passes:[...round.scoreComponents.passes]});
  run.totalScore+=round.score;if(qualified)run.stagesCleared++;
- run.status=run.mode==='festival'&&qualified&&run.stageIndex<2?'upgrade':'ended';
+ run.status=qualified&&(run.mode==='endless'||run.mode==='festival'&&run.stageIndex<2)?'upgrade':'ended';
  run.bassChargeMs=round.bass.chargeMs;
- return {qualified,pickups:round.pickups,target:STAGES[run.stageIndex].target,score:round.score,totalScore:run.totalScore};
+ return {qualified,pickups:round.pickups,target:stageFor(run).target,score:round.score,totalScore:run.totalScore};
 }
 export function upgradeChoices(run){return run.status==='upgrade'?Object.keys(PERKS).filter(id=>!run.perks.includes(id)&&(!run.availablePerks||run.availablePerks.includes(id))):[];}
-export function chooseUpgrade(run,id){if(run.status!=='upgrade'||!upgradeChoices(run).includes(id))return false;run.perks.push(id);run.stageIndex++;run.status='ready';return true;}
+function nextStage(run){run.pendingPerk=null;run.stageIndex++;run.status='ready';}
+export function chooseUpgrade(run,id,replaceId=null){
+ if(run.status!=='upgrade'||!upgradeChoices(run).includes(id))return false;
+ if(run.mode==='endless'&&run.perks.length>=4){
+  const slot=run.perks.indexOf(replaceId);if(slot<0)return false;run.perks[slot]=id;
+ }else{if(replaceId!==null)return false;run.perks.push(id);}
+ nextStage(run);return true;
+}
+export function keepPerks(run){if(run.mode!=='endless'||run.status!=='upgrade')return false;nextStage(run);return true;}

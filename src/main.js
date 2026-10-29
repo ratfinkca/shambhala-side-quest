@@ -20,7 +20,7 @@ import { createStorage } from './storage.js';
 import { preventGameKeyDefault } from './input.js';
 import { cycleAt } from './festival.js';
 import { setupResponsiveLayout } from './layout.js';
-import { PERKS, createRun, startStage, finishStage, chooseUpgrade, upgradeChoices } from './run.js';
+import { PERKS, createRun, startStage, finishStage, chooseUpgrade, keepPerks, stageFor, upgradeChoices } from './run.js';
 import { STAGES } from './stages.js';
 import {bassMovementFactor} from './bass-head.js';
 import { bassFactor } from './geometry.js';
@@ -59,7 +59,7 @@ function render(){
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
  $('#avatar-preview').hidden=screen.name!=='wardrobe';
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
- menus.show(screen.name,{progressReward,onlineSubmission:submission,onlineInput:playtest.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:STAGES[run?.stageIndex??0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ menus.show(screen.name,{progressReward,onlineSubmission:submission,onlineInput:playtest.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:run?stageFor(run):STAGES[0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage;$('#initials').value=run.initials;$('#initials').disabled=true;}
  if(screen.name==='results'&&submission?.initials){$('#initials').value=submission.initials;$('#initials').disabled=true;}
  if(rehearsal&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
@@ -73,12 +73,12 @@ function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
  if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;
-  if(arcadeConfig.baseUrl){const owner=run.id,current=createSubmission(owner);submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId}).then(result=>{if(run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);if(screen.name==='results')render();});}
+  if(arcadeConfig.baseUrl&&run.mode!=='endless'){const owner=run.id,current=createSubmission(owner);submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId}).then(result=>{if(run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);if(screen.name==='results')render();});}
  }
  playtest.stageStart(run.stageIndex);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
  go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});refreshLayout();
- $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}/3 · ${config.stage.name.toUpperCase()}`;
+ $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+config.stage.loop:'/3'} · ${config.stage.name.toUpperCase()}`;
 }
 function action(name,value){
  switch(name){
@@ -88,6 +88,7 @@ function action(name,value){
   }
   case 'playtest-notice':if(onlineConfig.enabled)window.open(onlineConfig.notice,'_blank','noopener,noreferrer');break;
   case 'rush':if(screen.name!=='title')return;newRun('rush');begin();break;
+  case 'endless':if(screen.name!=='title')return;newRun('endless');go('RULES');break;
   case 'festival':if(screen.name!=='title')return;newRun('festival');playtest.menu('instructions',activeTheme);go('RULES');break;
   case 'start':begin();break;
   case 'resume':if(screen.name!=='paused')return;audio.setEnabled(saved.sound);scene.resumeRound();go('RESUME');break;
@@ -110,10 +111,10 @@ function action(name,value){
    setOutfit(previewAvatar,{...saved.profile.outfit,[key]:id});$('#outfit-feedback').textContent=`Previewing ${item.name} · not equipped. Choose an available item to return to your outfit.`;break;
   }
   case 'wardrobe':go('WARDROBE');break;
-  case 'scores':if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
+  case 'scores':if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode==='festival'?'festival':'rush');break;
   case 'online-board':if(screen.name==='scores'&&['rush','festival'].includes(value))void loadBoard(value);break;
   case 'post-online':{
-   if(rehearsal||screen.name!=='results'||!run||!submission)return;
+   if(rehearsal||screen.name!=='results'||!run||run.mode==='endless'||!submission)return;
    const initials=$('#initials').value.toUpperCase();if(!/^[A-Z0-9]{3}$/.test(initials)){toast('Enter three letters or digits first.');return;}
    const owner=run.id,current=submission;const pending=current.post({initials,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId,inputType:playtest.inputType(),totalScore:run.totalScore,stagesCleared:run.stagesCleared,stages:run.scoreStages},p=>arcade.submitScore(p));render();
    void pending.then(()=>{if(run?.id===owner&&submission===current&&screen.name==='results')render();});break;
@@ -123,7 +124,13 @@ function action(name,value){
   case 'cancel':go('CANCEL');break;
   case 'confirm':if(screen.name!=='confirmExit')return;scene.pauseRound();audio.stop();playtest.end(run,'exit');void playtest.flush();run=null;go('CONFIRM');break;
   case 'upgrade':go('UPGRADE');break;
-  case 'choose':if(screen.name==='upgrade'&&chooseUpgrade(run,value)){playtest.perk(value);go('CHOOSE');}break;
+  case 'choose':
+   if(screen.name!=='upgrade')return;
+   if(run.mode==='endless'&&run.perks.length===4&&upgradeChoices(run).includes(value)){run.pendingPerk=value;render();break;}
+   if(chooseUpgrade(run,value)){playtest.perk(value);go('CHOOSE');}break;
+  case 'replace':if(screen.name==='upgrade'&&run.mode==='endless'&&chooseUpgrade(run,run.pendingPerk,value))go('CHOOSE');break;
+  case 'cancel-swap':if(screen.name==='upgrade'&&run.mode==='endless'){run.pendingPerk=null;render();}break;
+  case 'keep-perks':if(screen.name==='upgrade'&&keepPerks(run))go('CHOOSE');break;
   case 'replay':if(screen.name!=='results')return;replayPending=true;newRun(run.mode);go('REPLAY');break;
   case 'title':go('TITLE');break;
   case 'submit':{
@@ -168,7 +175,7 @@ game.events.on('round:update',round=>{
  $('#phase-detail').textContent=cycle.phase==='ended'?'COMPLETE':cycle.phase==='drop'?`2× POINTS · ${count}s`:cycle.phase==='build'?`IN ${count}…`:count?`${count}s`:'MAKE IT COUNT';
  const progress=cycle.phase==='drop'?cycle.remainingMs/4000:cycle.phase==='build'?1-cycle.remainingMs/3000:1-cycle.remainingMs/15000;$('#phase-fill').style.width=`${Math.max(0,Math.min(1,progress))*100}%`;
  $('#flow-status').textContent=round.flowMs>0&&!round.ended?`✦ FLOW ${Math.ceil(round.flowMs/1000)}s`:'◇ FIND FLOW';$('#flow-status').classList.toggle('active',round.flowMs>0&&!round.ended);
- $('#passes').textContent=round.closePasses;$('#spark-goal').textContent=run?.mode==='festival'?`✦ ${round.pickups} / ${STAGES[run.stageIndex].target} sparks`:`✦ ${round.pickups} sparks`;
+ $('#passes').textContent=round.closePasses;$('#spark-goal').textContent=run&&run.mode!=='rush'?`✦ ${round.pickups} / ${stageFor(run).target} sparks`:`✦ ${round.pickups} sparks`;
  $('#shield-status').textContent=round.shieldsRemaining?'◌ SHIELD READY':'';
  const mystery=round.mystery;
  $('#effect-status').hidden=!mystery.effect;

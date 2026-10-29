@@ -75,10 +75,10 @@ export function updateEncounter(encounter, player, dancer, elapsedMs) {
 
 const SPOTS = [[235,250],[385,255],[565,235],[735,260],[300,365],[665,365],[225,490],[410,490],[585,495],[750,485]];
 
-export function crowdPosition(index, elapsedMs, anchors = SPOTS) {
+export function crowdPosition(index, elapsedMs, anchors = SPOTS, speed = 1) {
   // Integrate the extra drop speed; multiplying the timestamp would teleport dancers.
   const extraMs = DROP_STARTS.reduce((sum, start) => sum + Math.max(0, Math.min(4000, elapsedMs - start)) * 0.65, 0);
-  const t = (elapsedMs + extraMs) / 1000;
+  const t = (elapsedMs + extraMs) / 1000 * speed;
   const [x, y] = anchors[index % anchors.length];
   const wander = index % 3 === 0;
   return {
