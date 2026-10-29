@@ -23,14 +23,13 @@ export function validateScore(p,ticket){
   const qualified=p.mode==='rush'||s.pickups>=(p.mode==='endless'?Math.min(45,[20,25,30][i%3]+Math.floor(i/3)*3):[20,25,30][i]);
   if(qualified)cleared++;else if(i!==p.stages.length-1)return fail('invalid');
   if(p.mode==='festival'&&qualified&&i===p.stages.length-1&&i<2)return fail('unfinished');
-  if(p.mode==='endless'&&qualified&&i===p.stages.length-1)return fail('unfinished');
   previous=s.perks;total+=points;
  }
  if(total!==p.totalScore||cleared!==p.stagesCleared)return fail('invalid');
  if(ticket&&(ticket.mode!==p.mode||ticket.scoringVersion!==p.scoringVersion||ticket.runId!==p.runId||ticket.elapsedMs+5000<p.stages.length*60000))return fail('invalid_ticket');
  return {ok:true,record:p};
 }
-export function validBoard(rows,mode,version){return Array.isArray(rows)&&rows.length<=50&&rows.every(r=>exact(r,['initials','score','stagesCleared','inputType','mode','scoringVersion','receivedAt'])&&/^[A-Z0-9]{3}$/.test(r.initials)&&integer(r.score)&&integer(r.stagesCleared)&&r.stagesCleared<=(mode==='endless'?MAX_ONLINE_STAGES-1:3)&&INPUTS.includes(r.inputType)&&r.mode===mode&&r.scoringVersion===version&&typeof r.receivedAt==='string'&&Number.isFinite(Date.parse(r.receivedAt)));}
+export function validBoard(rows,mode,version){return Array.isArray(rows)&&rows.length<=50&&rows.every(r=>exact(r,['initials','score','stagesCleared','inputType','mode','scoringVersion','receivedAt'])&&/^[A-Z0-9]{3}$/.test(r.initials)&&integer(r.score)&&integer(r.stagesCleared)&&r.stagesCleared<=(mode==='endless'?MAX_ONLINE_STAGES:3)&&INPUTS.includes(r.inputType)&&r.mode===mode&&r.scoringVersion===version&&typeof r.receivedAt==='string'&&Number.isFinite(Date.parse(r.receivedAt)));}
 
 function validEndlessPerks(previous,next){
  const added=next.filter(p=>!previous.includes(p)).length,removed=previous.filter(p=>!next.includes(p)).length;

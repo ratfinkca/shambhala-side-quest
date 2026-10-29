@@ -42,3 +42,9 @@ export function chooseUpgrade(run,id,replaceId=null){
  nextStage(run);return true;
 }
 export function keepPerks(run){if(run.mode!=='endless'||run.status!=='upgrade')return false;nextStage(run);return true;}
+
+// Totals/history are committed only by finishStage, so a partial round is excluded.
+export function finishRun(run){
+ if(run.mode!=='endless'||!['playing','ready','upgrade'].includes(run.status)||run.scoreStages.length===0)return false;
+ run.status='ended';run.endedVoluntarily=true;run.pendingPerk=null;return true;
+}

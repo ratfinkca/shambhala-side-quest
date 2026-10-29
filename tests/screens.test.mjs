@@ -14,3 +14,16 @@ test('stage screens guard duplicate transitions and discard is explicit',()=>{
  assert.equal(transition(s,{type:'CHOOSE'}),s);s=transition(s,{type:'START'});s=transition(s,{type:'PAUSE'});s=transition(s,{type:'EXIT'});assert.equal(s.name,'confirmExit');
  assert.equal(transition(s,{type:'CANCEL'}).name,'paused');assert.equal(transition(s,{type:'CONFIRM'}).name,'title');
 });
+
+test('finish confirmation preserves the run for results and unsaved navigation can be cancelled',()=>{
+ for(const from of ['paused','rules','summary','upgrade']){
+  const confirm=transition({name:from},{type:'EXIT'});
+  assert.equal(transition(confirm,{type:'FINISH'}).name,'results');
+  assert.equal(transition(confirm,{type:'CANCEL'}).name,from);
+ }
+ const results={name:'results'};const leave=transition(results,{type:'LEAVE',destination:'replay'});
+ assert.equal(leave.name,'confirmLeave');assert.equal(leave.destination,'replay');
+ assert.equal(transition(leave,{type:'CANCEL'}).name,'results');
+ assert.equal(transition(leave,{type:'LEAVE_CONFIRMED'}).name,'results');
+ assert.equal(transition({name:'playing'},{type:'LEAVE'}).name,'playing');
+});

@@ -194,3 +194,16 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 .equipped-perks { padding:12px; border:1px solid var(--secondary); border-radius:12px; margin-bottom:16px; }
 .equipped-perks h3 { margin:0 0 6px; }
 .equipped-perks p { margin:0; color:var(--paper); }
+
+/* Keep score decisions ahead of navigation on every festival theme. */
+.score-save-panel{border:1px solid var(--border,#718463);background:var(--field);border-radius:12px;padding:18px;margin:16px 0 22px;text-align:left}
+.score-save-panel .score-entry{display:grid;grid-template-columns:minmax(90px,1fr) minmax(160px,2fr);gap:10px;align-items:center}
+.score-save-panel .score-entry label,.score-save-panel .score-entry small{grid-column:1/-1}
+.score-save-panel .score-entry input{width:100%;max-width:120px;text-align:center;font-size:24px;letter-spacing:.18em;box-sizing:border-box}
+.score-save-panel .primary-button{min-height:48px;width:100%;margin:0}
+.score-save-panel h3{margin-top:18px;margin-bottom:8px}
+.score-save-panel [role=status]:empty{display:none}
+.result-navigation{margin-top:20px}
+@media(max-width:480px){.score-save-panel{padding:14px}.score-save-panel .score-entry{grid-template-columns:1fr}.score-save-panel .score-entry input{max-width:100%}}
+.game-frame[data-menu='results'] .result-total{font-size:48px;line-height:1;margin:14px 0}
+.game-frame[data-menu='results'] .result-total small{display:block;margin-top:8px;line-height:1.3}

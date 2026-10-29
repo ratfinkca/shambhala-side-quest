@@ -27,3 +27,19 @@ test('Endless board accepts more than three clears and stays isolated from earli
  const pending={};const board=createBoard(({mode})=>new Promise(resolve=>pending[mode]=resolve));const old=board.select('festival','arcade-v1'),current=board.select('endless','arcade-v1');
  pending.endless({ok:true,data:[row]});await current;pending.festival({ok:true,data:[]});await old;assert.equal(board.rows[0].stagesCleared,12);assert.equal(board.mode,'endless');
 });
+
+test('save area leads with initials and prominent actions; navigation is secondary and warns only when needed',async()=>{
+ const {renderResults,resultsExitState}=await import('../src/results-view.js');
+ const run={mode:'endless',totalScore:1234,stagesCleared:3,endedVoluntarily:true};const state=createSubmission('id');state.setTicket('id',{ticket:'a'.repeat(64)});
+ const html=renderResults({run,summary:null,profile:{},onlineSubmission:state,onlineInput:'touch'});
+ assert.match(html,/Finish|finished|FINISHED/);assert.match(html,/Save on this device/);assert.match(html,/class="primary-button" data-action="post-online"/);
+ assert.ok(html.indexOf('data-action="post-online"')<html.indexOf('data-action="replay"'));assert.ok(html.indexOf('id="initials"')<html.indexOf('data-action="submit"'));
+ assert.equal(resultsExitState(run,state),'unsaved');assert.equal(resultsExitState({...run,submitted:true},state),'saved');
+ state.status='pending';assert.equal(resultsExitState({...run,submitted:true},state),'pending');state.status='succeeded';assert.equal(resultsExitState(run,state),'saved');
+ state.status='error';assert.equal(resultsExitState(run,state),'unsaved');
+});
+
+test('results retain partially typed or cleared initials when a warning is cancelled',async()=>{
+ const {renderResults}=await import('../src/results-view.js');
+ for(const initialsDraft of ['ZX','']){const html=renderResults({run:{mode:'endless',endedVoluntarily:true,totalScore:10,stagesCleared:1,initialsDraft},profile:{}});assert.ok(html.includes(`value="${initialsDraft}"`));}
+});
