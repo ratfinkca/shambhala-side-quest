@@ -1,3 +1,4 @@
+import {renderPerkArt} from './perk-art.js';
 import {THEMES,getTheme} from './themes.js';
 import {renderPlaytestShortcut} from './playtest/view.js';
 import {PERKS} from './run.js';
@@ -11,5 +12,5 @@ export function renderFestivalStyles(profile){
 }
 export function renderPerks(choices,themeId){
  const theme=getTheme(themeId);
- return `<p class="menu-eyebrow">A LITTLE FESTIVAL MAGIC</p><h2>Choose your perk.</h2><p class="menu-copy">A little something for the rest of your run.</p><div class="perk-options">${choices.map(id=>`<button type="button" class="perk-card" data-perk="${id}" data-action="choose" data-value="${id}"><strong>${PERKS[id].name}</strong><img src="${theme.perks[id]}" alt="" width="480" height="480"><small>${PERKS[id].description}</small><span class="perk-pick">Take it with you</span></button>`).join('')}</div>`;
+ return `<p class="menu-eyebrow">A LITTLE FESTIVAL MAGIC</p><h2>Choose your perk.</h2><p class="menu-copy">A little something for the rest of your run.</p><div class="perk-options">${choices.map(id=>`<button type="button" class="perk-card" data-perk="${id}" data-action="choose" data-value="${id}"><strong>${PERKS[id].name}</strong>${theme.perks[id]?`<img src="${theme.perks[id]}" alt="" width="480" height="480">`:renderPerkArt(id)}<small>${PERKS[id].description}</small><span class="perk-pick">Take it with you</span></button>`).join('')}</div>`;
 }

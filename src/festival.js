@@ -20,6 +20,7 @@ export function awardClosePass(round) {
   const points = round.rules.closePassPoints * cycleAt(60000 - round.remainingMs).bonus;
   round.score += points;
   round.closePasses++;
+  round.surferMs=round.rules.surferDurationMs||0;
   round.scoreComponents.passes[cycleAt(60000-round.remainingMs).bonus-1]++;
   return points;
 }

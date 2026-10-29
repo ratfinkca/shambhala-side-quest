@@ -5,12 +5,13 @@ import {createMystery,advanceMystery} from './mystery.js';
 
 export function createRound(options = {}) {
   const rules = {...rulesFor([]), ...options};
-  return { scoreComponents:{sparks:Array(20).fill(0),passes:[0,0]}, rules, bass:createBass(), mystery:createMystery(), shieldsRemaining: rules.bumpShields, remainingMs: 60000, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, flowMs: 0, flowTaken: [], sincePickupMs: Infinity, ended: false };
+  return { surferMs:0,scoreComponents:{sparks:Array(20).fill(0),passes:[0,0]}, rules, bass:createBass(), mystery:createMystery(), shieldsRemaining: rules.bumpShields, remainingMs: 60000, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, flowMs: 0, flowTaken: [], sincePickupMs: Infinity, ended: false };
 }
 
 export function advanceRound(round, dtMs) {
   if (round.ended) return;
   round.remainingMs = Math.max(0, round.remainingMs - Math.max(0, dtMs));
+  round.surferMs = Math.max(0,round.surferMs-Math.max(0,dtMs));
   round.flowMs = Math.max(0, round.flowMs - Math.max(0, dtMs));
   round.sincePickupMs += Math.max(0, dtMs);
   round.slowedMs = Math.max(0, round.slowedMs - Math.max(0, dtMs));

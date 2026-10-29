@@ -108,3 +108,10 @@ Rave XP and six ranks now persist on-device, alongside six cumulative achievemen
 Neon Grove now has a minor-key bass/synth arrangement and faster pink/cyan crossing beams. Sunrise Clearing has major harmony, rising bell phrases, a gentle rolling groove and broader amber/rose fans. Both retain the shared 120 BPM clock, build/drop timing, optional Flow layers, pause/mute cleanup and static reduced-motion lighting. Living Forest remains the baseline show. Lighting is selected by stage, independently of the chosen menu theme.
 
 115 tests and production build pass; independent review found no blockers. Rehearsal browser checks cover both stage transitions, Neon pause/resume and Sunrise rendering, with no console errors. Rehearsal does not award XP or save scores. Subjective audio mix, phone speakers and sustained phone performance still need playtesting. Approved for release after listening feedback; final review found no blockers.
+
+
+## Local earned-perk expansion — 2026-10-28
+
+Four new run-only perks unlock for all players through XP: Crowd Surfer at 300 (+25% movement for 1.2 seconds after a clean pass; refreshes, no stacking), Bass Battery at 650 (1.5× Bass Head charge rate), Encore at 1,200 (+3 seconds to first collected Flow per stage, additive with Moth), Sweet Tooth at 2,000 (all candy effects last 7 seconds). Grandfathering applies only to the previous four perks. New cards use procedural theme-coloured SVG art. Rehearsal exposes all eight choices without changing XP or score saves.
+
+124 tests and production build pass. Coverage includes fresh/legacy unlock thresholds and reveals, timers, active Bass charge blackout/caps, first-Flow semantics, combo effects, valid new-perk score submissions and analytics ingestion. Battery analytics measure real charging time, not amplified charge units. Local only; release must deploy the updated `submit-score` and `playtest` function allowlists before publishing the frontend. No database migration or scoring arithmetic/version change is required. Phone controls and perk balance still need playtesting.

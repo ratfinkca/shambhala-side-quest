@@ -10,7 +10,7 @@ export function validateScore(p,ticket){
  let total=0,cleared=0,previous=[];
  for(let i=0;i<p.stages.length;i++){
   const s=p.stages[i];
-  if(!exact(s,['stageIndex','activeMs','pickups','closePasses','score','perks','sparks','passes'])||s.stageIndex!==i||s.activeMs!==60000||![s.pickups,s.closePasses,s.score].every(integer)||!Array.isArray(s.perks)||s.perks.length!==i||new Set(s.perks).size!==i||!s.perks.every(k=>['boots','noodle','moth','bracelet'].includes(k))||!previous.every((v,j)=>s.perks[j]===v)||!Array.isArray(s.sparks)||s.sparks.length!==20||!s.sparks.every(integer)||!Array.isArray(s.passes)||s.passes.length!==2||!s.passes.every(integer))return fail('invalid');
+  if(!exact(s,['stageIndex','activeMs','pickups','closePasses','score','perks','sparks','passes'])||s.stageIndex!==i||s.activeMs!==60000||![s.pickups,s.closePasses,s.score].every(integer)||!Array.isArray(s.perks)||s.perks.length!==i||new Set(s.perks).size!==i||!s.perks.every(k=>['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'].includes(k))||!previous.every((v,j)=>s.perks[j]===v)||!Array.isArray(s.sparks)||s.sparks.length!==20||!s.sparks.every(integer)||!Array.isArray(s.passes)||s.passes.length!==2||!s.passes.every(integer))return fail('invalid');
   let points=0,pickups=0;
   s.sparks.forEach((n,index)=>{const multiplier=Math.floor(index/4)+1,drop=Math.floor(index%4/2)+1,bass=index%2+1;points+=n*10*multiplier*drop*bass;pickups+=n;});
   // Each chain spends four pickups at 1x, then five at each of 2x–4x.

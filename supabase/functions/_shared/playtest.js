@@ -8,7 +8,7 @@ const stageKeys=['stageIndex','activeMs','bassMs','chargeMs','pickups','bumps','
 function payload(type,p){
  if(type==='run_start'||type==='replay')return exact(p,[]);
  if(type==='stage_start')return exact(p,['stageIndex'])&&integer(p.stageIndex,2);
- if(type==='perk')return exact(p,['perk'])&&['boots','noodle','moth','bracelet'].includes(p.perk);
+ if(type==='perk')return exact(p,['perk'])&&['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'].includes(p.perk);
  if(type==='menu')return exact(p,['action'])&&['instructions','theme'].includes(p.action);
  if(type==='run_end')return exact(p,['outcome','stagesCleared','totalScore'])&&['complete','exit'].includes(p.outcome)&&integer(p.stagesCleared,3)&&integer(p.totalScore);
  if(type!=='stage_end'||!exact(p,stageKeys))return false;

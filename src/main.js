@@ -20,7 +20,7 @@ import { createStorage } from './storage.js';
 import { preventGameKeyDefault } from './input.js';
 import { cycleAt } from './festival.js';
 import { setupResponsiveLayout } from './layout.js';
-import { createRun, startStage, finishStage, chooseUpgrade, upgradeChoices } from './run.js';
+import { PERKS, createRun, startStage, finishStage, chooseUpgrade, upgradeChoices } from './run.js';
 import { STAGES } from './stages.js';
 import {bassMovementFactor} from './bass-head.js';
 import { bassFactor } from './geometry.js';
@@ -68,7 +68,7 @@ function render(){
 }
 function go(type,extra={}){const next=transition(screen,{type,...extra});if(next===screen)return false;screen=next;clearToast();render();return true}
 function pause(type='PAUSE'){if(screen.name!=='playing')return;scene.pauseRound();audio.stop();go(type)}
-function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);run.availablePerks=availablePerks(saved.profile.progress);summary=null;progressReward=null;resultSnapshot=null;submission=null;}
+function newRun(mode){activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);summary=null;progressReward=null;resultSnapshot=null;submission=null;}
 function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
@@ -180,7 +180,7 @@ game.events.on('round:update',round=>{
  button.style.setProperty('--bass-charge',`${ability.chargeMs/100}%`);
  button.classList.toggle('ready',ability.chargeMs>=10000);
  const bass=scene?bassFactor(scene.dancer,scene.stage.obstacles):1;
- $('#crowd-tip').textContent=bass<1&&!round.ended?`Bass pressure · ${Math.round(bassMovementFactor(round.bass,bass)*100)}% speed`:round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
+ $('#crowd-tip').textContent=bass<1&&!round.ended?`Bass pressure · ${Math.round(bassMovementFactor(round.bass,bass)*100)}% speed`:round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':round.surferMs>0&&!round.ended?`Crowd Surfer · ${Math.ceil(round.surferMs/100)/10}s speed boost`:`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
  if(screen.name==='playing')audio.sync(round,scene.stage.id);
 });
 game.events.on('round:phase',phase=>{if(phase==='build')toast('Feel that? Here comes the drop.',2300);if(phase==='drop'){audio.drop();toast('BASS DROP · DOUBLE VIBES',2500)}});
@@ -189,7 +189,7 @@ game.events.on('round:flow',()=>{audio.celebrate();toast('FLOW STATE · Sparks c
 game.events.on('round:mystery',effect=>{
  const info=MYSTERY_EFFECTS[effect];
  toast(`${info.name} · ${info.hint}`,1800);
- $('#announcement').textContent=`Mystery candy: ${info.name}. ${info.hint}. Five seconds.`;
+ $('#announcement').textContent=`Mystery candy: ${info.name}. ${info.hint}. ${scene.round.rules.candyDurationMs/1000} seconds.`;
 });
 game.events.on('round:closepass',()=>audio.closePass());game.events.on('round:bump',()=>{if(scene.phase==='cruise')toast('Easy does it. Keep your flow.',1100)});
 game.events.on('round:pickup',({multiplier,celebrate})=>{audio.pickup(multiplier);if(celebrate){audio.celebrate();if(scene.phase==='cruise')toast('You found your people.')}});
@@ -199,7 +199,7 @@ game.events.on('round:end',round=>{
  if(run.status==='ended')playtest.end(run);
  void playtest.flush();
  progressReward=rehearsal?null:saved.awardProgress({id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3});
- run.availablePerks=availablePerks(saved.profile.progress);
+ run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
  if(run.status==='ended')resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,inputType:playtest.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};
  go('END',{qualified:run.status==='upgrade'});$('#announcement').textContent=`Stage complete. ${round.pickups} sparks. ${run.totalScore} total points.`;

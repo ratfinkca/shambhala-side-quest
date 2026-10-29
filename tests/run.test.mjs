@@ -22,7 +22,7 @@ test('failed stage contributes score but ends the run; rush always ends',()=>{
  assert.deepEqual(createRun('festival','new').perks,[]);
 });
 test('upgrades alter only their configured rules, respect drops and expire exactly',()=>{
- assert.deepEqual(rulesFor([]),{comboGraceMs:2000,flowDurationMs:5000,closePassPoints:15,bumpShields:0});
+ assert.deepEqual(rulesFor([]),{comboGraceMs:2000,flowDurationMs:5000,closePassPoints:15,bumpShields:0,surferDurationMs:0,bassChargeRate:1,firstFlowBonusMs:0,candyDurationMs:5000});
  const r=createRound(rulesFor(['bracelet','moth','boots','noodle']));collect(r);advanceRound(r,3000);assert.equal(r.chain,1);advanceRound(r,1);assert.equal(r.chain,0);
  advanceRound(r,4999);activateFlow(r);assert.equal(r.flowMs,7000);assert.equal(r.shieldsRemaining,1);
  advanceRound(r,7000);assert.equal(r.flowMs,0);assert.equal(awardClosePass(r),50);

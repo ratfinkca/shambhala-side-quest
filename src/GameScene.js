@@ -107,9 +107,9 @@ export class GameScene extends Phaser.Scene {
       this.halo.setScale(1+Math.sin(time*.004)*.08);
     }
     if (!this.running) { if(this.menuAmbient)this.background.update(time,'cruise',this.reducedMotion);return; }
-    const activeMs=Math.max(0,Math.min(delta,this.round.remainingMs)),inBass=bassFactor(this.dancer,this.stage.obstacles)<1,chargeBefore=this.round.bass.chargeMs;
-    advanceBass(this.round,activeMs,inBass);
-    this.game.events.emit('round:measure',{runId:this.round.runId,activeMs,bassMs:inBass?activeMs:0,chargeMs:Math.max(0,this.round.bass.chargeMs-chargeBefore)});
+    const activeMs=Math.max(0,Math.min(delta,this.round.remainingMs)),inBass=bassFactor(this.dancer,this.stage.obstacles)<1;
+    const chargeMs=advanceBass(this.round,activeMs,inBass);
+    this.game.events.emit('round:measure',{runId:this.round.runId,activeMs,bassMs:inBass?activeMs:0,chargeMs});
     advanceRound(this.round, delta);
     if (this.round.ended) { this.running=false; this.clearInput(); this.mysteryView.update(this.round.mystery,this.reducedMotion); this.game.events.emit('round:update',this.round); this.game.events.emit('round:end',this.round); return; }
     const cycle = cycleAt(60000 - this.round.remainingMs);
@@ -120,7 +120,7 @@ export class GameScene extends Phaser.Scene {
     this.background.update(60000-this.round.remainingMs,cycle.phase,this.reducedMotion);
     this.dropWash.setAlpha(this.reducedMotion ? 0 : cycle.phase === 'drop' ? .045 : 0);
     const movementDelta = Math.min(delta, 50) * movementFactor(this.dancer,this.stage.mud,this.round.slowedMs,this.stage.obstacles,bassMovementFactor(this.round.bass,bassFactor(this.dancer,this.stage.obstacles)));
-    const speed=mysterySpeed(this.round.mystery);
+    const speed=mysterySpeed(this.round.mystery)*(this.round.surferMs>0?1.25:1);
     const k=this.keys;
     let direction={x:Number(k.D.isDown||k.RIGHT.isDown)-Number(k.A.isDown||k.LEFT.isDown),y:Number(k.S.isDown||k.DOWN.isDown)-Number(k.W.isDown||k.UP.isDown)};
     if(direction.x||direction.y) {

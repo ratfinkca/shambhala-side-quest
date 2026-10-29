@@ -32,3 +32,20 @@ test('multipliers must be earned, including multiple combo chains after resets',
  stage.pickups=40;stage.score=p.totalScore=8*10+10*20+10*30+10*40+2*50;assert.equal(validateScore(p).ok,true);
  stage.sparks[0]=4;stage.pickups-=4;stage.score=p.totalScore-=40;assert.equal(validateScore(p).ok,false);
 });
+
+test('every new perk can appear in a valid scored Festival and unknown perks still fail',async()=>{
+ const {createRound,collect}=await import('../src/game.js');
+ const {createRun,startStage,finishStage,chooseUpgrade}=await import('../src/run.js');
+ for(const chosen of [['surfer','battery'],['encore','sweet']]){
+  const run=createRun('festival',fixture().runId);
+  for(let i=0;i<3;i++){
+   const config=startStage(run),r=createRound(config.rules);
+   for(let n=0;n<[20,25,30][i];n++)collect(r);
+   r.remainingMs=0;r.ended=true;finishStage(run,r);
+   if(i<2)assert.equal(chooseUpgrade(run,chosen[i]),true);
+  }
+  const p={...fixture(),mode:'festival',totalScore:run.totalScore,stagesCleared:3,stages:run.scoreStages};
+  assert.equal(validateScore(p).ok,true);
+  p.stages[1].perks=['unknown'];assert.equal(validateScore(p).ok,false);
+ }
+});

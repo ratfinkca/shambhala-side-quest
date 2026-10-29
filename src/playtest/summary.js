@@ -13,7 +13,7 @@ export function createRunSummary({runId,mode,buildId,scoringVersion}){
         current=stageSummary(payload.stageIndex);data.stages.push(current);return;
       }
       if(type==='exit'||type==='complete'){data.outcome=type;return;}
-      if(type==='perk'&&['boots','noodle','moth','bracelet'].includes(payload.perk)&&!data.perks.includes(payload.perk)){data.perks.push(payload.perk);return;}
+      if(type==='perk'&&['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'].includes(payload.perk)&&!data.perks.includes(payload.perk)){data.perks.push(payload.perk);return;}
       if(!current||current.finished)return;
       if(type==='tick')for(const key of ['activeMs','bassMs','chargeMs']){const n=payload[key];if(Number.isFinite(n)&&n>=0)current[key]=Math.min(60000,current[key]+n);}
       if(type==='pickup'){current.pickups++;current.peakCombo=Math.max(current.peakCombo,payload.chain||0);}

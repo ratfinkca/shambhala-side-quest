@@ -184,3 +184,7 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 .passport li,.unlock-list li { margin-bottom: .6rem; }
 .passport small { opacity: .8; }
 .reward-reveal { background: #8de8ba12; }
+
+.perk-art { display:block; width:100%; height:auto; aspect-ratio:1; margin:8px 0 12px; color:var(--accent); }
+.perk-art .perk-back { fill:var(--secondary); opacity:.12; }
+.perk-art .perk-solid { fill:var(--secondary); stroke:var(--accent); }
