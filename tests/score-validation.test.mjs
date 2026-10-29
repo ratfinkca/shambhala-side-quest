@@ -59,7 +59,7 @@ test('Endless submits real scaled stages with four perks, a swap, keeps and a fi
   const q=structuredClone(p);mutate(q);assert.equal(validateScore(q).ok,false);
  }
  const unfinished=structuredClone(p);unfinished.stages.pop();unfinished.stagesCleared=8;
- assert.equal(validateScore(unfinished).ok,false);
+ unfinished.totalScore=unfinished.stages.reduce((n,s)=>n+s.score,0);assert.equal(validateScore(unfinished).ok,true);
  // Stage four requires23, not20. Dropping to20 must prevent later stages.
  const q=structuredClone(p);q.stages[3].pickups=20;q.stages[3].sparks=Array(20).fill(0);q.stages[3].sparks[0]=20;q.stages[3].score=200;q.totalScore=q.stages.reduce((n,s)=>n+s.score,0);
  assert.equal(validateScore(q).ok,false);
@@ -71,7 +71,7 @@ test('Endless online history is bounded without ending gameplay',async()=>{
  assert.equal(run.stageIndex,1442);assert.equal(run.scoreStages.length,1440);assert.equal(run.scoreOverflow,true);
 });
 
-test('Endless accepts capped45 targets and rejects unfinished, oversized and skipped-award histories',async()=>{
+test('Endless accepts capped45 targets and rejects oversized and skipped-award histories',async()=>{
  const p=await endlessFixture();const prior=p.stages[7],failed=p.stages.at(-1);p.stages=p.stages.slice(0,-1);
  while(p.stages.length<40){const s=structuredClone(prior);s.stageIndex=p.stages.length;s.pickups=45;s.sparks=Array(20).fill(0);s.sparks[0]=45;s.score=450;p.stages.push(s);}
  failed.stageIndex=40;p.stages.push(failed);p.stagesCleared=40;p.totalScore=p.stages.reduce((n,s)=>n+s.score,0);
@@ -79,4 +79,12 @@ test('Endless accepts capped45 targets and rejects unfinished, oversized and ski
  const low=structuredClone(p);low.stages[39].pickups=44;low.stages[39].sparks[0]=44;low.stages[39].score=440;low.totalScore-=10;assert.equal(validateScore(low).ok,false);
  const oversized=structuredClone(p);oversized.stages=Array(1441).fill(failed);assert.equal(validateScore(oversized).ok,false);
  const chain=structuredClone(p);chain.stages[40].sparks[16]=1;chain.stages[40].pickups=1;chain.stages[40].score=50;chain.totalScore+=50;assert.equal(validateScore(chain).ok,false);
+});
+
+test('voluntarily banked Endless accepts complete stages but never an unfinished round or invented clear',async()=>{
+ const p=await endlessFixture();p.stages.pop();p.totalScore=p.stages.reduce((n,s)=>n+s.score,0);
+ assert.equal(validateScore(p).ok,true);
+ for(const mutate of [q=>q.stages.at(-1).activeMs=30000,q=>q.stagesCleared++,q=>q.stages=[],q=>q.totalScore++]){const q=structuredClone(p);mutate(q);assert.equal(validateScore(q).ok,false);}
+ const single=structuredClone(p);single.stages=single.stages.slice(0,1);single.totalScore=single.stages[0].score;single.stagesCleared=1;assert.equal(validateScore(single).ok,true);
+ single.mode='festival';assert.equal(validateScore(single).code,'unfinished');
 });

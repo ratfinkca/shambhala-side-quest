@@ -52,3 +52,21 @@ test('Endless migration preserves existing boards, allows tickets and ranks surv
  await db.exec('set role service_role');assert.equal((await board()).rows[0].value.length,4);
  }finally{await db.close();}
 });
+
+test('banked Endless score posts through real handler and SQL with idempotent retry',async()=>{
+ const {endlessFixture}=await import('./helpers/score-fixtures.mjs');const {createArcadeHandler}=await import('../supabase/functions/_shared/arcade.js');
+ const db=new PGlite();try{
+ await db.exec('create role anon;create role authenticated;create role service_role;');
+ for(const migration of ['202610220001_scores.sql','202610290001_endless_scores.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+migration,import.meta.url),'utf8'));
+ const p=await endlessFixture();p.stages.pop();p.totalScore=p.stages.reduce((n,s)=>n+s.score,0);
+ const handler=createArcadeHandler({kind:'submit-score',origins:['http://localhost'],secret:'test',rpc:async(name,args)=>{
+  const r=await db.query('select arcade_submit($1,$2,$3,$4) value',[args.p_hash,args.p_digest,JSON.stringify(args.p_record),args.p_bucket]);return r.rows[0].value;
+ }});
+ const hash=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p.ticket))).toString('hex');
+ await db.query("select arcade_ticket($1,$2,'endless','arcade-v1','test',$3)",[hash,p.runId,'b'.repeat(64)]);
+ await db.exec("update arcade_private.tickets set issued_at=now()-interval '8 minutes'");
+ const request=()=>new Request('http://server',{method:'POST',headers:{origin:'http://localhost','content-type':'application/json'},body:JSON.stringify(p)});
+ for(let i=0;i<2;i++){const r=await handler(request());assert.equal(r.status,200);assert.equal((await r.json()).accepted,true);}
+ const board=(await db.query("select arcade_board('endless','arcade-v1') value")).rows[0].value;assert.equal(board.length,1);assert.equal(board[0].stagesCleared,8);assert.equal(board[0].score,p.totalScore);
+ }finally{await db.close();}
+});

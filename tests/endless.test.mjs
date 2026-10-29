@@ -66,3 +66,18 @@ test('each loop adds the intended crowd count up to 22 with safe extra anchors',
   assert.equal(stageFor(r),s);
  }
 });
+
+test('voluntary finish banks only completed stages from every Endless checkpoint',async()=>{
+ const {finishRun}=await import('../src/run.js');
+ for(const checkpoint of ['upgrade','ready','playing']){
+  const run=createRun('endless','finish');clear(run);
+  if(checkpoint!=='upgrade')keepPerks(run);
+  if(checkpoint==='playing'){const c=startStage(run),partial=createRound(c.rules);partial.score=9999;partial.pickups=99;}
+  const score=run.totalScore,history=structuredClone(run.scoreStages);
+  assert.equal(finishRun(run),true);assert.equal(run.status,'ended');assert.equal(run.endedVoluntarily,true);
+  assert.equal(run.totalScore,score);assert.equal(run.stagesCleared,1);assert.deepEqual(run.scoreStages,history);
+  assert.equal(finishRun(run),false);assert.equal(startStage(run),null);
+ }
+ assert.equal(finishRun(createRun('endless','empty')),false);
+ const festival=createRun('festival','festival');clear(festival);assert.equal(finishRun(festival),false);
+});

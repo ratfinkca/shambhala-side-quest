@@ -1,3 +1,4 @@
+import {resultsExitState} from './results-view.js';
 import {availablePerks} from './progression.js';
 import {WARDROBE} from './wardrobe.js';
 import {createOnlineClient,readArcadeConfig} from './online/client.js';
@@ -20,7 +21,7 @@ import { createStorage } from './storage.js';
 import { preventGameKeyDefault } from './input.js';
 import { cycleAt } from './festival.js';
 import { setupResponsiveLayout } from './layout.js';
-import { PERKS, createRun, startStage, finishStage, chooseUpgrade, keepPerks, stageFor, upgradeChoices } from './run.js';
+import { PERKS, createRun, startStage, finishStage, finishRun, chooseUpgrade, keepPerks, stageFor, upgradeChoices } from './run.js';
 import { STAGES } from './stages.js';
 import {bassMovementFactor} from './bass-head.js';
 import { bassFactor } from './geometry.js';
@@ -43,7 +44,7 @@ const fmt=n=>String(n).padStart(3,'0');
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:960,height:640,backgroundColor:'#102430',scene:GameScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},audio:{noAudio:true},banner:false});
 const refreshLayout=setupResponsiveLayout(game);
 const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'avatar-preview',width:180,height:180,transparent:true,audio:{noAudio:true},banner:false,fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,saved.profile.outfit);previewAvatar.setPosition(90,135).setScale(2);previewReady=true;},update(time){if(previewAvatar)animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches)}}});
-const menus=createScreens($('#menu'),{action,volume,outfit});
+const menus=createScreens($('#menu'),{action,volume,outfit,initials:value=>{if(run)run.initialsDraft=value;}});
 function clearToast(){clearTimeout(toastTimer);$('#toast').textContent=''}
 function toast(text,duration=2000){clearToast();$('#toast').textContent=text;toastTimer=setTimeout(clearToast,duration)}
 function soundLabel(){$('#sound').textContent=saved.sound?'Sound on':'Sound off';$('#sound').setAttribute('aria-pressed',String(saved.sound))}
@@ -79,6 +80,14 @@ function begin(){
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
  go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});refreshLayout();
  $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+config.stage.loop:'/3'} · ${config.stage.name.toUpperCase()}`;
+}
+function captureResult(){resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,inputType:playtest.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};}
+function navigateResults(destination,confirmed=false){
+ if(screen.name!=='results'||!run)return;
+ const state=resultsExitState(run,submission);
+ if(state==='pending'){toast('Wait for posting to finish before leaving.');return;}
+ if(!confirmed&&state==='unsaved'){go('LEAVE',{destination});return;}
+ if(destination==='replay'){replayPending=true;newRun(run.mode);go('REPLAY');}else go('TITLE');
 }
 function action(name,value){
  switch(name){
@@ -122,7 +131,16 @@ function action(name,value){
   case 'back':go('BACK');break;
   case 'exit':go('EXIT');break;
   case 'cancel':go('CANCEL');break;
-  case 'confirm':if(screen.name!=='confirmExit')return;scene.pauseRound();audio.stop();playtest.end(run,'exit');void playtest.flush();run=null;go('CONFIRM');break;
+  case 'confirm':{
+   if(screen.name!=='confirmExit')return;
+   scene.pauseRound();audio.stop();
+   if(finishRun(run)){captureResult();playtest.end(run,'exit');void playtest.flush();go('FINISH');}
+   else{playtest.end(run,'exit');void playtest.flush();run=null;go('CONFIRM');}
+   break;
+  }
+  case 'leave-confirm':{
+   if(screen.name!=='confirmLeave')return;const destination=screen.destination;go('LEAVE_CONFIRMED');navigateResults(destination,true);break;
+  }
   case 'upgrade':go('UPGRADE');break;
   case 'choose':
    if(screen.name!=='upgrade')return;
@@ -131,8 +149,8 @@ function action(name,value){
   case 'replace':if(screen.name==='upgrade'&&run.mode==='endless'&&chooseUpgrade(run,run.pendingPerk,value))go('CHOOSE');break;
   case 'cancel-swap':if(screen.name==='upgrade'&&run.mode==='endless'){run.pendingPerk=null;render();}break;
   case 'keep-perks':if(screen.name==='upgrade'&&keepPerks(run))go('CHOOSE');break;
-  case 'replay':if(screen.name!=='results')return;replayPending=true;newRun(run.mode);go('REPLAY');break;
-  case 'title':go('TITLE');break;
+  case 'replay':navigateResults('replay');break;
+  case 'title':navigateResults('title');break;
   case 'submit':{
    if(rehearsal||screen.name!=='results'||!run||run.submitted||!resultSnapshot)return;
    const initials=($('#initials').value.toUpperCase().replace(/[^A-Z0-9]/g,'')+'AAA').slice(0,3);
@@ -155,7 +173,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){pause('HID
 setInterval(()=>{if(screen.name==='playing')void playtest.flush();},30000);window.addEventListener('blur',()=>pause('HIDDEN'));
 window.addEventListener('keydown',e=>{
  if(e.key.toLowerCase()==='b'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&screen.name==='playing'){if(scene.activateBassHead())playtest.input('keyboard');e.preventDefault();}
- if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores','style'].includes(screen.name))action('back');else if(screen.name==='confirmExit')action('cancel')}
+ if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores','style'].includes(screen.name))action('back');else if(['confirmExit','confirmLeave'].includes(screen.name))action('cancel')}
  if(preventGameKeyDefault(e.key,screen.name==='playing',document.activeElement===$('#game')))e.preventDefault();
 });
 game.events.on('round:input',({kind,runId})=>playtest.input(kind,runId));
@@ -208,7 +226,7 @@ game.events.on('round:end',round=>{
  progressReward=rehearsal?null:saved.awardProgress({id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3});
  run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
- if(run.status==='ended')resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,inputType:playtest.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};
+ if(run.status==='ended')captureResult();
  go('END',{qualified:run.status==='upgrade'});$('#announcement').textContent=`Stage complete. ${round.pickups} sparks. ${run.totalScore} total points.`;
 });
 render();
