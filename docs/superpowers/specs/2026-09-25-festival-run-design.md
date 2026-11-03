@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../../ROADMAP.md) and [handoff](../../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Festival Run: first playable milestone
 
 Status: approved and shipped in PR #2 (`4fb9fab`). This is the historical design for the first Festival Run milestone. See [the project handoff](../../PROJECT-HANDOFF.md) for current status and proposed next milestones.

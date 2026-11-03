@@ -145,10 +145,10 @@ function action(name,value){
   case 'choose':
    if(screen.name!=='upgrade')return;
    if(run.mode==='endless'&&run.perks.length===4&&upgradeChoices(run).includes(value)){run.pendingPerk=value;render();break;}
-   if(chooseUpgrade(run,value)){playtest.perk(value);go('CHOOSE');}break;
-  case 'replace':if(screen.name==='upgrade'&&run.mode==='endless'&&chooseUpgrade(run,run.pendingPerk,value))go('CHOOSE');break;
+   if(chooseUpgrade(run,value)){if(run.mode==='endless')playtest.choice(run,'add',value);else playtest.perk(value);go('CHOOSE');}break;
+  case 'replace':{if(screen.name!=='upgrade'||run.mode!=='endless')return;const taken=run.pendingPerk;if(chooseUpgrade(run,taken,value)){playtest.choice(run,'swap',taken,value);go('CHOOSE');}break;}
   case 'cancel-swap':if(screen.name==='upgrade'&&run.mode==='endless'){run.pendingPerk=null;render();}break;
-  case 'keep-perks':if(screen.name==='upgrade'&&keepPerks(run))go('CHOOSE');break;
+  case 'keep-perks':if(screen.name==='upgrade'&&keepPerks(run)){playtest.choice(run,'keep');go('CHOOSE');}break;
   case 'replay':navigateResults('replay');break;
   case 'title':navigateResults('title');break;
   case 'submit':{

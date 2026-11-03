@@ -1,74 +1,67 @@
-# Playtest operations
+# Online operations
 
-Public collection is disabled. The owner created Supabase project `hziafdynblkyxywythqg` (Side-Quest, East US / North Virginia); it was linked on 2026-10-22. Both tracking migrations and the `playtest` function are deployed. The receiver currently permits only `http://127.0.0.1:5174` for local verification, not the public game origin. The arcade board is a separate future implementation.
+Updated 2026-11-03. Current architecture/configuration is described here; live health is verified at release time, not guaranteed by this document. [Handoff](PROJECT-HANDOFF.md) · [roadmap](ROADMAP.md) · [historical hosted checks](history/online-operations-through-2026-10-22.md).
 
-Hosted smoke checks on 2026-10-22 confirmed valid synthetic ingestion and duplicate retry responses (200), preflight (204), disallowed production origin (403), invalid payload (400), and oversized body (413). Synthetic event `404e6e42-170e-403e-a26d-596499148cfc`, build `hosted-smoke-20261022`, was used for database verification and subsequently deleted. A successful retry response alone does not verify the stored row count. Subsequent results for cleanup, access, rate limits, and hosting retention are recorded below. No production frontend release or collection enablement occurred.
+## Production and ownership
 
-## Local verification
+GitHub Pages serves the static game at https://ratfinkca.github.io/shambhala-side-quest/; allowed origin is https://ratfinkca.github.io. Supabase project `hziafdynblkyxywythqg` hosts the backend in East US/North Virginia. Public playtest configuration and arcade configuration are enabled in the released game; analytics still require explicit player consent. Arcade posting does not require analytics consent. This release adds M1 Endless analytics. Its migration and playtest function were deployed before frontend rollout; see [release evidence](superpowers/m1-release-validation.md). PR #13 /8b5192f is the prior verified gameplay baseline.
 
-Additional hosted access checks on 2026-10-22 used the project's public publishable key: private-schema reads and writes both returned 406 (`PGRST106`, schema not exposed); direct ingestion and cleanup RPC calls both returned 401 (`42501`, permission denied). CLI authentication was renewed after the previous login became unavailable. Public collection remains disabled.
+No secrets in frontend code, Git, reports or chat. Supabase server-side environment supplies the service role; clients receive public endpoint configuration only. Use project-scoped MCP tools if exposed, otherwise authenticated pinned CLI 2.121.0. Never reset a hosted project. No routine browser login is needed when authenticated management tools work.
 
-`npm ci`, `npm test`, and `npm run build` cover consent, measurement, transport, request validation and an embedded Postgres instance. The embedded database runs the actual data migration and tests roles, duplicate batches, limits, retention and aggregate reruns. It does not exercise Supabase's gateway, Deno wrapper or pg_cron.
+## Functions and storage
 
-For the full integration gate, use Node 24, a Docker-compatible runtime, and pinned CLI 2.121.0:
+| Function | Responsibility |
+|---|---|
+| playtest | Strict schema/CORS/body validation, best-effort rate limiting, private ingestion |
+| run-ticket | Opaque24-hour score capability; only its hash is stored |
+| submit-score | Validate counters/targets/perks and ticket binding; atomic idempotent receipt |
+| leaderboard | Mode/version-filtered public top 50 with limited public fields |
+
+`playtest_private` holds raw events, rotating network hashes and identifier-free daily metrics. `arcade_private` holds tickets, score claims, moderation state and limits. Both have RLS and denied anon/authenticated direct access; server-owned RPC execution is service-role only. Neither private schema is exposed through the public API.
+
+Shipped migrations:202610200001/2 (analytics/maintenance),202610220001/2 (arcade/maintenance),202610290001 (Endless tickets/ranking). The finish/save release required validators only. M1 adds migration202611030001 (Endless outcome/choice metrics), applied before its playtest function/frontend.
+
+## Configuration
+
+Frontend Pages variables:
+
+- `PLAYTEST_ENABLED=true`, `PLAYTEST_URL=https://hziafdynblkyxywythqg.supabase.co/functions/v1/playtest`, `PLAYTEST_NOTICE_URL=https://ratfinkca.github.io/shambhala-side-quest/playtest-data.html`.
+- `ARCADE_ENABLED=true`, `ARCADE_URL=https://hziafdynblkyxywythqg.supabase.co/functions/v1`.
+- Workflow maps these to `VITE_*`; `VITE_BUILD_ID` is the GitHub commit. Local env uses the VITE names directly.
+
+Server: separate `PLAYTEST_ORIGINS`/`PLAYTEST_RATE_SECRET` and `ARCADE_ORIGINS`/`ARCADE_RATE_SECRET`. Supabase supplies URL/service-role values. CORS is not authentication and cannot distinguish repositories sharing the Pages origin. Rotating network hashes/rate limits are best-effort abuse controls, not player identity or authoritative anti-cheat.
+
+## Consent, bounds and retention
+
+Analytics default off; title/settings control sharing. Accepting mid-run starts measurement next run; opting out stops measurement, removes the browser identifier and clears/aborts queued work. No names, emails, arcade initials, pointer recordings or screenshots enter analytics. No durable/replayed analytics queue. Existing transport caps:100 events,20 events/32 KiB per batch,5-second timeout and one retry on a later flush; ingress120 requests/hour per rotating bucket.
+
+Analytics raw events remain private for29–30 days; daily cleanup deletes whole UTC days beyond the cutoff. Aggregates can persist without browser/run/session IDs. Hash cleanup is hourly, roughly24–25 hours. `maintain_playtest()` runs daily 00:10 UTC; hourly cleanup at minute 10. Verify cron success and permissions at each backend rollout. Provider service logs/backups are separate: the public notice records the settings last reviewed2026-10-22, not a new audit of today's plan. Re-check those settings before making new retention promises.
+
+Arcade tickets last24 hours, issuance60/hour and submission120/hour. Submission bodies cap1 MiB; ticket/board bodies32 KiB; Endless online history1440 completed stages. Overflow disables online posting while local gameplay continues. Exact successful retries remain accepted after expiry; conflicting payloads fail. Expired unused tickets/hashes are cleaned hourly. Accepted score claims/receipts persist until owner removal/moderation.
+
+Public score fields: initials, score, stagesCleared, inputType, mode, scoringVersion, receivedAt. Endless order: clears descending → points descending → server time ascending → ID ascending. Rush/Festival: points → clears → time → ID. Boards cache30 seconds. Initials are not unique identities. Arcade-v1 remains current; change version for changes to awards, not presentation alone.
+
+## Private reporting
+
+Use `supabase/reports/playtest.sql` for aggregate reports and `supabase/reports/endless.sql` for stage/loop/choice breakdowns. Use owner SQL tooling; do not expose reporting RPCs publicly. Publish aggregate counts only, with UTC window, build/version/mode/input filters and denominators. Unknown completion means no terminal event was observed, not a confirmed quit. Replays are events, not unique retention; opt-in samples do not represent every player. XP/rank reachability is not directly measured by existing stage totals.
+
+Do not run maintenance merely to read a report: use the metrics view/current raw aggregates or stored daily metrics as appropriate. If management access is unavailable, record the missing observation; do not request raw identifiable exports or invent results.
+
+Private moderation: inspect reviewed entries using owner SQL, then set `hidden=true` on the specific IDs; set false to restore. Preserve score/receipt data. Never grant player direct table/RPC access. No production test score is needed for validator checks: valid synthetic payloads with deliberately nonexistent tickets must reach `invalid_ticket`, while tampered payloads fail earlier.
+
+## Local checks and release
+
+Node 24: `npm ci`, `npm test`, `npm run build`, `git diff --check`. Tests use actual migrations with PGlite; full CI uses a disposable Supabase/Docker stack:
 
 ```
 npx --yes supabase@2.121.0 start
 npx --yes supabase@2.121.0 db reset
 npx --yes supabase@2.121.0 test db
-npx --yes supabase@2.121.0 functions serve playtest --env-file /absolute/path/outside-repo/playtest.env
+npx --yes supabase@2.121.0 stop --no-backup
 ```
 
-`db reset` is for the disposable LOCAL stack only. The backend CI workflow uses no production credentials. Never reset a hosted project to run tests.
+Reset only the disposable local stack. Keep write-producing QA on a local/staging backend; rehearsal disables scores/XP/analytics. Record browser evidence and actual physical-device gaps.
 
-## Owner setup and deployment
+Release order: review/test → linked migration dry run → apply only reviewed additive migrations → deploy changed functions → compare downloaded source → safe hosted validation/CORS/permissions/cron → PR checks → merge → Pages success → public UI/build smoke test. Attach the PR to the chat. A merge alone does not establish deployment acceptance.
 
-1. The owner creates/signs into a Supabase account and accepts its terms. Choose an organization, project region, and service plan after reviewing current costs/limits. Start with a staging project separate from production. Store database passwords and access tokens in a password manager; do not paste them in chat or frontend configuration.
-2. Link the project with the Supabase CLI using the owner's authenticated session. Review and apply migrations with `supabase db push`; never run a remote reset. Confirm `playtest_private` is not an exposed API schema.
-3. Configure server secrets `PLAYTEST_ORIGINS` (comma-separated exact origins) and `PLAYTEST_RATE_SECRET` (random, at least 32 bytes). Supabase provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the function. Deploy `playtest`; `verify_jwt=false` is intentional for optional account-free telemetry. The endpoint validates all data; no client receives a service key.
-4. Production origin is `https://ratfinkca.github.io`; origin checks cannot distinguish individual Pages repositories on that origin and are not authentication. Staging permits its own origin only. Verify which address header the hosted gateway overwrites; the current handler hashes the first `x-forwarded-for` address. If spoofable, configure trusted gateway rate limiting before public activation. Network limits are best-effort abuse controls, not player identity or proof of consent.
-5. Check the provider's current request-log and backup retention in the chosen project/plan. Record it in `public/playtest-data.html`. The application does not log request bodies, initials or raw IPs. No public activation until this notice is accurate and the daily cleanup succeeds.
-6. Synthetic staging checks: permitted/disallowed origin, missing/invalid payload, >32 KiB body, duplicate batch, >120 requests/hour, anonymous direct reads/writes and RPC calls, scheduled cleanup, and reports. Delete only those synthetic test records after validation.
-7. Set public frontend values: `VITE_PLAYTEST_ENABLED=true`, `VITE_PLAYTEST_URL=https://<project>.supabase.co/functions/v1/playtest`, and `VITE_PLAYTEST_NOTICE_URL=https://ratfinkca.github.io/shambhala-side-quest/playtest-data.html`. `VITE_BUILD_ID` is the build commit. All values here are public. Do not set public enablement until staging passes and shipping is approved.
-8. Deploy backend before enabling/releasing frontend. Smoke-test a consent-declined run (no analytics request), an accepted run, opt-out and local score saving. Verify no private tables or fields are publicly readable.
-
-The user selected GitHub issues as the public contact route; the notice warns that reports are public. No separate email account is needed.
-
-## Retention and reports
-
-Cron runs `public.maintain_playtest()` at 00:10 UTC daily. A separate hourly job deletes rate-limit hashes older than 24 hours, bounding retention to roughly 24–25 hours. It replaces daily aggregate rows only for days still represented by raw events, then removes whole UTC days older than the rolling cutoff: raw retention is 29–30 days. Aggregates contain day, mode, input category, scoring version, metric and total; no installation/session/run IDs. Unknown completion means no end event observed at aggregation time, not a confirmed quit.
-
-Run `supabase/reports/playtest.sql` in the owner SQL editor. Show run/stage sample sizes and unknown completions alongside outcomes. Replay counts are events, not unique-player retention. Input on completed runs uses the terminal label; unfinished runs can remain unknown. Delayed data/closed tabs/ad blockers mean coverage is incomplete. Duplicate event IDs are suppressed while raw records remain retained.
-
-Inspect `cron.job` and `cron.job_run_details` after rollout; a failed cleanup requires attention. Retention is not a promise about provider backups/service logs, which the notice must describe separately.
-
-## Failure and rollback
-
-Missing/invalid frontend config disables collection and the invitation. Opt-out discards the in-memory queue and aborts pending requests; already received data remains subject to retention. Queues cap at 100 events, batches at 20/32 KiB, timeout at 5 seconds, and one retry on a later flush. No durable analytics queue, credentials, or retroactive recording.
-
-To stop ingestion immediately, remove all allowed origins or disable the deployed function; then deploy with `VITE_PLAYTEST_ENABLED=false`. Gameplay and local saves keep working. Do not drop tables as a rollback. Preserve migration history; schema changes require reviewed forward migrations.
-
-References checked during implementation: [Edge Function auth](https://supabase.com/docs/guides/functions/auth), [local development](https://supabase.com/docs/guides/local-development/cli/getting-started), [scheduled SQL](https://supabase.com/docs/guides/cron).
-
-## Hosted verification completed 2026-10-22
-
-- Owner queries confirm anonymous schema access and direct ingestion execution are denied.
-- Both cron jobs are active. Recent hourly cleanup executions succeeded. The daily maintenance function ran successfully on demand; its scheduled execution has not yet been observed.
-- A rollback-isolated test aged the synthetic event by 31 days and confirmed maintenance removed it.
-- 125 duplicate requests returned 120 successes and five 429s. Two further requests with different forged `x-forwarded-for` values also returned 429. The database still contained one synthetic event; the current rate bucket counted 127 requests. This validates the tested hosted gateway path, not a universal guarantee for future gateways.
-- Dashboard confirms Free plan and no included project backups. The current official pricing page lists one day of API/database log retention. The public notice now describes these settings without promising deletion from all provider operational systems.
-- Codex Supabase MCP added with project scope and OAuth authentication verified. The current running tool inventory has not yet exposed its tools; CLI access remains usable.
-
-The synthetic event and its generated summary were removed with a guarded transaction; zero events remain. All 90 tests and the production build pass (existing large-bundle warning only). Remaining release work: commit/review the updated notice, configure the production origin and Pages variables, and publish the consent UI. Until that rollout, public collection stays off.
-
-## Arcade board
-
-Use `VITE_ARCADE_ENABLED=true` and `VITE_ARCADE_URL=https://<project>.supabase.co/functions/v1` only after deploying migrations 202610220001/2 and functions `run-ticket`, `submit-score`, `leaderboard`. Configure separate server secrets `ARCADE_ORIGINS` and `ARCADE_RATE_SECRET` (random 32 bytes or more). Keep development on its own local backend. Rehearsal disables both clients. Public arcade configuration does not depend on playtest consent or its configuration.
-
-Tickets last 24 hours and permit pauses. Issuance allows 60/hour per rotating network hash; submission allows 120/hour. Exact successful retries work after expiry, but conflicting reuse does not. Accepted receipts persist with scores for deduplication. Hourly cleanup removes expired unused tickets and network hashes older than 24 hours. Score records and receipts persist until owner removal; they contain initials and run claims, never the analytics installation identifier. No external backup or logging additions are made by this feature.
-
-The board is casual: component checks and elapsed-time checks cannot prove legitimate movement in a client-controlled game. Moderate privately via `select id,initials,score from arcade_private.scores order by received_at desc;`, then `update arcade_private.scores set hidden=true where id=<reviewed-id>;` (set false to restore). Do not grant players direct table access. Public clients cache boards for 30 seconds; hidden entries can remain in an already loaded view until refreshed.
-
-Rank order is score descending, stages cleared descending, server receipt time ascending, then internal ID. Public output has initials, score, stagesCleared, inputType, mode, scoringVersion and receivedAt only. Initials are not unique identities. Score-affecting releases must add a supported scoring version in the server validator and client constant; cosmetic releases retain arcade-v1. Older boards remain available through the leaderboard endpoint's scoringVersion filter, although the first UI shows the current version only.
-
-Before release, run backend CI, validate the deployed origins/permissions and synthetic moderation flow, then enable repository variables `ARCADE_ENABLED` and `ARCADE_URL`. A declined-tracking run must post successfully without adding analytics rows. Disable the frontend variable or clear `ARCADE_ORIGINS` to stop public access without removing data.
+Rollback without dropping data: clear the affected allowed origins or disable frontend variables and redeploy. Opt-out clears only unsent analytics; received records follow retention. Preserve migration history; use reviewed forward migrations. Unknown posting outcomes retry the same frozen payload.

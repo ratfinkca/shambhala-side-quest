@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../ROADMAP.md) and [handoff](../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Rave Experience first implementation — 2026-10-28
 
 Approved for release with the Living Forest music/lighting update. All 112 tests and the production build pass; independent release review found no blockers.

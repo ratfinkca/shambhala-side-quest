@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../../ROADMAP.md) and [handoff](../../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Forest Freakout Implementation Plan
 
 > **For agentic workers:** Use superpowers:executing-plans to implement this plan task-by-task.

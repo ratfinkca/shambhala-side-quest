@@ -4,13 +4,13 @@ export function createInputTracker(){
 }
 const stageSummary=stageIndex=>({stageIndex,activeMs:0,bassMs:0,chargeMs:0,pickups:0,bumps:0,closePasses:0,clearanceBins:[0,0,0],minClearance:null,peakCombo:0,flowUses:0,bassUses:0,candies:{speed:0,dizzy:0,waves:0},score:0,qualified:false,finished:false});
 export function createRunSummary({runId,mode,buildId,scoringVersion}){
-  const data={runId,mode,buildId,scoringVersion,outcome:'unknown',stages:[],perks:[]};let current;
+  const data={runId,mode,buildId,scoringVersion,outcome:'unknown',stages:[],perks:[]};let current,nextIndex=0;
   return {
     record(type,payload={}){
       if(payload.runId!==runId||data.outcome!=='unknown')return;
       if(type==='start'){
-        if(!Number.isInteger(payload.stageIndex)||payload.stageIndex!==data.stages.length||payload.stageIndex>2)return;
-        current=stageSummary(payload.stageIndex);data.stages.push(current);return;
+        if(!Number.isInteger(payload.stageIndex)||payload.stageIndex!==nextIndex||payload.stageIndex>(mode==='endless'?999999:mode==='rush'?0:2)||current&&!current.finished)return false;
+        nextIndex++;current=stageSummary(payload.stageIndex);if(mode==='endless')data.stages=[current];else data.stages.push(current);return true;
       }
       if(type==='exit'||type==='complete'){data.outcome=type;return;}
       if(type==='perk'&&['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'].includes(payload.perk)&&!data.perks.includes(payload.perk)){data.perks.push(payload.perk);return;}
