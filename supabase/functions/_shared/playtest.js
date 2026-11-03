@@ -1,3 +1,4 @@
+import {variationIdForStage} from './variations.js';
 // Shared public schema: strict allowlists keep accidental personal data off the wire.
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -9,7 +10,7 @@ const perks=['boots','noodle','moth','bracelet','surfer','battery','encore','swe
 function payload(type,p,mode){
  const endless=mode==='endless',stageMax=endless?999999:mode==='rush'?0:2;
  if(type==='run_start'||type==='replay')return exact(p,[]);
- if(type==='stage_start')return exact(p,['stageIndex'])&&integer(p.stageIndex,stageMax);
+ if(type==='stage_start')return stagePayload(p,['stageIndex'],endless)&&integer(p.stageIndex,stageMax);
  if(type==='perk')return exact(p,['perk'])&&['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'].includes(p.perk);
  if(type==='menu')return exact(p,['action'])&&['instructions','theme'].includes(p.action);
  if(type==='perk_choice')return endless&&exact(p,['stageIndex','action','perk','replaced','activePerks'])&&integer(p.stageIndex,stageMax)&&Array.isArray(p.activePerks)&&p.activePerks.length<=Math.min(p.stageIndex+1,4)&&new Set(p.activePerks).size===p.activePerks.length&&p.activePerks.every(k=>perks.includes(k))&&(
@@ -17,9 +18,10 @@ function payload(type,p,mode){
   p.action==='add'&&perks.includes(p.perk)&&p.activePerks.includes(p.perk)&&p.replaced===null||
   p.action==='swap'&&p.stageIndex>=4&&p.activePerks.length===4&&perks.includes(p.perk)&&perks.includes(p.replaced)&&p.perk!==p.replaced&&p.activePerks.includes(p.perk)&&!p.activePerks.includes(p.replaced));
  if(type==='run_end')return exact(p,['outcome','stagesCleared','totalScore'])&&(endless?['banked','failed','exit']:['complete','exit']).includes(p.outcome)&&integer(p.stagesCleared,endless?1000000:3)&&integer(p.totalScore,endless?Number.MAX_SAFE_INTEGER:1000000);
- if(type!=='stage_end'||!exact(p,stageKeys))return false;
+ if(type!=='stage_end'||!stagePayload(p,stageKeys,endless))return false;
  return integer(p.stageIndex,stageMax)&&['activeMs','bassMs','chargeMs'].every(k=>duration(p[k]))&&p.bassMs<=p.activeMs&&p.chargeMs<=p.bassMs&&['pickups','bumps','closePasses','peakCombo','flowUses','bassUses','score'].every(k=>integer(p[k]))&&Array.isArray(p.clearanceBins)&&p.clearanceBins.length===3&&p.clearanceBins.every(n=>integer(n))&&p.clearanceBins.reduce((a,b)=>a+b,0)===p.closePasses&&(p.closePasses===0?p.minClearance===null:Number.isFinite(p.minClearance)&&p.minClearance>=0&&p.minClearance<=21)&&exact(p.candies,['speed','dizzy','waves'])&&Object.values(p.candies).every(n=>integer(n))&&typeof p.qualified==='boolean'&&p.finished===true;
 }
+function stagePayload(p,keys,endless){const tagged=object(p)&&Object.hasOwn(p,'variationId');return exact(p,tagged?[...keys,'variationId']:keys)&&(!tagged||endless&&p.variationId===variationIdForStage(p.stageIndex));}
 export function validatePlaytestBatch(events){
  const fail={ok:false,error:'Invalid playtest batch'};
  if(!Array.isArray(events)||events.length<1||events.length>20)return fail;

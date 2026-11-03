@@ -76,10 +76,10 @@ function begin(){
  if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;
   if(arcadeConfig.baseUrl){const owner=run.id,current=createSubmission(owner);submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:SCORING_VERSION,buildId:arcadeConfig.buildId}).then(result=>{if(run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);if(screen.name==='results')render();});}
  }
- playtest.stageStart(run.stageIndex);
+ playtest.stageStart(run.stageIndex,config.stage.variationId);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
  go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});refreshLayout();
- $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+config.stage.loop:'/3'} · ${config.stage.name.toUpperCase()}`;
+ $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+config.stage.loop:'/3'} · ${config.stage.name.toUpperCase()}${config.stage.variationId&&config.stage.variationId!=='original'?' · '+config.stage.variationName:''}`;
 }
 function captureResult(){resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,inputType:playtest.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};}
 function navigateResults(destination,confirmed=false){
@@ -231,4 +231,4 @@ game.events.on('round:end',round=>{
 });
 render();
 
-if(import.meta.env.DEV && rehearsal)import('./rehearsal.js').then(({installRehearsal})=>installRehearsal(()=>scene,()=>screen.name==='playing'));
+if(import.meta.env.DEV && rehearsal)import('./rehearsal.js').then(({installRehearsal})=>installRehearsal(()=>scene,()=>screen.name==='playing',{previewStage:index=>{const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('endless');run.stageIndex=index;go('RULES');};if(scene)load();else game.events.once('forest:ready',load);}}));

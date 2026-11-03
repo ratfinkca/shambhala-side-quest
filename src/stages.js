@@ -1,7 +1,7 @@
 const forestAnchors=[[235,250],[385,255],[565,235],[735,260],[300,365],[665,365],[225,490],[410,490],[585,495],[750,485]];
 const festivalAnchors=[200,340,480,620,760,850].flatMap(x=>[210,455,555].map(y=>[x,y]));
 // One sampled shoreline drives both rendering and movement checks.
-function puddle(x,y,width,height,phase){
+export function puddle(x,y,width,height,phase){
  const points=Array.from({length:48},(_,i)=>{
   const angle=i/48*Math.PI*2;
   const radius=.9+.075*Math.sin(angle*3+phase)+.025*Math.cos(angle*5-phase);

@@ -43,3 +43,12 @@ test('Endless consent is non-retroactive and opt-out suppresses choices and term
  s.start(r);s.stageStart(0);s.finishStage(0,{score:0,qualified:true});s.setConsent('declined');s.choice({...r,stageIndex:1,perks:['boots']},'add','boots');s.end({...r,endedVoluntarily:true});await s.flush();assert.equal(batches.length,0);
  s.input('touch');assert.equal(s.inputType(),'touch');
 });
+
+test('Endless stage telemetry carries layout identity while legacy payloads remain valid',async()=>{
+ const {validatePlaytestBatch}=await import('../supabase/functions/_shared/playtest.js');
+ const {s,batches}=setup();s.setConsent('accepted');s.start({...run,mode:'endless'});
+ for(let i=0;i<4;i++){s.stageStart(i,i<3?'original':'forest-creekside');s.finishStage(i,{score:0,qualified:true});await s.flush();}
+ const stage=batches.find(e=>e.type==='stage_end'&&e.payload.stageIndex===3);assert.equal(stage.payload.variationId,'forest-creekside');assert.ok(validatePlaytestBatch([stage]).ok);
+ const old=structuredClone(stage);delete old.payload.variationId;assert.ok(validatePlaytestBatch([old]).ok);
+ for(const variationId of ['unknown','neon-stereo','original'])assert.equal(validatePlaytestBatch([{...stage,payload:{...stage.payload,variationId}}]).ok,false);
+});

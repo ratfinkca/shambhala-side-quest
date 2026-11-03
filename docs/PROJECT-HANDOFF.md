@@ -37,3 +37,14 @@ Node 24, `npm ci`, `npm test`, `npm run build`, `git diff --check`. No credentia
 `/?rehearsal` is development-only: qualify/fail controls, all perks, no saved scores/XP or online requests. It verifies navigation, never balance. Browser-check changed flows, desktop/phone layouts and console; physical-device performance/audio need real playtesting. Phaser's existing large-bundle warning is known.
 
 Use feature branches and PRs to main. Deploy needed backend migrations/functions first, verify live safe validation, then merge after frontend/backend CI. Main merge triggers Pages; verify deployment completion and public UI/assets separately. Do not reset a hosted database or post test production scores. Preserve private data and credentials outside the repository.
+
+
+## M2 first layout preview — local, 2026-11-03
+
+Six authored layouts now alternate from loop2 (A) and loop3 (B) onward, while loop1 and Festival/Rush geometry remain original. Each keeps its base stage ID, music and palette. Layout names appear on rules/HUD. Crowds use deterministic cabinet-clear anchors, preserving existing counts/speed caps. Organic mud uses the same sampled polygon for art/collision.
+
+Practice link: `http://127.0.0.1:5181/?rehearsal&layout=forest-creekside`. Development-only Layout lab selects any encounter; loading resets to a no-perk practice stage. Scores/XP/analytics are disabled. Rehearsal's qualify/fail controls remain in the collapsible lab. Reload reopens the selected layout's rules, not a saved run.
+
+Optional Endless stage_start/stage_end measurements gain variationId, validated against the deterministic stage-index registry; older schema2 events without IDs still work. Private stage reports separate legacy-unknown samples. Before any frontend release, deploy the updated playtest function and its shared variations.js module; no SQL migration or arcade validator/scoring-version change is needed. Local preview only: do not deploy or mix new test data into production before approval.
+
+M2 acceptance:155automated tests and production build pass; independent review clean. Browser loaded all six layouts, tested picker/reset/reload, pause/resume, destination steering and finish with rehearsal saving/XP disabled.390x844HUD/picker check passed; no console errors/warnings. Physical touch balance and sustained phone performance remain user playtest work. Preview server5181 stays running, opening Creekside Drift rules; no release performed.
