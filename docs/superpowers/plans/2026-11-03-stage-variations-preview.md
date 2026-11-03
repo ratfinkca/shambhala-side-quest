@@ -17,3 +17,7 @@ All five implementation steps complete locally.155tests and build pass; producti
 Browser at5181 loaded all six via picker, observed rules/name/target changes and distinct geometry.390x844check: HUD label wraps, timer remains visible, picker works; destination steering/bump feedback, pause/resume and voluntary finish verified. Rehearsal result shows score saving disabled and0XP. Reload keeps selected layout link and resets practice. No console errors/warnings. Screenshots:/tmp/m2-{forest-weave,neon-stereo,neon-crossfade,sunrise-islands,sunrise-lane}.png and/tmp/m2-creekside-preview.png; phone:/tmp/m2-last-dance-mobile.png.
 
 Limits: no physical touch/audio performance or complete human-played qualification run is claimed; qualify fixture verifies transitions, not balance. Preview has no perks initially. Local server remains running for user playtest. Production remains M1. Before shipping M2, deploy updated playtest/shared variations module, then frontend after CI; no SQL migration/arcade scoring change required.
+
+## Release authorization
+
+After reviewing the playable preview, the user requested shipping. Backend-first playtest/shared-variation deployment, CI gates, PR merge, Pages and public build verification follow; final results are recorded on the release PR. Earlier local-only statements above describe the preview checkpoint.
