@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../../ROADMAP.md) and [handoff](../../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Festival Run Implementation Plan
 
 Status: historical plan for the milestone shipped in PR #2 (`4fb9fab`). The checklists below are preserved planning history, not outstanding implementation tasks. Start with [the project handoff](../../PROJECT-HANDOFF.md) for current work and [validation evidence](../festival-run-validation.md) for coverage and limits.

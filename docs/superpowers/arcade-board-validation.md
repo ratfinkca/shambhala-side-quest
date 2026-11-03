@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../ROADMAP.md) and [handoff](../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Arcade board validation
 
 Implementation follows the approved 2026-10-20 arcade board plan. Migration names advance to 202610220001/2 because tracking already used 202610200002. Native work stays on a dedicated branch in the writable checkout, as with tracking.

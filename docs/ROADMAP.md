@@ -1,0 +1,59 @@
+# Development roadmap
+
+Updated 2026-11-03. Milestone labels below define the next development sequence; they are not retroactive release numbers. User approved features/atmosphere/rewards ahead of candy/bass fine-tuning. Build and preview one milestone at a time, then ship through PR/backend-first release checks when authorized.
+
+## Completed foundation
+
+| Track | Shipped outcome |
+|---|---|
+| Core festival | Rush, three-stage Festival, click/tap parity, mud/bass/candy/Bass Head |
+| Identity/atmosphere | Three switchable themes; distinct music and reactive lighting per stage |
+| Progression | Local XP/ranks/achievements, wardrobe/totems/flourishes and eight earned perks |
+| Feedback/online | Opt-in playtest sharing, near-miss rings, initials boards for all modes |
+| Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
+| Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
+
+Latest verified release: PR #13 /8b5192f. See handoff for release evidence and limits.
+
+## M1 — Endless insights
+
+**Status:** implemented locally and reviewed; production baseline still excludes Endless analytics. Backend-first rollout is pending.
+
+**Outcome:** answer where consenting players stop, fail, keep builds or swap perks before changing difficulty/content.
+
+- [Coverage review](playtests/2026-11-03-coverage.md) completed: only 1 recorded run and no stage-end samples; no balance conclusions. Review subsequent coverage privately, publishing only aggregate counts and explicit observation gaps. Never equate missing telemetry with inactivity or unknown completion with a quit.
+- Add opt-in Endless run/stage summaries, banked/failed/exit outcomes and add/swap/keep choices. Bound client memory and existing transport. No names/initials/pointer trajectories, no retroactive capture, no consent default change.
+- Add private stage/loop and choice reports with time/build/mode/input scope and sample denominators. Preserve Rush/Festival compatibility and existing retention/permissions.
+- Refresh the public data notice and operations. Deploy analytics migration/function before frontend. Validate consent-off, mid-run consent, opt-out, long runs, invalid events and reporting privately.
+
+**Done when:** automated tests, private SQL reporting tests, browser consent/perk/finish checks and independent review pass; hosted rollout is a separate release gate. Interpret real results only after collection is verified. [Design](superpowers/specs/2026-11-03-endless-insights-design.md) · [plan](superpowers/plans/2026-11-03-endless-insights.md).
+
+## M2 — Endless stage variations
+
+**Status:** planned next; exact layouts need a playable preview.
+
+**Outcome:**later loops offer recognizable encounters beyond higher counts/targets.
+
+First pass: two deterministic variations per base stage (six encounters), introduced after loop1; preserve original first-loop layout and stage music. Vary speaker/mud arrangement and crowd anchors while preserving spawn, collection access and escape routes. Never reroll a stage mid-play. Keep existing target/speed caps and perk rules until evidence supports a change. No additional visual effects that obscure taps or create harsh strobing.
+
+Plan: define reusable layout data and deterministic selection → geometry/path-clearance tests → rehearsal/phone preview → attach variation identity to optional telemetry → update score validation/version only if scoring rules change → release. Review encounters with the user before fixing final counts/art. Acceptance: every pickup region is reachable, no unavoidable spawn trap, stable pause/reload semantics, playable touch preview and performance checks. No run recovery is implied.
+
+## M3 — Endless achievements and rewards
+
+**Status:** planned after M2 produces interesting challenges.
+
+Outcome: more reasons to experiment and return. Add a small reward collection tied to survival, perk exploration and stage encounters; prefer wardrobe/totem/flourish rewards with locked previews and clear progress. Preserve existing saves/unlocks. Do not reward intentional failure or make success depend on inaccessible cosmetics.
+
+Plan: use M1 evidence to propose reachable thresholds → approve reward concepts/criteria → extend progression migration/receipts and unlock UI → verify normal play, reduced motion and old saves → preview/release. Exact rewards and thresholds remain proposals, not approved promises. No currency/store in this milestone.
+
+## M4 — Gameplay feel and reliability
+
+**Status:** deferred focused pass, promoted earlier for actual bugs/accessibility failures.
+
+Use evidence and audience feedback to tune candy timing/effects (especially waves), bass escapes, pacing, input differences and reward reachability. Test physical phones, speakers/headphones and sustained performance. Evaluate active-run recovery as a separate scoped feature: protect against refresh/OS suspension without double XP or duplicate online submissions. Cross-device sync is a larger later project.
+
+Acceptance: before/after measurements and actual playtests, specific improvements with denominators, no speculative difficulty changes. Keep scoring-version boundaries explicit.
+
+## Later backlog
+
+More stages/authored music assets, additional cosmetics, optional currency/shop, cloud profiles/saves, stronger score verification and a public itch.io launch package. Itch launch remains on hold at the user's request. No dates or automatic publishing commitments are assigned.

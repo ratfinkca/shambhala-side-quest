@@ -1,3 +1,5 @@
+> Historical visual acceptance evidence. All three themes are shipped. For the current game, release status and remaining physical-device checks see [handoff](docs/PROJECT-HANDOFF.md) and [roadmap](docs/ROADMAP.md).
+
 # Forest Freakout visual QA — 2026-10-16
 
 Status: passed for the implemented first-theme scope. Local preview only; no deployment.

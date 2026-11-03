@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../ROADMAP.md) and [handoff](../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Playtest tracking validation — 2026-10-22
 
 Branch: `codex/playtest-tracking`. Local implementation only; no public collection, external project deployment, PR or merge performed.

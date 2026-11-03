@@ -4,7 +4,7 @@ A tiny, unofficial festival-inspired game: wander a glowing forest, collect good
 
 ## Festival Run
 
-The game includes a title screen, wardrobe, independent music/effects volume controls, and local plus optional online arcade scores. Play either mode using the GitHub Pages link below.
+The game includes a title screen, wardrobe, independent music/effects volume controls, and local plus optional online arcade scores. Play any mode using the GitHub Pages link below.
 
 - **Quick Rush** keeps the original one-minute score chase.
 - **Endless Festival** repeats Forest → Neon → Sunrise in one-minute stages until a spark target is missed, or choose **Finish run & save score** to bank completed stages (unfinished-stage points are excluded). Targets rise by 3 per loop to a cap of 45; crowd counts rise by 2 per loop to 22 and movement rises to +20%. Four active perk slots allow optional swaps, or keep the current build. Completed stages award XP. Its local top ten and optional online top 50 rank stages cleared first, then score. Online entries use three initials, include input type, and require a connected start and posting within 24 hours (up to 1440 recorded stages). Stage variations remain future work. Reloading discards an unfinished run.
@@ -14,7 +14,7 @@ The game includes a title screen, wardrobe, independent music/effects volume con
 - Bass Head is an earned special, not a selected perk. Bass exposure builds from 90% speed toward the distance-based 20–50% floor over six seconds. Outside bass, movement recovers immediately and exposure fades fully over three seconds. Ten accumulated seconds in bass earns one charge; press B or tap Bass Head to spend it for six seconds of bass immunity and 2× spark points when both you and the spark are inside bass. Mud/bumps still apply. Combo/drop bonuses stack; each spark still counts once toward qualification. No charging during activation. Unspent charge carries between stages, while exposure and active effects reset; a new run clears everything.
 - The wardrobe offers nine onesies, nine hats and nine totems, plus three earnable visual flourishes. New players unlock expanded choices with Rave Experience and achievements; existing saves retain all previously available pieces. Cosmetics do not change the hitbox or abilities.
 - Sound defaults on for new players and begins on a Play interaction. An existing mute preference is preserved. Settings offer independent music/effects sliders; opening them during play pauses the game and requires explicit Resume.
-- Results offer optional three-character arcade initials. Quick Rush and Festival Run each have a local top ten, stored only in this browser. An optional initials-based online board offers separate Quick Rush and Festival Run rankings; playtest sharing is independent and opt-in. Cross-device profile sync is not included. Historical best scores migrate; reloading abandons an unfinished run.
+- Results offer optional three-character arcade initials. Quick Rush and Festival Run each have a local top ten, stored only in this browser. An optional initials-based online board offers separate Quick Rush, Festival Run and Endless rankings; playtest sharing is independent and opt-in. Cross-device profile sync is not included. Endless voluntary finishing banks only completed stages; unsaved results require confirmation before replay/title navigation. Historical best scores migrate; reloading abandons an unfinished run.
 - Rave Experience, cosmetic achievements and device-local progression are included; currency/store, Endless stage variations and cloud profile sync remain later milestones.
 
 For development-only transition checks, run Vite and open `/?rehearsal`. The visible rehearsal controls can finish a stage with a qualifying or failing fixture. Scores and historical-best updates are disabled in that mode. Its module is excluded from production builds. Use normal play for difficulty/balance feedback.
@@ -27,7 +27,9 @@ Each stage has its own procedural arrangement and six stage-mounted moving beams
 
 ## Run
 
-For current project status, architecture, remaining validation and proposed milestones, start with [Project handoff and roadmap](docs/PROJECT-HANDOFF.md).
+For current release and architecture, start with the [project handoff](docs/PROJECT-HANDOFF.md). The [roadmap](docs/ROADMAP.md) defines the next milestones; [operations](docs/online-operations.md) covers backend deployment, consent and reporting. Historical plans are indexed in [docs](docs/README.md).
+
+Current development: M1 Endless insights is implemented locally with 150 passing tests; production remains the PR #13 gameplay/score-save release until the analytics migration and function are deployed before its frontend. See the roadmap for the release gate and M2 stage variations.
 
 Use Node.js 24 for development and tests (the GitHub Actions workflow also uses Node 24).
 

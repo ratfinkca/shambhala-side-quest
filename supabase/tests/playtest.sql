@@ -1,5 +1,5 @@
 begin;
-select plan(9);
+select plan(12);
 select ok(not has_schema_privilege('anon','playtest_private','USAGE'),'anonymous cannot access private schema');
 select ok(not has_function_privilege('anon','public.ingest_playtest(jsonb,text)','EXECUTE'),'anonymous cannot bypass endpoint');
 select ok(not has_function_privilege('authenticated','public.maintain_playtest()','EXECUTE'),'signed-in callers cannot purge data');
@@ -14,5 +14,9 @@ select public.maintain_playtest();
 select is((select sum(value)::int from playtest_private.daily where metric='unknown_completions'),1,'archived aggregate survives rerun');
 select is((select count(*)::int from cron.job where jobname='playtest-daily-maintenance'),1,'one retention job is scheduled');
 select is((select count(*)::int from cron.job where jobname='playtest-rate-cleanup' and schedule='10 * * * *'),1,'hourly hash cleanup is scheduled');
+select public.ingest_playtest('[{"eventId":"00000000-0000-4000-8000-000000000101","installationId":"00000000-0000-4000-8000-000000000102","runId":"00000000-0000-4000-8000-000000000103","type":"run_start","schemaVersion":2,"mode":"endless","inputType":"touch","scoringVersion":"arcade-v1","payload":{}},{"eventId":"00000000-0000-4000-8000-000000000104","installationId":"00000000-0000-4000-8000-000000000102","runId":"00000000-0000-4000-8000-000000000103","type":"run_end","schemaVersion":2,"mode":"endless","inputType":"touch","scoringVersion":"arcade-v1","payload":{"outcome":"banked","stagesCleared":5,"totalScore":100}}]',repeat('b',64));
+select is((select value::int from playtest_private.metrics where mode='endless' and metric='banked_runs'),1,'banked Endless is distinct');
+select is((select value::int from playtest_private.metrics where mode='endless' and metric='failed_runs'),0,'banked run is not failed');
+select ok(not has_table_privilege('anon','playtest_private.metrics','SELECT'),'new metrics remain private');
 select * from finish();
 rollback;

@@ -18,3 +18,9 @@ test('pauses and hidden pages do not add active time or exits',()=>{
 test('input tracks accepted game actions and does not infer from hardware',()=>{
  const t=createInputTracker();assert.equal(t.inputType(),'unknown');t.recordInput('menu');assert.equal(t.inputType(),'unknown');t.recordInput('touch');t.recordInput('touch');assert.equal(t.inputType(),'touch');t.recordInput('keyboard');assert.equal(t.inputType(),'mixed');
 });
+
+test('Endless keeps only its current sequential stage while preserving accurate long-run counters',()=>{
+ const s=createRunSummary({runId:'r',mode:'endless',buildId:'dev',scoringVersion:'arcade-v1'});
+ for(let i=0;i<5000;i++){s.record('start',{runId:'r',stageIndex:i});s.record('pickup',{runId:'r',chain:1});const stage=s.finishStage(i,{score:10,qualified:true});assert.equal(stage?.stageIndex,i);assert.equal(stage.pickups,1);assert.ok(s.snapshot().stages.length<=1);}
+ s.record('start',{runId:'r',stageIndex:5001});assert.equal(s.snapshot().stages[0].stageIndex,4999);
+});

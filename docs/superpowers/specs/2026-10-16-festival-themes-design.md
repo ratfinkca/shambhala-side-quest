@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../../ROADMAP.md) and [handoff](../../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Festival styles — Forest Freakout first
 
 Status: user approved the three-theme direction and Forest Freakout as the first implementation. This written specification awaits review before the implementation plan.

@@ -25,3 +25,21 @@ test('Bass Battery reports real charging time within bass exposure and remains i
  const final=advanceBass(round,1000,true);assert.ok(final<=1000);assert.equal(round.bass.chargeMs,10000);
  activateBass(round);assert.equal(advanceBass(round,6000,true),0);
 });
+
+test('schema2 Endless accepts late stages and rejects personal fields, invalid choices and legacy-mode broadening',()=>{
+ const e={...event(),schemaVersion:2,mode:'endless'};e.payload.stageIndex=120;
+ assert.equal(validatePlaytestBatch([e]).ok,true);
+ for(const change of [{schemaVersion:1},{schemaVersion:2,mode:'festival'}])assert.equal(validatePlaytestBatch([{...e,...change}]).ok,false);
+ const choice={...e,type:'perk_choice',payload:{stageIndex:120,action:'swap',perk:'surfer',replaced:'moth',activePerks:['boots','surfer','noodle','bracelet']}};
+ assert.equal(validatePlaytestBatch([choice]).ok,true);
+ for(const mutate of [p=>p.activePerks.push('sweet'),p=>p.activePerks[0]='surfer',p=>p.replaced='surfer',p=>p.replaced=null,p=>p.stageIndex=1000000,p=>p.x=1,p=>p.perk='unknown']){const q=structuredClone(choice);mutate(q.payload);assert.equal(validatePlaytestBatch([q]).ok,false);}
+ for(const outcome of ['banked','failed','exit'])assert.equal(validatePlaytestBatch([{...e,type:'run_end',payload:{outcome,stagesCleared:123,totalScore:2000000}}]).ok,true);
+ assert.equal(validatePlaytestBatch([{...choice,schemaVersion:1,mode:'festival'}]).ok,false);
+});
+
+test('Endless choices cannot claim an impossible early build or swap before four perks were earned',()=>{
+ const base={...event(),schemaVersion:2,mode:'endless',type:'perk_choice',payload:{stageIndex:0,action:'add',perk:'boots',replaced:null,activePerks:['boots','moth','noodle','bracelet']}};
+ assert.equal(validatePlaytestBatch([base]).ok,false);
+ base.payload={stageIndex:3,action:'swap',perk:'surfer',replaced:'moth',activePerks:['surfer','boots','noodle','bracelet']};assert.equal(validatePlaytestBatch([base]).ok,false);
+ base.payload.stageIndex=4;assert.equal(validatePlaytestBatch([base]).ok,true);
+});

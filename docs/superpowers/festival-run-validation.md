@@ -1,3 +1,5 @@
+> Historical scope or validation snapshot. See the [current roadmap](../ROADMAP.md) and [handoff](../PROJECT-HANDOFF.md) for shipped status and remaining work. Original task checkboxes and local/pending statements are retained as evidence, not a current backlog.
+
 # Festival Run preview validation — 2026-09-25
 
 Release update (2026-10-13): the user accepted the preview; PR #2 was merged to `main` as `4fb9fab`, and GitHub Pages deployment succeeded. The live title and Festival Run start were checked without console errors. The evidence below records preview validation; remaining balance/device checks are tracked in [the project handoff](../PROJECT-HANDOFF.md).

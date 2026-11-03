@@ -23,8 +23,23 @@ test('stale measurements and completion cannot contaminate a replay',async()=>{
  const ending=batches.find(e=>e.type==='run_end');assert.equal(ending.runId,replay.id);assert.equal(ending.payload.totalScore,0);
 });
 
-test('Endless keeps input classification local without emitting unsupported analytics',async()=>{
- const {s,batches}=setup();s.setConsent('accepted');s.start({...run,mode:'endless'});
- s.input('touch');s.stageStart(30);s.record('tick',{activeMs:60000,bassMs:0,chargeMs:0});s.perk('boots');s.finishStage(30,{score:50,qualified:true});s.end({...run,mode:'endless'});await s.flush();
- assert.equal(batches.length,0);assert.equal(s.inputType(),'touch');
+test('consenting Endless tracks late stages, one accepted choice per clear and banked/failed/exit outcomes',async()=>{
+ const {validatePlaytestBatch}=await import('../supabase/functions/_shared/playtest.js');
+ for(const outcome of ['banked','failed','exit']){
+  const {s,batches}=setup();s.setConsent('accepted');const r={...run,mode:'endless'};s.start(r);s.input('touch');
+  for(let i=0;i<7;i++){s.stageStart(i);s.record('tick',{activeMs:60000,bassMs:0,chargeMs:0});s.finishStage(i,{score:0,qualified:true});
+   const next={...r,stageIndex:i+1,perks:i<4?['boots','noodle','moth','bracelet'].slice(0,i+1):['boots','surfer','moth','bracelet']};
+   const action=i<4?'add':i===4?'swap':'keep';const perk=i<4?next.perks.at(-1):i===4?'surfer':null;const replaced=i===4?'noodle':null;
+   s.choice(next,action,perk,replaced);s.choice(next,action,perk,replaced);await s.flush();
+  }
+  const finished={...r,endedVoluntarily:outcome==='banked',stagesCleared:7,totalScore:0};s.end(finished,outcome==='exit'?'exit':'complete');s.end(finished);await s.flush();
+  const end=batches.filter(e=>e.type==='run_end');assert.equal(end.length,1);assert.equal(end[0].payload.outcome,outcome);assert.equal(end[0].inputType,'touch');
+  assert.equal(batches.filter(e=>e.type==='perk_choice').length,7);assert.ok(batches.some(e=>e.type==='stage_end'&&e.payload.stageIndex===6));
+  assert.ok(batches.every(e=>e.schemaVersion===2&&validatePlaytestBatch([e]).ok));assert.ok(!JSON.stringify(batches).includes('initials'));
+ }
+});
+test('Endless consent is non-retroactive and opt-out suppresses choices and terminal events',async()=>{
+ const {s,batches}=setup();const r={...run,mode:'endless'};s.start(r);s.setConsent('accepted');s.stageStart(0);s.end(r);await s.flush();assert.equal(batches.length,0);
+ s.start(r);s.stageStart(0);s.finishStage(0,{score:0,qualified:true});s.setConsent('declined');s.choice({...r,stageIndex:1,perks:['boots']},'add','boots');s.end({...r,endedVoluntarily:true});await s.flush();assert.equal(batches.length,0);
+ s.input('touch');assert.equal(s.inputType(),'touch');
 });
