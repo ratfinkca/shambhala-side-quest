@@ -13,11 +13,11 @@ Updated 2026-11-03. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-Latest verified release: PR #13 /8b5192f. See handoff for release evidence and limits.
+Prior verified baseline: PR #13 /8b5192f. This release completes M1; see the handoff and M1 release evidence for rollout checks.
 
 ## M1 — Endless insights
 
-**Status:** implemented locally and reviewed; production baseline still excludes Endless analytics. Backend-first rollout is pending.
+**Status:** complete in this release. Analytics migration and playtest function deployed first; CI/Pages acceptance is recorded on the release PR.
 
 **Outcome:** answer where consenting players stop, fail, keep builds or swap perks before changing difficulty/content.
 

@@ -2,9 +2,9 @@
 
 Updated 2026-11-03. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
 
-## Shipped baseline
+## Current release and prior baseline
 
-Latest verified release: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, following PR #12 online Endless and PR #11 Endless gameplay. Backend validators deployed before frontend merge; both CI workflows and Pages deployment passed. Public save/post controls, unsaved warning and preserved initials were checked. Release baseline:145 automated tests and production build passed. This is recorded release evidence, not a fresh production-health audit.
+Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, following PR #12 online Endless and PR #11 Endless gameplay. Backend validators deployed before frontend merge; both CI workflows and Pages deployment passed. Public save/post controls, unsaved warning and preserved initials were checked. Release baseline:145 automated tests and production build passed. This is recorded release evidence, not a fresh production-health audit.
 
 [Public game](https://ratfinkca.github.io/shambhala-side-quest/) · [repository](https://github.com/ratfinkca/shambhala-side-quest).
 
@@ -16,11 +16,13 @@ Latest verified release: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, fol
 - Six local XP ranks/achievements, nine onesies/nine hats/nine totems and three earnable flourishes. Existing profiles retain previously available choices. No cloud profile sync or permanent power purchases.
 - Three complete visual themes with saved selection/Surprise; individual stage music and smooth reactive lighting; reduced motion supported.
 - Pointer movement is click/tap-to-destination. Organic mud, bass pressure, charged Bass Head, wrapped mystery candy and proximity-scaled clean-pass rings are implemented.
-- Public optional playtest sharing is opt-in and reachable on the title screen/settings. In the shipped baseline, Endless analytics are deliberately disabled; online score posting works independently.
+- Public optional playtest sharing is opt-in and reachable on the title screen/settings. M1 adds optional Endless stage/outcome and perk-choice analytics; online score posting works independently.
+
+M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage memory, banked/failed/exit distinctions and add/swap/keep choices. The metrics migration, deployed source, private access and cleanup jobs were verified before frontend merge. See [M1 release evidence](superpowers/m1-release-validation.md); final CI/Pages results are recorded on the release PR.
 
 ## Current work and next steps
 
-The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is implemented locally and reviewed (150 tests/build pass); its backend/frontend release is pending. Do not assume local M1 code is deployed. No balancing claims follow from rehearsal or from a small/missing sample.
+The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations is next. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 

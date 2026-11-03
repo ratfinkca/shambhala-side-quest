@@ -4,7 +4,7 @@ Updated 2026-11-03. Current architecture/configuration is described here; live h
 
 ## Production and ownership
 
-GitHub Pages serves the static game at https://ratfinkca.github.io/shambhala-side-quest/; allowed origin is https://ratfinkca.github.io. Supabase project `hziafdynblkyxywythqg` hosts the backend in East US/North Virginia. Public playtest configuration and arcade configuration are enabled in the released game; analytics still require explicit player consent. Arcade posting does not require analytics consent. Existing release evidence is PR #13 /8b5192f; M1 analytics additions remain local until separately released.
+GitHub Pages serves the static game at https://ratfinkca.github.io/shambhala-side-quest/; allowed origin is https://ratfinkca.github.io. Supabase project `hziafdynblkyxywythqg` hosts the backend in East US/North Virginia. Public playtest configuration and arcade configuration are enabled in the released game; analytics still require explicit player consent. Arcade posting does not require analytics consent. This release adds M1 Endless analytics. Its migration and playtest function were deployed before frontend rollout; see [release evidence](superpowers/m1-release-validation.md). PR #13 /8b5192f is the prior verified gameplay baseline.
 
 No secrets in frontend code, Git, reports or chat. Supabase server-side environment supplies the service role; clients receive public endpoint configuration only. Use project-scoped MCP tools if exposed, otherwise authenticated pinned CLI 2.121.0. Never reset a hosted project. No routine browser login is needed when authenticated management tools work.
 
@@ -19,7 +19,7 @@ No secrets in frontend code, Git, reports or chat. Supabase server-side environm
 
 `playtest_private` holds raw events, rotating network hashes and identifier-free daily metrics. `arcade_private` holds tickets, score claims, moderation state and limits. Both have RLS and denied anon/authenticated direct access; server-owned RPC execution is service-role only. Neither private schema is exposed through the public API.
 
-Shipped migrations:202610200001/2 (analytics/maintenance),202610220001/2 (arcade/maintenance),202610290001 (Endless tickets/ranking). The finish/save release required validators only. M1's later analytics migration must deploy before its frontend.
+Shipped migrations:202610200001/2 (analytics/maintenance),202610220001/2 (arcade/maintenance),202610290001 (Endless tickets/ranking). The finish/save release required validators only. M1 adds migration202611030001 (Endless outcome/choice metrics), applied before its playtest function/frontend.
 
 ## Configuration
 
@@ -43,7 +43,7 @@ Public score fields: initials, score, stagesCleared, inputType, mode, scoringVer
 
 ## Private reporting
 
-Use `supabase/reports/playtest.sql` for aggregate reports and the M1 companion report for stage/loop/choice breakdowns once its migration is applied. Use owner SQL tooling; do not expose reporting RPCs publicly. Publish aggregate counts only, with UTC window, build/version/mode/input filters and denominators. Unknown completion means no terminal event was observed, not a confirmed quit. Replays are events, not unique retention; opt-in samples do not represent every player. XP/rank reachability is not directly measured by existing stage totals.
+Use `supabase/reports/playtest.sql` for aggregate reports and `supabase/reports/endless.sql` for stage/loop/choice breakdowns. Use owner SQL tooling; do not expose reporting RPCs publicly. Publish aggregate counts only, with UTC window, build/version/mode/input filters and denominators. Unknown completion means no terminal event was observed, not a confirmed quit. Replays are events, not unique retention; opt-in samples do not represent every player. XP/rank reachability is not directly measured by existing stage totals.
 
 Do not run maintenance merely to read a report: use the metrics view/current raw aggregates or stored daily metrics as appropriate. If management access is unavailable, record the missing observation; do not request raw identifiable exports or invent results.
 

@@ -2,9 +2,9 @@
 
 Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and [online operations](online-operations.md). Those three files own current release status, development priorities and operating procedures respectively. The root [README](../README.md) is the player/developer quick start.
 
-## Active milestone
+## M1 release and next milestone
 
-[M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.
+[M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). M1 is complete in this release; [release evidence](superpowers/m1-release-validation.md) records backend checks. M2 stage variations is next. Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.
 
 [2026-11-03 aggregate coverage review](playtests/2026-11-03-coverage.md): 8 retained events, 1 recorded run, 0 stage-end samples. This is an observation gap, not evidence of an inactive audience.
 

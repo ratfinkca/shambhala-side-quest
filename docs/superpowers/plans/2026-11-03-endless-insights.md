@@ -29,7 +29,7 @@ Files: new supabase/migrations/202611030001_endless_playtest.sql;supabase/report
 
 ## Release boundary
 
-No automatic PR/merge/publish in this implementation task. Keep current release baseline explicit. When shipping is requested, deploy analytics migration/playtest function before frontend. M2 layout work starts after this milestone is reviewed; its six encounters need a playable layout preview rather than speculative balance changes now.
+The user authorized PR/merge/deploy after implementation. Analytics migration/playtest function were deployed first; final CI/Pages results belong to the release PR. Keep current release baseline explicit. M2 layout work starts after this milestone is reviewed; its six encounters need a playable layout preview rather than speculative balance changes now.
 
 
 ## Completion evidence and limits — 2026-11-03
@@ -38,4 +38,4 @@ No automatic PR/merge/publish in this implementation task. Keep current release 
 
 Browser at 127.0.0.1:5180 used a localhost-only strict capture endpoint: sharing-off run/exit produced 0 events; consenting Endless produced 3 schema-2 events (run_start,stage_start,run_end outcome exit); opting out during a second run cleared pending measurement and left capture at 3 events. No console errors/warnings. Screenshot:/tmp/endless-insights-consent-off.png.
 
-Banked/failed outcomes, late stages, accepted add/swap/keep, duplicate choices, mid-run consent and 5000-stage memory bounds are covered in automated tests, not a full manual long run. Physical-device QA and full Supabase/Deno/pg_cron CI have not run in this local task. Migration/function/frontend remain undeployed. No production test analytics or scores were written.
+Banked/failed outcomes, late stages, accepted add/swap/keep, duplicate choices, mid-run consent and 5000-stage memory bounds are covered in automated tests, not a full manual long run. Physical-device QA and full Supabase/Deno/pg_cron CI have not run in this local task. This paragraph describes the local implementation checkpoint; the subsequent authorized release deployed the migration/function first. Final frontend verification belongs to the release PR. No production test analytics or scores were written.

@@ -29,7 +29,7 @@ Each stage has its own procedural arrangement and six stage-mounted moving beams
 
 For current release and architecture, start with the [project handoff](docs/PROJECT-HANDOFF.md). The [roadmap](docs/ROADMAP.md) defines the next milestones; [operations](docs/online-operations.md) covers backend deployment, consent and reporting. Historical plans are indexed in [docs](docs/README.md).
 
-Current development: M1 Endless insights is implemented locally with 150 passing tests; production remains the PR #13 gameplay/score-save release until the analytics migration and function are deployed before its frontend. See the roadmap for the release gate and M2 stage variations.
+This release includes M1 Endless insights: optional stage/outcome and perk-choice measurement with private aggregate reports. Its migration and playtest function were deployed before frontend rollout. M2 stage variations is the next content milestone; see the roadmap and release evidence.
 
 Use Node.js 24 for development and tests (the GitHub Actions workflow also uses Node 24).
 
@@ -75,7 +75,7 @@ Pages uses the **GitHub Actions** publishing source in repository Settings → P
 
 ## Implementation
 
-Phaser 3.90 + Vite with JavaScript modules. `src/game.js` owns basic rules, `src/festival.js` owns crowd encounters and drop timing, `src/Crowd.js` renders the dancers, `src/GameScene.js` coordinates the arena, and `src/main.js` connects menus and HUD. `src/music.js` defines the beat and `src/audio.js` synthesizes it from active game time. Run state, stage definitions, geometry, profile validation and menu transitions are separate testable modules. `Avatar.js` shares the wardrobe and player renderer; `StageRenderer.js` owns stage scenery. Arena artwork and audio are procedural. Forest Freakout uses original generated illustrations and locally served OFL fonts (see public/ASSETS.md). No tracking, accounts, or remote scores.
+Phaser 3.90 + Vite with JavaScript modules. `src/game.js` owns basic rules, `src/festival.js` owns crowd encounters and drop timing, `src/Crowd.js` renders the dancers, `src/GameScene.js` coordinates the arena, and `src/main.js` connects menus and HUD. `src/music.js` defines the beat and `src/audio.js` synthesizes it from active game time. Run state, stage definitions, geometry, profile validation and menu transitions are separate testable modules. `Avatar.js` shares the wardrobe and player renderer; `StageRenderer.js` owns stage scenery. Arena artwork and audio are procedural. Forest Freakout uses original generated illustrations and locally served OFL fonts (see public/ASSETS.md). Optional consent-gated playtest tracking and initials-based online scores use separate Supabase services; no player account is required.
 
 Reduced-motion mode disables ambient pulses, decorative dancer swaying, trails, and bursts; dancers still travel because their positions matter to gameplay. The drop countdown and double-points indicator remain readable with sound and motion disabled. Storage and audio failures degrade gracefully. This is a personal fan project, not an official festival product.
 
