@@ -26,7 +26,7 @@ export function createPlaytestSession({config,consent,send,uuid=()=>crypto.rando
   },
   input:(kind,runId=run?.id)=>{if(runId===run?.id)input.recordInput(kind);},
   inputType:()=>input.inputType(),
-  stageStart(index){if(summary?.record('start',{runId:run.id,stageIndex:index}))emit('stage_start',{stageIndex:index});},
+  stageStart(index,variationId){const stage={stageIndex:index,...(run?.mode==='endless'&&variationId?{variationId}:{})};if(summary?.record('start',{runId:run.id,...stage}))emit('stage_start',stage);},
   record(type,payload={}){if(payload.runId&&payload.runId!==run?.id)return;summary?.record(type,{...payload,runId:run.id});},
   perk(perk){if(!summary)return;summary.record('perk',{runId:run.id,perk});emit('perk',{perk});},
   finishStage(index,result){const stage=summary?.finishStage(index,result);if(stage){lastFinished=index;emit('stage_end',stage);}},

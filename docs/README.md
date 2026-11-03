@@ -4,7 +4,7 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 ## M1 release and next milestone
 
-[M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). M1 is complete in this release; [release evidence](superpowers/m1-release-validation.md) records backend checks. M2 stage variations is next. Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.
+[M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). M1 shipped in PR #14; [release evidence](superpowers/m1-release-validation.md) records backend checks. M2 stage variations has an [implementation plan and local QA record](superpowers/plans/2026-11-03-stage-variations-preview.md). Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.
 
 [2026-11-03 aggregate coverage review](playtests/2026-11-03-coverage.md): 8 retained events, 1 recorded run, 0 stage-end samples. This is an observation gap, not evidence of an inactive audience.
 
@@ -18,3 +18,5 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 - [Earlier handoff](history/project-handoff-through-2026-10-29.md) and [early hosted setup](history/online-operations-through-2026-10-22.md):archived for traceability.
 
 Update current docs when behavior/release status changes, keep original evidence dates, and distinguish local implementation from hosted backend, merged PR and verified Pages deployment. Never commit private playtest identifiers or credentials.
+
+M2 release scope and verification limits: [release evidence](superpowers/m2-release-validation.md). M3 achievements/rewards is next.

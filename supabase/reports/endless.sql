@@ -21,14 +21,14 @@ from runs group by 3,4 order by 3,4;
 -- Per-stage samples are the denominator; not a funnel of all people who started.
 with params as (select now()-interval '14 days' since_utc,now() until_utc,null::text build)
 select e.event->>'buildId' build,e.event->>'inputType' input_type,
- (e.event->'payload'->>'stageIndex')::int+1 stage_number,(e.event->'payload'->>'stageIndex')::int/3+1 loop_number,
+ (e.event->'payload'->>'stageIndex')::int+1 stage_number,(e.event->'payload'->>'stageIndex')::int/3+1 loop_number,coalesce(e.event->'payload'->>'variationId','legacy-unknown') layout,
  count(*) stage_samples,count(*)filter(where(e.event->'payload'->>'qualified')::boolean) qualified,
  round(avg((e.event->'payload'->>'activeMs')::numeric)) mean_active_ms,
  round(avg((e.event->'payload'->>'pickups')::numeric),2) mean_sparks,
  round(avg((e.event->'payload'->>'bassUses')::numeric),2) mean_bass_uses
 from playtest_private.events e cross join params p where e.received_at>=p.since_utc and e.received_at<p.until_utc
 and e.event->>'mode'='endless' and e.event->>'type'='stage_end' and(p.build is null or e.event->>'buildId'=p.build)
-group by 1,2,3,4 order by 3,1,2;
+group by 1,2,3,4,5 order by 3,1,2;
 
 -- Cancelled swaps do not emit a choice. These are choice events, not unique players.
 with params as (select now()-interval '14 days' since_utc,now() until_utc,null::text build)

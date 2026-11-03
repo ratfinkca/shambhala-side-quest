@@ -13,11 +13,11 @@ Updated 2026-11-03. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-Prior verified baseline: PR #13 /8b5192f. This release completes M1; see the handoff and M1 release evidence for rollout checks.
+Prior verified baseline: PR #14 /e34e092 (M1). This release completes the first M2 collection; see the handoff and M2 release evidence for rollout checks.
 
 ## M1 — Endless insights
 
-**Status:** complete in this release. Analytics migration and playtest function deployed first; CI/Pages acceptance is recorded on the release PR.
+**Status:** shipped in PR #14. Analytics migration and playtest function deployed first; CI/Pages acceptance is recorded on that release PR.
 
 **Outcome:** answer where consenting players stop, fail, keep builds or swap perks before changing difficulty/content.
 
@@ -30,11 +30,11 @@ Prior verified baseline: PR #13 /8b5192f. This release completes M1; see the han
 
 ## M2 — Endless stage variations
 
-**Status:** planned next; exact layouts need a playable preview.
+**Status:** first six-layout collection approved for this release. Geometry/UI checks pass; ongoing balance and physical touch feedback remain playtest work.
 
 **Outcome:**later loops offer recognizable encounters beyond higher counts/targets.
 
-First pass: two deterministic variations per base stage (six encounters), introduced after loop1; preserve original first-loop layout and stage music. Vary speaker/mud arrangement and crowd anchors while preserving spawn, collection access and escape routes. Never reroll a stage mid-play. Keep existing target/speed caps and perk rules until evidence supports a change. No additional visual effects that obscure taps or create harsh strobing.
+First collection: two deterministic variations per base stage (six encounters), introduced after loop1; preserve original first-loop layout and stage music. Vary speaker/mud arrangement and crowd anchors while preserving spawn, collection access and escape routes. Never reroll a stage mid-play. Keep existing target/speed caps and perk rules until evidence supports a change. No additional visual effects that obscure taps or create harsh strobing.
 
 Plan: define reusable layout data and deterministic selection → geometry/path-clearance tests → rehearsal/phone preview → attach variation identity to optional telemetry → update score validation/version only if scoring rules change → release. Review encounters with the user before fixing final counts/art. Acceptance: every pickup region is reachable, no unavoidable spawn trap, stable pause/reload semantics, playable touch preview and performance checks. No run recovery is implied.
 

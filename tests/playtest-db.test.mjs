@@ -60,7 +60,10 @@ test('Endless metrics separate banked/failed/exit/unknown and choices while reta
  assert.equal((await db.query("select value from playtest_private.metrics where mode='rush' and metric='completed_runs'")).rows[0].value,1);
  await db.exec('select maintain_playtest();');const before=(await db.query('select * from playtest_private.daily order by day,mode,metric')).rows;await db.exec('select maintain_playtest();');assert.deepEqual((await db.query('select * from playtest_private.daily order by day,mode,metric')).rows,before);
  assert.equal((await db.query("select value from playtest_private.daily where day='2020-01-01' and metric='run_samples'")).rows[0].value,5);
- await db.exec(await readFile(new URL('../supabase/reports/endless.sql',import.meta.url),'utf8'));
+ await emit(run,'stage_end',{stageIndex:3,qualified:true,activeMs:60000,pickups:23,bassUses:0,variationId:'forest-creekside'});
+ await emit(run,'stage_end',{stageIndex:3,qualified:true,activeMs:60000,pickups:23,bassUses:0});
+ const layoutReport=await db.exec(await readFile(new URL('../supabase/reports/endless.sql',import.meta.url),'utf8'));
+ assert.deepEqual(layoutReport[1].rows.map(r=>r.layout).sort(),['forest-creekside','legacy-unknown']);
  await db.exec("insert into playtest_private.daily values('2020-01-01','rush','touch','arcade-v1','stage_samples',7),('2020-01-01','rush','touch','arcade-v1','perk_boots',3)");
  const report=await db.exec(await readFile(new URL('../supabase/reports/playtest.sql',import.meta.url),'utf8'));
  const archived=report.at(-1).rows.filter(r=>r.mode==='rush'&&['stage_samples','perk_boots'].includes(r.metric));

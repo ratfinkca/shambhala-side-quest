@@ -22,7 +22,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations is next. No balancing claims follow from rehearsal or from a small/missing sample.
+The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations completes the first six-encounter collection in this release; M3 Endless rewards is next. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 
@@ -37,3 +37,16 @@ Node 24, `npm ci`, `npm test`, `npm run build`, `git diff --check`. No credentia
 `/?rehearsal` is development-only: qualify/fail controls, all perks, no saved scores/XP or online requests. It verifies navigation, never balance. Browser-check changed flows, desktop/phone layouts and console; physical-device performance/audio need real playtesting. Phaser's existing large-bundle warning is known.
 
 Use feature branches and PRs to main. Deploy needed backend migrations/functions first, verify live safe validation, then merge after frontend/backend CI. Main merge triggers Pages; verify deployment completion and public UI/assets separately. Do not reset a hosted database or post test production scores. Preserve private data and credentials outside the repository.
+
+
+## M2 stage variations — release scope, 2026-11-03
+
+Six authored layouts now alternate from loop2 (A) and loop3 (B) onward, while loop1 and Festival/Rush geometry remain original. Each keeps its base stage ID, music and palette. Layout names appear on rules/HUD. Crowds use deterministic cabinet-clear anchors, preserving existing counts/speed caps. Organic mud uses the same sampled polygon for art/collision.
+
+Practice link: `http://127.0.0.1:5181/?rehearsal&layout=forest-creekside`. Development-only Layout lab selects any encounter; loading resets to a no-perk practice stage. Scores/XP/analytics are disabled. Rehearsal's qualify/fail controls remain in the collapsible lab. Reload reopens the selected layout's rules, not a saved run.
+
+Optional Endless stage_start/stage_end measurements gain variationId, validated against the deterministic stage-index registry; older schema2 events without IDs still work. Private stage reports separate legacy-unknown samples. The updated playtest function and shared variations.js module deploy before the frontend; no SQL migration or arcade validator/scoring-version change is needed. User approved release after the local preview.
+
+M2 acceptance:155automated tests and production build pass; independent review clean. Browser loaded all six layouts, tested picker/reset/reload, pause/resume, destination steering and finish with rehearsal saving/XP disabled.390x844HUD/picker check passed; no console errors/warnings. Physical touch balance and sustained phone performance remain user playtest work. Preview server5181 stays running, opening Creekside Drift rules; That paragraph records local acceptance; subsequent backend/CI/Pages evidence is recorded on the M2 release PR.
+
+M2 release: prior verified M1 baseline is PR #14 /e34e092. The six layouts preserve loop1, scoring/caps and stage atmosphere. Final hosted and Pages checks are recorded on the release PR; [release evidence](superpowers/m2-release-validation.md) records scope and test limits.

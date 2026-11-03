@@ -10,7 +10,7 @@ export function createRunSummary({runId,mode,buildId,scoringVersion}){
       if(payload.runId!==runId||data.outcome!=='unknown')return;
       if(type==='start'){
         if(!Number.isInteger(payload.stageIndex)||payload.stageIndex!==nextIndex||payload.stageIndex>(mode==='endless'?999999:mode==='rush'?0:2)||current&&!current.finished)return false;
-        nextIndex++;current=stageSummary(payload.stageIndex);if(mode==='endless')data.stages=[current];else data.stages.push(current);return true;
+        nextIndex++;current=stageSummary(payload.stageIndex);if(mode==='endless'&&payload.variationId)current.variationId=payload.variationId;if(mode==='endless')data.stages=[current];else data.stages.push(current);return true;
       }
       if(type==='exit'||type==='complete'){data.outcome=type;return;}
       if(type==='perk'&&['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'].includes(payload.perk)&&!data.perks.includes(payload.perk)){data.perks.push(payload.perk);return;}
