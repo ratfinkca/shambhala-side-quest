@@ -50,6 +50,6 @@
 
 ### Task 3: Review and handoff
 
-- [ ] Request one independent whole-branch review, inspect migrations/credit boundaries/preview isolation.
-- [ ] Fix important findings with regression coverage; run full tests/build/diff checks.
-- [ ] Present the local preview and evidence; leave publication for a separate ship request.
+- [x] Request one independent whole-branch review, inspect migrations/credit boundaries/preview isolation.
+- [x] Fix important findings with regression coverage; run full tests/build/diff checks.
+- [x] Present the local preview and evidence; leave publication for a separate ship request.

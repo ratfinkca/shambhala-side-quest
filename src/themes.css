@@ -203,14 +203,20 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 .layout-collection ul{padding-left:0;list-style:none;line-height:2}
 #avatar-preview{width:240px;height:240px}
 #avatar-preview canvas{width:100%!important;height:100%!important}
-#avatar-preview-label{position:absolute;bottom:8px;left:8px;right:8px;font-size:11px;text-align:center;color:var(--accent)}
+#avatar-preview-label{position:absolute;bottom:-22px;left:0;right:0;font-size:11px;text-align:center;color:var(--accent)}
 .screen-layer[data-screen="wardrobe"] .menu-card{margin-right:245px}
 @container(max-width:800px){.reward-grid{grid-template-columns:1fr}}
 @container(max-width:640px){
- #avatar-preview{position:relative;top:auto;right:auto;width:200px;height:200px}
+ #avatar-preview{position:relative;top:auto;right:auto;width:200px;height:200px;margin-bottom:24px}
  .screen-layer[data-screen="wardrobe"] .menu-card{margin-right:0}
  .reward-grid{grid-template-columns:1fr}
  .souvenir-detail{min-height:0}
+}
+@media(max-height:500px){
+ .screen-layer[data-screen="wardrobe"]{position:fixed;inset:54px 8px 8px;flex-direction:row;gap:12px;padding:10px;align-items:center}
+ .screen-layer[data-screen="wardrobe"] #avatar-preview{display:block!important;position:relative;top:auto;right:auto;transform:none;flex:0 0 clamp(100px,23vw,180px);width:clamp(100px,23vw,180px);height:clamp(100px,23vw,180px);margin:0 0 24px}
+ .screen-layer[data-screen="wardrobe"] .menu-card{flex:1;min-width:0;min-height:0;width:auto;max-height:100%;margin:0!important;padding:8px;overflow:auto}
+ .screen-layer[data-screen="wardrobe"] .reward-grid{grid-template-columns:1fr}
 }
 .reward-reveal { background: #8de8ba12; }
 
