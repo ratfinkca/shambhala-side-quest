@@ -104,6 +104,6 @@ The bottom Reward lab can demonstrate earning each reward. Its profile is tempor
 
 ## M4 candy feel preview (local development)
 
-M3 is published as [PR #16](https://github.com/ratfinkca/shambhala-side-quest/pull/16). The M4 candy pass adds: Dizzy reverses keys and mirrors click/tap destinations, and Wavy Colours has more visible liquid light behind gameplay objects. Timing, speed, points and perk durations stay the same.
+M4 candy is published as [PR #17](https://github.com/ratfinkca/shambhala-side-quest/pull/17), following M3 [PR #16](https://github.com/ratfinkca/shambhala-side-quest/pull/16). The candy pass adds: Dizzy reverses keys and mirrors click/tap destinations, and Wavy Colours has more visible liquid light behind gameplay objects. Timing, speed, points and perk durations stay the same.
 
 Open `http://127.0.0.1:5181/?rehearsal&candy=waves`. Use the Candy lab picker and **Start candy practice** to start a fresh Quick Rush with that effect. Practice saves no score or XP and sends no playtest data. Reduced motion uses a static tint. Bass tuning and run recovery are later work.

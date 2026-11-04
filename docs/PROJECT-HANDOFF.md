@@ -4,7 +4,7 @@ Updated 2026-11-04. This document is the current starting point. [Roadmap](ROADM
 
 ## Current release and prior baseline
 
-Current public release: **M3, PR #16 /79080a6**, verified after Pages deployment on 2026-11-04. See [M3 release evidence](superpowers/m3-release-validation.md). The M4 candy preview below is local work.
+Current public release: **M4 candy, PR #17 /d00ee62**, verified after Pages deployment on 2026-11-04. See [candy release evidence](superpowers/m4-candy-release-validation.md). Bass-zone communication/activation is in design; no bass rules have changed.
 
 Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, following PR #12 online Endless and PR #11 Endless gameplay. Backend validators deployed before frontend merge; both CI workflows and Pages deployment passed. Public save/post controls, unsaved warning and preserved initials were checked. Release baseline:145 automated tests and production build passed. This is recorded release evidence, not a fresh production-health audit.
 
@@ -24,7 +24,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-M1 insights, M2 stage variations and M3 souvenirs are published. M4 has started with a local candy-feel preview: user-confirmed steering inversion and clearer Wavy Colours. Broader candy/bass tuning, physical-device reliability and scoped run recovery follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
+M1 insights, M2 stage variations and M3 souvenirs are published. M4 candy feel is published: user-confirmed steering inversion and clearer Wavy Colours. Broader candy/bass tuning, physical-device reliability and scoped run recovery follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 
@@ -63,10 +63,10 @@ Preview: `http://127.0.0.1:5181/?rehearsal&rewards`. The wardrobe opens automati
 
 M3 release approval (2026-11-04): user approved the preview. Release checks: 163 tests, production build, independent review and portrait/landscape acceptance pass. No backend deployment is required. Final PR/merge/Pages/public verification passed: [release evidence](superpowers/m3-release-validation.md).
 
-## M4 first slice — local candy preview
+## M4 first slice — published candy pass
 
 The user confirmed Dizzy should invert controls. Keyboard vectors reverse; click/tap targets are mirrored once around the player and clamped to the field. Collecting Dizzy mid-journey mirrors the existing target once; expiry changes subsequent input without an automatic return trip. Existing collision rules are unchanged. Wavy Colours now paints slowly shifting pools/ribbons behind the field objects, with gentle fades and a static reduced-motion tint. Timing, speed, Sweet Tooth and scoring remain unchanged.
 
-`/?rehearsal&candy=waves` opens a DEV Candy lab. Select an effect and choose Start candy practice; each try starts a fresh Quick Rush and uses the real collection path. Scores, XP and analytics remain disabled. The lab is absent from production. New modules/tests: `src/candy-colours.js`, mystery/scene input regressions and `tests/candy-colours.test.mjs`. No backend deployment required. M4 has not been published.
+`/?rehearsal&candy=waves` opens a DEV Candy lab. Select an effect and choose Start candy practice; each try starts a fresh Quick Rush and uses the real collection path. Scores, XP and analytics remain disabled. The lab is absent from production. New modules/tests: `src/candy-colours.js`, mystery/scene input regressions and `tests/candy-colours.test.mjs`. No backend deployment required. M4 candy is published in PR #17; the lab remains DEV-only.
 
-M4 candy release approval (2026-11-04): user requested PR, merge and deployment after the preview. Release checks: 168 tests/build, independent review and browser acceptance pass. No backend deployment is required. CI/Pages/public checks are pending; bass-zone feel is the next scoped pass.
+M4 candy release approval (2026-11-04): user requested PR, merge and deployment after the preview. Release checks: 168 tests/build, independent review and browser acceptance pass. No backend deployment is required. CI/Pages/public checks passed; [release evidence](superpowers/m4-candy-release-validation.md) records them. Bass-zone feel is the next scoped pass.
