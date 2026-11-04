@@ -30,14 +30,14 @@ export function finishStage(run,round){
  run.totalScore+=round.score;if(qualified)run.stagesCleared++;
  run.status=qualified&&(run.mode==='endless'||run.mode==='festival'&&run.stageIndex<2)?'upgrade':'ended';
  run.bassChargeMs=round.bass.chargeMs;
- return {qualified,pickups:round.pickups,target:stageFor(run).target,score:round.score,totalScore:run.totalScore};
+ return {qualified,pickups:round.pickups,target:stageFor(run).target,score:round.score,totalScore:run.totalScore,progressContext:{mode:run.mode,stagesCleared:run.stagesCleared,variationId:stageFor(run).variationId,remixed:qualified&&run.mode==='endless'&&run.remixStageIndex===run.stageIndex}};
 }
 export function upgradeChoices(run){return run.status==='upgrade'?Object.keys(PERKS).filter(id=>!run.perks.includes(id)&&(!run.availablePerks||run.availablePerks.includes(id))):[];}
 function nextStage(run){run.pendingPerk=null;run.stageIndex++;run.status='ready';}
 export function chooseUpgrade(run,id,replaceId=null){
  if(run.status!=='upgrade'||!upgradeChoices(run).includes(id))return false;
  if(run.mode==='endless'&&run.perks.length>=4){
-  const slot=run.perks.indexOf(replaceId);if(slot<0)return false;run.perks[slot]=id;
+  const slot=run.perks.indexOf(replaceId);if(slot<0)return false;run.perks[slot]=id;run.remixStageIndex=run.stageIndex+1;
  }else{if(replaceId!==null)return false;run.perks.push(id);}
  nextStage(run);return true;
 }

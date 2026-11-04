@@ -1,5 +1,6 @@
 import {resultsExitState} from './results-view.js';
 import {availablePerks} from './progression.js';
+import {renderReward} from './progression-view.js';
 import {WARDROBE} from './wardrobe.js';
 import {createOnlineClient,readArcadeConfig} from './online/client.js';
 import {createSubmission} from './online/submission.js';
@@ -30,7 +31,9 @@ import { createScreenState, transition, createScreens } from './screens.js';
 const $=s=>document.querySelector(s);
 let local;try{local=window.localStorage}catch{}
 const rehearsal=import.meta.env.DEV && new URLSearchParams(location.search).has('rehearsal');
-const saved=createStorage(local),audio=createAudio();audio.setVolumes(saved.profile.audio);
+const rewardLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('rewards');
+// The reward lab gets a disposable profile, never the player's browser profile.
+const saved=createStorage(rewardLab?{getItem:()=>null,setItem:()=>{}}:local),audio=createAudio();audio.setVolumes(saved.profile.audio);
 const onlineConfig=rehearsal?{enabled:false}:readOnlineConfig(import.meta.env);
 const playtest=createPlaytestSession({config:onlineConfig,consent:createConsent({storage:saved}),send:onlineConfig.enabled?createPlaytestSender(onlineConfig.endpoint):async()=>false});
 const arcadeConfig=rehearsal?{}:readArcadeConfig(import.meta.env);
@@ -43,7 +46,7 @@ let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,progr
 const fmt=n=>String(n).padStart(3,'0');
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:960,height:640,backgroundColor:'#102430',scene:GameScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},audio:{noAudio:true},banner:false});
 const refreshLayout=setupResponsiveLayout(game);
-const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'avatar-preview',width:180,height:180,transparent:true,audio:{noAudio:true},banner:false,fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,saved.profile.outfit);previewAvatar.setPosition(90,135).setScale(2);previewReady=true;},update(time){if(previewAvatar)animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches)}}});
+const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'avatar-preview',width:240,height:240,transparent:true,audio:{noAudio:true},banner:false,fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,saved.profile.outfit);previewAvatar.setPosition(105,147).setScale(2.5);previewReady=true;},update(time){if(previewAvatar)animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches,cycleAt(time%60000).phase==='drop')}}});
 const menus=createScreens($('#menu'),{action,volume,outfit,initials:value=>{if(run)run.initialsDraft=value;}});
 function clearToast(){clearTimeout(toastTimer);$('#toast').textContent=''}
 function toast(text,duration=2000){clearToast();$('#toast').textContent=text;toastTimer=setTimeout(clearToast,duration)}
@@ -60,7 +63,10 @@ function render(){
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
  $('#avatar-preview').hidden=screen.name!=='wardrobe';
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
+ $('#avatar-preview-label').textContent='Your festival look';
+ $('#avatar-preview').setAttribute('aria-label','Your festival look');
  menus.show(screen.name,{progressReward,onlineSubmission:submission,onlineInput:playtest.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:saved.profile,run,summary,stage:run?stageFor(run):STAGES[0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ if(rewardLab&&screen.name==='wardrobe'){$('#outfit-feedback').textContent='Reward preview · temporary profile · reload to reset. Real progress is untouched.';if(progressReward)$('#outfit-feedback').insertAdjacentHTML('afterend',renderReward(progressReward));}
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage;$('#initials').value=run.initials;$('#initials').disabled=true;}
  if(screen.name==='results'&&submission?.initials){$('#initials').value=submission.initials;$('#initials').disabled=true;}
  if(rehearsal&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
@@ -115,9 +121,9 @@ function action(name,value){
    break;
   }
   case 'preview-outfit':{
-   if(screen.name!=='wardrobe')return;
+   if(screen.name!=='wardrobe'||!previewReady)return;
    const [key,id]=value.split(':');const item=WARDROBE[key]?.find(o=>o.id===id);if(!item)return;
-   setOutfit(previewAvatar,{...saved.profile.outfit,[key]:id});$('#outfit-feedback').textContent=`Previewing ${item.name} · not equipped. Choose an available item to return to your outfit.`;break;
+   setOutfit(previewAvatar,{...saved.profile.outfit,[key]:id});$('#avatar-preview-label').textContent=item.name;$('#avatar-preview').setAttribute('aria-label',`Previewing ${item.name}`);$('#outfit-feedback').textContent=`Previewing ${item.name} · not equipped. Choose an available item to return to your outfit.`;break;
   }
   case 'wardrobe':go('WARDROBE');break;
   case 'scores':if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
@@ -161,7 +167,7 @@ function action(name,value){
  }
 }
 function volume(key,value){const settings={...saved.profile.audio,[key]:value};saved.saveAudio(settings);audio.setVolumes(settings);audio.setEnabled(settings.enabled);$(`#value-${key}`).textContent=`${Math.round(value*100)}%`;if(key==='effects')audio.pickup(1)}
-function outfit(key,value){const result=saved.saveOutfit({...saved.profile.outfit,[key]:value});if(result.accepted&&previewAvatar){setOutfit(previewAvatar,saved.profile.outfit);$('#outfit-feedback').textContent=result.persisted?'Outfit saved.':'Selected for this session; browser storage is unavailable.'}}
+function outfit(key,value){const result=saved.saveOutfit({...saved.profile.outfit,[key]:value});if(result.accepted&&previewAvatar){setOutfit(previewAvatar,saved.profile.outfit);$('#avatar-preview-label').textContent=WARDROBE[key].find(o=>o.id===value)?.name||'Your festival look';$('#outfit-feedback').textContent=rewardLab?'Equipped in temporary reward profile.':result.persisted?'Outfit saved.':'Selected for this session; browser storage is unavailable.'}}
 game.events.on('forest:ready',value=>{scene=value;render()});
 $('#bass-head').addEventListener('click',e=>{if(screen.name==='playing'){if(scene.activateBassHead())playtest.input(e.pointerType==='touch'?'touch':e.detail===0?'keyboard':'mouse');$('#game').focus({preventScroll:true});}});
 $('#pause').addEventListener('click',()=>pause());$('#settings').addEventListener('click',()=>action('settings'));
@@ -223,7 +229,7 @@ game.events.on('round:end',round=>{
  playtest.finishStage(run.stageIndex,{score:round.score,qualified:result.qualified});
  if(run.status==='ended')playtest.end(run);
  void playtest.flush();
- progressReward=rehearsal?null:saved.awardProgress({id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3});
+ progressReward=rehearsal?null:saved.awardProgress({id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3,...result.progressContext});
  run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
  if(run.status==='ended')captureResult();
@@ -231,4 +237,14 @@ game.events.on('round:end',round=>{
 });
 render();
 
-if(import.meta.env.DEV && rehearsal)import('./rehearsal.js').then(({installRehearsal})=>installRehearsal(()=>scene,()=>screen.name==='playing',{previewStage:index=>{const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('endless');run.stageIndex=index;go('RULES');};if(scene)load();else game.events.once('forest:ready',load);}}));
+if(import.meta.env.DEV && rehearsal)import('./rehearsal.js').then(({installRehearsal})=>{
+ const openRewards=()=>{scene?.pauseRound();audio.stop();screen=createScreenState();go('WARDROBE');};
+ installRehearsal(()=>scene,()=>screen.name==='playing',{
+  previewStage:index=>{const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('endless');run.stageIndex=index;go('RULES');};if(scene)load();else game.events.once('forest:ready',load);},
+  ...(rewardLab?{openRewards,previewReward:(stages,key)=>{
+   const results=stages.map(stage=>saved.awardProgress(stage));
+   progressReward={xp:results.reduce((sum,r)=>sum+r.xp,0),rewards:[...new Set(results.flatMap(r=>r.rewards))],persisted:true};
+   const [category,id]=key.split(':');saved.saveOutfit({...saved.profile.outfit,[category]:id});openRewards();
+  }}:{})
+ });
+});

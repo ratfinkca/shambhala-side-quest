@@ -1,6 +1,6 @@
 # Side Quest — current project handoff
 
-Updated 2026-11-03. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
+Updated 2026-11-04. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
 
 ## Current release and prior baseline
 
@@ -13,7 +13,7 @@ Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, fol
 - Voluntary Finish run & save score banks completed stages; unfinished-stage points are excluded. Missing a stage target also reaches results. No finished stage means explicit discard. Local save/public post are separate explicit actions; replay/title warn if neither succeeded. Viewing scores preserves the run. Reloading abandons an active run.
 - Online top 50 per mode, three A–Z/0–9 initials, visible control type. Endless ranks clears, then points; Rush/Festival rank points, then clears. Local top 10 per mode. Tickets24 hours; online history1440 stages and1 MiB submission bound; overflow never ends local gameplay.
 - Eight run perks: Boots, Noodle, Moth, Bracelet plus XP-unlocked Surfer 300, Battery 650, Encore 1200, Sweet Tooth 2000. Perks reset each run.
-- Six local XP ranks/achievements, nine onesies/nine hats/nine totems and three earnable flourishes. Existing profiles retain previously available choices. No cloud profile sync or permanent power purchases.
+- Six local XP ranks and six earlier achievements; the M3 preview adds four Endless achievements, bringing the wardrobe to ten onesies/ten hats/ten totems and four earnable flourishes. Existing profiles retain previously available choices. No cloud profile sync or permanent power purchases.
 - Three complete visual themes with saved selection/Surprise; individual stage music and smooth reactive lighting; reduced motion supported.
 - Pointer movement is click/tap-to-destination. Organic mud, bass pressure, charged Bass Head, wrapped mystery candy and proximity-scaled clean-pass rings are implemented.
 - Public optional playtest sharing is opt-in and reachable on the title screen/settings. M1 adds optional Endless stage/outcome and perk-choice analytics; online score posting works independently.
@@ -22,7 +22,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations completes the first six-encounter collection in this release; M3 Endless rewards is next. No balancing claims follow from rehearsal or from a small/missing sample.
+The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations shipped as PR #15 /34974ab with Pages/public verification. M3 Endless rewards preview was approved for release on 2026-11-04; CI/Pages verification is pending. M4 feel/reliability follows. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 
@@ -50,3 +50,13 @@ Optional Endless stage_start/stage_end measurements gain variationId, validated 
 M2 acceptance:155automated tests and production build pass; independent review clean. Browser loaded all six layouts, tested picker/reset/reload, pause/resume, destination steering and finish with rehearsal saving/XP disabled.390x844HUD/picker check passed; no console errors/warnings. Physical touch balance and sustained phone performance remain user playtest work. Preview server5181 stays running, opening Creekside Drift rules; That paragraph records local acceptance; subsequent backend/CI/Pages evidence is recorded on the M2 release PR.
 
 M2 release: prior verified M1 baseline is PR #14 /e34e092. The six layouts preserve loop1, scoring/caps and stage atmosphere. Final hosted and Pages checks are recorded on the release PR; [release evidence](superpowers/m2-release-validation.md) records scope and test limits.
+
+## M3 Endless souvenirs — local preview, 2026-11-04
+
+Four achievements unlock Spore Sprout, Mixtape Totem, Mycelium Threads and Aurora Ribbons. See the [design](superpowers/specs/2026-11-04-endless-rewards-design.md) for the approved 4-clear, swap-then-clear, six-layout and 12-clear criteria. Existing profiles retain earlier items; new achievements start at zero, without inferred historical layout/swap credit. Progress saves at qualifying stage end. Score posting and playtest consent stay independent.
+
+`src/progression.js` normalizes bounded `endless` records (best clears, up to six known layout IDs, Remix completion). `finishStage` returns `progressContext` and successful swaps mark only the following stage. Existing receipts guard duplicate stage awards. `src/endless-cosmetics.js` draws bounded procedural details with stable reduced-motion variants. No migration, function deployment, dependencies or score-version change is needed.
+
+Preview: `http://127.0.0.1:5181/?rehearsal&rewards`. The wardrobe opens automatically. Scroll to Endless souvenirs to preview each reward; the bottom Reward lab demonstrates earning selected rewards through the real progression function. This mode uses a disposable profile; reload resets it and never touches the real profile. Scores/analytics are disabled. Ordinary `/?rehearsal` still disables stage XP. Production builds exclude lab controls and fixture code. Physical touch comfort, sustained performance and reward reachability remain playtest work.
+
+M3 release approval (2026-11-04): user approved the preview. Release checks: 163 tests, production build, independent review and portrait/landscape acceptance pass. No backend deployment is required. Final PR/merge/Pages/public verification is recorded on the release PR and in the release evidence.

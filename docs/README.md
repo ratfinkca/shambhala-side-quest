@@ -19,4 +19,4 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 Update current docs when behavior/release status changes, keep original evidence dates, and distinguish local implementation from hosted backend, merged PR and verified Pages deployment. Never commit private playtest identifiers or credentials.
 
-M2 release scope and verification limits: [release evidence](superpowers/m2-release-validation.md). M3 achievements/rewards is next.
+M2 release scope and verification limits: [release evidence](superpowers/m2-release-validation.md). M3 achievements/rewards is now a local preview: [design](superpowers/specs/2026-11-04-endless-rewards-design.md), [plan](superpowers/plans/2026-11-04-endless-rewards.md), and [validation](superpowers/m3-preview-validation.md). Preview approved for release; CI and public verification are recorded in the release PR.

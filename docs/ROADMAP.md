@@ -1,6 +1,6 @@
 # Development roadmap
 
-Updated 2026-11-03. Milestone labels below define the next development sequence; they are not retroactive release numbers. User approved features/atmosphere/rewards ahead of candy/bass fine-tuning. Build and preview one milestone at a time, then ship through PR/backend-first release checks when authorized.
+Updated 2026-11-04. Milestone labels below define the next development sequence; they are not retroactive release numbers. User approved features/atmosphere/rewards ahead of candy/bass fine-tuning. Build and preview one milestone at a time, then ship through PR/backend-first release checks when authorized.
 
 ## Completed foundation
 
@@ -13,7 +13,7 @@ Updated 2026-11-03. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-Prior verified baseline: PR #14 /e34e092 (M1). This release completes the first M2 collection; see the handoff and M2 release evidence for rollout checks.
+Prior verified baseline: PR #15 /34974ab (M2). M3 souvenirs are approved for release; CI and public deployment are checked separately.
 
 ## M1 — Endless insights
 
@@ -30,7 +30,7 @@ Prior verified baseline: PR #14 /e34e092 (M1). This release completes the first 
 
 ## M2 — Endless stage variations
 
-**Status:** first six-layout collection approved for this release. Geometry/UI checks pass; ongoing balance and physical touch feedback remain playtest work.
+**Status:** shipped in PR #15 (34974ab); Pages and public bundle verified. Geometry/UI checks pass; ongoing balance and physical touch feedback remain playtest work.
 
 **Outcome:**later loops offer recognizable encounters beyond higher counts/targets.
 
@@ -40,11 +40,13 @@ Plan: define reusable layout data and deterministic selection → geometry/path-
 
 ## M3 — Endless achievements and rewards
 
-**Status:** planned after M2 produces interesting challenges.
+**Status:** preview approved for release on 2026-11-04; PR/CI/Pages verification pending.
 
-Outcome: more reasons to experiment and return. Add a small reward collection tied to survival, perk exploration and stage encounters; prefer wardrobe/totem/flourish rewards with locked previews and clear progress. Preserve existing saves/unlocks. Do not reward intentional failure or make success depend on inaccessible cosmetics.
+Four approved achievements: **The Night’s Just Starting** (4 clears in one Endless run → Spore Sprout hat), **Remix Artist** (swap a perk and clear the immediately following stage → Mixtape Totem), **Trail Mixer** (clear all six authored layouts across runs → Mycelium Threads), and **Still Dancing** (12 clears in one run → Aurora Ribbons). These thresholds remain preview targets pending playtest evidence.
 
-Plan: use M1 evidence to propose reachable thresholds → approve reward concepts/criteria → extend progression migration/receipts and unlock UI → verify normal play, reduced motion and old saves → preview/release. Exact rewards and thresholds remain proposals, not approved promises. No currency/store in this milestone.
+Credit saves at qualifying stage end independently of score saving/posting. Wardrobe shows best clears, a layout checklist, locked previews and earned progress. New rewards start locked for legacy profiles, preserving every older unlock. Effects stay close to the avatar, freeze under reduced motion and never affect gameplay. No currency/store, backend changes or cloud sync.
+
+[Approved design](superpowers/specs/2026-11-04-endless-rewards-design.md) · [implementation plan](superpowers/plans/2026-11-04-endless-rewards.md). Local reward lab: `/?rehearsal&rewards`, with a disposable profile and no real progress/score/analytics writes. The user approved the collection and release. Thresholds remain subject to later playtest feedback; record CI/Pages acceptance on the release PR.
 
 ## M4 — Gameplay feel and reliability
 
