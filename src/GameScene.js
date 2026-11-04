@@ -19,7 +19,8 @@ const COLORS = [0xcff598, 0x93ffd6, 0xfaa5d6, 0xc6b0ff];
 export class GameScene extends Phaser.Scene {
   constructor() { super('Forest'); this.running = false; this.round = createRound(); }
   create() {
-    this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
+    this.reducedMotion=this.motionQuery.matches;
     this.stage = STAGES[0];
     this.background = new StageRenderer(this);
     this.background.show(this.stage);
@@ -112,6 +113,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
   update(time, delta) {
+    this.reducedMotion=this.motionQuery?.matches??this.reducedMotion;
     if (!this.reducedMotion && (this.running || this.menuAmbient)) {
       this.sparks.forEach(s=>s.setScale(1+Math.sin(time*.003+s.phase)*.12));
       this.fireflies.forEach((f,i)=>f.setAlpha(.2+Math.sin(time*.001+i)*.15));

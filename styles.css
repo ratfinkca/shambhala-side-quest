@@ -85,6 +85,6 @@ body[data-mode="game"] .intro,body[data-mode="game"] .page-footer{display:none}
 #bass-head[data-phase="full"]{animation:bass-ready-breathe 2.5s ease-in-out infinite}
 @keyframes bass-ready-breathe{50%{box-shadow:0 0 0 4px #95ffe026,0 0 22px #95ffe045}}
 @container(max-width:600px){#bass-head{width:62px;height:62px;right:7px;top:7px}.arena-caption{display:none}}
-@container(max-width:360px){#bass-head{width:56px;height:56px;right:5px;top:-5px}.bass-control-icon{font-size:16px}}
+@container(max-width:360px){#bass-head{width:56px;height:56px;right:5px;top:-5px;padding:5px 3px}#bass-head .bass-control-icon{font-size:14px}#bass-head .bass-control-name{font-size:7px;letter-spacing:0;white-space:nowrap}#bass-head .bass-control-detail{font-size:11px}}
 @media(prefers-reduced-motion:reduce){#bass-head{animation:none!important}}
 .game-footer{flex-wrap:wrap;gap:8px;display:flex;height:auto;min-height:30px;align-items:center}

@@ -35,3 +35,13 @@ test('Bass Head scene activation reports actual partial duration and blocks paus
  scene.running=true;assert.equal(scene.activateBassHead(),true);assert.equal(scene.activateBassHead(),false);
  assert.equal(events.length,1);assert.equal(events[0][1].durationMs,3000);
 });
+test('live reduced-motion preference is adopted without resetting a paused or active Bass Head timer',()=>{
+ const scene=new GameScene();scene.motionQuery={matches:false};scene.round.bass.activeMs=1500;
+ scene.update(0,16);assert.equal(scene.reducedMotion,false);assert.equal(scene.round.bass.activeMs,1500);
+ scene.motionQuery.matches=true;scene.update(100,100);assert.equal(scene.reducedMotion,true);assert.equal(scene.round.bass.activeMs,1500);
+ scene.motionQuery.matches=false;scene.update(200,16);assert.equal(scene.reducedMotion,false);
+ Object.assign(scene,{running:true,stage:{obstacles:[]},dancer:{x:480,y:400},input:{keyboard:{resetKeys(){}}},mysteryView:{update(){}},game:{events:{emit(){}}}});
+ scene.motionQuery.matches=true;
+ scene.round.remainingMs=1000;scene.update(1100,1000);
+ assert.equal(scene.reducedMotion,true);assert.equal(scene.round.remainingMs,0);assert.equal(scene.round.bass.activeMs,500);
+});

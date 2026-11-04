@@ -48,5 +48,5 @@
 **Files:** `src/rehearsal.js`, `src/main.js`, fixture tests, roadmap/handoff/validation docs.
 - [x] Test safe scenario presets; add DEV Bass lab with fresh/quarter/half/full/outside scenarios.
 - [x] Check 25/50/100 activation, charge buildup, pause, B and click/touch control isolation in browser; inspect desktop/phone/landscape and all themes. Capture proof outside repo.
-- [ ] Run full suite/build/fixture-exclusion/link/diff checks and one independent read-only review; fix important findings with regression proof.
-- [ ] Commit locally and present the preview. Keep published candy release separate.
+- [x] Run full suite/build/fixture-exclusion/link/diff checks and one independent read-only review; fix important findings with regression proof.
+- [x] Commit locally and present the preview. Keep published candy release separate.
