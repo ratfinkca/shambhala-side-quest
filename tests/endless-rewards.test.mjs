@@ -1,0 +1,56 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {normalizeProgress,awardStage,requirement,ACHIEVEMENTS} from '../src/progression.js';
+import {createRun,startStage,finishStage,chooseUpgrade,keepPerks,stageFor} from '../src/run.js';
+import {createStorage} from '../src/storage.js';
+const layouts=['forest-creekside','forest-weave','neon-stereo','neon-crossfade','sunrise-islands','sunrise-lane'];
+const clear=(id,stagesCleared,extra={})=>({id,mode:'endless',qualified:true,stagesCleared,...extra});
+test('four Endless milestones award on clear, with best survival rather than lifetime sum',()=>{
+ assert.equal(ACHIEVEMENTS.filter(a=>a.endless).length,4);
+ let p=normalizeProgress();
+ for(let i=0;i<5;i++)p=awardStage(p,clear(`short${i}`,3)).progress;
+ assert.notEqual(requirement(p,'hat:spore'),null);
+ const four=awardStage(p,clear('four',4));assert.ok(four.rewards.includes('hat:spore'));
+ assert.notEqual(requirement(four.progress,'flair:aurora'),null);
+ const failed=awardStage(four.progress,clear('failed',12,{qualified:false}));assert.equal(failed.progress.endless.bestCleared,4);
+ const festival=awardStage(four.progress,clear('festival',12,{mode:'festival'}));assert.equal(festival.progress.endless.bestCleared,4);
+ const twelve=awardStage(four.progress,clear('twelve',12));assert.ok(twelve.rewards.includes('flair:aurora'));
+ assert.deepEqual(awardStage(twelve.progress,clear('twelve',12)).rewards,[]);
+ assert.equal(awardStage(twelve.progress,clear('later',13)).rewards.length,0);
+});
+test('layout collection is distinct, validated, and persists across runs without score posting',()=>{
+ const data={},raw={getItem:k=>data[k]||null,setItem:(k,v)=>data[k]=v};let s=createStorage(raw);
+ for(const variationId of ['original','unknown',null])s.awardProgress(clear(`bad:${variationId}`,4,{variationId}));
+ assert.deepEqual(s.profile.progress.endless.layouts,[]);
+ s.awardProgress(clear('failure',4,{variationId:layouts[0],qualified:false}));
+ assert.deepEqual(s.profile.progress.endless.layouts,[]);
+ layouts.slice(0,5).forEach((variationId,i)=>s.awardProgress(clear(`run${i}:stage`,4,{variationId})));
+ s=createStorage(raw);assert.equal(s.profile.progress.endless.layouts.length,5);
+ s.awardProgress(clear('repeat',4,{variationId:layouts[0]}));assert.notEqual(requirement(s.profile.progress,'onesie:mycelium'),null);
+ const sixth=s.awardProgress(clear('sixth',9,{variationId:layouts[5]}));assert.ok(sixth.rewards.includes('onesie:mycelium'));
+ assert.equal(createStorage(raw).saveOutfit({onesie:'mycelium'}).accepted,true);
+ assert.equal(s.awardProgress(clear('sixth',9,{variationId:layouts[5]})).xp,0);
+});
+const finish=run=>{startStage(run);return finishStage(run,{ended:true,remainingMs:0,pickups:stageFor(run).target,closePasses:0,score:0,scoreComponents:{sparks:[],passes:[]},bass:{chargeMs:0}});};
+test('Remix requires a successful equipped swap followed immediately by a qualified stage',()=>{
+ const run=createRun('endless','mix');run.perks=['boots','bracelet','moth','noodle'];
+ finish(run);assert.equal(chooseUpgrade(run,'surfer','missing'),false);assert.equal(chooseUpgrade(run,'surfer','boots'),true);
+ const result=finish(run);assert.equal(result.progressContext.remixed,true);
+ const earned=awardStage(normalizeProgress(),{id:'mix:1',qualified:result.qualified,...result.progressContext});assert.ok(earned.rewards.includes('totem:mixtape'));
+ keepPerks(run);assert.equal(finish(run).progressContext.remixed,false);
+ const add=createRun('endless','add');finish(add);chooseUpgrade(add,'boots');assert.equal(finish(add).progressContext.remixed,false);
+ const failed=createRun('endless','fail');failed.perks=['boots','bracelet','moth','noodle'];finish(failed);chooseUpgrade(failed,'surfer','boots');startStage(failed);
+ const miss=finishStage(failed,{ended:true,remainingMs:0,pickups:0,closePasses:0,score:0,scoreComponents:{sparks:[],passes:[]},bass:{chargeMs:0}});
+ assert.equal(miss.progressContext.remixed,false);
+ assert.notEqual(requirement(awardStage(normalizeProgress(),{id:'fail:1',qualified:false,...miss.progressContext}).progress,'totem:mixtape'),null);
+});
+test('legacy migration preserves old unlocks while new rewards start locked and malformed records normalize',()=>{
+ const old=normalizeProgress({legacyWardrobe:true,xp:2500,totals:{sparks:50}});
+ for(const key of ['onesie:cosmic','hat:cat','totem:ufo'])assert.equal(requirement(old,key),null);
+ for(const key of ['hat:spore','totem:mixtape','onesie:mycelium','flair:aurora'])assert.notEqual(requirement(old,key),null);
+ const bad=normalizeProgress({endless:{bestCleared:Infinity,layouts:[...layouts,...layouts,'bad',1],remixed:'yes'}});
+ assert.equal(bad.endless.bestCleared,0);assert.deepEqual(bad.endless.layouts,layouts);assert.equal(bad.endless.remixed,false);
+ assert.deepEqual(normalizeProgress(JSON.parse(JSON.stringify(old))),old);
+ const s=createStorage({getItem(){return null},setItem(){throw Error('blocked')}});
+ assert.equal(s.awardProgress(clear('blocked',12)).persisted,false);assert.equal(requirement(s.profile.progress,'flair:aurora'),null);
+});

@@ -223,7 +223,7 @@ game.events.on('round:end',round=>{
  playtest.finishStage(run.stageIndex,{score:round.score,qualified:result.qualified});
  if(run.status==='ended')playtest.end(run);
  void playtest.flush();
- progressReward=rehearsal?null:saved.awardProgress({id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3});
+ progressReward=rehearsal?null:saved.awardProgress({id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3,...result.progressContext});
  run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
  if(run.status==='ended')captureResult();
