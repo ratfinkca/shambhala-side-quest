@@ -24,3 +24,5 @@ M2 release scope and verification limits: [release evidence](superpowers/m2-rele
 M3 is published: [release evidence](superpowers/m3-release-validation.md). M4 candy feel is published as PR #17 ([release evidence](superpowers/m4-candy-release-validation.md)): [design](superpowers/specs/2026-11-04-candy-feel-design.md), [plan](superpowers/plans/2026-11-04-candy-feel.md), and [fresh coverage](playtests/2026-11-04-m4-coverage.md).
 
 Bass-zone investigation: [current behavior and user feedback](playtests/2026-11-04-bass-baseline.md).
+
+Bass interface local preview: [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [validation](superpowers/bass-interface-preview-validation.md).

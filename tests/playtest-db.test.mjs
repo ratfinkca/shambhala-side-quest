@@ -62,6 +62,8 @@ test('Endless metrics separate banked/failed/exit/unknown and choices while reta
  assert.equal((await db.query("select value from playtest_private.daily where day='2020-01-01' and metric='run_samples'")).rows[0].value,5);
  await emit(run,'stage_end',{stageIndex:3,qualified:true,activeMs:60000,pickups:23,bassUses:0,variationId:'forest-creekside'});
  await emit(run,'stage_end',{stageIndex:3,qualified:true,activeMs:60000,pickups:23,bassUses:0});
+ // Keep fixture rows strictly before the report's exclusive upper boundary, even within one clock millisecond.
+ await db.exec("update playtest_private.events set received_at=received_at-interval '1 second' where event->>'type'='stage_end'");
  const layoutReport=await db.exec(await readFile(new URL('../supabase/reports/endless.sql',import.meta.url),'utf8'));
  assert.deepEqual(layoutReport[1].rows.map(r=>r.layout).sort(),['forest-creekside','legacy-unknown']);
  await db.exec("insert into playtest_private.daily values('2020-01-01','rush','touch','arcade-v1','stage_samples',7),('2020-01-01','rush','touch','arcade-v1','perk_boots',3)");

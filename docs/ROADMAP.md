@@ -13,7 +13,7 @@ Updated 2026-11-04. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-Current published baseline: PR #17 /d00ee62 (M4 candy pass). Bass-zone communication and activation are the next scoped improvement.
+Current published baseline: PR #17 /d00ee62 (M4 candy pass). Bass-zone communication and activation now have a separate local preview, pending user playtest/release approval.
 
 ## M1 — Endless insights
 
@@ -50,7 +50,7 @@ Credit saves at qualifying stage end independently of score saving/posting. Ward
 
 ## M4 — Gameplay feel and reliability
 
-**Status:** candy pass shipped as PR #17 /d00ee62; tests, Pages and public verification pass. It implements the user-confirmed inverted Dizzy controls and stronger Wavy Colours. See [design](superpowers/specs/2026-11-04-candy-feel-design.md) and [plan](superpowers/plans/2026-11-04-candy-feel.md). The DEV Candy lab (`/?rehearsal&candy=waves`) remains available for practice. See [release evidence](superpowers/m4-candy-release-validation.md). Bass-zone feel has started with a [baseline and user feedback](playtests/2026-11-04-bass-baseline.md): visual cause/effect, easier in-field activation, and possible partial-meter spending. Preserve existing slowdown/scoring while that design is settled.
+**Status:** candy pass shipped as PR #17 /d00ee62; tests, Pages and public verification pass. It implements the user-confirmed inverted Dizzy controls and stronger Wavy Colours. See [design](superpowers/specs/2026-11-04-candy-feel-design.md) and [plan](superpowers/plans/2026-11-04-candy-feel.md). The DEV Candy lab (`/?rehearsal&candy=waves`) remains available for practice. See [release evidence](superpowers/m4-candy-release-validation.md). Bass-zone feel has started with a [baseline and user feedback](playtests/2026-11-04-bass-baseline.md): visual cause/effect, easier in-field activation, and possible partial-meter spending. The user approved an on-field button, partial-meter spending and clearer feedback. The local preview preserves the slowdown/pressure functions and point values. See [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [preview validation](superpowers/bass-interface-preview-validation.md).
 
 [Fresh coverage review](playtests/2026-11-04-m4-coverage.md): no new shared events/stage samples since the previous check. No broad difficulty or reward threshold changes follow. First slice preserves candy timing, speed, perk duration and points; bass escapes and recovery remain subsequent scoped work.
 

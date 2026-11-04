@@ -72,9 +72,19 @@ body[data-mode="game"] .intro,body[data-mode="game"] .page-footer{display:none}
 
 .game-footer{gap:6px}#effect-status{color:#f1d0ef;font-weight:700;font-size:9px;letter-spacing:0;white-space:nowrap}
 
-#bass-head { min-height:44px; flex-shrink:0; font-size:11px; }
-#bass-head.ready { border-color:#ffcc77; color:#ffcc77; }
-.game-footer { flex-wrap:wrap; gap:8px; }
-
-#bass-head { background:linear-gradient(to right, #ffcc7726 var(--bass-charge,0%), transparent var(--bass-charge,0%)); }
-.game-footer { display:flex; height:auto; min-height:30px; align-items:center; }
+/* Bass Head is a native on-field control: fixed size, no steering gesture overlap. */
+#bass-head{position:absolute;right:10px;top:10px;z-index:25;width:68px;height:68px;min-height:0;padding:8px 4px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;border:1px solid #91b9aa;border-radius:50%;color:#e1f5ec;font:700 10px/1.1 var(--body,Arial,sans-serif);background:conic-gradient(#95ffe0 var(--bass-angle,0deg),#354c49 0);box-shadow:0 3px 12px #00191688;touch-action:manipulation;isolation:isolate}
+#bass-head::before{content:"";position:absolute;inset:4px;border-radius:50%;background:#12312e;z-index:-1}
+#bass-head:disabled{opacity:.82;cursor:default}
+#bass-head .bass-control-icon{font-size:19px;line-height:1;color:#a2dac8}
+#bass-head .bass-control-name{font-size:8px;letter-spacing:.3px;text-transform:uppercase}
+#bass-head .bass-control-detail{font-size:12px;font-variant-numeric:tabular-nums}
+#bass-head.ready{border-color:#aaffdf;box-shadow:0 0 0 3px #95ffe015,0 3px 16px #00191688}
+#bass-head.ready .bass-control-icon{color:#afffe3}
+#bass-head[data-phase="active"]{opacity:1;color:#caffed;box-shadow:0 0 18px #95ffe040}
+#bass-head[data-phase="full"]{animation:bass-ready-breathe 2.5s ease-in-out infinite}
+@keyframes bass-ready-breathe{50%{box-shadow:0 0 0 4px #95ffe026,0 0 22px #95ffe045}}
+@container(max-width:600px){#bass-head{width:62px;height:62px;right:7px;top:7px}.arena-caption{display:none}}
+@container(max-width:360px){#bass-head{width:56px;height:56px;right:5px;top:-5px}.bass-control-icon{font-size:16px}}
+@media(prefers-reduced-motion:reduce){#bass-head{animation:none!important}}
+.game-footer{flex-wrap:wrap;gap:8px;display:flex;height:auto;min-height:30px;align-items:center}

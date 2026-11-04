@@ -1,0 +1,16 @@
+# Bass interface — local preview validation, 2026-11-04
+
+Published baseline remains candy PR #17 /d00ee62. This Bass Head interface preview is not published.
+
+- User approved the on-field button, partial spending and clearer visuals, preserving slowdown. The minimum is 25%; all charge is spent for a proportional duration, up to six seconds. Score component rules, Bass Battery and carry behavior are unchanged.
+- Rule tests were observed RED→GREEN for quarter/half/full boundaries, no repeat use, exact expiry/overshoot, unchanged stored pressure and a real partial-boost score accepted by the existing validator. View/scene tests cover one consistent availability state, actual duration announcements, keyboard/touch/mouse classification and paused/repeated activation guards.
+- Drawing tests cover cone-origin expanding ripples, bounded output, distinct player pressure/protection cues and static reduced motion. Pressure/exposure/charging and `bassMovementFactor` were compared against the published source and remain unchanged. Player cosmetics now shake together; protection steadies that decorative shake without moving hitboxes.
+- The initial baseline found an existing flaky report fixture: a row timestamp equaled the report's exclusive `until` boundary. Diagnostic timestamps reproduced it. The fixture is now one second before the query; the existing failing test passed afterward. No production report/migration changed.
+- Latest suite: 177 tests pass; production build passes with the existing Phaser bundle-size warning. Final review/verification follows below.
+- IAB browser checks: default 790×898, portrait 390×844, small phone 320×568 and landscape 844×390. A lower-right button overlapped ordinary spark space on phones, so the preview places it in upper-right scenery. The control remains 56–68px with readable duration, no horizontal overflow and no movement forwarded from its activation click. The smallest layout straddles the arena's top edge slightly.
+- Browser covered fresh charge below threshold, crossing 25%, partial B activation, 50% pointer spending, full native Space activation, active lockout, pause/hide/resume with retained time, stage reset, and all three themes. Charge continues normally inside Bass lab presets, so a quarter preset can buy slightly more than 1.5s if the player waits before activating; exact amounts are pinned in rule tests.
+- Bass lab has safe fresh/quarter/half/full/outside scenarios and a disposable profile. Practice sends no analytics and saves no scores, XP or real settings. Production fixture exclusion is a final build gate.
+- No relevant browser console errors/warnings. Evidence outside repo: `/tmp/bass-pressure-desktop.png`, `/tmp/bass-protection-desktop.png`, `/tmp/bass-protected-mobile.png`, `/tmp/bass-small-phone.png`, `/tmp/bass-landscape.png`, `/tmp/bass-moonlit.png`, `/tmp/bass-neon.png`.
+- Physical touch comfort, sustained-device performance and actual OS-level reduced-motion switching remain audience checks. Deterministic static-motion drawing and pointer classification tests do not claim physical-device acceptance.
+
+Independent review pending.

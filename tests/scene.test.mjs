@@ -9,7 +9,7 @@ test('scene start configures stage, outfit, rules and resets transient state',()
  const scene=new GameScene(),calls=[];
  scene.mysteryView={reset(){calls.push(['mysteryReset'])}};
  const node=new Proxy({},{get:(_,key)=> (...args)=>{calls.push([key,...args]);return node}});
- Object.assign(scene,{background:{show(s){calls.push(['stage',s.id])},fireflies:[]},crowd:{configure(s){calls.push(['crowd',s.crowdAnchors.length])},reset(){}},avatar:{art:node},clearInput(){},effects:{clear(){}},tweens:{paused:true,killAll(){},resumeAll(){this.paused=false}},dancer:node,flowPickup:node,dropWash:node,sparks:[],game:{events:{emit(){}}}});
+ Object.assign(scene,{background:{show(s){calls.push(['stage',s.id])},fireflies:[]},crowd:{configure(s){calls.push(['crowd',s.crowdAnchors.length])},reset(){}},avatar:{art:node,setPosition:node.setPosition},bassFeedback:node,clearInput(){},effects:{clear(){}},tweens:{paused:true,killAll(){},resumeAll(){this.paused=false}},dancer:node,flowPickup:node,dropWash:node,sparks:[],game:{events:{emit(){}}}});
  scene.startRound({stage:STAGES[1],rules:rulesFor(['moth','noodle']),bassChargeMs:7500,outfit:{onesie:'moth',hat:'wizard',totem:'star'}});
  assert.equal(scene.round.bass.chargeMs,7500);assert.equal(scene.round.bass.exposureMs,0);assert.equal(scene.round.bass.activeMs,0);
  assert.equal(scene.tweens.paused,false);assert.equal(scene.stage.id,'neon');assert.equal(scene.round.rules.flowDurationMs,7000);assert.equal(scene.round.shieldsRemaining,1);assert.equal(scene.round.remainingMs,60000);assert.equal(scene.running,true);
@@ -28,4 +28,10 @@ test('collecting Dizzy reverses an existing destination once and cannot retrigge
  assert.equal(events.filter(([type])=>type==='round:mystery').length,1);
  scene.running=false;scene.round.mystery.phase='available';scene.round.mystery.effectMs=0;
  assert.equal(scene.takeCandy(()=>.9),null);
+});
+test('Bass Head scene activation reports actual partial duration and blocks paused or repeated use',()=>{
+ const scene=new GameScene(),events=[];scene.game={events:{emit:(...args)=>events.push(args)}};
+ scene.round.bass.chargeMs=5000;assert.equal(scene.activateBassHead(),false);assert.equal(scene.round.bass.chargeMs,5000);
+ scene.running=true;assert.equal(scene.activateBassHead(),true);assert.equal(scene.activateBassHead(),false);
+ assert.equal(events.length,1);assert.equal(events[0][1].durationMs,3000);
 });

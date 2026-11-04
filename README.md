@@ -107,3 +107,9 @@ The bottom Reward lab can demonstrate earning each reward. Its profile is tempor
 M4 candy is published as [PR #17](https://github.com/ratfinkca/shambhala-side-quest/pull/17), following M3 [PR #16](https://github.com/ratfinkca/shambhala-side-quest/pull/16). The candy pass adds: Dizzy reverses keys and mirrors click/tap destinations, and Wavy Colours has more visible liquid light behind gameplay objects. Timing, speed, points and perk durations stay the same.
 
 Open `http://127.0.0.1:5181/?rehearsal&candy=waves`. Use the Candy lab picker and **Start candy practice** to start a fresh Quick Rush with that effect. Practice saves no score or XP and sends no playtest data. Reduced motion uses a static tint. Bass tuning and run recovery are later work.
+
+## Bass Head interface preview (local development)
+
+The published game remains the candy release. A local preview adds an on-field Bass Head meter/button and partial spending: at least 25% charge buys 1.5 seconds, half buys 3 seconds, and full buys 6 seconds. All available charge is consumed. Keyboard B still works, and the native button supports Enter/Space. The existing slowdown is unchanged.
+
+Speaker wavefronts and amber player-foot cues show bass pressure; a mint aura shows protection. Reduced motion uses stable marks. Open `http://127.0.0.1:5181/?rehearsal&bass=half`, pick a Bass lab scenario and choose **Start bass practice**. This practice uses a temporary profile and saves no scores, XP, analytics or real settings. Charge continues normally near speakers.

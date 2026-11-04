@@ -28,3 +28,5 @@ Stage arrangements and sound effects are synthesized locally through Web Audio (
 The M3 Endless souvenirs (Spore Sprout, Mixtape Totem, Mycelium Threads and Aurora Ribbons) are original procedural artwork in `src/Avatar.js` and `src/endless-cosmetics.js`. Their fixed drawing commands create no external assets or persistent particle systems; reduced-motion versions freeze animation and drop response.
 
 M4 Wavy Colours uses bounded procedural liquid-light strokes in `src/candy-colours.js`, behind field objects. It uses no external imagery, shaders or music assets.
+
+Bass interface preview: cone-origin wavefronts and player pressure/protection marks are bounded procedural graphics in `src/bass-feedback.js`. The on-field meter uses CSS, text and a Unicode icon; no external artwork was added.

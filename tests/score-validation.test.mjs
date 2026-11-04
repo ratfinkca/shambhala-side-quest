@@ -8,6 +8,15 @@ test('valid Rush accepts pauses and rejects tampering, unknown fields and early 
  assert.equal(validateScore(p,{mode:'rush',scoringVersion:'arcade-v1',runId:p.runId,elapsedMs:1000}).ok,false);
  p.stages[0].sparks[0]=-1;assert.equal(validateScore(p).ok,false);
 });
+test('real quarter-charge Bass Head awards reconcile with existing arcade scoring',async()=>{
+ const {createRound,collect}=await import('../src/game.js');const {createRun,startStage,finishStage}=await import('../src/run.js');
+ const {activateBass,advanceBass}=await import('../src/bass-head.js');
+ const run=createRun('rush',fixture().runId);startStage(run);const r=createRound();r.bass.chargeMs=2500;
+ assert.equal(activateBass(r),true);assert.equal(r.bass.activeMs,1500);
+ collect(r,{playerInBass:true,sparkInBass:true});advanceBass(r,1500,true);collect(r,{playerInBass:true,sparkInBass:true});
+ assert.equal(r.score,30);r.ended=true;r.remainingMs=0;finishStage(run,r);
+ assert.equal(validateScore({...fixture(),totalScore:run.totalScore,stagesCleared:1,stages:run.scoreStages}).ok,true);
+});
 test('Festival requires qualified prior stages and distinct earned perks',()=>{
  const p=fixture();p.mode='festival';p.stagesCleared=0;assert.equal(validateScore(p).ok,true);
  p.stages.push({...p.stages[0],stageIndex:1,perks:['boots']});p.totalScore=20;assert.equal(validateScore(p).ok,false);

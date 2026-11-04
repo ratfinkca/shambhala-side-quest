@@ -1,5 +1,7 @@
 export const BASS_CHARGE_MS=10000, BASS_ACTIVE_MS=6000, BASS_EXPOSURE_MS=6000;
-export function createBass(chargeMs=0){return {chargeMs:Math.max(0,Math.min(BASS_CHARGE_MS,chargeMs)),exposureMs:0,activeMs:0};}
+export const BASS_MIN_CHARGE_MS=2500;
+export function bassDuration(chargeMs){return Number.isFinite(chargeMs)&&chargeMs>=BASS_MIN_CHARGE_MS?BASS_ACTIVE_MS*Math.min(BASS_CHARGE_MS,chargeMs)/BASS_CHARGE_MS:0;}
+export function createBass(chargeMs=0){return {chargeMs:Math.max(0,Math.min(BASS_CHARGE_MS,chargeMs)),exposureMs:0,activeMs:0,activeDurationMs:0};}
 export function advanceBass(round,dt,inBass){
  if(round.ended)return 0;
  const b=round.bass,before=b.chargeMs,rate=round.rules?.bassChargeRate??1,elapsed=Math.max(0,dt),chargingTime=Math.max(0,elapsed-b.activeMs);
@@ -11,8 +13,9 @@ export function advanceBass(round,dt,inBass){
 }
 export function activateBass(round){
  const b=round.bass;
- if(round.ended||b.activeMs>0||b.chargeMs<BASS_CHARGE_MS)return false;
- b.chargeMs=0;b.activeMs=BASS_ACTIVE_MS;return true;
+ const duration=bassDuration(b.chargeMs);
+ if(round.ended||b.activeMs>0||!duration)return false;
+ b.chargeMs=0;b.activeMs=duration;b.activeDurationMs=duration;return true;
 }
 export function bassMovementFactor(b,radialFactor){
  if(radialFactor===1||b.activeMs>0)return 1;

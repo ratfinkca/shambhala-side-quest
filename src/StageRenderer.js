@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import {concertLighting,LIGHT_SHOWS} from './concert-lighting.js';
 import {BASS_RADIUS,BASS_CORE,speakerCones} from './geometry.js';
 import {bassBeat} from './bass-motion.js';
+import {drawSpeakerBass} from './bass-feedback.js';
 const W=960,H=640;
 export class StageRenderer {
  constructor(scene){this.scene=scene;this.objects=[];}
@@ -43,9 +44,6 @@ export class StageRenderer {
     zone.lineStyle(1,0xf0c986,.18).strokeCircle(x,y,BASS_RADIUS);
     zone.lineStyle(1,0xf0c986,.07).strokeCircle(x,y,BASS_CORE);
     const pulse=this.scene.add.graphics().setPosition(x,y).setDepth(1.1);
-    pulse.fillStyle(0xefac68,.025).fillCircle(0,0,BASS_CORE);
-    pulse.lineStyle(1,0xf0c986,.14).strokeCircle(0,0,BASS_CORE);
-    pulse.lineStyle(1,0xf0c986,.07).strokeCircle(0,0,80);
     this.bassPulses.push(pulse);
    }
    const g=this.scene.add.graphics().setDepth(4);
@@ -72,7 +70,7 @@ export class StageRenderer {
     this.canopyLights.forEach((l,i)=>{l.setAlpha(reduced?.65:.65+.25*Math.sin(elapsed*.0007+i*1.5));l.setScale(reduced?1:1+.09*Math.sin(elapsed*.0004+i));});
   }
   const pulse=bassBeat(elapsed),strength=phase==='drop'?1.5:1;
-  this.bassPulses?.forEach(p=>{p.setAlpha(reduced?1:.35+pulse*.65);p.setScale(reduced?1:1+pulse*.09*strength)});
+  this.bassPulses?.forEach(p=>{p.clear();drawSpeakerBass(p,elapsed,phase,reduced);});
   this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
  }
  destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];}

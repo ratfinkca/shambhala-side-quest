@@ -25,6 +25,7 @@ import { setupResponsiveLayout } from './layout.js';
 import { PERKS, createRun, startStage, finishStage, finishRun, chooseUpgrade, keepPerks, stageFor, upgradeChoices } from './run.js';
 import { STAGES } from './stages.js';
 import {bassMovementFactor} from './bass-head.js';
+import {updateBassButton,activationInput} from './bass-view.js';
 import { bassFactor } from './geometry.js';
 import {MYSTERY_EFFECTS} from './mystery.js';
 import { createScreenState, transition, createScreens } from './screens.js';
@@ -33,8 +34,9 @@ let local;try{local=window.localStorage}catch{}
 const rehearsal=import.meta.env.DEV && new URLSearchParams(location.search).has('rehearsal');
 const rewardLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('rewards');
 const candyLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('candy');
-// The reward lab gets a disposable profile, never the player's browser profile.
-const saved=createStorage(rewardLab?{getItem:()=>null,setItem:()=>{}}:local),audio=createAudio();audio.setVolumes(saved.profile.audio);
+const bassLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('bass');
+// Preview reward/bass labs use disposable profiles, never the player's browser profile.
+const saved=createStorage(rewardLab||bassLab?{getItem:()=>null,setItem:()=>{}}:local),audio=createAudio();audio.setVolumes(saved.profile.audio);
 const onlineConfig=rehearsal?{enabled:false}:readOnlineConfig(import.meta.env);
 const playtest=createPlaytestSession({config:onlineConfig,consent:createConsent({storage:saved}),send:onlineConfig.enabled?createPlaytestSender(onlineConfig.endpoint):async()=>false});
 const arcadeConfig=rehearsal?{}:readArcadeConfig(import.meta.env);
@@ -59,8 +61,7 @@ function render(){
  if(scene)scene.menuAmbient=['title','wardrobe'].includes(screen.name);
  if(scene&&!playing)scene.mysteryView.waves.setVisible(false);
  for(const el of document.querySelectorAll('.hud,.beat-bar,.game-footer'))el.setAttribute('aria-hidden',String(!playing));
- $('#bass-head').hidden=!playing||!scene?.stage.obstacles.length;
- $('#bass-head').disabled=!playing||!scene||scene.round.bass.chargeMs<10000||scene.round.bass.activeMs>0;
+ updateBassButton($('#bass-head'),scene?.round.bass,{playing,hasSpeakers:!!scene?.stage.obstacles.length});
  $('#pause').disabled=!playing;$('#settings').disabled=!['playing','paused','title'].includes(screen.name);
  $('#avatar-preview').hidden=screen.name!=='wardrobe';
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
@@ -170,7 +171,9 @@ function action(name,value){
 function volume(key,value){const settings={...saved.profile.audio,[key]:value};saved.saveAudio(settings);audio.setVolumes(settings);audio.setEnabled(settings.enabled);$(`#value-${key}`).textContent=`${Math.round(value*100)}%`;if(key==='effects')audio.pickup(1)}
 function outfit(key,value){const result=saved.saveOutfit({...saved.profile.outfit,[key]:value});if(result.accepted&&previewAvatar){setOutfit(previewAvatar,saved.profile.outfit);$('#avatar-preview-label').textContent=WARDROBE[key].find(o=>o.id===value)?.name||'Your festival look';$('#outfit-feedback').textContent=rewardLab?'Equipped in temporary reward profile.':result.persisted?'Outfit saved.':'Selected for this session; browser storage is unavailable.'}}
 game.events.on('forest:ready',value=>{scene=value;render()});
-$('#bass-head').addEventListener('click',e=>{if(screen.name==='playing'){if(scene.activateBassHead())playtest.input(e.pointerType==='touch'?'touch':e.detail===0?'keyboard':'mouse');$('#game').focus({preventScroll:true});}});
+let lastBassPointer;
+$('#bass-head').addEventListener('pointerdown',e=>{lastBassPointer=e.pointerType;});
+$('#bass-head').addEventListener('click',e=>{if(screen.name==='playing'){if(scene.activateBassHead())playtest.input(activationInput(e,lastBassPointer));$('#game').focus({preventScroll:true});}});
 $('#pause').addEventListener('click',()=>pause());$('#settings').addEventListener('click',()=>action('settings'));
 $('#sound').addEventListener('click',()=>{saved.saveSound(!saved.sound);audio.setEnabled(saved.sound);soundLabel();if(screen.name==='settings')render()});
 const fullscreen=$('#fullscreen');fullscreen.hidden=!document.fullscreenEnabled;
@@ -205,18 +208,13 @@ game.events.on('round:update',round=>{
  const mystery=round.mystery;
  $('#effect-status').hidden=!mystery.effect;
  $('#effect-status').textContent=mystery.effect?`${MYSTERY_EFFECTS[mystery.effect].name} · ${Math.ceil(mystery.effectMs/1000)}s`:'';
- const ability=round.bass,button=$('#bass-head');
- button.hidden=screen.name!=='playing'||!scene?.stage.obstacles.length;
- button.disabled=screen.name!=='playing'||round.ended||ability.activeMs>0||ability.chargeMs<10000;
- button.textContent=ability.activeMs>0?`Bass Head · ${Math.ceil(ability.activeMs/1000)}s`:ability.chargeMs>=10000?'Bass Head · Activate [B]':`Bass Head · ${Math.floor(ability.chargeMs/100)}%`;
- button.style.setProperty('--bass-charge',`${ability.chargeMs/100}%`);
- button.classList.toggle('ready',ability.chargeMs>=10000);
+ updateBassButton($('#bass-head'),round.bass,{playing:screen.name==='playing'&&!round.ended,hasSpeakers:!!scene?.stage.obstacles.length});
  const bass=scene?bassFactor(scene.dancer,scene.stage.obstacles):1;
  $('#crowd-tip').textContent=bass<1&&!round.ended?`Bass pressure · ${Math.round(bassMovementFactor(round.bass,bass)*100)}% speed`:round.slowedMs>0&&!round.ended?'Gentle bump · keep moving':round.surferMs>0&&!round.ended?`Crowd Surfer · ${Math.ceil(round.surferMs/100)/10}s speed boost`:`Clean passes = +${round.rules.closePassPoints*cycle.bonus}`;
  if(screen.name==='playing')audio.sync(round,scene.stage.id);
 });
 game.events.on('round:phase',phase=>{if(phase==='build')toast('Feel that? Here comes the drop.',2300);if(phase==='drop'){audio.drop();toast('BASS DROP · DOUBLE VIBES',2500)}});
-game.events.on('round:bass',()=>{scene.round.bassUses=(scene.round.bassUses||0)+1;toast('BASS HEAD · Bass immunity + 2× zone sparks');$('#announcement').textContent='Bass Head active for six seconds.';});
+game.events.on('round:bass',({durationMs})=>{scene.round.bassUses=(scene.round.bassUses||0)+1;const seconds=Math.round(durationMs/100)/10;toast(`BASS HEAD · ${seconds}s`);$('#announcement').textContent=`Bass Head active for ${seconds} seconds. Bass immunity and double zone-spark points.`;updateBassButton($('#bass-head'),scene.round.bass,{playing:screen.name==='playing',hasSpeakers:!!scene.stage.obstacles.length});});
 game.events.on('round:flow',()=>{audio.celebrate();toast('FLOW STATE · Sparks come to you')});
 game.events.on('round:mystery',effect=>{
  const info=MYSTERY_EFFECTS[effect];
@@ -249,6 +247,10 @@ if(import.meta.env.DEV && rehearsal)import('./rehearsal.js').then(({installRehea
   }}:{}),
   ...(candyLab?{previewCandy:roll=>{
    const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('rush');begin();scene.round.mystery.phase='available';scene.takeCandy(()=>roll);};
+   if(scene)load();else game.events.once('forest:ready',load);
+  }}:{}),
+  ...(bassLab?{previewBass:fixture=>{
+   const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('endless');run.stageIndex=fixture.stageIndex;run.bassChargeMs=fixture.chargeMs;begin();scene.round.bass.exposureMs=fixture.exposureMs;scene.dancer.setPosition(fixture.position.x,fixture.position.y);};
    if(scene)load();else game.events.once('forest:ready',load);
   }}:{})
  });
