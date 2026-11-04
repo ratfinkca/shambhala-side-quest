@@ -4,6 +4,8 @@ Updated 2026-11-04. This document is the current starting point. [Roadmap](ROADM
 
 ## Current release and prior baseline
 
+Current public release: **M3, PR #16 /79080a6**, verified after Pages deployment on 2026-11-04. See [M3 release evidence](superpowers/m3-release-validation.md). The M4 candy preview below is local work.
+
 Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, following PR #12 online Endless and PR #11 Endless gameplay. Backend validators deployed before frontend merge; both CI workflows and Pages deployment passed. Public save/post controls, unsaved warning and preserved initials were checked. Release baseline:145 automated tests and production build passed. This is recorded release evidence, not a fresh production-health audit.
 
 [Public game](https://ratfinkca.github.io/shambhala-side-quest/) · [repository](https://github.com/ratfinkca/shambhala-side-quest).
@@ -13,7 +15,7 @@ Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, fol
 - Voluntary Finish run & save score banks completed stages; unfinished-stage points are excluded. Missing a stage target also reaches results. No finished stage means explicit discard. Local save/public post are separate explicit actions; replay/title warn if neither succeeded. Viewing scores preserves the run. Reloading abandons an active run.
 - Online top 50 per mode, three A–Z/0–9 initials, visible control type. Endless ranks clears, then points; Rush/Festival rank points, then clears. Local top 10 per mode. Tickets24 hours; online history1440 stages and1 MiB submission bound; overflow never ends local gameplay.
 - Eight run perks: Boots, Noodle, Moth, Bracelet plus XP-unlocked Surfer 300, Battery 650, Encore 1200, Sweet Tooth 2000. Perks reset each run.
-- Six local XP ranks and six earlier achievements; the M3 preview adds four Endless achievements, bringing the wardrobe to ten onesies/ten hats/ten totems and four earnable flourishes. Existing profiles retain previously available choices. No cloud profile sync or permanent power purchases.
+- Six local XP ranks and six earlier achievements; M3 adds four Endless achievements, bringing the wardrobe to ten onesies/ten hats/ten totems and four earnable flourishes. Existing profiles retain previously available choices. No cloud profile sync or permanent power purchases.
 - Three complete visual themes with saved selection/Surprise; individual stage music and smooth reactive lighting; reduced motion supported.
 - Pointer movement is click/tap-to-destination. Organic mud, bass pressure, charged Bass Head, wrapped mystery candy and proximity-scaled clean-pass rings are implemented.
 - Public optional playtest sharing is opt-in and reachable on the title screen/settings. M1 adds optional Endless stage/outcome and perk-choice analytics; online score posting works independently.
@@ -22,7 +24,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations shipped as PR #15 /34974ab with Pages/public verification. M3 Endless rewards preview was approved for release on 2026-11-04; CI/Pages verification is pending. M4 feel/reliability follows. No balancing claims follow from rehearsal or from a small/missing sample.
+M1 insights, M2 stage variations and M3 souvenirs are published. M4 has started with a local candy-feel preview: user-confirmed steering inversion and clearer Wavy Colours. Broader candy/bass tuning, physical-device reliability and scoped run recovery follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 
@@ -59,4 +61,10 @@ Four achievements unlock Spore Sprout, Mixtape Totem, Mycelium Threads and Auror
 
 Preview: `http://127.0.0.1:5181/?rehearsal&rewards`. The wardrobe opens automatically. Scroll to Endless souvenirs to preview each reward; the bottom Reward lab demonstrates earning selected rewards through the real progression function. This mode uses a disposable profile; reload resets it and never touches the real profile. Scores/analytics are disabled. Ordinary `/?rehearsal` still disables stage XP. Production builds exclude lab controls and fixture code. Physical touch comfort, sustained performance and reward reachability remain playtest work.
 
-M3 release approval (2026-11-04): user approved the preview. Release checks: 163 tests, production build, independent review and portrait/landscape acceptance pass. No backend deployment is required. Final PR/merge/Pages/public verification is recorded on the release PR and in the release evidence.
+M3 release approval (2026-11-04): user approved the preview. Release checks: 163 tests, production build, independent review and portrait/landscape acceptance pass. No backend deployment is required. Final PR/merge/Pages/public verification passed: [release evidence](superpowers/m3-release-validation.md).
+
+## M4 first slice — local candy preview
+
+The user confirmed Dizzy should invert controls. Keyboard vectors reverse; click/tap targets are mirrored once around the player and clamped to the field. Collecting Dizzy mid-journey mirrors the existing target once; expiry changes subsequent input without an automatic return trip. Existing collision rules are unchanged. Wavy Colours now paints slowly shifting pools/ribbons behind the field objects, with gentle fades and a static reduced-motion tint. Timing, speed, Sweet Tooth and scoring remain unchanged.
+
+`/?rehearsal&candy=waves` opens a DEV Candy lab. Select an effect and choose Start candy practice; each try starts a fresh Quick Rush and uses the real collection path. Scores, XP and analytics remain disabled. The lab is absent from production. New modules/tests: `src/candy-colours.js`, mystery/scene input regressions and `tests/candy-colours.test.mjs`. No backend deployment required. M4 has not been published.

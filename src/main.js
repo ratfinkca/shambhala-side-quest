@@ -32,6 +32,7 @@ const $=s=>document.querySelector(s);
 let local;try{local=window.localStorage}catch{}
 const rehearsal=import.meta.env.DEV && new URLSearchParams(location.search).has('rehearsal');
 const rewardLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('rewards');
+const candyLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('candy');
 // The reward lab gets a disposable profile, never the player's browser profile.
 const saved=createStorage(rewardLab?{getItem:()=>null,setItem:()=>{}}:local),audio=createAudio();audio.setVolumes(saved.profile.audio);
 const onlineConfig=rehearsal?{enabled:false}:readOnlineConfig(import.meta.env);
@@ -245,6 +246,10 @@ if(import.meta.env.DEV && rehearsal)import('./rehearsal.js').then(({installRehea
    const results=stages.map(stage=>saved.awardProgress(stage));
    progressReward={xp:results.reduce((sum,r)=>sum+r.xp,0),rewards:[...new Set(results.flatMap(r=>r.rewards))],persisted:true};
    const [category,id]=key.split(':');saved.saveOutfit({...saved.profile.outfit,[category]:id});openRewards();
+  }}:{}),
+  ...(candyLab?{previewCandy:roll=>{
+   const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('rush');begin();scene.round.mystery.phase='available';scene.takeCandy(()=>roll);};
+   if(scene)load();else game.events.once('forest:ready',load);
   }}:{})
  });
 });

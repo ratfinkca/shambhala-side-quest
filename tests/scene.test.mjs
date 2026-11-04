@@ -19,3 +19,13 @@ test('scene start configures stage, outfit, rules and resets transient state',()
  assert.equal(scene.round.mystery.effect,null);assert.equal(scene.round.mystery.effectMs,0);
  assert.equal(calls.filter(c=>c[0]==='mysteryReset').length,2);
 });
+test('collecting Dizzy reverses an existing destination once and cannot retrigger while paused or spent',()=>{
+ const scene=new GameScene(),events=[];
+ Object.assign(scene,{running:true,dancer:{x:480,y:380},target:{x:580,y:420},game:{events:{emit:(...args)=>events.push(args)}}});
+ scene.round.mystery.phase='available';
+ assert.equal(scene.takeCandy(()=>.5),'dizzy');assert.deepEqual(scene.target,{x:380,y:340});
+ assert.equal(scene.takeCandy(()=>.5),null);assert.deepEqual(scene.target,{x:380,y:340});
+ assert.equal(events.filter(([type])=>type==='round:mystery').length,1);
+ scene.running=false;scene.round.mystery.phase='available';scene.round.mystery.effectMs=0;
+ assert.equal(scene.takeCandy(()=>.9),null);
+});
