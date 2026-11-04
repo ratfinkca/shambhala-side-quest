@@ -1,6 +1,6 @@
 # Candy Feel Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Produce a local M4 preview with inverted Dizzy controls and clearer Wavy Colours.
 
@@ -42,4 +42,4 @@
 - [x] Add a Candy lab dropdown and fresh-practice action behind DEV/rehearsal guards.
 - [x] Run full tests, build and production-fixture exclusion check; expect GREEN.
 - [x] Browser-check pointer/keyboard reversal, effect appearance, pause/reset and portrait layout; capture evidence outside repo.
-- [ ] Request one fresh read-only review, fix important findings with regression evidence, update M3 release/M4 preview docs and commit locally.
+- [x] Request one fresh read-only review, fix important findings with regression evidence, update M3 release/M4 preview docs and commit locally.
