@@ -22,7 +22,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations shipped as PR #15 /34974ab with Pages/public verification. M3 Endless rewards now has a local preview; user playtesting and release approval are next. No balancing claims follow from rehearsal or from a small/missing sample.
+The approved next sequence is [M1: Endless insights](ROADMAP.md#m1--endless-insights), M2:stage variations, M3:Endless rewards, then evidence-led feel/reliability work. M1 is complete in this release (150 tests/build pass). Its analytics migration and playtest function were deployed and checked before frontend rollout. M2 stage variations shipped as PR #15 /34974ab with Pages/public verification. M3 Endless rewards preview was approved for release on 2026-11-04; CI/Pages verification is pending. M4 feel/reliability follows. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 
@@ -58,3 +58,5 @@ Four achievements unlock Spore Sprout, Mixtape Totem, Mycelium Threads and Auror
 `src/progression.js` normalizes bounded `endless` records (best clears, up to six known layout IDs, Remix completion). `finishStage` returns `progressContext` and successful swaps mark only the following stage. Existing receipts guard duplicate stage awards. `src/endless-cosmetics.js` draws bounded procedural details with stable reduced-motion variants. No migration, function deployment, dependencies or score-version change is needed.
 
 Preview: `http://127.0.0.1:5181/?rehearsal&rewards`. The wardrobe opens automatically. Scroll to Endless souvenirs to preview each reward; the bottom Reward lab demonstrates earning selected rewards through the real progression function. This mode uses a disposable profile; reload resets it and never touches the real profile. Scores/analytics are disabled. Ordinary `/?rehearsal` still disables stage XP. Production builds exclude lab controls and fixture code. Physical touch comfort, sustained performance and reward reachability remain playtest work.
+
+M3 release approval (2026-11-04): user approved the preview. Release checks: 163 tests, production build, independent review and portrait/landscape acceptance pass. No backend deployment is required. Final PR/merge/Pages/public verification is recorded on the release PR and in the release evidence.

@@ -29,7 +29,7 @@ Each stage has its own procedural arrangement and six stage-mounted moving beams
 
 For current release and architecture, start with the [project handoff](docs/PROJECT-HANDOFF.md). The [roadmap](docs/ROADMAP.md) defines the next milestones; [operations](docs/online-operations.md) covers backend deployment, consent and reporting. Historical plans are indexed in [docs](docs/README.md).
 
-This release includes M1 Endless insights: optional stage/outcome and perk-choice measurement with private aggregate reports. Its migration and playtest function were deployed before frontend rollout. M2 adds six stage variations from loop two; its layout-aware playtest validator deploys before the frontend. M3 Endless rewards is available as a local preview pending release approval; see the roadmap and release evidence.
+This release includes M1 Endless insights: optional stage/outcome and perk-choice measurement with private aggregate reports. Its migration and playtest function were deployed before frontend rollout. M2 adds six stage variations from loop two; its layout-aware playtest validator deploys before the frontend. M3 adds four Endless achievement rewards; see the roadmap and release evidence.
 
 Use Node.js 24 for development and tests (the GitHub Actions workflow also uses Node 24).
 
