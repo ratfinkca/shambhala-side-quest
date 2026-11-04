@@ -183,6 +183,35 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 .passport summary,.unlock-list summary { cursor: pointer; padding: .7rem 0; }
 .passport li,.unlock-list li { margin-bottom: .6rem; }
 .passport small { opacity: .8; }
+
+/* Endless souvenirs: progress and previews sit beside the raver, not over the field. */
+.endless-rewards{margin:1.5rem 0;text-align:left;padding-top:1.2rem;border-top:1px solid var(--accent)}
+.endless-rewards>h3{font:normal 30px var(--display-font,Georgia,serif);margin:.3rem 0}
+.endless-rewards>p{font-size:12px;line-height:1.6}
+.reward-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.souvenir-card{position:relative;padding:16px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:18px;background:color-mix(in srgb,var(--field) 90%,var(--accent));overflow:hidden}
+.souvenir-card.earned{border-color:var(--accent);box-shadow:inset 0 0 24px color-mix(in srgb,var(--accent) 10%,transparent)}
+.souvenir-mark{display:block;font-size:38px;line-height:1;color:var(--accent);margin-bottom:12px}
+.souvenir-state{font-size:10px;letter-spacing:.5px;font-weight:bold;margin:0 0 8px;color:var(--accent)}
+.souvenir-card h4{font-size:17px;line-height:1.3;margin:0 0 10px}
+.souvenir-card p,.souvenir-card small{font-size:11px;line-height:1.6}
+.souvenir-card progress{width:100%;height:8px;accent-color:var(--accent)}
+.souvenir-detail{opacity:.8;min-height:3.2em}
+.souvenir-card .menu-button{margin-bottom:0;min-height:44px;font-size:11px;padding:9px}
+.layout-collection{font-size:12px;margin-top:14px}
+.layout-collection summary{padding:12px 0;cursor:pointer}
+.layout-collection ul{padding-left:0;list-style:none;line-height:2}
+#avatar-preview{width:240px;height:240px}
+#avatar-preview canvas{width:100%!important;height:100%!important}
+#avatar-preview-label{position:absolute;bottom:8px;left:8px;right:8px;font-size:11px;text-align:center;color:var(--accent)}
+.screen-layer[data-screen="wardrobe"] .menu-card{margin-right:245px}
+@container(max-width:800px){.reward-grid{grid-template-columns:1fr}}
+@container(max-width:640px){
+ #avatar-preview{position:relative;top:auto;right:auto;width:200px;height:200px}
+ .screen-layer[data-screen="wardrobe"] .menu-card{margin-right:0}
+ .reward-grid{grid-template-columns:1fr}
+ .souvenir-detail{min-height:0}
+}
 .reward-reveal { background: #8de8ba12; }
 
 .perk-art { display:block; width:100%; height:auto; aspect-ratio:1; margin:8px 0 12px; color:var(--accent); }

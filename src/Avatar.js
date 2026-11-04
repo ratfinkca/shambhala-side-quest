@@ -1,10 +1,11 @@
+import {drawEndlessCosmetics} from './endless-cosmetics.js';
 import { normalizeOutfit } from './wardrobe.js';
 export function createAvatar(scene,outfit) {
-  const node=scene.add.container(0,0);node.flourish=scene.add.graphics();node.art=scene.add.graphics();node.add([node.flourish,node.art]);setOutfit(node,outfit);return node;
+  const node=scene.add.container(0,0);node.flourish=scene.add.graphics();node.art=scene.add.graphics();node.magic=scene.add.graphics();node.add([node.flourish,node.art,node.magic]);setOutfit(node,outfit);return node;
 }
 export function setOutfit(node,value) {
   const outfit=normalizeOutfit(value),g=node.art;node.outfit=outfit;g.clear();animateAvatar(node,0,true);
-  const color=({lime:0xc8f68c,moth:0xb39ae7,rainbow:0xffb59b,tiger:0xffaa65,frog:0x69d69c,cosmic:0x6256a6,bee:0xffdc65,skeleton:0x283d50,patchwork:0xef83bd})[outfit.onesie];
+  const color=({lime:0xc8f68c,moth:0xb39ae7,rainbow:0xffb59b,tiger:0xffaa65,frog:0x69d69c,cosmic:0x6256a6,bee:0xffdc65,skeleton:0x283d50,patchwork:0xef83bd,mycelium:0x202f48})[outfit.onesie];
   g.lineStyle(4,0xf4efc5).lineBetween(-4,8,-7,16).lineBetween(4,8,7,16);
   if(outfit.onesie==='moth'){g.fillStyle(0x9e77c7,.8).fillTriangle(-4,-6,-22,3,-8,12).fillTriangle(4,-6,22,3,8,12);g.fillStyle(0xf1c68d).fillCircle(-14,3,3).fillCircle(14,3,3);}
   g.fillStyle(color).fillRoundedRect(-8,-5,16,18,5);
@@ -99,9 +100,10 @@ export function setOutfit(node,value) {
 }
 
 // A fixed number of decorative marks: no spawned particles, hitboxes or scoring effects.
-export function animateAvatar(node,time,reduced=false){
+export function animateAvatar(node,time,reduced=false,drop=false){
+ if(node.magic){node.magic.clear();drawEndlessCosmetics(node.magic,node.outfit,time,reduced,drop);}
  const g=node.flourish;if(!g)return;g.clear();
- const flair=node.outfit?.flair;if(!flair||flair==='none')return;
+ const flair=node.outfit?.flair;if(!flair||flair==='none'||flair==='aurora')return;
  const t=reduced?0:time/1000;
  if(flair==='prism'){
    const colours=[0xf4a3d8,0xa9a1ff,0x8bf0df,0xf5de8d];

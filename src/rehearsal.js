@@ -2,10 +2,16 @@
 // main.js excludes this module from production and disables score submission.
 import {STAGE_VARIATIONS} from './stage-variations.js';
 import { collect } from './game.js';
+export function rewardDemoStages(key){
+ const base={mode:'endless',qualified:true,pickups:0};
+ if(key==='onesie:mycelium')return STAGE_VARIATIONS.map((v,i)=>({...base,id:`reward-demo:${key}:${i}`,stagesCleared:4+Math.floor(i/2)+(i%2)*3,variationId:v.id}));
+ const clears={'hat:spore':4,'totem:mixtape':6,'flair:aurora':12};
+ return clears[key]?[{...base,id:`reward-demo:${key}`,stagesCleared:clears[key],remixed:key==='totem:mixtape'}]:[];
+}
 export function layoutPreviewIndex(id){const i=STAGE_VARIATIONS.findIndex(v=>v.id===id);return i<0?null:3+Math.floor(i/2)+(i%2)*3;}
-export function installRehearsal(getScene,isPlaying,{previewStage}={}) {
+export function installRehearsal(getScene,isPlaying,{previewStage,previewReward,openRewards}={}) {
   const bar=document.createElement('details');bar.id='rehearsal-controls';
-  const label=document.createElement('summary');label.textContent='Layout lab · practice only · no saves';bar.append(label);
+  const label=document.createElement('summary');label.textContent=previewReward?'Reward lab · temporary profile · no saves':'Layout lab · practice only · no saves';bar.append(label);
   const controls=document.createElement('div');controls.style.cssText='display:flex;flex-wrap:wrap;gap:6px;padding-top:6px';bar.append(controls);
   Object.assign(bar.style,{position:'fixed',bottom:'4px',left:'4px',zIndex:'100',maxWidth:'calc(100vw - 16px)',background:'#fff',padding:'6px',borderRadius:'6px',color:'#111',font:'12px system-ui'});
   for(const qualified of [true,false]){
@@ -25,6 +31,14 @@ export function installRehearsal(getScene,isPlaying,{previewStage}={}) {
     controls.prepend(select,button);
     const requested=new URLSearchParams(location.search).get('layout'),index=layoutPreviewIndex(requested);
     if(index!==null){select.value=requested;previewStage(index);}
+  }
+  if(previewReward){
+   const select=document.createElement('select');select.setAttribute('aria-label','Reward demonstration');
+   for(const [key,name]of [['hat:spore','Spore Sprout'],['totem:mixtape','Mixtape Totem'],['onesie:mycelium','Mycelium Threads'],['flair:aurora','Aurora Ribbons']]){const option=document.createElement('option');option.value=key;option.textContent=name;select.append(option);}
+   const earn=document.createElement('button');earn.textContent='Demonstrate earning reward';earn.addEventListener('click',()=>{previewReward(rewardDemoStages(select.value),select.value);bar.open=false;});
+   const open=document.createElement('button');open.textContent='Open reward wardrobe';open.addEventListener('click',()=>{openRewards();bar.open=false;});
+   const note=document.createElement('p');note.textContent='Temporary reward profile. Real unlocks are untouched. Reload to reset demos. Scores and playtest sharing are disabled.';note.style.flexBasis='100%';
+   controls.prepend(note,select,earn,open);openRewards();
   }
   document.body.append(bar);
 }

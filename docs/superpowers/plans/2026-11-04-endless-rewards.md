@@ -1,6 +1,6 @@
 # Endless Souvenirs Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the approved four-achievement M3 collection and a playable local preview.
 
@@ -30,23 +30,23 @@
 
 **Files:** `src/progression.js`, `src/run.js`, `src/main.js`, `tests/endless-rewards.test.mjs`.
 **Interfaces:** `normalizeProgress` adds `{endless:{bestCleared,layouts,remixed}}`; `achievementValue(progress,achievement)` supplies progress; `finishStage` returns `progressContext:{mode,stagesCleared,variationId,remixed}` consumed by `awardStage` via main.
-- [ ] Write tests for 4/12 clear milestones, all-six collection across runs, swap-following-clear, failure/add/keep/cancel exclusions, legacy migration, duplicate receipts and reload.
-- [ ] Run `node --test tests/endless-rewards.test.mjs`; expect missing achievement failures.
-- [ ] Implement the interfaces and narrow legacy grandfathering to previous item IDs.
-- [ ] Run focused tests and `npm test`; expect all green.
-- [ ] Commit persistent achievement logic.
+- [x] Write tests for 4/12 clear milestones, all-six collection across runs, swap-following-clear, failure/add/keep/cancel exclusions, legacy migration, duplicate receipts and reload.
+- [x] Run `node --test tests/endless-rewards.test.mjs`; expect missing achievement failures.
+- [x] Implement the interfaces and narrow legacy grandfathering to previous item IDs.
+- [x] Run focused tests and `npm test`; expect all green.
+- [x] Commit persistent achievement logic.
 
 ### Task 2: Artwork, wardrobe and preview
 
 **Files:** `src/wardrobe.js`, `src/Avatar.js`, new `src/endless-cosmetics.js`, `src/progression-view.js`, `src/screens.js`, `src/main.js`, `src/rehearsal.js`, CSS, `tests/endless-cosmetics.test.mjs`.
 **Interfaces:** Registry IDs `hat:spore`, `totem:mixtape`, `onesie:mycelium`, `flair:aurora`; `drawEndlessCosmetics(graphics,outfit,time,reduced,drop)` draws bounded decorative artwork; `renderEndlessRewards(progress)` supplies preview cards.
-- [ ] Write tests for registry/unlock agreement, stable reduced-motion graphics, bounded effects and progress/preview UI; run focused tests expecting missing feature failures.
-- [ ] Draw new artwork in a separate foreground layer, pass drop context from gameplay and a periodic demonstration in wardrobe.
-- [ ] Add reward cards with named preview buttons, progress and clear collection checklist. Enlarge preview without obscuring controls.
-- [ ] Add DEV reward lab entry and earn-demo using isolated in-memory storage; production excludes lab. Existing rehearsal still disables scores and progress writes.
-- [ ] Run focused tests, full suite and build; expect all green.
-- [ ] Verify locked/earned preview, achievement reveal, reload, normal play, phone layout and reduced motion in browser. Capture screenshots outside repo.
-- [ ] Update roadmap/handoff and validation notes, then commit preview.
+- [x] Write tests for registry/unlock agreement, stable reduced-motion graphics, bounded effects and progress/preview UI; run focused tests expecting missing feature failures.
+- [x] Draw new artwork in a separate foreground layer, pass drop context from gameplay and a periodic demonstration in wardrobe.
+- [x] Add reward cards with named preview buttons, progress and clear collection checklist. Enlarge preview without obscuring controls.
+- [x] Add DEV reward lab entry and earn-demo using isolated in-memory storage; production excludes lab. Existing rehearsal still disables scores and progress writes.
+- [x] Run focused tests, full suite and build; expect all green.
+- [x] Verify locked/earned preview, achievement reveal, reload, normal play, phone layout and reduced motion in browser. Capture screenshots outside repo.
+- [x] Update roadmap/handoff and validation notes, then commit preview.
 
 ### Task 3: Review and handoff
 

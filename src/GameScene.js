@@ -137,7 +137,7 @@ export class GameScene extends Phaser.Scene {
     }
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
     if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
-    animateAvatar(this.avatar,60000-this.round.remainingMs,this.reducedMotion);
+    animateAvatar(this.avatar,60000-this.round.remainingMs,this.reducedMotion,cycle.phase==='drop');
     this.crowd.update(this.dancer, this.round, this.reducedMotion);
     const mystery=this.round.mystery;
     if(mystery.phase==='available'&&!this.mysteryView.placed){
