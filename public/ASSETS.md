@@ -26,3 +26,5 @@ The four experience-unlocked perk cards (Crowd Surfer, Bass Battery, Encore, Swe
 Stage arrangements and sound effects are synthesized locally through Web Audio (`src/music.js`, `src/audio.js`). There are no streamed festival recordings, external commercial tracks or runtime music-service dependencies in this build. Music direction and stage arrangements are separate from the selectable menu themes.
 
 The M3 Endless souvenirs (Spore Sprout, Mixtape Totem, Mycelium Threads and Aurora Ribbons) are original procedural artwork in `src/Avatar.js` and `src/endless-cosmetics.js`. Their fixed drawing commands create no external assets or persistent particle systems; reduced-motion versions freeze animation and drop response.
+
+M4 Wavy Colours uses bounded procedural liquid-light strokes in `src/candy-colours.js`, behind field objects. It uses no external imagery, shaders or music assets.

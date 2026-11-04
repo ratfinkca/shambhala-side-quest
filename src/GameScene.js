@@ -9,7 +9,7 @@ import { STAGES } from './stages.js';
 import { moveInArena, findSpawn, movementFactor, bassFactor, isOpen } from './geometry.js';
 import { Crowd } from './Crowd.js';
 import {MysteryRenderer} from './MysteryRenderer.js';
-import {collectMystery,findCandySpawn,mysteryDirection,mysterySpeed} from './mystery.js';
+import {collectMystery,findCandySpawn,mysteryDirection,mysteryTarget,mysterySpeed} from './mystery.js';
 import {bassOffset} from './bass-motion.js';
 
 const W = 960, H = 640;
@@ -45,7 +45,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.removeCapture(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT']);
     const point = pointer => {
       if (!this.running || pointer.event?.target !== this.game.canvas || pointer.x < 0 || pointer.y < 0 || pointer.x > W || pointer.y > H) return;
-      this.target = { x: pointer.x, y: pointer.y };
+      this.target = mysteryTarget(this.round.mystery,this.dancer,{x:pointer.x,y:pointer.y});
       this.game.events.emit('round:input',{kind:pointer.wasTouch?'touch':'mouse',runId:this.round.runId});
       document.querySelector('#game').focus({ preventScroll: true });
     };
@@ -87,6 +87,15 @@ export class GameScene extends Phaser.Scene {
     this.game.events.emit('round:update', this.round);
   }
   activateBassHead(){if(!this.running||!activateBass(this.round))return false;this.game.events.emit('round:bass',{runId:this.round.runId});return true;}
+  takeCandy(rng=Math.random){
+    if(!this.running)return null;
+    const effect=collectMystery(this.round,rng);
+    if(effect){
+      if(effect==='dizzy'&&this.target)this.target=mysteryTarget(this.round.mystery,this.dancer,this.target);
+      this.game.events.emit('round:mystery',effect);this.game.events.emit('playtest:candy',{effect,runId:this.round.runId});
+    }
+    return effect;
+  }
   pauseRound() { this.running = false; this.clearInput(); this.tweens.pauseAll(); }
   resumeRound() { if (!this.round.ended) { this.running = true; this.clearInput(); this.tweens.resumeAll(); } }
   effect(x,y,color,points,celebrate,label) {
@@ -131,7 +140,6 @@ export class GameScene extends Phaser.Scene {
     } else if(this.target) {
       direction={x:this.target.x-this.dancer.x,y:this.target.y-this.dancer.y};
       const distance=Math.hypot(direction.x,direction.y),step=Math.min(movementDelta,distance/speed*1000);
-      direction=mysteryDirection(this.round.mystery,direction,distance);
       moveInArena(this.dancer,direction,step,{width:W,height:H,obstacles:this.stage.obstacles,speed});
       if(Math.hypot(this.target.x-this.dancer.x,this.target.y-this.dancer.y)<1)this.target=null;
     }
@@ -147,8 +155,7 @@ export class GameScene extends Phaser.Scene {
       else mystery.phase='spent';
     }
     if(mystery.phase==='available'&&this.mysteryView.placed&&Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,this.mysteryView.pickup.x,this.mysteryView.pickup.y)<23){
-      const effect=collectMystery(this.round);
-      if(effect){this.game.events.emit('round:mystery',effect);this.game.events.emit('playtest:candy',{effect,runId:this.round.runId});}
+      this.takeCandy();
     }
     this.mysteryView.update(mystery,this.reducedMotion);
     const slot = availableFlow(this.round);

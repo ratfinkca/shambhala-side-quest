@@ -1,3 +1,4 @@
+import {drawCandyColours} from './candy-colours.js';
 const COLOURS=[0xf49ec7,0x85dcca,0xd3b0ff,0xffcc83];
 
 export class MysteryRenderer {
@@ -29,14 +30,6 @@ export class MysteryRenderer {
   this.pickup.setVisible(m.phase==='available'&&this.placed);
   this.pickup.setScale(reduced?1:1+Math.sin(m.elapsedMs*.003)*.045);
   this.waves.clear().setVisible(m.effect==='waves'&&m.effectMs>0);
-  if(m.effect!=='waves'||m.effectMs<=0)return;
-  if(reduced){this.waves.fillStyle(0xbda0ec,.1).fillRect(0,0,960,640);return;}
-  const t=m.elapsedMs*.00065;
-  for(let band=0;band<5;band++){
-   const points=Array.from({length:33},(_,i)=>({x:i*30,y:100+band*115+Math.sin(i*.22+t+band)*28}));
-   const colour=COLOURS[band%COLOURS.length];
-   this.waves.lineStyle(38,colour,.045).strokePoints(points);
-   this.waves.lineStyle(2,colour,.13).strokePoints(points);
-  }
+  drawCandyColours(this.waves,m,reduced);
  }
 }

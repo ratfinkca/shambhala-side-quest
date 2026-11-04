@@ -15,7 +15,7 @@ The game includes a title screen, wardrobe, independent music/effects volume con
 - The wardrobe offers ten onesies, ten hats and ten totems, plus four earnable visual flourishes. New players unlock expanded choices with Rave Experience and achievements; existing saves retain all previously available pieces. Cosmetics do not change the hitbox or abilities.
 - Sound defaults on for new players and begins on a Play interaction. An existing mute preference is preserved. Settings offer independent music/effects sliders; opening them during play pauses the game and requires explicit Resume.
 - Results offer optional three-character arcade initials. Quick Rush and Festival Run each have a local top ten, stored only in this browser. An optional initials-based online board offers separate Quick Rush, Festival Run and Endless rankings; playtest sharing is independent and opt-in. Cross-device profile sync is not included. Endless voluntary finishing banks only completed stages; unsaved results require confirmation before replay/title navigation. Historical best scores migrate; reloading abandons an unfinished run.
-- Rave Experience, cosmetic achievements and device-local progression are included; the M3 preview adds four Endless souvenirs; currency/store and cloud profile sync remain later milestones.
+- Rave Experience, cosmetic achievements and device-local progression are included; M3 adds four Endless souvenirs; currency/store and cloud profile sync remain later milestones.
 
 For development-only transition checks, run Vite and open `/?rehearsal`. The visible rehearsal controls can finish a stage with a qualifying or failing fixture. Scores and historical-best updates are disabled in that mode. Its module is excluded from production builds. Use normal play for difficulty/balance feedback.
 
@@ -53,7 +53,7 @@ No environment file, API keys or backend setup is required. Browser saves stay o
 - Thread through ten dancers: a clean close pass earns 15 points (30 during a drop). The faint ring shows the sweet spot. Bumping someone briefly halves your speed without subtracting points. Pass bonuses have a three-second cooldown per dancer and require you to move.
 - A three-second build leads into drops at 15, 30, and 45 seconds. Each drop lasts four seconds: all rewards double and the crowd moves faster.
 - The optional original 120 BPM synthesized groove follows the round. Higher combos add melody, and drops deepen the bass. Pause, mute, and round end stop the audio immediately.
-- Mystery ground-scores look like wrapped candy with varied colours and patterns. Each round/stage has an 80% chance of one appearance, between 12 and 40 active seconds; it disappears after 10 seconds. Walk over it for a random five-second Sugar Rush (2.5× speed), Dizzy steering wobble, or Wavy Colours effect. No direct points or spark credit, no stacking, and Flow never attracts candy. The footer shows the effect countdown. Pause freezes it; stage changes and round end clear it. Reduced motion uses a static tint instead of moving colour ribbons.
+- Mystery ground-scores look like wrapped candy with varied colours and patterns. Each round/stage has an 80% chance of one appearance, between 12 and 40 active seconds; it disappears after 10 seconds. Walk over it for a random five-second Sugar Rush (2.5× speed), Dizzy reversed steering, or Wavy Colours effect. No direct points or spark credit, no stacking, and Flow never attracts candy. The footer shows the effect countdown. Pause freezes it; stage changes and round end clear it. Reduced motion uses a static tint instead of moving colour ribbons.
 - Escape or Pause takes a breather. Leaving the window pauses automatically; resume explicitly.
 - Sound is optional. Scores and the sound preference save in this browser when storage is available.
 
@@ -101,3 +101,9 @@ Forest: Creekside Drift / Mushroom Weave. Neon: Stereo Split / Crossfade Alley. 
 Open `http://127.0.0.1:5181/?rehearsal&rewards`. Endless souvenirs in the wardrobe offer animated previews of the Spore Sprout hat (4 clears in one run), Mixtape Totem (swap, then clear the very next stage), Mycelium Threads (all six layouts, across runs) and Aurora Ribbons (12 clears in one run). These are cosmetic only; thresholds are initial playtest targets. Earned achievements save at qualifying stage end, without saving/posting a score.
 
 The bottom Reward lab can demonstrate earning each reward. Its profile is temporary: actual progress is untouched, reload resets demonstrations, and score/analytics submission is disabled. The lab is excluded from production. In normal play, progress and unlocks save on this device; new rewards start locked for existing players while older unlocks remain available.
+
+## M4 candy feel preview (local development)
+
+M3 is published as [PR #16](https://github.com/ratfinkca/shambhala-side-quest/pull/16). The M4 candy pass adds: Dizzy reverses keys and mirrors click/tap destinations, and Wavy Colours has more visible liquid light behind gameplay objects. Timing, speed, points and perk durations stay the same.
+
+Open `http://127.0.0.1:5181/?rehearsal&candy=waves`. Use the Candy lab picker and **Start candy practice** to start a fresh Quick Rush with that effect. Practice saves no score or XP and sends no playtest data. Reduced motion uses a static tint. Bass tuning and run recovery are later work.

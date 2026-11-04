@@ -13,7 +13,7 @@ Updated 2026-11-04. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-Prior verified baseline: PR #15 /34974ab (M2). M3 souvenirs are approved for release; CI and public deployment are checked separately.
+Current published baseline: PR #16 /79080a6 (M3). The M4 candy pass is approved for release; CI/Pages/public verification is pending.
 
 ## M1 — Endless insights
 
@@ -40,17 +40,19 @@ Plan: define reusable layout data and deterministic selection → geometry/path-
 
 ## M3 — Endless achievements and rewards
 
-**Status:** preview approved for release on 2026-11-04; PR/CI/Pages verification pending.
+**Status:** shipped as PR #16 /79080a6. Test/build, Pages and public wardrobe/asset verification pass; see [release evidence](superpowers/m3-release-validation.md).
 
 Four approved achievements: **The Night’s Just Starting** (4 clears in one Endless run → Spore Sprout hat), **Remix Artist** (swap a perk and clear the immediately following stage → Mixtape Totem), **Trail Mixer** (clear all six authored layouts across runs → Mycelium Threads), and **Still Dancing** (12 clears in one run → Aurora Ribbons). These thresholds remain preview targets pending playtest evidence.
 
 Credit saves at qualifying stage end independently of score saving/posting. Wardrobe shows best clears, a layout checklist, locked previews and earned progress. New rewards start locked for legacy profiles, preserving every older unlock. Effects stay close to the avatar, freeze under reduced motion and never affect gameplay. No currency/store, backend changes or cloud sync.
 
-[Approved design](superpowers/specs/2026-11-04-endless-rewards-design.md) · [implementation plan](superpowers/plans/2026-11-04-endless-rewards.md). Local reward lab: `/?rehearsal&rewards`, with a disposable profile and no real progress/score/analytics writes. The user approved the collection and release. Thresholds remain subject to later playtest feedback; record CI/Pages acceptance on the release PR.
+[Approved design](superpowers/specs/2026-11-04-endless-rewards-design.md) · [implementation plan](superpowers/plans/2026-11-04-endless-rewards.md). Local reward lab: `/?rehearsal&rewards`, with a disposable profile and no real progress/score/analytics writes. The user approved the collection and release. Thresholds remain subject to later playtest feedback.
 
 ## M4 — Gameplay feel and reliability
 
-**Status:** deferred focused pass, promoted earlier for actual bugs/accessibility failures.
+**Status:** candy pass approved for release on 2026-11-04. It implements the user-confirmed inverted Dizzy controls and stronger Wavy Colours. See [design](superpowers/specs/2026-11-04-candy-feel-design.md) and [plan](superpowers/plans/2026-11-04-candy-feel.md). The DEV Candy lab (`/?rehearsal&candy=waves`) remains available for practice; final CI/Pages/public verification is recorded on the release PR. Bass-zone feel follows.
+
+[Fresh coverage review](playtests/2026-11-04-m4-coverage.md): no new shared events/stage samples since the previous check. No broad difficulty or reward threshold changes follow. First slice preserves candy timing, speed, perk duration and points; bass escapes and recovery remain subsequent scoped work.
 
 Use evidence and audience feedback to tune candy timing/effects (especially waves), bass escapes, pacing, input differences and reward reachability. Test physical phones, speakers/headphones and sustained performance. Evaluate active-run recovery as a separate scoped feature: protect against refresh/OS suspension without double XP or duplicate online submissions. Cross-device sync is a larger later project.
 
