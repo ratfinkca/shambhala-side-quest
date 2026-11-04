@@ -13,7 +13,7 @@ Updated 2026-11-04. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-Current published baseline: PR #16 /79080a6 (M3). M4 candy feel has a separate local preview; release approval is still required.
+Current published baseline: PR #16 /79080a6 (M3). The M4 candy pass is approved for release; CI/Pages/public verification is pending.
 
 ## M1 — Endless insights
 
@@ -50,7 +50,7 @@ Credit saves at qualifying stage end independently of score saving/posting. Ward
 
 ## M4 — Gameplay feel and reliability
 
-**Status:** started. First local candy preview implements the user-confirmed inverted Dizzy controls and stronger Wavy Colours. See [design](superpowers/specs/2026-11-04-candy-feel-design.md) and [plan](superpowers/plans/2026-11-04-candy-feel.md). Preview uses the DEV Candy lab (`/?rehearsal&candy=waves`); it is not published.
+**Status:** candy pass approved for release on 2026-11-04. It implements the user-confirmed inverted Dizzy controls and stronger Wavy Colours. See [design](superpowers/specs/2026-11-04-candy-feel-design.md) and [plan](superpowers/plans/2026-11-04-candy-feel.md). The DEV Candy lab (`/?rehearsal&candy=waves`) remains available for practice; final CI/Pages/public verification is recorded on the release PR. Bass-zone feel follows.
 
 [Fresh coverage review](playtests/2026-11-04-m4-coverage.md): no new shared events/stage samples since the previous check. No broad difficulty or reward threshold changes follow. First slice preserves candy timing, speed, perk duration and points; bass escapes and recovery remain subsequent scoped work.
 
