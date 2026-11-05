@@ -25,4 +25,6 @@ M3 is published: [release evidence](superpowers/m3-release-validation.md). M4 ca
 
 Bass-zone investigation: [current behavior and user feedback](playtests/2026-11-04-bass-baseline.md).
 
-Bass interface local preview: [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [validation](superpowers/bass-interface-preview-validation.md).
+Bass interface approved release: [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [validation](superpowers/bass-interface-preview-validation.md).
+
+Bass Head release scope and hosted acceptance: [release evidence](superpowers/m4-bass-release-validation.md).
