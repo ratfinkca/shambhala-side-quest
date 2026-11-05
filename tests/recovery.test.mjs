@@ -21,3 +21,9 @@ test('malformed versions, scores, timers, perks, positions and encounter fields 
 test('a 257-stage recovery retains cumulative totals and receipt identities without shortening history',()=>{
  const r=makeRecovery(recoveryFixture(257));assert.equal(readRecovery(r).ok,true);assert.equal(r.run.scoreStages.length,257);assert.equal(r.run.stagesCleared,257);assert.equal(r.run.stageIndex,257);assert.equal(r.run.scoreStages[256].stageIndex,256);
 });
+
+test('banking after a new perk keeps valid results without pretending the perk applied to the last completed stage',async()=>{
+ const {chooseUpgrade,finishRun}=await import('../src/run.js');const f=recoveryFixture(1);f.run.status='upgrade';f.run.stageIndex=0;f.run.availablePerks=['boots'];chooseUpgrade(f.run,'boots');finishRun(f.run);
+ f.summary={qualified:true,pickups:20,target:20,score:f.run.totalScore,totalScore:f.run.totalScore};f.resultSnapshot={id:f.run.id,score:f.run.totalScore,stagesCleared:1,inputType:'touch',outfit:{onesie:'lime',hat:'none',totem:'none',flair:'none'},completedAt:1000};
+ const r=makeRecovery(f);assert.equal(r.screen,'results');assert.equal(readRecovery(r).ok,true);
+});

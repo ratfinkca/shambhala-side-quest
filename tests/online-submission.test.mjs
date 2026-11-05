@@ -56,3 +56,5 @@ test('expired unattempted ticket cannot post but an uncertain attempted payload 
  const a=createSubmission('id');a.setTicket('id',{ticket:'b'.repeat(64),expiresAt:'2000-01-01T00:00:00Z'});let sent=0;await a.post({},async()=>{sent++;return {ok:true}});assert.equal(sent,0);assert.equal(a.code,'expired');
  const b=createSubmission('id',{...a.snapshot(),status:'pending',payload:{initials:'ABC',runId:'id',ticket:'b'.repeat(64)}});await b.post({},async()=>{sent++;return {ok:true}});assert.equal(sent,1);assert.equal(b.status,'succeeded');
 });
+
+test('restoring while a ticket is still waiting never issues or invents a replacement',()=>{const a=createSubmission('id');const b=createSubmission('id',a.snapshot());assert.equal(b.status,'ineligible');assert.equal(b.setTicket('id',{ticket:'a'.repeat(64)}),false);});

@@ -52,3 +52,9 @@ test('Endless stage telemetry carries layout identity while legacy payloads rema
  const old=structuredClone(stage);delete old.payload.variationId;assert.ok(validatePlaytestBatch([old]).ok);
  for(const variationId of ['unknown','neon-stereo','original'])assert.equal(validatePlaytestBatch([{...stage,payload:{...stage.payload,variationId}}]).ok,false);
 });
+
+test('recovered sessions never impute missing stage measurements or duplicate a start, even when consent changes',async()=>{
+ const {s,batches}=setup();s.setConsent('accepted');s.start(run);s.stageStart(0);await s.flush();const before=batches.length;
+ s.recover();s.input('touch');s.record('pickup',{runId:run.id,chain:3});s.stageStart(1);s.finishStage(1,{score:50,qualified:true});s.end(run);s.menu('instructions','forest-freakout');s.setConsent('declined');s.setConsent('accepted');await s.flush();assert.equal(batches.length,before);
+ s.start({...run,id:id(101)});s.stageStart(0);await s.flush();assert.equal(batches.filter(e=>e.type==='run_start').length,2);
+});

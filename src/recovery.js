@@ -24,7 +24,7 @@ export function makeRecovery({run,screen,scene,summary=null,resultSnapshot=null,
  if(run?.mode!=='endless'||run.status==='ready'&&run.stageIndex===0)return null;
  const logical=scene?{round:pick(scene.round,roundKeys),player:scene.player,sparks:scene.sparks,candy:scene.candy,crowd:scene.crowd.map(e=>pick(e,encounterKeys))}:null;
  if(logical&&logical.round.sincePickupMs===Infinity)logical.round.sincePickupMs=null;
- return structuredClone({version:RECOVERY_VERSION,rules:RECOVERY_RULES,scoringVersion:'arcade-v1',savedAt:now,run:{...pick(run,runKeys),buildId:run.buildId||buildId},screen:recoveryScreen(screen,run),scene:run.status==='playing'?logical:null,summary,resultSnapshot,progressReward,submission:submission?.snapshot?submission.snapshot():submission,inputType});
+ return structuredClone({version:RECOVERY_VERSION,rules:RECOVERY_RULES,scoringVersion:'arcade-v1',savedAt:now,run:{...pick(run,runKeys),buildId:run.buildId||buildId},screen:recoveryScreen(screen,run),scene:run.status==='playing'?logical:null,summary:summary?pick(summary,['qualified','pickups','target','score','totalScore']):null,resultSnapshot,progressReward,submission:submission?.snapshot?submission.snapshot():submission,inputType});
 }
 function historyOK(r){
  const len=r.scoreStages?.length;if(!integer(len,0,MAX_ONLINE_STAGES))return false;
@@ -33,11 +33,16 @@ function historyOK(r){
  const total=r.scoreStages.reduce((a,s)=>a+s.score,0);
  if(!validateScore({runId:r.id,ticket:'a'.repeat(64),initials:'AAA',mode:'endless',scoringVersion:'arcade-v1',buildId:r.buildId,inputType:'unknown',totalScore:total,stagesCleared:cleared,stages:r.scoreStages}).ok)return false;
  if(r.scoreOverflow){if(len!==MAX_ONLINE_STAGES||r.stageIndex<len||r.totalScore<total||r.stagesCleared<cleared)return false;}
- else if(r.totalScore!==total||r.stagesCleared!==cleared||r.stageIndex!==len-(['upgrade','ended'].includes(r.status)&&!r.endedVoluntarily?1:r.status==='upgrade'?1:0)&&!(r.status==='ended'&&r.endedVoluntarily&&[len-1,len].includes(r.stageIndex)))return false;
+ else {
+  if(r.totalScore!==total||r.stagesCleared!==cleared)return false;
+  const indices=r.status==='ended'&&r.endedVoluntarily?[len-1,len]:[['upgrade','ended'].includes(r.status)?len-1:len];
+  if(!indices.includes(r.stageIndex))return false;
+ }
  if(r.status!=='ended'&&cleared!==len)return false;
  const prev=r.scoreStages.at(-1).perks;
  const added=r.perks.filter(p=>!prev.includes(p)).length,removed=prev.filter(p=>!r.perks.includes(p)).length;
- return ['upgrade','ended'].includes(r.status)?added===0&&removed===0:added===0&&removed===0||prev.length<4&&added===1&&removed===0||prev.length===4&&added===1&&removed===1;
+ const nextStage=['playing','ready'].includes(r.status)||r.status==='ended'&&r.endedVoluntarily&&r.stageIndex===len;
+ return !nextStage?added===0&&removed===0:added===0&&removed===0||prev.length<4&&added===1&&removed===0||prev.length===4&&added===1&&removed===1;
 }
 function roundOK(s,r){
  if(!allowed(s,['round','player','sparks','candy','crowd'])||!point(s.player)||!Array.isArray(s.sparks)||s.sparks.length!==12||!s.sparks.every(point)||!allowed(s.candy,['placed','x','y'])||!bool(s.candy.placed)||!point({x:s.candy.x,y:s.candy.y}))return false;
