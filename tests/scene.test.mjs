@@ -45,3 +45,13 @@ test('live reduced-motion preference is adopted without resetting a paused or ac
  scene.round.remainingMs=1000;scene.update(1100,1000);
  assert.equal(scene.reducedMotion,true);assert.equal(scene.round.remainingMs,0);assert.equal(scene.round.bass.activeMs,500);
 });
+
+test('scene checkpoint captures logical state and restores paused without ordinary round events or new spawns',async()=>{
+ const {recoveryFixture}=await import('./helpers/recovery-fixtures.mjs');const f=recoveryFixture();
+ const node=(x=0,y=0)=>{let p;return p=new Proxy({x,y,setPosition(a,b){this.x=a;this.y=b;return p}},{get(o,k){return k in o?o[k]:(...args)=>p}});};
+ const source=new GameScene();Object.assign(source,{round:{...f.scene.round,rules:rulesFor([]),sincePickupMs:Infinity},dancer:node(480,400),sparks:f.scene.sparks.map(p=>node(p.x,p.y)),mysteryView:{placed:true,pickup:node(600,400)},crowd:{people:f.scene.crowd.map(encounter=>({encounter}))}});
+ const cp=source.captureRecovery();assert.equal(cp.round.sincePickupMs,null);assert.equal(cp.candy.x,600);
+ const target=new GameScene(),events=[],art=node();Object.assign(target,{background:{show(){},update(){},fireflies:[]},crowd:{configure(){},restoreRecovery(v,t){this.restored=v;this.elapsed=t}},avatar:{art,setPosition:art.setPosition},bassFeedback:art,halo:art,dropWash:art,dancer:node(),sparks:Array.from({length:12},()=>node()),flowPickup:node(),effects:{clear(){}},tweens:{killAll(){},pauseAll(){}},input:{keyboard:{resetKeys(){}}},mysteryView:{reset(){},update(){},pickup:node(),placed:false},game:{events:{emit:type=>events.push(type)}}});
+ target.restoreRecovery(cp,{stage:STAGES[0],rules:rulesFor([]),outfit:{}});
+ assert.equal(target.running,false);assert.equal(target.round.remainingMs,44000);assert.equal(target.round.score,20);assert.equal(target.round.sincePickupMs,Infinity);assert.equal(target.dancer.x,480);assert.equal(target.target,null);assert.equal(target.mysteryView.pickup.x,600);assert.equal(target.crowd.elapsed,16000);assert.equal(target.sparks[1].x,150);assert.deepEqual(events,['round:update']);target.update(999999,50000);assert.equal(target.round.remainingMs,44000);
+});

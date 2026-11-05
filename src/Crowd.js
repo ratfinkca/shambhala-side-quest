@@ -60,6 +60,10 @@ export class Crowd {
     this.lastBumpAt = -Infinity;
   }
 
+  restoreRecovery(encounters,elapsed) {
+    this.people.forEach((person,index)=>{const p=crowdPosition(index,elapsed,this.stage.crowdAnchors,this.stage.crowdSpeed??1);person.node.setPosition(p.x,p.y);person.encounter=structuredClone(encounters[index]);});
+  }
+
   update(player, round, reducedMotion) {
     const elapsed = 60000 - round.remainingMs;
     this.people.forEach((person, index) => {

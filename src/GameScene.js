@@ -89,6 +89,25 @@ export class GameScene extends Phaser.Scene {
     this.running = true; this.lastTrail = 0;
     this.game.events.emit('round:update', this.round);
   }
+  captureRecovery() {
+    const {rules,...round}=this.round;
+    const copy=structuredClone(round);if(copy.sincePickupMs===Infinity)copy.sincePickupMs=null;
+    return {round:copy,player:{x:this.dancer.x,y:this.dancer.y},sparks:this.sparks.map(s=>({x:s.x,y:s.y})),candy:{placed:this.mysteryView.placed,x:this.mysteryView.pickup.x,y:this.mysteryView.pickup.y},crowd:this.crowd.people.map(p=>structuredClone(p.encounter))};
+  }
+  restoreRecovery(value,{stage,rules,outfit}) {
+    this.running=false;this.stage=stage;this.background.show(stage);this.fireflies=this.background.fireflies;
+    this.crowd.configure(stage);setOutfit(this.avatar,outfit);this.clearInput();this.effects.clear(true,true);this.tweens.killAll();this.tweens.pauseAll();
+    this.round={...structuredClone(value.round),rules};if(this.round.sincePickupMs===null)this.round.sincePickupMs=Infinity;
+    const elapsed=60000-this.round.remainingMs,cycle=cycleAt(elapsed);this.phase=cycle.phase;
+    this.dancer.setPosition(value.player.x,value.player.y);this.dancer.setRotation(0);this.avatar.setPosition(0,0);
+    this.sparks.forEach((s,i)=>{s.setPosition(value.sparks[i].x,value.sparks[i].y);s.art?.setPosition(0,0);});
+    this.mysteryView.reset(this.round.mystery.wrapper);this.mysteryView.placed=value.candy.placed;this.mysteryView.pickup.setPosition(value.candy.x,value.candy.y);this.mysteryView.update(this.round.mystery,this.reducedMotion);
+    this.crowd.restoreRecovery(value.crowd,elapsed);
+    this.flowSlot=availableFlow(this.round);this.flowPickup.setVisible(this.flowSlot>=0);if(this.flowSlot>=0){const p=stage.flowSpawns[this.flowSlot];this.flowPickup.setPosition(p.x,p.y);}
+    this.background.update(elapsed,cycle.phase,this.reducedMotion);this.dropWash.setAlpha(0);
+    this.halo.setRadius(this.round.flowMs>0?42:26);this.bassFeedback.clear();drawPlayerBass(this.bassFeedback,this.round.bass,bassFactor(this.dancer,stage.obstacles),elapsed,this.reducedMotion);
+    this.lastTrail=0;this.game.events.emit('round:update',this.round);
+  }
   activateBassHead(){if(!this.running||!activateBass(this.round))return false;this.game.events.emit('round:bass',{runId:this.round.runId,durationMs:this.round.bass.activeDurationMs});return true;}
   takeCandy(rng=Math.random){
     if(!this.running)return null;
