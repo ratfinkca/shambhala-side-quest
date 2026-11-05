@@ -4,7 +4,7 @@ Updated 2026-11-05. This document is the current starting point. [Roadmap](ROADM
 
 ## Current release and prior baseline
 
-Current public release: **M4 candy, PR #17 /d00ee62**, verified after Pages deployment on 2026-11-04. See [candy release evidence](superpowers/m4-candy-release-validation.md). The Bass Head interface update was approved for release on 2026-11-05: partial spending and on-field feedback; slowdown rules remain unchanged. [Bass release evidence](superpowers/m4-bass-release-validation.md) records the release scope and links CI/Pages/public acceptance on its PR.
+Current public release: **M4 Bass Head, [PR #18](https://github.com/ratfinkca/shambhala-side-quest/pull/18) /41148ee**, verified after Pages deployment on 2026-11-05. Partial spending and on-field speaker/player feedback are live; slowdown remains unchanged. [Bass release evidence](superpowers/m4-bass-release-validation.md) records acceptance. Candy PR #17 /d00ee62 is the preceding release.
 
 Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, following PR #12 online Endless and PR #11 Endless gameplay. Backend validators deployed before frontend merge; both CI workflows and Pages deployment passed. Public save/post controls, unsaved warning and preserved initials were checked. Release baseline:145 automated tests and production build passed. This is recorded release evidence, not a fresh production-health audit.
 
@@ -24,7 +24,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-M1 insights, M2 stage variations and M3 souvenirs are published. M4 candy feel is published: user-confirmed steering inversion and clearer Wavy Colours. Broader candy/bass tuning, physical-device reliability and scoped run recovery follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
+M1 insights, M2 stage variations and M3 souvenirs are published. M4 candy feel is published: user-confirmed steering inversion and clearer Wavy Colours. Bass Head communication/activation is published in PR #18. Run recovery is now in design: the user selected paused mid-stage Endless restoration on the same browser/device. See the [proposed recovery design](superpowers/specs/2026-11-05-run-recovery-design.md); implementation waits for design approval. Broader candy/bass tuning and physical-device reliability follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 

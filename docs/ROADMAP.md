@@ -13,7 +13,7 @@ Updated 2026-11-05. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-M4 candy shipped in PR #17 /d00ee62. The user approved the Bass Head interface preview for release on 2026-11-05: on-field activation, partial charge spending and clearer speaker/player feedback, with slowdown unchanged. [Bass release evidence](superpowers/m4-bass-release-validation.md) links the release PR and its CI/Pages/public acceptance.
+M4 candy shipped in PR #17 /d00ee62. Bass Head shipped in [PR #18](https://github.com/ratfinkca/shambhala-side-quest/pull/18) /41148ee on 2026-11-05: on-field activation, partial charge spending and clearer speaker/player feedback, with slowdown unchanged. [Bass release evidence](superpowers/m4-bass-release-validation.md) links the release PR and its CI/Pages/public acceptance.
 
 ## M1 — Endless insights
 
@@ -56,7 +56,7 @@ Credit saves at qualifying stage end independently of score saving/posting. Ward
 
 Use evidence and audience feedback to tune candy timing/effects (especially waves), bass escapes, pacing, input differences and reward reachability. Test physical phones, speakers/headphones and sustained performance. Evaluate active-run recovery as a separate scoped feature: protect against refresh/OS suspension without double XP or duplicate online submissions. Cross-device sync is a larger later project.
 
-Next: validate the Bass Head button and feedback on physical phones, including thumb reach, pause/resume and sustained performance; review opt-in samples for remaining escape/pacing issues before tuning. The next candidate feature is scoped active-run recovery, with resume/discard, paused restoration and duplicate XP/score protection; design it separately before implementation.
+Next: validate the Bass Head button and feedback on physical phones, including thumb reach, pause/resume and sustained performance; review opt-in samples for remaining escape/pacing issues before tuning. The user requested active-run recovery and selected mid-stage restoration: [proposed design](superpowers/specs/2026-11-05-run-recovery-design.md). First scope is same-device Endless resume/discard, paused restoration and duplicate XP/score protection; design approval precedes implementation. Audience playtests are expected over the weekend; do not wait for balance data to design reliability work.
 
 Acceptance: before/after measurements and actual playtests, specific improvements with denominators, no speculative difficulty changes. Keep scoring-version boundaries explicit.
 

@@ -28,3 +28,5 @@ Bass-zone investigation: [current behavior and user feedback](playtests/2026-11-
 Bass interface approved release: [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [validation](superpowers/bass-interface-preview-validation.md).
 
 Bass Head release scope and hosted acceptance: [release evidence](superpowers/m4-bass-release-validation.md).
+
+Endless run recovery: [proposed design](superpowers/specs/2026-11-05-run-recovery-design.md), following the user-selected paused mid-stage approach. Not implemented or published.
