@@ -1,10 +1,10 @@
 # Side Quest — current project handoff
 
-Updated 2026-11-04. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
+Updated 2026-11-05. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
 
 ## Current release and prior baseline
 
-Current public release: **M3, PR #16 /79080a6**, verified after Pages deployment on 2026-11-04. See [M3 release evidence](superpowers/m3-release-validation.md). The M4 candy preview below is local work.
+Current public release: **M4 candy, PR #17 /d00ee62**, verified after Pages deployment on 2026-11-04. See [candy release evidence](superpowers/m4-candy-release-validation.md). The Bass Head interface update was approved for release on 2026-11-05: partial spending and on-field feedback; slowdown rules remain unchanged. [Bass release evidence](superpowers/m4-bass-release-validation.md) records the release scope and links CI/Pages/public acceptance on its PR.
 
 Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, following PR #12 online Endless and PR #11 Endless gameplay. Backend validators deployed before frontend merge; both CI workflows and Pages deployment passed. Public save/post controls, unsaved warning and preserved initials were checked. Release baseline:145 automated tests and production build passed. This is recorded release evidence, not a fresh production-health audit.
 
@@ -24,7 +24,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-M1 insights, M2 stage variations and M3 souvenirs are published. M4 has started with a local candy-feel preview: user-confirmed steering inversion and clearer Wavy Colours. Broader candy/bass tuning, physical-device reliability and scoped run recovery follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
+M1 insights, M2 stage variations and M3 souvenirs are published. M4 candy feel is published: user-confirmed steering inversion and clearer Wavy Colours. Broader candy/bass tuning, physical-device reliability and scoped run recovery follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 
@@ -63,10 +63,18 @@ Preview: `http://127.0.0.1:5181/?rehearsal&rewards`. The wardrobe opens automati
 
 M3 release approval (2026-11-04): user approved the preview. Release checks: 163 tests, production build, independent review and portrait/landscape acceptance pass. No backend deployment is required. Final PR/merge/Pages/public verification passed: [release evidence](superpowers/m3-release-validation.md).
 
-## M4 first slice — local candy preview
+## M4 first slice — published candy pass
 
 The user confirmed Dizzy should invert controls. Keyboard vectors reverse; click/tap targets are mirrored once around the player and clamped to the field. Collecting Dizzy mid-journey mirrors the existing target once; expiry changes subsequent input without an automatic return trip. Existing collision rules are unchanged. Wavy Colours now paints slowly shifting pools/ribbons behind the field objects, with gentle fades and a static reduced-motion tint. Timing, speed, Sweet Tooth and scoring remain unchanged.
 
-`/?rehearsal&candy=waves` opens a DEV Candy lab. Select an effect and choose Start candy practice; each try starts a fresh Quick Rush and uses the real collection path. Scores, XP and analytics remain disabled. The lab is absent from production. New modules/tests: `src/candy-colours.js`, mystery/scene input regressions and `tests/candy-colours.test.mjs`. No backend deployment required. M4 has not been published.
+`/?rehearsal&candy=waves` opens a DEV Candy lab. Select an effect and choose Start candy practice; each try starts a fresh Quick Rush and uses the real collection path. Scores, XP and analytics remain disabled. The lab is absent from production. New modules/tests: `src/candy-colours.js`, mystery/scene input regressions and `tests/candy-colours.test.mjs`. No backend deployment required. M4 candy is published in PR #17; the lab remains DEV-only.
 
-M4 candy release approval (2026-11-04): user requested PR, merge and deployment after the preview. Release checks: 168 tests/build, independent review and browser acceptance pass. No backend deployment is required. CI/Pages/public checks are pending; bass-zone feel is the next scoped pass.
+M4 candy release approval (2026-11-04): user requested PR, merge and deployment after the preview. Release checks: 168 tests/build, independent review and browser acceptance pass. No backend deployment is required. CI/Pages/public checks passed; [release evidence](superpowers/m4-candy-release-validation.md) records them. Bass-zone feel is the next scoped pass.
+
+## Bass interface — approved release
+
+`/?rehearsal&bass=half` opens the DEV Bass lab. Start a fresh Neon Grove practice with fresh/quarter/half/full/outside presets. This lab uses a disposable profile, with scores, XP and analytics disabled. Charge continues normally in-zone; the outside scenario is useful for comparing spending without charging further.
+
+The on-field native control appears in upper-right scenery to avoid normal pickup space on phones. It retains B/Enter/Space. At 25% or more, spend the whole meter for proportional protection (1.5–6s); the ring shows charge or remaining active time. `src/bass-view.js` owns the shared UI state. Speaker/player feedback is in `src/bass-feedback.js`: restrained cone wavefronts, amber pressure at the feet and mint protection. Cosmetic layers vibrate together and steady during protection. No two-finger gesture was added.
+
+Exposure, radial slowdown, cooldown and post-expiry pressure are unchanged; the previously observed expiry cliff remains deliberate for this slice. Mud/bumps still slow a protected player. Score validation and analytics schemas are unchanged; no backend deployment is expected. [Validation](superpowers/bass-interface-preview-validation.md) records tests and phone layout limits. The user approved shipping on 2026-11-05. See the release evidence for final hosted verification.

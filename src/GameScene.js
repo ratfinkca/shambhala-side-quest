@@ -11,6 +11,7 @@ import { Crowd } from './Crowd.js';
 import {MysteryRenderer} from './MysteryRenderer.js';
 import {collectMystery,findCandySpawn,mysteryDirection,mysteryTarget,mysterySpeed} from './mystery.js';
 import {bassOffset} from './bass-motion.js';
+import {drawPlayerBass} from './bass-feedback.js';
 
 const W = 960, H = 640;
 const COLORS = [0xcff598, 0x93ffd6, 0xfaa5d6, 0xc6b0ff];
@@ -18,7 +19,8 @@ const COLORS = [0xcff598, 0x93ffd6, 0xfaa5d6, 0xc6b0ff];
 export class GameScene extends Phaser.Scene {
   constructor() { super('Forest'); this.running = false; this.round = createRound(); }
   create() {
-    this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
+    this.reducedMotion=this.motionQuery.matches;
     this.stage = STAGES[0];
     this.background = new StageRenderer(this);
     this.background.show(this.stage);
@@ -32,6 +34,7 @@ export class GameScene extends Phaser.Scene {
     this.halo = this.add.circle(0, 0, 26, 0xcfffad, .09);
     this.dancer.add(this.halo);
     this.dancer.add(this.add.circle(0, 0, 17, 0x92dfb2, .15));
+    this.bassFeedback=this.add.graphics();this.dancer.add(this.bassFeedback);
     this.avatar = createAvatar(this);
     this.dancer.add(this.avatar);
     this.flowPickup = this.add.container(0, 0).setDepth(15).setVisible(false);
@@ -76,7 +79,7 @@ export class GameScene extends Phaser.Scene {
     this.crowd.configure(stage); setOutfit(this.avatar, outfit);
     this.round = createRound(rules); this.round.runId=runId; this.round.bass=createBass(bassChargeMs); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
     this.mysteryView.reset(this.round.mystery.wrapper);
-    this.avatar.art.setPosition(0,0);
+    this.avatar.setPosition(0,0);this.bassFeedback.clear();
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
     this.crowd.reset();
     this.flowSlot = -1; this.flowPickup.setVisible(false);
@@ -86,7 +89,7 @@ export class GameScene extends Phaser.Scene {
     this.running = true; this.lastTrail = 0;
     this.game.events.emit('round:update', this.round);
   }
-  activateBassHead(){if(!this.running||!activateBass(this.round))return false;this.game.events.emit('round:bass',{runId:this.round.runId});return true;}
+  activateBassHead(){if(!this.running||!activateBass(this.round))return false;this.game.events.emit('round:bass',{runId:this.round.runId,durationMs:this.round.bass.activeDurationMs});return true;}
   takeCandy(rng=Math.random){
     if(!this.running)return null;
     const effect=collectMystery(this.round,rng);
@@ -110,6 +113,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
   update(time, delta) {
+    this.reducedMotion=this.motionQuery?.matches??this.reducedMotion;
     if (!this.reducedMotion && (this.running || this.menuAmbient)) {
       this.sparks.forEach(s=>s.setScale(1+Math.sin(time*.003+s.phase)*.12));
       this.fireflies.forEach((f,i)=>f.setAlpha(.2+Math.sin(time*.001+i)*.15));
@@ -170,8 +174,8 @@ export class GameScene extends Phaser.Scene {
       this.game.events.emit('round:flow',{runId:this.round.runId});
     }
     this.halo.setRadius(this.round.flowMs > 0 ? 42 : 26);
-    this.halo.setStrokeStyle(this.round.bass.activeMs>0 && bassFactor(this.dancer,this.stage.obstacles)<1 ? 2 : 0,0xffcc77,.8);
     this.halo.setFillStyle(this.round.flowMs > 0 ? 0xffd886 : this.round.slowedMs > 0 ? 0xf2b59b : cycle.phase === 'drop' ? 0xe5ff8c : 0xcfffad, this.round.flowMs > 0 ? .2 : this.round.slowedMs > 0 ? .2 : .09);
+    this.bassFeedback.clear();drawPlayerBass(this.bassFeedback,this.round.bass,bassFactor(this.dancer,this.stage.obstacles),60000-this.round.remainingMs,this.reducedMotion);
     this.sparks.forEach(spark => {
       if (this.round.flowMs > 0) { const old={x:spark.x,y:spark.y};attractSpark(spark,this.dancer,delta);if(!isOpen(spark,8,this.stage.obstacles))spark.setPosition(old.x,old.y); }
       spark.setAlpha(cycle.phase === 'drop' ? 1 : .85);
@@ -180,7 +184,7 @@ export class GameScene extends Phaser.Scene {
     for(const spark of this.sparks){if(Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,spark.x,spark.y)<25){const result=collect(this.round,{playerInBass:bassFactor(this.dancer,this.stage.obstacles)<1,sparkInBass:bassFactor(spark,this.stage.obstacles)<1});this.effect(spark.x,spark.y,spark.color,result.points,result.celebrate);this.game.events.emit('round:pickup',{...result,runId:this.round.runId,chain:this.round.chain,multiplier:this.round.multiplier,pickups:this.round.pickups});this.placeSpark(spark);}}
     const elapsed=60000-this.round.remainingMs;
     const shakeArt=(position,art)=>{const offset=bassOffset(position,this.stage.obstacles,elapsed,cycle.phase,this.reducedMotion);art.setPosition(offset.x,offset.y)};
-    shakeArt(this.dancer,this.avatar.art);
+    if(this.round.bass.activeMs>0)this.avatar.setPosition(0,0);else shakeArt(this.dancer,this.avatar);
     for(const spark of this.sparks)shakeArt(spark,spark.art);
     shakeArt(this.mysteryView.pickup,this.mysteryView.art);
     // The Flow label stays still; only its central artwork vibrates.

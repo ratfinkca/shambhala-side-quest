@@ -3,6 +3,21 @@ import assert from 'node:assert/strict';
 import {createRound,collect} from '../src/game.js';
 import {createRun,startStage,finishStage,chooseUpgrade,upgradeChoices} from '../src/run.js';
 import {advanceBass,activateBass,bassMovementFactor} from '../src/bass-head.js';
+test('quarter, half and full meter buy proportional Bass Head time and consume all charge',()=>{
+ for(const [charge,duration]of [[2499,0],[2500,1500],[5000,3000],[7500,4500],[10000,6000]]){
+  const r=createRound();r.bass.chargeMs=charge;r.bass.exposureMs=6000;
+  assert.equal(activateBass(r),duration>0);
+  assert.equal(r.bass.activeMs,duration);assert.equal(r.bass.chargeMs,duration?0:charge);
+  if(duration){assert.equal(r.bass.activeDurationMs,duration);assert.equal(activateBass(r),false);assert.equal(r.bass.exposureMs,6000);}
+ }
+});
+test('partial boosts expire precisely, recharge only after expiry, and preserve the original pressure cliff',()=>{
+ const r=createRound();r.bass.chargeMs=2500;r.bass.exposureMs=6000;activateBass(r);
+ advanceBass(r,1499,true);assert.equal(r.bass.activeMs,1);assert.equal(r.bass.chargeMs,0);assert.equal(bassMovementFactor(r.bass,.2),1);
+ advanceBass(r,1,true);assert.equal(r.bass.activeMs,0);assert.equal(r.bass.chargeMs,0);assert.equal(bassMovementFactor(r.bass,.2),.2);
+ const over=createRound();over.bass.chargeMs=2500;activateBass(over);advanceBass(over,2000,true);
+ assert.equal(over.bass.activeMs,0);assert.equal(over.bass.chargeMs,500);
+});
 test('exposure builds over six seconds and cools over three while charge is retained',()=>{
  const r=createRound();advanceBass(r,3000,true);assert.equal(r.bass.chargeMs,3000);assert.ok(Math.abs(bassMovementFactor(r.bass,.2)-.55)<1e-9);
  advanceBass(r,3000,true);assert.equal(bassMovementFactor(r.bass,.2),.2);

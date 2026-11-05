@@ -1,6 +1,6 @@
 # Development roadmap
 
-Updated 2026-11-04. Milestone labels below define the next development sequence; they are not retroactive release numbers. User approved features/atmosphere/rewards ahead of candy/bass fine-tuning. Build and preview one milestone at a time, then ship through PR/backend-first release checks when authorized.
+Updated 2026-11-05. Milestone labels below define the next development sequence; they are not retroactive release numbers. User approved features/atmosphere/rewards ahead of candy/bass fine-tuning. Build and preview one milestone at a time, then ship through PR/backend-first release checks when authorized.
 
 ## Completed foundation
 
@@ -13,7 +13,7 @@ Updated 2026-11-04. Milestone labels below define the next development sequence;
 | Endless milestone one | Capped scaling, four-slot swapping, local/online survival ranking |
 | Finish/save fix | Bank completed stages voluntarily, clear save/post controls and unsaved-leave warning |
 
-Current published baseline: PR #16 /79080a6 (M3). The M4 candy pass is approved for release; CI/Pages/public verification is pending.
+M4 candy shipped in PR #17 /d00ee62. The user approved the Bass Head interface preview for release on 2026-11-05: on-field activation, partial charge spending and clearer speaker/player feedback, with slowdown unchanged. [Bass release evidence](superpowers/m4-bass-release-validation.md) links the release PR and its CI/Pages/public acceptance.
 
 ## M1 — Endless insights
 
@@ -50,11 +50,13 @@ Credit saves at qualifying stage end independently of score saving/posting. Ward
 
 ## M4 — Gameplay feel and reliability
 
-**Status:** candy pass approved for release on 2026-11-04. It implements the user-confirmed inverted Dizzy controls and stronger Wavy Colours. See [design](superpowers/specs/2026-11-04-candy-feel-design.md) and [plan](superpowers/plans/2026-11-04-candy-feel.md). The DEV Candy lab (`/?rehearsal&candy=waves`) remains available for practice; final CI/Pages/public verification is recorded on the release PR. Bass-zone feel follows.
+**Status:** candy pass shipped as PR #17 /d00ee62; tests, Pages and public verification pass. It implements the user-confirmed inverted Dizzy controls and stronger Wavy Colours. See [design](superpowers/specs/2026-11-04-candy-feel-design.md) and [plan](superpowers/plans/2026-11-04-candy-feel.md). The DEV Candy lab (`/?rehearsal&candy=waves`) remains available for practice. See [release evidence](superpowers/m4-candy-release-validation.md). Bass-zone feel has started with a [baseline and user feedback](playtests/2026-11-04-bass-baseline.md): visual cause/effect, easier in-field activation, and possible partial-meter spending. The user approved an on-field button, partial-meter spending and clearer feedback. The approved Bass Head release preserves the slowdown/pressure functions and point values. See [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [preview validation](superpowers/bass-interface-preview-validation.md).
 
 [Fresh coverage review](playtests/2026-11-04-m4-coverage.md): no new shared events/stage samples since the previous check. No broad difficulty or reward threshold changes follow. First slice preserves candy timing, speed, perk duration and points; bass escapes and recovery remain subsequent scoped work.
 
 Use evidence and audience feedback to tune candy timing/effects (especially waves), bass escapes, pacing, input differences and reward reachability. Test physical phones, speakers/headphones and sustained performance. Evaluate active-run recovery as a separate scoped feature: protect against refresh/OS suspension without double XP or duplicate online submissions. Cross-device sync is a larger later project.
+
+Next: validate the Bass Head button and feedback on physical phones, including thumb reach, pause/resume and sustained performance; review opt-in samples for remaining escape/pacing issues before tuning. The next candidate feature is scoped active-run recovery, with resume/discard, paused restoration and duplicate XP/score protection; design it separately before implementation.
 
 Acceptance: before/after measurements and actual playtests, specific improvements with denominators, no speculative difficulty changes. Keep scoring-version boundaries explicit.
 

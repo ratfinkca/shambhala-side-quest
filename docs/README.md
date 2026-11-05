@@ -21,4 +21,10 @@ Update current docs when behavior/release status changes, keep original evidence
 
 M2 release scope and verification limits: [release evidence](superpowers/m2-release-validation.md). M3 achievements/rewards is published: [design](superpowers/specs/2026-11-04-endless-rewards-design.md), [plan](superpowers/plans/2026-11-04-endless-rewards.md), and [validation](superpowers/m3-preview-validation.md). CI and public verification are recorded in the release evidence below.
 
-M3 is published: [release evidence](superpowers/m3-release-validation.md). M4 candy feel is local preview work: [design](superpowers/specs/2026-11-04-candy-feel-design.md), [plan](superpowers/plans/2026-11-04-candy-feel.md), and [fresh coverage](playtests/2026-11-04-m4-coverage.md).
+M3 is published: [release evidence](superpowers/m3-release-validation.md). M4 candy feel is published as PR #17 ([release evidence](superpowers/m4-candy-release-validation.md)): [design](superpowers/specs/2026-11-04-candy-feel-design.md), [plan](superpowers/plans/2026-11-04-candy-feel.md), and [fresh coverage](playtests/2026-11-04-m4-coverage.md).
+
+Bass-zone investigation: [current behavior and user feedback](playtests/2026-11-04-bass-baseline.md).
+
+Bass interface approved release: [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [validation](superpowers/bass-interface-preview-validation.md).
+
+Bass Head release scope and hosted acceptance: [release evidence](superpowers/m4-bass-release-validation.md).
