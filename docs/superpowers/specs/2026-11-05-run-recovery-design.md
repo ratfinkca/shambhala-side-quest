@@ -1,6 +1,6 @@
 # Endless run recovery — first preview design
 
-Date: 2026-11-05. Status: proposed, pending design approval. Baseline: Bass Head PR #18 /41148ee. No implementation or release is authorized by this document alone.
+Date: 2026-11-05. Status: approved by the user on 2026-11-05. Baseline: Bass Head PR #18 /41148ee. No implementation or release is authorized by this document alone.
 
 ## Intent and decisions
 
