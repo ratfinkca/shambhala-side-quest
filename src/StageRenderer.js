@@ -6,13 +6,14 @@ import {bassBeat} from './bass-motion.js';
 import {drawSpeakerBass} from './bass-feedback.js';
 const W=960,H=640;
 export class StageRenderer {
- constructor(scene){this.scene=scene;this.objects=[];}
+ constructor(scene,{venueView}={}){this.scene=scene;this.venueViewFactory=venueView;this.objects=[];}
  show(stage){
-  this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);if(stage.id==='clock-lab')this.drawPractice();else this.drawForest();
+  this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);this.venueView=this.venueViewFactory?.(this.scene,stage);if(this.venueView)this.fireflies=[];else if(stage.id==='clock-lab')this.drawPractice();else this.drawForest();
+  this.lightShow=stage.lighting||LIGHT_SHOWS[stage.id]||LIGHT_SHOWS.forest;
   if(stage.id!=='forest')this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
   this.concertBeams=[];this.lamps=[];this.canopyLights=[];
   {
-    const show=LIGHT_SHOWS[stage.id]||LIGHT_SHOWS.forest;
+    const show=this.lightShow;
     for(const [i,x] of [330,390,450,510,570,630].entries()){
       const color=show.colours[i];
       const beam=this.scene.add.graphics().setPosition(x,92).setDepth(.2);
@@ -64,8 +65,9 @@ export class StageRenderer {
   this.objects=this.scene.children.list.filter(o=>!before.has(o));
  }
  update(elapsed,phase,reduced,timing=getTiming()){
+  this.venueView?.update(elapsed,phase,reduced,timing);
   {
-    const light=concertLighting(elapsed,reduced,this.stageId,timing);
+    const light=concertLighting(elapsed,reduced,this.stageId,timing,this.lightShow);
     this.concertBeams.forEach((b,i)=>{b.rotation=(i-2.5)*.17*light.spread+light.sweep*(i%2?1:-1);b.setAlpha(light.alpha);b.setScale(1+light.fan*.25,1);});
     this.lamps.forEach(l=>l.setAlpha(light.glow));
     this.canopyLights.forEach((l,i)=>{l.setAlpha(reduced?.65:.65+.25*Math.sin(elapsed*.0007+i*1.5));l.setScale(reduced?1:1+.09*Math.sin(elapsed*.0004+i));});
@@ -74,7 +76,7 @@ export class StageRenderer {
   this.bassPulses?.forEach(p=>{p.clear();drawSpeakerBass(p,elapsed,phase,reduced,timing);});
   this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
  }
- destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];}
+ destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];this.venueView=null;}
   drawPractice(){
     const g=this.scene.add.graphics();g.fillStyle(0x14252c).fillRect(0,0,W,H);
     g.lineStyle(1,0x91b8c1,.09);

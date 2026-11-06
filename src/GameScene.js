@@ -23,7 +23,7 @@ export class GameScene extends Phaser.Scene {
     this.motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
     this.reducedMotion=this.motionQuery.matches;
     this.stage = STAGES[0];
-    this.background = new StageRenderer(this);
+    this.background = new StageRenderer(this,this.stageRendererOptions);
     this.background.show(this.stage);
     this.fireflies = this.background.fireflies;
     this.dropWash = this.add.rectangle(W / 2, H / 2, W, H, 0xb2efbd, 1).setDepth(1).setAlpha(0);
