@@ -43,3 +43,18 @@ test('results retain partially typed or cleared initials when a warning is cance
  const {renderResults}=await import('../src/results-view.js');
  for(const initialsDraft of ['ZX','']){const html=renderResults({run:{mode:'endless',endedVoluntarily:true,totalScore:10,stagesCleared:1,initialsDraft},profile:{}});assert.ok(html.includes(`value="${initialsDraft}"`));}
 });
+
+test('reload after uncertain posting keeps the exact original ticket, build and payload for explicit retry',async()=>{
+ const a=createSubmission('id');a.setTicket('id',{ticket:'a'.repeat(64),expiresAt:new Date(Date.now()+3600000).toISOString()});let finish;
+ const pending=a.post({initials:'ABC',buildId:'original',totalScore:30},()=>new Promise(r=>finish=r));
+ const b=createSubmission('id',a.snapshot());assert.equal(b.status,'error');assert.equal(b.code,'unavailable');assert.equal(b.initials,'ABC');let sent;
+ await b.post({initials:'XYZ',buildId:'new',totalScore:99},async p=>{sent=p;return {ok:true}});
+ assert.equal(sent.initials,'ABC');assert.equal(sent.buildId,'original');assert.equal(sent.totalScore,30);assert.equal(sent.ticket,'a'.repeat(64));assert.equal(b.status,'succeeded');finish({ok:true});await pending;
+ assert.equal(createSubmission('id',b.snapshot()).status,'succeeded');
+});
+test('expired unattempted ticket cannot post but an uncertain attempted payload may retry its receipt',async()=>{
+ const a=createSubmission('id');a.setTicket('id',{ticket:'b'.repeat(64),expiresAt:'2000-01-01T00:00:00Z'});let sent=0;await a.post({},async()=>{sent++;return {ok:true}});assert.equal(sent,0);assert.equal(a.code,'expired');
+ const b=createSubmission('id',{...a.snapshot(),status:'pending',payload:{initials:'ABC',runId:'id',ticket:'b'.repeat(64)}});await b.post({},async()=>{sent++;return {ok:true}});assert.equal(sent,1);assert.equal(b.status,'succeeded');
+});
+
+test('restoring while a ticket is still waiting never issues or invents a replacement',()=>{const a=createSubmission('id');const b=createSubmission('id',a.snapshot());assert.equal(b.status,'ineligible');assert.equal(b.setTicket('id',{ticket:'a'.repeat(64)}),false);});

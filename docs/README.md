@@ -28,3 +28,5 @@ Bass-zone investigation: [current behavior and user feedback](playtests/2026-11-
 Bass interface approved release: [design](superpowers/specs/2026-11-04-bass-interface-design.md), [plan](superpowers/plans/2026-11-04-bass-interface.md) and [validation](superpowers/bass-interface-preview-validation.md).
 
 Bass Head release scope and hosted acceptance: [release evidence](superpowers/m4-bass-release-validation.md).
+
+Endless run recovery: [approved design](superpowers/specs/2026-11-05-run-recovery-design.md), [plan](superpowers/plans/2026-11-05-run-recovery.md) and [local preview validation](superpowers/run-recovery-preview-validation.md). Approved for release as [PR #19](https://github.com/ratfinkca/shambhala-side-quest/pull/19); see [release evidence](superpowers/run-recovery-release-validation.md).

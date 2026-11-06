@@ -2,7 +2,8 @@ import {createRunSummary,createInputTracker} from './summary.js';
 import {createPlaytestTransport} from './transport.js';
 export function createPlaytestSession({config,consent,send,uuid=()=>crypto.randomUUID(),width=()=>innerWidth}){
  let sessionId=null,run=null,summary=null,input=createInputTracker(),ended=false,lastFinished=-1,lastChoice=-1;
- const enabled=()=>!!config.enabled&&consent.enabled();
+ let recovered=false;
+ const enabled=()=>!recovered&&!!config.enabled&&consent.enabled();
  const transport=createPlaytestTransport({send,consent:enabled});
  function emit(type,payload,theme=run?.themeId||'forest-freakout'){
   if(!enabled())return;
@@ -19,11 +20,12 @@ export function createPlaytestSession({config,consent,send,uuid=()=>crypto.rando
    return result;
   },
   start(value,replay=false){
-   run={...value};ended=false;lastFinished=-1;lastChoice=-1;input=createInputTracker();summary=null;
+   recovered=false;run={...value};ended=false;lastFinished=-1;lastChoice=-1;input=createInputTracker();summary=null;
    if(!enabled())return;
    summary=createRunSummary({runId:run.id,mode:run.mode,buildId:config.buildId||'dev',scoringVersion:'arcade-v1'});
    emit('run_start',{});if(replay)emit('replay',{});
   },
+  recover(){recovered=true;summary=null;run=null;sessionId=null;transport.stop();},
   input:(kind,runId=run?.id)=>{if(runId===run?.id)input.recordInput(kind);},
   inputType:()=>input.inputType(),
   stageStart(index,variationId){const stage={stageIndex:index,...(run?.mode==='endless'&&variationId?{variationId}:{})};if(summary?.record('start',{runId:run.id,...stage}))emit('stage_start',stage);},

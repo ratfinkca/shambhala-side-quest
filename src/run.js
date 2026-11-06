@@ -48,3 +48,5 @@ export function finishRun(run){
  if(run.mode!=='endless'||!['playing','ready','upgrade'].includes(run.status)||run.scoreStages.length===0)return false;
  run.status='ended';run.endedVoluntarily=true;run.pendingPerk=null;return true;
 }
+
+export function stageLabel(run){const stage=stageFor(run);return run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+stage.loop:'/3'} · ${stage.name.toUpperCase()}${stage.variationId&&stage.variationId!=='original'?' · '+stage.variationName:''}`;}

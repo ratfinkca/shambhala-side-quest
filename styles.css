@@ -88,3 +88,9 @@ body[data-mode="game"] .intro,body[data-mode="game"] .page-footer{display:none}
 @container(max-width:360px){#bass-head{width:56px;height:56px;right:5px;top:-5px;padding:5px 3px}#bass-head .bass-control-icon{font-size:14px}#bass-head .bass-control-name{font-size:7px;letter-spacing:0;white-space:nowrap}#bass-head .bass-control-detail{font-size:11px}}
 @media(prefers-reduced-motion:reduce){#bass-head{animation:none!important}}
 .game-footer{flex-wrap:wrap;gap:8px;display:flex;height:auto;min-height:30px;align-items:center}
+#recovery-notice{position:relative;z-index:45;margin:0;padding:6px 12px;font:12px/1.4 var(--font-body,system-ui);color:#ffe3a3;background:#152430;text-align:center}
+#recovery-notice[hidden]{display:none}
+
+.game-frame[data-recovered-paused="true"][data-menu="paused"]>.arena-wrap{visibility:visible}
+.game-frame[data-recovered-paused="true"]>.screen-layer{background-image:none;background-color:#04121980}
+.game-frame[data-recovered-paused="true"] .menu-card{width:min(100%,440px)}

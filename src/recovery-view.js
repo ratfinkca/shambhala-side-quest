@@ -1,0 +1,9 @@
+const button=(action,label,primary=false)=>`<button class="${primary?'primary-button':'menu-button'}" data-action="${action}">${label}</button>`;
+export function renderRecovery(screen,record){
+ const header=(title,copy)=>`<p class="menu-eyebrow">KEEP THE NIGHT GOING</p><h2>${title}</h2><p class="menu-copy">${copy}</p>`;
+ if(screen==='recoveryBusy')return header('Game open in another tab','Close the other game tab, then try again. This tab will not change its progress.')+button('recovery-retry','Try again',true);
+ if(screen==='recoveryInvalid')return header('This run cannot be restored',record?.code==='incompatible'?'This save belongs to an incompatible game version. Your earned XP and wardrobe are safe.':'The recovery save is incomplete or damaged. Your earned XP and wardrobe are safe.')+button('recovery-discard-confirm','Dismiss saved run',true);
+ if(screen==='discardRecovery')return header('Discard this run?','Unfinished progress and unsaved results will be lost. Already earned XP, cosmetics and saved scores stay.')+button('recovery-cancel','Keep my run',true)+button('recovery-discard-confirm','Discard this run');
+ const v=record.value,r=v.run,points=r.totalScore+(v.scene?.round.score||0),seconds=v.scene?Math.ceil(v.scene.round.remainingMs/1000):null;
+ return header('Your night is still here.',`Endless · Stage ${r.stageIndex+1} · Loop ${Math.floor(r.stageIndex/3)+1}. ${r.stagesCleared} stages cleared · ${points} points${seconds!==null?` · ${seconds}s remaining`:''}.`)+`<p class="menu-footnote">Last saved ${new Date(v.savedAt).toLocaleString()}. ${r.status==='playing'?'You will return paused. Time away has not used the stage timer.':'Your next stage decision or results are saved.'} Recovery stays on this browser.</p><div class="menu-actions">`+button('recover-resume',r.status==='ended'?'Return to results':'Resume run',true)+button('recover-discard','Discard run')+'</div>';
+}

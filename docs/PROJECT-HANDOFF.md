@@ -1,10 +1,10 @@
 # Side Quest — current project handoff
 
-Updated 2026-11-05. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
+Updated 2026-11-06. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
 
 ## Current release and prior baseline
 
-Current public release: **M4 candy, PR #17 /d00ee62**, verified after Pages deployment on 2026-11-04. See [candy release evidence](superpowers/m4-candy-release-validation.md). The Bass Head interface update was approved for release on 2026-11-05: partial spending and on-field feedback; slowdown rules remain unchanged. [Bass release evidence](superpowers/m4-bass-release-validation.md) records the release scope and links CI/Pages/public acceptance on its PR.
+Recovery release: **[PR #19](https://github.com/ratfinkca/shambhala-side-quest/pull/19)**, user approved shipping on 2026-11-06. It restores same-browser Endless runs paused at the saved moment; atomic progress/checkpoints and original score tickets prevent duplicate awards/posts. [Recovery release evidence](superpowers/run-recovery-release-validation.md) links final CI/Pages/public acceptance. The preceding verified public baseline is Bass Head PR #18 /41148ee, published 2026-11-05; see [Bass release evidence](superpowers/m4-bass-release-validation.md).
 
 Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, following PR #12 online Endless and PR #11 Endless gameplay. Backend validators deployed before frontend merge; both CI workflows and Pages deployment passed. Public save/post controls, unsaved warning and preserved initials were checked. Release baseline:145 automated tests and production build passed. This is recorded release evidence, not a fresh production-health audit.
 
@@ -12,7 +12,7 @@ Prior verified baseline: PR #13, `8b5192fc397f98927a5fbd45fe425bb66ba52efa`, fol
 
 - Quick Rush: 60-second score chase. Festival Run: Forest 20 → Neon 25 → Sunrise 30 sparks in three 60-second stages.
 - Endless: repeat those stages; target+3/loop capped45, dancers+2/loop capped22, movement+8%/loop capped20%. Four distinct active perks, optional add/keep/swap. Stage music and lighting remain stage-specific.
-- Voluntary Finish run & save score banks completed stages; unfinished-stage points are excluded. Missing a stage target also reaches results. No finished stage means explicit discard. Local save/public post are separate explicit actions; replay/title warn if neither succeeded. Viewing scores preserves the run. Reloading abandons an active run.
+- Voluntary Finish run & save score banks completed stages; unfinished-stage points are excluded. Missing a stage target also reaches results. No finished stage means explicit discard. Local save/public post are separate explicit actions; replay/title warn if neither succeeded. Viewing scores preserves the run. Endless can recover on this browser; Rush/Festival recovery is not included. A recovery save does not install the game for offline use or sync devices.
 - Online top 50 per mode, three A–Z/0–9 initials, visible control type. Endless ranks clears, then points; Rush/Festival rank points, then clears. Local top 10 per mode. Tickets24 hours; online history1440 stages and1 MiB submission bound; overflow never ends local gameplay.
 - Eight run perks: Boots, Noodle, Moth, Bracelet plus XP-unlocked Surfer 300, Battery 650, Encore 1200, Sweet Tooth 2000. Perks reset each run.
 - Six local XP ranks and six earlier achievements; M3 adds four Endless achievements, bringing the wardrobe to ten onesies/ten hats/ten totems and four earnable flourishes. Existing profiles retain previously available choices. No cloud profile sync or permanent power purchases.
@@ -24,7 +24,7 @@ M1 release scope (2026-11-03): schema-2 Endless analytics, bounded current-stage
 
 ## Current work and next steps
 
-M1 insights, M2 stage variations and M3 souvenirs are published. M4 candy feel is published: user-confirmed steering inversion and clearer Wavy Colours. Broader candy/bass tuning, physical-device reliability and scoped run recovery follow evidence and playtest feedback. No balancing claims follow from rehearsal or from a small/missing sample.
+M1 insights, M2 stage variations and M3 souvenirs are published. M4 candy feel is published: user-confirmed steering inversion and clearer Wavy Colours. Bass Head communication/activation is published in PR #18. Run recovery is approved for release: paused mid-stage Endless restoration on the same browser/device. See the [design](superpowers/specs/2026-11-05-run-recovery-design.md), [plan](superpowers/plans/2026-11-05-run-recovery.md) and [preview validation](superpowers/run-recovery-preview-validation.md). Its release PR records hosted verification. The user selected more stage atmosphere/music as the next direction. First investigate richer music/lighting within the existing three stages; a fourth stage would separately affect rotation/scoring. Broader candy/bass tuning and physical-device reliability follow weekend playtests and evidence. No balancing claims follow from rehearsal or from a small/missing sample.
 
 ## Architecture
 
