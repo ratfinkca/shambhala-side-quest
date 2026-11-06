@@ -42,7 +42,8 @@ const rewardLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location
 const candyLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('candy');
 const bassLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('bass');
 // Every rehearsal uses a disposable profile; only recovery practice persists in its own namespace.
-const profileStorage=recoveryLab?{getItem:key=>local?.getItem('sidequest.recovery-practice.'+key),setItem:(key,value)=>{if(!local)throw Error('storage unavailable');local.setItem('sidequest.recovery-practice.'+key,value)}}:rehearsal?{getItem:()=>null,setItem:()=>{}}:local;
+const recoveryPractice=recoveryLab?await import('./recovery-practice.js'):null;
+const profileStorage=recoveryLab?recoveryPractice.practiceStorage(local):rehearsal?{getItem:()=>null,setItem:()=>{}}:local;
 const recoveryOwner=createRecoveryOwner({locks:!rehearsal||recoveryLab?navigator.locks:null,name:recoveryLab?'sidequest.recovery-practice':'sidequest.profile.v1'});
 const ownership=!rehearsal||recoveryLab?await recoveryOwner.acquire():'unsupported';
 const saved=createStorage(profileStorage,{canWrite:()=>!recoveryOwner.supported||recoveryOwner.held}),audio=createAudio();audio.setVolumes(saved.profile.audio);
@@ -55,7 +56,7 @@ async function loadBoard(mode){const pending=board.select(mode,SCORING_VERSION);
 let replayPending=false;
 let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,progressReward,previewAvatar,previewReady=false;
-let runInputs=createInputTracker(),recoveryRecord=null;
+let runInputs=createInputTracker(),recoveryRecord=null,recoveredRun=false;
 if(ownership==='busy')screen={name:'recoveryBusy'};
 else if(recoveryOwner.held&&saved.recovery!==null){recoveryRecord=readRecovery(saved.recovery);screen={name:recoveryRecord.ok?'recovery':'recoveryInvalid'};}
 const recoveryNotice=document.createElement('p');recoveryNotice.id='recovery-notice';recoveryNotice.setAttribute('role','status');recoveryNotice.hidden=true;document.querySelector('.game-frame').append(recoveryNotice);
@@ -69,7 +70,7 @@ function captureCheckpoint(){
 function recordInput(kind,id=run?.id){if(id===run?.id)runInputs.recordInput(kind);playtest.input(kind,id);}
 function restoreRun(){
  if(!scene||!recoveryRecord?.ok||!recovery.canWrite)return;
- const v=recoveryRecord.value;run=structuredClone(v.run);summary=v.summary;resultSnapshot=v.resultSnapshot;progressReward=v.progressReward;
+ const v=recoveryRecord.value;recoveredRun=true;run=structuredClone(v.run);summary=v.summary;resultSnapshot=v.resultSnapshot;progressReward=v.progressReward;
  activeTheme=applyTheme(run.themeId);submission=v.submission?createSubmission(run.id,v.submission):null;runInputs=createInputTracker();
  if(v.inputType==='mixed'){runInputs.recordInput('mouse');runInputs.recordInput('touch');}else runInputs.recordInput(v.inputType);
  playtest.recover();screen={name:v.screen,returnTo:'title'};
@@ -88,7 +89,7 @@ function soundLabel(){$('#sound').textContent=saved.sound?'Sound on':'Sound off'
 function render(){
  soundLabel();$('#best').textContent=fmt(saved.best);
  const playing=screen.name==='playing';document.body.dataset.mode='game';
- $('.game-frame').dataset.menu=screen.name;$('#game').inert=!playing;
+ $('.game-frame').dataset.menu=screen.name;$('.game-frame').dataset.recoveredPaused=String(recoveredRun&&screen.name==='paused');$('#game').inert=!playing;
  if(scene)scene.menuAmbient=['title','wardrobe'].includes(screen.name);
  if(scene&&!playing)scene.mysteryView.waves.setVisible(false);
  for(const el of document.querySelectorAll('.hud,.beat-bar,.game-footer'))el.setAttribute('aria-hidden',String(!playing));
@@ -102,13 +103,13 @@ function render(){
  if(rewardLab&&screen.name==='wardrobe'){$('#outfit-feedback').textContent='Reward preview · temporary profile · reload to reset. Real progress is untouched.';if(progressReward)$('#outfit-feedback').insertAdjacentHTML('afterend',renderReward(progressReward));}
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage||'Score saved on this device.';$('#initials').value=run.initials;$('#initials').disabled=true;}
  if(screen.name==='results'&&submission?.initials){$('#initials').value=submission.initials;$('#initials').disabled=true;}
- if(rehearsal&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
+ if(rehearsal&&!recoveryLab&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
  if(['title','recovery'].includes(screen.name)&&!scene)$('#menu-content').querySelectorAll('button').forEach(b=>b.disabled=true);
  refreshLayout();if(playing)$('#game').focus({preventScroll:true});
 }
 function go(type,extra={}){const next=transition(screen,{type,...extra});if(next===screen)return false;screen=next;clearToast();render();recovery.save(true);return true}
 function pause(type='PAUSE'){if(screen.name!=='playing')return;scene.pauseRound();audio.stop();go(type)}
-function newRun(mode){runInputs=createInputTracker();activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);run.buildId=arcadeConfig.buildId||'dev';run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);summary=null;progressReward=null;resultSnapshot=null;submission=null;}
+function newRun(mode){recoveredRun=false;runInputs=createInputTracker();activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,crypto.randomUUID(),activeTheme);run.buildId=arcadeConfig.buildId||'dev';run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);summary=null;progressReward=null;resultSnapshot=null;submission=null;}
 function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
@@ -197,7 +198,7 @@ function action(name,value){
   case 'replay':navigateResults('replay');break;
   case 'title':navigateResults('title');break;
   case 'submit':{
-   if(rehearsal||screen.name!=='results'||!run||run.submitted||!resultSnapshot)return;
+   if(rehearsal&&!recoveryLab||screen.name!=='results'||!run||run.submitted||!resultSnapshot)return;
    const initials=($('#initials').value.toUpperCase().replace(/[^A-Z0-9]/g,'')+'AAA').slice(0,3);
    const before=run.submitted;run.submitted=true;run.initials=initials;
    const result=run.mode==='endless'?recovery.commitScore(run.mode,{...resultSnapshot,initials}):saved.submitScore(run.mode,{...resultSnapshot,initials});
@@ -269,22 +270,23 @@ game.events.on('round:end',round=>{
  if(run.status==='ended')playtest.end(run);
  void playtest.flush();
  const award={id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===3,...result.progressContext};
- progressReward=rehearsal?null:awardStage(saved.profile.progress,award);
+ progressReward=rehearsal&&!recoveryLab?null:awardStage(saved.profile.progress,award);
  run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(progressReward.progress);
  summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore);
  if(run.status==='ended')captureResult();
  screen=transition(screen,{type:'END',qualified:run.status==='upgrade'});
- if(!rehearsal){const committed=run.mode==='endless'?recovery.commitStage(award):saved.awardProgress(award);if(committed)progressReward=committed;}
+ if(!rehearsal||recoveryLab){const committed=run.mode==='endless'?recovery.commitStage(award):saved.awardProgress(award);if(committed)progressReward=committed;}
  render();$('#announcement').textContent=`Stage complete. ${round.pickups} sparks. ${run.totalScore} total points.`;
 });
 window.addEventListener('pagehide',()=>{pause('HIDDEN');recovery.save(true);recovery.release();});
 window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
 render();
 
-if(import.meta.env.DEV && rehearsal)import('./rehearsal.js').then(({installRehearsal})=>{
+if(import.meta.env.DEV && rehearsal && ownership!=='busy')import('./rehearsal.js').then(({installRehearsal})=>{
  const openRewards=()=>{scene?.pauseRound();audio.stop();screen=createScreenState();go('WARDROBE');};
  installRehearsal(()=>scene,()=>screen.name==='playing',{
   previewStage:index=>{const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('endless');run.stageIndex=index;go('RULES');};if(scene)load();else game.events.once('forest:ready',load);},
+  ...(recoveryLab?{previewRecovery:preset=>{const value=recoveryPractice.recoveryPreview(preset,activeTheme);if(value){saved.saveRecovery(value);recoveryRecord=readRecovery(value);screen={name:'recovery'};run=null;scene?.pauseRound();audio.stop();render();}},resetRecovery:()=>{recoveryPractice.resetPractice(local);location.reload();}}:{}),
   ...(rewardLab?{openRewards,previewReward:(stages,key)=>{
    const results=stages.map(stage=>saved.awardProgress(stage));
    progressReward={xp:results.reduce((sum,r)=>sum+r.xp,0),rewards:[...new Set(results.flatMap(r=>r.rewards))],persisted:true};

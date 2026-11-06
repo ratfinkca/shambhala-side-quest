@@ -15,9 +15,9 @@ export function rewardDemoStages(key){
  return clears[key]?[{...base,id:`reward-demo:${key}`,stagesCleared:clears[key],remixed:key==='totem:mixtape'}]:[];
 }
 export function layoutPreviewIndex(id){const i=STAGE_VARIATIONS.findIndex(v=>v.id===id);return i<0?null:3+Math.floor(i/2)+(i%2)*3;}
-export function installRehearsal(getScene,isPlaying,{previewStage,previewReward,openRewards,previewCandy,previewBass}={}) {
+export function installRehearsal(getScene,isPlaying,{previewStage,previewReward,openRewards,previewCandy,previewBass,previewRecovery,resetRecovery}={}) {
   const bar=document.createElement('details');bar.id='rehearsal-controls';
-  const label=document.createElement('summary');label.textContent=previewBass?'Bass lab · practice only · no saves':previewReward?'Reward lab · temporary profile · no saves':previewCandy?'Candy lab · practice only · no saves':'Layout lab · practice only · no saves';bar.append(label);
+  const label=document.createElement('summary');label.textContent=previewRecovery?'Recovery lab · disposable saves':previewBass?'Bass lab · practice only · no saves':previewReward?'Reward lab · temporary profile · no saves':previewCandy?'Candy lab · practice only · no saves':'Layout lab · practice only · no saves';bar.append(label);
   const controls=document.createElement('div');controls.style.cssText='display:flex;flex-wrap:wrap;gap:6px;padding-top:6px';bar.append(controls);
   Object.assign(bar.style,{position:'fixed',bottom:'4px',left:'4px',zIndex:'100',maxWidth:'calc(100vw - 16px)',background:'#fff',padding:'6px',borderRadius:'6px',color:'#111',font:'12px system-ui'});
   for(const qualified of [true,false]){
@@ -29,7 +29,7 @@ export function installRehearsal(getScene,isPlaying,{previewStage,previewReward,
       scene.round.remainingMs=1;
     });controls.append(button);
   }
-  if(previewStage&&!previewCandy&&!previewBass){
+  if(previewStage&&!previewCandy&&!previewBass&&!previewRecovery){
     const select=document.createElement('select');select.setAttribute('aria-label','Layout preview');select.style.maxWidth='100%';
     STAGE_VARIATIONS.forEach(v=>{const option=document.createElement('option');option.value=v.id;option.textContent=`${v.stageId} · ${v.name}`;select.append(option)});
     const button=document.createElement('button');button.textContent='Load layout';
@@ -37,6 +37,14 @@ export function installRehearsal(getScene,isPlaying,{previewStage,previewReward,
     controls.prepend(select,button);
     const requested=new URLSearchParams(location.search).get('layout'),index=layoutPreviewIndex(requested);
     if(index!==null){select.value=requested;previewStage(index);}
+  }
+  if(previewRecovery){
+   const select=document.createElement('select');select.setAttribute('aria-label','Recovery preview');
+   for(const [id,name] of [['live','Mid-stage · ready for a drop'],['bass','Mid-stage · Bass Head and Dizzy'],['swap','Pending perk swap'],['results','Unsaved results']]){const option=document.createElement('option');option.value=id;option.textContent=name;select.append(option);}
+   const load=document.createElement('button');load.textContent='Load recovery scenario';load.addEventListener('click',()=>{previewRecovery(select.value);bar.open=false;});
+   const reset=document.createElement('button');reset.textContent='Reset recovery practice';reset.addEventListener('click',resetRecovery);
+   const note=document.createElement('p');note.textContent='Disposable recovery survives reloads on this browser. Real scores, XP, settings and online services are untouched.';
+   controls.prepend(note,select,load,reset);bar.open=true;
   }
   if(previewBass){
    const select=document.createElement('select');select.setAttribute('aria-label','Bass preview');

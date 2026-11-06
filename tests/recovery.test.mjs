@@ -27,3 +27,8 @@ test('banking after a new perk keeps valid results without pretending the perk a
  f.summary={qualified:true,pickups:20,target:20,score:f.run.totalScore,totalScore:f.run.totalScore};f.resultSnapshot={id:f.run.id,score:f.run.totalScore,stagesCleared:1,inputType:'touch',outfit:{onesie:'lime',hat:'none',totem:'none',flair:'none'},completedAt:1000};
  const r=makeRecovery(f);assert.equal(r.screen,'results');assert.equal(readRecovery(r).ok,true);
 });
+
+test('online-history overflow keeps the full local run totals and oversized records fail closed',()=>{
+ const r=makeRecovery(recoveryFixture(1441));assert.equal(r.run.scoreStages.length,1440);assert.equal(r.run.scoreOverflow,true);assert.equal(r.run.stagesCleared,1441);assert.equal(readRecovery(r).ok,true);
+ const oversized=structuredClone(r);oversized.junk='x'.repeat(2*1024*1024);assert.equal(readRecovery(oversized).code,'oversized');
+});

@@ -29,4 +29,4 @@ Bass interface approved release: [design](superpowers/specs/2026-11-04-bass-inte
 
 Bass Head release scope and hosted acceptance: [release evidence](superpowers/m4-bass-release-validation.md).
 
-Endless run recovery: [proposed design](superpowers/specs/2026-11-05-run-recovery-design.md), following the user-selected paused mid-stage approach. Not implemented or published.
+Endless run recovery: [approved design](superpowers/specs/2026-11-05-run-recovery-design.md), [plan](superpowers/plans/2026-11-05-run-recovery.md) and [local preview validation](superpowers/run-recovery-preview-validation.md). Not yet published.
