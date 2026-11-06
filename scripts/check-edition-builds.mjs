@@ -21,7 +21,7 @@ for(const id of ['generic','smf']){
   if(!relative.startsWith('assets/')&&relative!=='index.html')assert.ok(allowed.includes(relative),`Unowned ${id} asset: ${relative}`);
   if(!/\.(css|html|js)$/.test(path))continue;
   const text=await readFile(path,'utf8');
-  assert.doesNotMatch(text,/clock-practice-entry|Timing and instrument practice|clock-lab-select/,'Production includes clock practice');
+  assert.doesNotMatch(text,/clock-practice-entry|Timing and instrument practice|clock-lab-select|Sister cedars · river reflections|twin lanes · follow the returning pulse/,'Production includes clock practice');
   if(id==='generic')assert.doesNotMatch(text,/themes\/(?:forest-freakout|moonlit-mycelium|neon-field-trip)\/title\.webp/,'Generic references SMF title art');
   if(/\.(css|html)$/.test(path)){
    for(const match of text.matchAll(/(?:src|href)=["']([^"']+)["']|url\(["']?([^\s)'";]+)["']?\)/g)){

@@ -1,0 +1,35 @@
+# Living Room and Pagoda venue preview
+
+Date:2026-11-06. Local M2B1 preview, not a public release. [Plan](plans/2026-11-06-smf-main-stages.md), [approved rules](specs/2026-11-06-smf-route-rules-design.md), [venue briefs](../research/smf-stage-identities-2026-11-06.md).
+
+## Scope
+
+Two independently authored venues: Living Room112BPM/68571ms/23sparks/10dancers/two cabinets; Pagoda128BPM/60000ms/28sparks/18dancers/three cabinets. Targets remain preview balance. Full dancer paths and pickup-grid connectivity are tested. Cabinets and bass zones use the existing collision/pressure system; river, trees, furniture and architecture are perimeter scenery.
+
+Original canvas art supplies riverside/timber/lamp scenery versus a tiered projection facade and indigo field. Both use bounded wide lighting and static reduced-motion variants. Original synthesized sketches have four8-bar sections,4-bar answers, separate bass/chord/motif/percussion parts, a final tonal return and an optional Flow layer. Living Room has small bounded swing offsets; timing/scoring remains on the canonical clock. This is an early music/art preview, not final production content or an artist imitation.
+
+Reference refresh: [official stage descriptions/current photo carousels](https://www.shambhalamusicfestival.com/stages) and [dated2026 album index](https://www.shambhalamusicfestival.com/blog/2026-photo-album-blog). Current stage photos have mixed/unknown capture dates, including2024 labels. These original interpretations target the approved2026 baseline; final silhouettes still need owner/crew confirmation. No photographs, logos or recorded tracks were imported/copied.
+
+## Isolation and lifecycle
+
+DEV SMF `/?rehearsal&venues` only. Two real stage choices; the seven-clock neutral lab remains at `/?rehearsal&clock`. Both use one Phaser engine across resets, paused hidden-page/BFCache behavior, fixed-width stable HUD columns and separate music/effects controls. The venue arena scales to available window height to keep the entire floor visible and its Bass Head button aligned; short desktops get a smaller floor.
+
+No profile, storage, lock, XP, score ticket, posting or playtest client is initialized. All practice progress resets on reload. Normal SMF stays the catalogue with three anonymous locked secrets. Generic gameplay/recovery/protocol and online clients remain unchanged. Both production outputs omit venue practice, authored fixtures and scenery/music modules through guarded dynamic imports/injection.
+
+## Evidence
+
+- Starting suite258/258. Each task observed a failing regression and a green targeted test before completion. Integrated suite270/270; default build and both edition checks pass. Independent review/fix outcome follows below.
+- Layout tests sample full dancer trajectories at50ms,14px cabinet clearance,24px spawn/Flow clearance, connected pickup-grid cells and left/centre/right routes. Seeded random and fallback spawns remain open.
+- Rendering tests distinguish the venues, preserve geometry, freeze the water/projection layers under reduced motion and destroy old owned scenery nodes on switches.
+- Music tests cover all512steps per venue, arrangement differences, low-score completeness, returning root, finite/bounded voices, swing offsets, Flow, silence at end and voice tails ending within the round.
+- Browser via in-app controls at desktop and390×844: both venues, real destination clicks and held arrow movement; Living Room sparks/Flow/close passes/bass charge; Pagoda full-charge activation and Living Room partial activation (1.2s protection remaining at3.583s active after spending the first quarter charge). Both on-field controls worked.
+- Pagoda reached60.000s active/0.0s remaining/Bar32Beat4 and the correct0/28 target feedback. Living Room target/clock and live play were observed; its exact logical end is covered by clock tests, not a second complete browser round.
+- Ten venue switches retain one canvas; target/score reset. Pause/Resume and mute/unmute work; held Escape produces one toggle rather than repeated toggles. Navigation to catalogue preserves all three anonymous secret tiles; browser Back returns a fresh usable lab.
+- Live HUD measurement:60 desktop samples and50 mobile samples showed0px x/width movement in phrase/time readouts, no clipping. Both entire arenas fit the tested windows. Console clean. Water/projection reduced-motion behavior is verified in renderer tests; an actual OS accessibility toggle was not exercised.
+- Screenshots outside repo: `/tmp/sidequest-living-room-preview.png`, `/tmp/sidequest-pagoda-preview.png`, and corresponding `*-mobile.png` captures. Actual device listening is unobserved; no claim of audible musicality/latency acceptance.
+
+## Limits and next work
+
+Physical phone/touch hardware, actual speaker/headphone listening and sustained mobile performance remain unobserved. A phone-sized viewport is layout evidence. Generation/scheduling tests do not establish musicality or device latency.
+
+This two-venue preview does not complete M2B. Four venues, six-stage Festival/Endless transitions and four-slot perk decisions/progression remain. Tagged durable SMF recovery/new online contract precede enabling normal play/posting; secrets remain M3 and final nine-stage music/lighting M4.

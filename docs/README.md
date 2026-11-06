@@ -14,6 +14,10 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 [M2 delivery sequence](superpowers/plans/2026-11-06-smf-m2-delivery.md) · [musical-clock foundation task plan](superpowers/plans/2026-11-06-smf-musical-clock.md). Approved for native execution. The isolated timing/audio/lighting lab is implemented locally; [clock validation](superpowers/smf-clock-preview-validation.md) records evidence and limits. Six authored mains/local run flow and edition-safe online integration follow. Generic gameplay/recovery/wire compatibility stays protected; SMF normal play and service connections remain disabled.
 
+## Living Room and Pagoda venue preview
+
+[Two-venue plan](superpowers/plans/2026-11-06-smf-main-stages.md) · [validation](superpowers/smf-venue-preview-validation.md). DEV SMF practice at `/?rehearsal&venues`, two real authored layouts/scenery and original musical sketches; no saving or online clients. This is M2B1, not the complete six-stage run or final pitch build.
+
 ## Completed Endless program and release evidence
 
 [M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). M1 shipped in PR #14; [release evidence](superpowers/m1-release-validation.md) records backend checks. M2 stage variations has an [implementation plan and local QA record](superpowers/plans/2026-11-03-stage-variations-preview.md). Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.

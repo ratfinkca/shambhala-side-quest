@@ -7,7 +7,7 @@ function cedar(g,x,lean){
 }
 function grain(g,colours){for(let i=0;i<150;i++){const x=155+(i*137%660),y=195+(i*83%410);g.fillStyle(colours[i%colours.length],.06).fillEllipse(x,y,2+i%3,1);}}
 function livingRoom(scene){
- const g=scene.add.graphics();g.fillGradientStyle(0x4d7573,0x8b8370,0x204d46,0x183e39).fillRect(0,0,W,H);
+ const g=scene.add.graphics();g.fillStyle(0x324c45).fillRect(0,0,W,H);g.fillStyle(0x3a5c58).fillRect(0,0,W,175);
  g.fillStyle(0xf4c47d,.22).fillCircle(775,74,54);g.fillStyle(0xffdea1,.22).fillCircle(775,74,31);
  for(let i=0;i<6;i++)g.fillStyle(0x244c44,.4).fillTriangle(i*190-100,160,i*190+40,15+(i%3)*18,i*190+170,160);
  // Salmo-inspired river stays at the perimeter, away from authored pickup space.
@@ -41,7 +41,7 @@ function livingRoom(scene){
  }};
 }
 function pagoda(scene){
- const g=scene.add.graphics();g.fillGradientStyle(0x141d36,0x241e43,0x172a35,0x192c36).fillRect(0,0,W,H);
+ const g=scene.add.graphics();g.fillStyle(0x172a35).fillRect(0,0,W,H);g.fillStyle(0x151c30).fillRect(0,0,W,175);
  // Deep forest silhouette frames a luminous seven-tier facade.
  for(const x of [70,125,835,895]){g.fillStyle(0x0f202b).fillRect(x,0,17,185);for(let i=0;i<5;i++)g.fillTriangle(x+8,12+i*25,x-48,63+i*25,x+68,63+i*25);}
  for(let i=0;i<7;i++)g.lineStyle(1,i%2?0xa59de1:0x67a2b8,.07).strokeEllipse(480,390,250+i*105,120+i*58);
@@ -49,7 +49,7 @@ function pagoda(scene){
  const tiers=[];
  for(let i=0;i<7;i++){
   const y=23+i*20,half=44+i*25;
-  g.fillStyle(i%2?0x2c3153:0x252c47).fillRect(480-half*.72,y,half*1.44,24);
+  g.fillStyle(i%2?0x3d426a:0x313b61).fillRect(480-half*.72,y,half*1.44,24);
   for(const side of [-1,1])g.lineStyle(1,0x9687bd,.6).lineBetween(480+side*half*.65,y+2,480+side*half*.65,y+23);
   const roof=[{x:480-half-12,y:y+9},{x:480-half*.8,y:y+3},{x:480-half*.45,y:y-7},{x:480+half*.45,y:y-7},{x:480+half*.8,y:y+3},{x:480+half+12,y:y+9},{x:480+half,y:y+14},{x:480-half,y:y+14}];
   g.fillStyle(0x151f35).fillPoints(roof,true);g.lineStyle(1.5,0xd0c9ef,.65).strokePoints(roof,true);tiers.push({y,half});
@@ -62,8 +62,8 @@ function pagoda(scene){
   const t=reduced?0:elapsed/1000,phrase=reduced?0:Math.floor(elapsed*timing.bpm/240000/8),colour=[0xa7a0ed,0x82c9d4,0xd8b780,0xc2b0ef][phrase%4];mapped.clear();floor.clear();
   for(const [i,{y,half}]of tiers.entries()){
    const breathe=reduced?.4:.35+.12*Math.sin(t*.7+i*.7);mapped.lineStyle(1.5,colour,breathe);
-   const inset=half*.55;for(const side of [-1,1])mapped.strokeTriangle(480+side*inset,y+16,480+side*inset*.35,y+16,480+side*inset*.7,y+24);
-   mapped.lineStyle(1,0xe6e2ff,.25).lineBetween(480-half*.65,y+25,480+half*.65,y+25);
+   const inset=half*.62;for(const side of [-1,1]){mapped.fillStyle(colour,breathe*.7).fillTriangle(480+side*inset,y+15,480+side*inset*.12,y+15,480+side*inset*.62,y+26);mapped.lineStyle(1.5,0xf1dba9,.55).strokeTriangle(480+side*inset,y+16,480+side*inset*.35,y+16,480+side*inset*.7,y+24);}
+   mapped.lineStyle(1,0xe6e2ff,.55).lineBetween(480-half*.65,y+25,480+half*.65,y+25);
   }
   for(let i=0;i<3;i++){const x=290+i*190+(reduced?0:Math.sin(t*.22+i)*24);for(let r=4;r>0;r--)floor.fillStyle(colour,.006).fillEllipse(x,330+i%2*170,r*45,r*75);}
  }};

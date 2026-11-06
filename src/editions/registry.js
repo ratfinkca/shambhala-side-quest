@@ -20,8 +20,13 @@ export function clockPracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.has('clock');
 }
-export async function startEdition(env,actions,{clockPractice=false}={}){
+export function venuePracticeRequested(env,search){
+ const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
+ return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.has('venues');
+}
+export async function startEdition(env,actions,{clockPractice=false,venuePractice=false}={}){
  const edition=getEdition(editionIdFromEnv(env));
+ if(env.DEV===true&&edition.id==='smf'&&venuePractice&&actions.venues)return actions.venues(edition);
  if(env.DEV===true&&edition.id==='smf'&&clockPractice&&actions.clock)return actions.clock(edition);
  return edition.playable?actions.game(edition):actions.scaffold(edition);
 }

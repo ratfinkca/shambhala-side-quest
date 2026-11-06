@@ -135,3 +135,7 @@ Generic retains existing same-origin saves/consent/recovery; SMF uses a separate
 Start an SMF development server with `VITE_EDITION=smf npm run dev -- --port 5191 --strictPort`, then open [clock practice](http://127.0.0.1:5191/?rehearsal&clock). Choose the generic clock or any of the six proposed main-stage phrase clocks. Start fresh, pause/resume, mute, click/tap a destination or use arrows/WASD; B activates charged Bass Head. Hidden tabs pause. Changing clocks starts a fresh round.
 
 This is a neutral timing floor with diagnostic synthesized percussion, not finished venue art or music. No real progress, local scores, recovery, analytics or online clients are initialized. Reload starts fresh. Production builds omit this lab and keep SMF's normal catalogue static; generic gameplay remains available separately. [Clock preview evidence](docs/superpowers/smf-clock-preview-validation.md).
+
+## Living Room and Pagoda venue practice (local development only)
+
+On the SMF dev server open [venue practice](http://127.0.0.1:5191/?rehearsal&venues). Choose The Living Room or The Pagoda and Start fresh. Each has authored scenery, speaker/crowd routing, its own phrase-length clock and an original synthesized music sketch. Collect the shown spark target; practice never saves progress or sends online data. Pause, sound controls, hidden-tab pause and on-field Bass Head remain available. The normal SMF catalogue and anonymous secret tiles are unchanged. [Validation and limits](docs/superpowers/smf-venue-preview-validation.md).

@@ -32,16 +32,16 @@
 
 ## Part A — musical clock (first implementable slice)
 
-- [ ] Execute the [detailed musical-clock plan](2026-11-06-smf-musical-clock.md).
-- [ ] Show a DEV-only, disposable timing lab with canonical main-stage clock choices and generic compatibility. This is a clock/instrument check, not a named SMF venue dressed in old art.
-- [ ] Verify exact durations, 2× boundaries, pause/resume, bounded audio scheduling and beat/visual agreement. Generic regression fixtures and actual paused reload recovery remain valid.
-- [ ] Record browser/audio/device evidence accurately and resolve important independent review findings.
+- [x] Execute the [detailed musical-clock plan](2026-11-06-smf-musical-clock.md).
+- [x] Show a DEV-only, disposable timing lab with canonical main-stage clock choices and generic compatibility. This is a clock/instrument check, not a named SMF venue dressed in old art.
+- [x] Verify exact durations, 2× boundaries, pause/resume, bounded audio scheduling and beat/visual agreement. Generic regression fixtures and actual paused reload recovery remain valid.
+- [x] Record browser/audio/device evidence accurately and resolve important independent review findings.
 
 **Exit:** trusted timing contract and working lab, default SMF remains the static catalogue, no new backend or production protocol. The owner reviews the clock preview before it becomes the basis of the six-stage playtest.
 
 ## Part B — six authored main venues and local run preview
 
-**Entry:** accepted clock behavior and a detailed task plan using the actual Part A interfaces. Filename reserved: `2026-11-06-smf-main-stages.md` (not yet written). No separate six-way implementation fork.
+**Entry:** accepted clock behavior and a detailed task plan using the actual Part A interfaces. The first [two-venue task plan](2026-11-06-smf-main-stages.md) implements Living Room/Pagoda only; four more venues and complete run flow follow. No separate six-way implementation fork.
 
 **Concrete content and code boundaries:**
 
@@ -81,4 +81,4 @@
 
 ## Scope and handoff
 
-M2 finishes with six real mains and the online/local lifecycle; M3 adds all three secret visits, M4 completes nine music/lighting identities, and M5 finishes 2027-inspired interface polish. These are incremental engineering previews toward the complete nine-venue pitch. This delivery document sequences the program; only Part A currently contains implementation-ready tasks. Do not report all of M2 complete after the clock lab.
+M2 finishes with six real mains and the online/local lifecycle; M3 adds all three secret visits, M4 completes nine music/lighting identities, and M5 finishes 2027-inspired interface polish. These are incremental engineering previews toward the complete nine-venue pitch. This delivery document sequences the program; Part A and the first two-venue subset of B have task plans. Do not report all of M2 complete after the clock lab.

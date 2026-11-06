@@ -11,11 +11,12 @@ export function diagnosticVoices({timing,step,phase}){
  if(step%timing.stepsPerBeat===timing.stepsPerBeat/2)voices.push({kind:'hat',noise:true,filter:7500,duration:.025,volume:.012});
  return voices;
 }
-export function createClockPractice({createSession}){
- let timing=getTiming(CLOCK_CHOICES[1].id),session=null,state='ready';
- const lab={get timing(){return timing},get state(){return state},
- start(){session?.destroy();session=createSession();state='playing';session.start({stage:practiceStage(),timingId:timing.id});},
- select(id){if(!CLOCK_CHOICES.some(c=>c.id===id))throw new Error('Unknown practice clock');timing=getTiming(id);lab.start();},
+export function createClockPractice({createSession,choices=CLOCK_CHOICES,resolveStage=practiceStage,initialId=choices===CLOCK_CHOICES?CLOCK_CHOICES[1].id:choices[0]?.id}){
+ const resolve=id=>{const choice=choices.find(c=>c.id===id);if(!choice)throw new Error('Unknown practice choice');return {timing:getTiming(choice.timingId??choice.id),stage:resolveStage(id)};};
+ let selected=resolve(initialId),session=null,state='ready';
+ const lab={get timing(){return selected.timing},get stage(){return selected.stage},get state(){return state},
+ start(){session?.destroy();session=createSession();state='playing';session.start({stage:selected.stage,timingId:selected.timing.id});},
+ select(id){selected=resolve(id);lab.start();},
  pause(){if(state==='playing'){session.pause();state='paused';}},
  resume(){if(state==='paused'){session.resume();state='playing';}},
  finish(){session?.pause();state='ended';},

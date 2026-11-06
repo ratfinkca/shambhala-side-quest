@@ -40,6 +40,10 @@ The [rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) rec
 
 Run an SMF dev server and open `/?rehearsal&clock` (current preview: http://127.0.0.1:5191/?rehearsal&clock). Seven trusted clocks, fixed-millisecond effects, synchronized crowd/scoring/lights and bounded audio scheduling are available on a neutral floor. All state is disposable; reload does not recover this lab. Generic 60-second round objects, score payloads, recovery-v1 and frozen pending posts remain compatible. Production SMF still opens its static catalogue; lab imports are removed from both production editions. No secret profile/name is added to the lab.
 
+## M2B1 venue practice
+
+The first two authored SMF venues are implemented locally at `http://127.0.0.1:5191/?rehearsal&venues`: Living Room and Pagoda, with independent scenery/geometry, their canonical clocks, preview targets and original phrased music sketches. [Plan](superpowers/plans/2026-11-06-smf-main-stages.md) and [validation](superpowers/smf-venue-preview-validation.md). Isolated practice only: no saves/progression/online connections; one Phaser engine, stable HUD and whole-floor framing. Four venues and real six-stage run/perk flow follow; durable SMF recovery and online contract remain later work. Normal SMF stays the static concealed-secret catalogue.
+
 ## Architecture
 
 Vite/Phaser static frontend on GitHub Pages. Local M0 uses `src/main.js` as an edition-first loader, `src/game-entry.js` for the existing playable bootstrap, and `src/editions/` for trusted identity, storage context and the static SMF catalogue. Pure game/run/stage rules live in `src/game.js`, `src/run.js`, `src/stages.js`, `src/endless.js`; Phaser rendering in GameScene/StageRenderer/Crowd/Avatar. `src/screens.js` controls navigation and `src/results-view.js` renders score decisions. `src/progression.js`, profile/storage own local XP and saves. Theme registry/art and stage music/lighting are independent.
