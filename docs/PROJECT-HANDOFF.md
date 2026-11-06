@@ -42,7 +42,7 @@ Run an SMF dev server and open `/?rehearsal&clock` (current preview: http://127.
 
 ## M2B1 venue practice
 
-The first two authored SMF venues are implemented locally at `http://127.0.0.1:5191/?rehearsal&venues`: Living Room and Pagoda, with independent scenery/geometry, their canonical clocks, preview targets and original phrased music sketches. [Plan](superpowers/plans/2026-11-06-smf-main-stages.md) and [validation](superpowers/smf-venue-preview-validation.md). Isolated practice only: no saves/progression/online connections; one Phaser engine, stable HUD and whole-floor framing. Four venues and real six-stage run/perk flow follow; durable SMF recovery and online contract remain later work. Normal SMF stays the static concealed-secret catalogue.
+The first two authored SMF venues are implemented locally at `http://127.0.0.1:5191/?rehearsal&venues`: Living Room and Pagoda, with independent scenery/geometry, their canonical clocks, preview targets and original phrased music sketches. [Plan](superpowers/plans/2026-11-06-smf-main-stages.md) and [validation](superpowers/smf-venue-preview-validation.md). Isolated practice only: no saves/progression/online connections; one Phaser engine, stable HUD and whole-floor framing. Four venues and real six-stage run/perk flow follow; durable SMF recovery and online contract remain later work. Normal SMF stays the static concealed-secret catalogue. The follow-up art correction replaces the generic Living Room cabin with a steep A-frame and Pagoda’s repeated roofs with a dated-reference faceted tower, arches and broad columned porch. Pagoda has a visually inspected 2026 reference; Living Room’s A-frame is supported by a firsthand 2026 written report, with fine proportions still interpretive.
 
 ## Architecture
 

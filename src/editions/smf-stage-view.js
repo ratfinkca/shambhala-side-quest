@@ -15,15 +15,23 @@ function livingRoom(scene){
  g.fillStyle(0xc2b58a,.48).fillPoints(bank.map(p=>({x:p.x+14,y:p.y})),true);g.fillStyle(0x1c5c65).fillPoints(bank,true);
  for(let i=0;i<8;i++)g.fillStyle(0xc6b584,.018).fillEllipse(510,402,720-i*52,500-i*32);
  grain(g,[0xe6d0a1,0x91b9a7,0xa9c8b7]);cedar(g,125,-20);cedar(g,850,12);
- // Low timber shelter, warm plankwork and a lit booth beneath the sister cedars.
- g.fillStyle(0x243d35).fillRoundedRect(337,74,286,92,5);
- for(let x=344;x<620;x+=17)g.lineStyle(2,0xb39666,.36).lineBetween(x,84,x,162);
- g.fillStyle(0x342f25).fillPoints([{x:310,y:91},{x:347,y:58},{x:601,y:58},{x:649,y:91},{x:638,y:105},{x:320,y:105}],true);
- g.lineStyle(3,0xd2b17d,.8).lineBetween(320,103,638,103).lineBetween(347,61,601,61);
- for(const x of [348,612])g.fillStyle(0x6b5438).fillRect(x,95,10,80);
- g.fillStyle(0x102f2d).fillRoundedRect(415,113,139,40,5);g.lineStyle(1,0xd8c08a,.7).strokeRoundedRect(415,113,139,40,5);
- for(let i=0;i<9;i++)g.fillStyle(i%2?0x8dc9b4:0xf1c88e,.32).fillRect(423+i*14,120,8,22);
- g.fillStyle(0x7b6040).fillRoundedRect(393,151,184,17,4);
+ // Steep open A-frame, rather than a generic flat-roof cabin. The timber
+ // triangles and deep stage opening remain readable at phone scale.
+ g.fillStyle(0x182e29).fillTriangle(480,10,315,172,645,172);
+ g.fillStyle(0x554a35).fillTriangle(480,10,315,172,345,166);
+ g.fillStyle(0x766044).fillTriangle(480,10,645,172,615,166);
+ g.fillStyle(0x273e32).fillTriangle(480,39,368,157,592,157);
+ for(let y=56;y<155;y+=12){const half=(y-30)*.87;g.lineStyle(1,0xc0a274,.22).lineBetween(480-half,y,480+half,y);}
+ g.fillStyle(0x0c2929).fillTriangle(480,59,395,153,565,153);
+ g.lineStyle(7,0xd0ac71,.9).lineBetween(480,14,326,170).lineBetween(480,14,634,170);
+ g.lineStyle(3,0xecd39b,.7).lineBetween(480,40,365,164).lineBetween(480,40,595,164);
+ g.lineStyle(5,0x8d714d,1).lineBetween(353,145,607,145).lineBetween(480,42,480,103);
+ for(const x of [370,580])g.fillStyle(0x91734d).fillRect(x,127,9,45);
+ g.fillStyle(0x6a5135).fillRoundedRect(315,167,330,10,3);
+ g.fillStyle(0x143430).fillRoundedRect(421,124,118,35,3);
+ g.lineStyle(2,0xd8c08a,.8).strokeRoundedRect(421,124,118,35,3);
+ for(let i=0;i<8;i++)g.fillStyle(i%2?0x8dc9b4:0xf1c88e,.4).fillRect(429+i*13,130,7,21);
+ g.fillStyle(0x9b794d).fillRoundedRect(409,158,142,9,2);
  // Catenary lamp cord and actual lampshades, all above the active floor.
  const lampPositions=[];let previous={x:130,y:61};
  for(let i=1;i<=20;i++){const p={x:130+i*35,y:61+Math.sin(i/20*Math.PI)*43};g.lineStyle(1,0xd4c39a,.65).lineBetween(previous.x,previous.y,p.x,p.y);previous=p;}
@@ -40,31 +48,66 @@ function livingRoom(scene){
   for(const [x,y]of lampPositions){const breathe=reduced?1:1+Math.sin(t*.6+x)*.08;for(let r=4;r>0;r--)glow.fillStyle(0xffd590,.008*breathe).fillEllipse(x,y+10,r*22,r*13);}
  }};
 }
+// Filled rounded arch sampled as a polygon for both Canvas and WebGL.
+function arch(g,x,y,width,height){
+ const points=[{x:x-width/2,y:y+height},{x:x-width/2,y:y+width*.48}];
+ for(let i=0;i<=12;i++){const angle=Math.PI+i/12*Math.PI;points.push({x:x+Math.cos(angle)*width/2,y:y+width*.48+Math.sin(angle)*width*.48});}
+ points.push({x:x+width/2,y:y+height});
+ g.fillStyle(0x152332).fillPoints(points,true);g.lineStyle(2,0xe1d8c7,.9).strokePoints(points,true);
+}
 function pagoda(scene){
  const g=scene.add.graphics();g.fillStyle(0x172a35).fillRect(0,0,W,H);g.fillStyle(0x151c30).fillRect(0,0,W,175);
- // Deep forest silhouette frames a luminous seven-tier facade.
  for(const x of [70,125,835,895]){g.fillStyle(0x0f202b).fillRect(x,0,17,185);for(let i=0;i<5;i++)g.fillTriangle(x+8,12+i*25,x-48,63+i*25,x+68,63+i*25);}
  for(let i=0;i<7;i++)g.lineStyle(1,i%2?0xa59de1:0x67a2b8,.07).strokeEllipse(480,390,250+i*105,120+i*58);
- grain(g,[0xb9b2e1,0x8cb3c6]);g.fillStyle(0x101727).fillRoundedRect(246,144,468,32,6);
- const tiers=[];
- for(let i=0;i<7;i++){
-  const y=23+i*20,half=44+i*25;
-  g.fillStyle(i%2?0x3d426a:0x313b61).fillRect(480-half*.72,y,half*1.44,24);
-  for(const side of [-1,1])g.lineStyle(1,0x9687bd,.6).lineBetween(480+side*half*.65,y+2,480+side*half*.65,y+23);
-  const roof=[{x:480-half-12,y:y+9},{x:480-half*.8,y:y+3},{x:480-half*.45,y:y-7},{x:480+half*.45,y:y-7},{x:480+half*.8,y:y+3},{x:480+half+12,y:y+9},{x:480+half,y:y+14},{x:480-half,y:y+14}];
-  g.fillStyle(0x151f35).fillPoints(roof,true);g.lineStyle(1.5,0xd0c9ef,.65).strokePoints(roof,true);tiers.push({y,half});
+ grain(g,[0xb9b2e1,0x8cb3c6]);g.fillStyle(0x101727).fillRoundedRect(236,165,488,12,3);
+ // 2026 reference: a broad faceted white tower, one main peaked roof and
+ // a wraparound lower porch. Storeys are wall/rail bands, not seven roofs.
+ const faces=[
+  [{x:360,y:50},{x:416,y:42},{x:416,y:139},{x:360,y:148}],
+  [{x:416,y:42},{x:544,y:42},{x:544,y:139},{x:416,y:139}],
+  [{x:544,y:42},{x:600,y:50},{x:600,y:148},{x:544,y:139}],
+ ];
+ // Low side wings sit behind the tower and extend its silhouette.
+ for(const side of [-1,1]){
+  const x=480+side*174;
+  g.fillStyle(0x777f96).fillPoints([{x:x-59,y:109},{x,y:80},{x:x+59,y:109},{x:x+54,y:119},{x:x-54,y:119}],true);
+  g.lineStyle(2,0xd4d0d1,.85).lineBetween(x-59,109,x,80).lineBetween(x,80,x+59,109);
  }
- g.lineStyle(2,0xdac68d,.8).lineBetween(480,3,480,15);
- for(const x of [255,705]){g.fillStyle(0x283344).fillRect(x,102,12,64);for(let i=0;i<4;i++)g.lineStyle(1,0xb6aee0,.45).strokeTriangle(x-11,116+i*12,x+6,106+i*12,x+24,116+i*12);}
- g.fillStyle(0x0c1825).fillRoundedRect(435,143,90,24,4);g.lineStyle(1.5,0xe5d2a8,.7).strokeRoundedRect(435,143,90,24,4);
- const mapped=scene.add.graphics().setDepth(.12),floor=scene.add.graphics().setDepth(.13);
+ faces.forEach((points,i)=>g.fillStyle([0xa8a9b6,0xd2ced1,0x969eaf][i]).fillPoints(points,true));
+ const roof=[{x:480,y:5},{x:552,y:29},{x:618,y:49},{x:634,y:36},{x:622,y:59},{x:548,y:49},{x:480,y:39},{x:412,y:49},{x:338,y:59},{x:326,y:36},{x:342,y:49},{x:408,y:29}];
+ g.fillStyle(0x6e7893).fillPoints(roof,true);g.lineStyle(2,0xe3dbd2,.95).strokePoints(roof,true);
+ g.lineStyle(1,0xc7c7d4,.8).lineBetween(480,5,416,47).lineBetween(480,5,544,47);
+ // Wide shallow porch roof and an open lower level, with a small central gable.
+ g.fillStyle(0x172439).fillRect(259,134,442,34);
+ g.fillStyle(0x9a9dac).fillPoints([{x:275,y:119},{x:360,y:111},{x:416,y:118},{x:544,y:118},{x:600,y:111},{x:685,y:119},{x:716,y:137},{x:244,y:137}],true);
+ g.lineStyle(2,0xe0d8cb,.9).lineBetween(244,137,716,137);
+ g.fillStyle(0xc9c6ce).fillTriangle(480,105,440,137,520,137);
+ g.lineStyle(2,0xeee3cd,.95).strokeTriangle(480,105,440,137,520,137);
+ const mapped=scene.add.graphics().setDepth(.12),details=scene.add.graphics().setDepth(.125),floor=scene.add.graphics().setDepth(.13);
+ // Dark openings and pale rails stay above the projection layer.
+ arch(details,480,53,40,38);arch(details,388,84,26,29);arch(details,572,84,26,29);
+ for(const y of [95,110]){
+  details.lineStyle(2,0xe0dcd3,.95).lineBetween(361,y+4,416,y).lineBetween(416,y,544,y).lineBetween(544,y,599,y+4);
+ }
+ for(let x=423;x<544;x+=12)details.lineStyle(1.5,0xe0dcd3,.85).lineBetween(x,96,x,109);
+ for(const side of [-1,1])for(let i=0;i<4;i++){const x=480+side*(72+i*12);details.lineStyle(1.5,0xd4d4d1,.85).lineBetween(x,96+i, x,110+i);}
+ for(const x of [261,299,343,391,569,617,661,699]){
+  details.fillStyle(0xd3cec7).fillRect(x,138,5,28);details.fillStyle(0xeee0c1).fillRect(x-3,137,11,4);
+ }
+ details.fillStyle(0x131b2c).fillRoundedRect(435,144,90,22,2);
+ details.lineStyle(1.5,0xe4c896,.9).strokeRoundedRect(435,144,90,22,2);
+ details.fillStyle(0xd1b27d,.65).fillRect(436,144,88,3);
  return {update(elapsed,phase,reduced,timing){
   const t=reduced?0:elapsed/1000,phrase=reduced?0:Math.floor(elapsed*timing.bpm/240000/8),colour=[0xa7a0ed,0x82c9d4,0xd8b780,0xc2b0ef][phrase%4];mapped.clear();floor.clear();
-  for(const [i,{y,half}]of tiers.entries()){
-   const breathe=reduced?.4:.35+.12*Math.sin(t*.7+i*.7);mapped.lineStyle(1.5,colour,breathe);
-   const inset=half*.62;for(const side of [-1,1]){mapped.fillStyle(colour,breathe*.7).fillTriangle(480+side*inset,y+15,480+side*inset*.12,y+15,480+side*inset*.62,y+26);mapped.lineStyle(1.5,0xf1dba9,.55).strokeTriangle(480+side*inset,y+16,480+side*inset*.35,y+16,480+side*inset*.7,y+24);}
-   mapped.lineStyle(1,0xe6e2ff,.55).lineBetween(480-half*.65,y+25,480+half*.65,y+25);
-  }
+  faces.forEach((points,i)=>{
+   const breathe=reduced?.2:.18+.07*Math.sin(t*.7+i*.7);
+   mapped.fillStyle(colour,breathe).fillPoints(points,true);
+   const left=points[0].x+5,right=points[1].x-5,mid=(left+right)/2;
+   for(const y of [65,94,120]){
+    mapped.lineStyle(1.5,colour,.7).strokeTriangle(left,y,mid,y-15,right,y);
+    mapped.lineStyle(1,0xf1dba9,.4).lineBetween(left,y+5,right,y+5);
+   }
+  });
   for(let i=0;i<3;i++){const x=290+i*190+(reduced?0:Math.sin(t*.22+i)*24);for(let r=4;r>0;r--)floor.fillStyle(colour,.006).fillEllipse(x,330+i%2*170,r*45,r*75);}
  }};
 }
