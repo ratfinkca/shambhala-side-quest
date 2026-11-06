@@ -3,7 +3,7 @@ import {createMusicTransport} from './music-transport.js';
 import { cycleAt } from './festival.js';
 import { stageVoices, BEAT_MS } from './music.js';
 
-export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)(), {timedVoices}={}) {
+export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)(), {timedVoices,useTransport=false}={}) {
   let noiseBuffer;
   let context, musicBus, effectsBus, enabled = false, lastStep = -1;
   let volumes = { music: .45, effects: .65 };
@@ -76,7 +76,7 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
     sync(round,stageId) {
       if (!enabled || !context || context.state !== 'running' || round.ended) {transport.stop();return;}
       const timing=roundTiming(round),elapsed=elapsedMs(round);
-      if(timing!==getTiming()){
+      if(useTransport||timing!==getTiming()){
         transport.sync({timing,elapsedMs:elapsed,audioNowSec:context.currentTime,multiplier:round.multiplier,flowActive:round.flowMs>0});return;
       }
       const step = Math.floor(elapsed / (BEAT_MS/2));

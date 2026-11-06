@@ -51,3 +51,7 @@ test('timed audio queues absolute onsets, stays silent without injected voices, 
  const silent=fake(),s=createAudio(()=>silent.ctx);s.setEnabled(true);s.sync(round,'smf-living-room');assert.equal(silent.voices.length,0);
  f.ctx.state='suspended';audio.sync(round);assert.equal(starts.length,1);f.ctx.state='running';audio.setEnabled(true);audio.sync({...round,remainingMs:68571-18000});assert.ok(starts.length>1);audio.setEnabled(false);assert.ok(f.voices.every(v=>v.stopped));
 });
+
+test('diagnostic transport can exercise the legacy clock without changing default legacy music',()=>{
+ const f=fake(),audio=createAudio(()=>f.ctx,{useTransport:true,timedVoices:()=>[{frequency:333,type:'sine',duration:.1,volume:.02}]});audio.setEnabled(true);audio.sync({remainingMs:60000,multiplier:1,flowMs:0},'clock-lab');assert.equal(f.voices[0].frequency.value,333);
+});

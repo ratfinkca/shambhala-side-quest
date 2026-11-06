@@ -8,7 +8,7 @@ const W=960,H=640;
 export class StageRenderer {
  constructor(scene){this.scene=scene;this.objects=[];}
  show(stage){
-  this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);this.drawForest();
+  this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);if(stage.id==='clock-lab')this.drawPractice();else this.drawForest();
   if(stage.id!=='forest')this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
   this.concertBeams=[];this.lamps=[];this.canopyLights=[];
   {
@@ -75,6 +75,14 @@ export class StageRenderer {
   this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
  }
  destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];}
+  drawPractice(){
+    const g=this.scene.add.graphics();g.fillStyle(0x14252c).fillRect(0,0,W,H);
+    g.lineStyle(1,0x91b8c1,.09);
+    for(let x=0;x<W;x+=80)g.lineBetween(x,0,x,H);
+    for(let y=0;y<H;y+=80)g.lineBetween(0,y,W,y);
+    g.lineStyle(2,0xa9cfd2,.25).strokeRoundedRect(40,40,W-80,H-80,24);
+    this.fireflies=[];
+  }
   drawForest() {
     const g = this.scene.add.graphics();
     g.fillGradientStyle(0x102430, 0x162036, 0x183c37, 0x153133).fillRect(0, 0, W, H);

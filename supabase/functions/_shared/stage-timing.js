@@ -14,7 +14,8 @@ export function getTiming(id='generic-60-v1'){
 export function assertTiming(timing){if(!timing||getTiming(timing.id)!==timing)throw new Error('Untrusted stage clock');return timing;}
 function activeTime(elapsed,timing){assertTiming(timing);if(!Number.isFinite(elapsed))throw new Error('Invalid elapsed time');return Math.max(0,Math.min(elapsed,timing.durationMs));}
 export function musicalPosition(elapsed,timing=getTiming()){
- const time=activeTime(elapsed,timing),beats=time*timing.bpm/60000;
+ const time=activeTime(elapsed,timing),totalBeats=Math.round(timing.durationMs*timing.bpm/60000);
+ const beats=Math.min(time*timing.bpm/60000,totalBeats-1e-9);
  return {beat:Math.floor(beats),bar:Math.floor(beats/timing.beatsPerBar),step:Math.floor(beats*timing.stepsPerBeat),beatPhase:beats%1};
 }
 export function phaseAt(elapsed,timing=getTiming()){

@@ -128,4 +128,10 @@ Stage awards and checkpoints persist together. Local score saving stays separate
 
 The default build/development edition is now `generic` (working title Festival Side Quest). `VITE_EDITION=smf npm run dev -- --port 5191 --strictPort` opens the non-playable nine-stage SMF catalogue. Unknown configured editions fail. Use `npm run build:generic` / `npm run build:smf` for separate `dist/generic` / `dist/smf` artifacts, and `npm run check:editions` for build/asset checks. Neither command publishes. Edition verification uses temporary builds and preserves the default `dist/`; rebuild the default artifact before any later default Pages upload after using the explicit nested output commands. The existing Pages workflow is unchanged; a public rebrand/release remains a later explicit decision.
 
-Generic retains existing same-origin saves/consent/recovery; SMF uses a separate context and currently initializes no game or online services. [M0 preview validation](docs/superpowers/edition-foundation-preview-validation.md) records tested flows and device/network observation limits.
+Generic retains existing same-origin saves/consent/recovery; SMF uses a separate context; its normal catalogue initializes no game or online services. The isolated DEV clock lab described below is the only playable SMF entry in this slice. [M0 preview validation](docs/superpowers/edition-foundation-preview-validation.md) records tested flows and device/network observation limits.
+
+## SMF musical-clock practice (local development only)
+
+Start an SMF development server with `VITE_EDITION=smf npm run dev -- --port 5191 --strictPort`, then open [clock practice](http://127.0.0.1:5191/?rehearsal&clock). Choose the generic clock or any of the six proposed main-stage phrase clocks. Start fresh, pause/resume, mute, click/tap a destination or use arrows/WASD; B activates charged Bass Head. Hidden tabs pause. Changing clocks starts a fresh round.
+
+This is a neutral timing floor with diagnostic synthesized percussion, not finished venue art or music. No real progress, local scores, recovery, analytics or online clients are initialized. Reload starts fresh. Production builds omit this lab and keep SMF's normal catalogue static; generic gameplay remains available separately. [Clock preview evidence](docs/superpowers/smf-clock-preview-validation.md).

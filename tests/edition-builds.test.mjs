@@ -14,7 +14,8 @@ async function inventory(dir,prefix=''){
 test('edition verification leaves the default generic release artifact untouched',async()=>{
  const build=spawnSync(process.execPath,['node_modules/vite/bin/vite.js','build'],{cwd:root,env:{...process.env,VITE_EDITION:'generic'},encoding:'utf8'});
  assert.equal(build.status,0,build.stderr);
- const before=await inventory(resolve(root,'dist'));assert.ok(!before.some(([p])=>p.endsWith('/title.webp')));
+ const before=await inventory(resolve(root,'dist'));
+ for(const [file] of before.filter(([p])=>p.endsWith('.js'))){const source=await readFile(resolve(root,'dist',file),'utf8');assert.doesNotMatch(source,/clock-practice-entry|Timing and instrument practice|clock-lab-select/);}assert.ok(!before.some(([p])=>p.endsWith('/title.webp')));
  const check=spawnSync(process.execPath,['scripts/check-edition-builds.mjs'],{cwd:root,encoding:'utf8'});assert.equal(check.status,0,check.stdout+check.stderr);
  assert.deepEqual(await inventory(resolve(root,'dist')),before,'The default dist must remain the generic-only artifact after edition verification');
 });

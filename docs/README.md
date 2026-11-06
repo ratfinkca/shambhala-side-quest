@@ -12,7 +12,7 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 ## M2 implementation planning
 
-[M2 delivery sequence](superpowers/plans/2026-11-06-smf-m2-delivery.md) · [musical-clock foundation task plan](superpowers/plans/2026-11-06-smf-musical-clock.md). Self-reviewed, awaiting owner review. First build an isolated timing/audio/lighting lab; then the six authored mains and local run flow, then edition-safe online integration. Generic gameplay/recovery/wire compatibility stays protected. SMF product implementation and backend rollout have not started. Native execution remains selected.
+[M2 delivery sequence](superpowers/plans/2026-11-06-smf-m2-delivery.md) · [musical-clock foundation task plan](superpowers/plans/2026-11-06-smf-musical-clock.md). Approved for native execution. The isolated timing/audio/lighting lab is implemented locally; [clock validation](superpowers/smf-clock-preview-validation.md) records evidence and limits. Six authored mains/local run flow and edition-safe online integration follow. Generic gameplay/recovery/wire compatibility stays protected; SMF normal play and service connections remain disabled.
 
 ## Completed Endless program and release evidence
 

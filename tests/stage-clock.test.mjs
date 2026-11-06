@@ -26,3 +26,7 @@ test('musical grid derives rational positions without accumulating rounded beats
  const m=musicalPosition(10000,t);assert.equal(m.beat,28);assert.equal(m.step,114);assert.equal(m.bar,7);assert.ok(m.beatPhase>=0&&m.beatPhase<1);
  const g=getTiming();assert.equal(phaseProgress(6000,g),.5);assert.equal(phaseProgress(54500,g),.5);
 });
+
+test('ended phrase position stays in the final bar instead of displaying an unplayed next bar',()=>{
+ for(const id of ['smf-fractal-clock-preview-1','smf-grove-clock-preview-1','smf-pagoda-clock-preview-1']){const t=getTiming(id);assert.equal(musicalPosition(t.durationMs,t).bar,31);assert.equal(musicalPosition(t.durationMs,t).beat,127);}
+});

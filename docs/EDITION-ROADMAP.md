@@ -24,7 +24,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Outcome:** nine dated, reviewable stage briefs and an agreed SMF route/music contract.
 
-**Status:** [sourced research briefs](research/smf-stage-identities-2026-11-06.md) and [concrete route/rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) drafted on 2026-11-06. Fresh builder check found no important unanswered questions beyond the recorded owner decisions. The owner selected 2026 venue structures and phrase-length rounds; 2027 official-site art is a separate [title/menu reference](research/smf-2027-interface-direction-2026-11-06.md). Secret reference gaps, final artwork and listening/layout acceptance remain explicit. The planning baseline is settled; ranked values are not frozen, and no M2 product changes have started.
+**Status:** [sourced research briefs](research/smf-stage-identities-2026-11-06.md) and [concrete route/rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) drafted on 2026-11-06. Fresh builder check found no important unanswered questions beyond the recorded owner decisions. The owner selected 2026 venue structures and phrase-length rounds; 2027 official-site art is a separate [title/menu reference](research/smf-2027-interface-direction-2026-11-06.md). Secret reference gaps, final artwork and listening/layout acceptance remain explicit. The planning baseline is settled; ranked values are not frozen, and M2A clock practice is implemented locally.
 
 - Research 2023–2026 official stage lineups/curator statements and available primary sets; record gaps instead of inferring secret programming from unrelated stages.
 - For each venue: recognizable setting/materials, day/night identity, musical palette/tempo/form, lighting language, geometry/spawn constraints and asset sources.
@@ -38,7 +38,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Outcome:** a complete six-stage SMF tour and Endless main loop with all parent stages recognizable.
 
-**Status:** [M2 delivery sequence](superpowers/plans/2026-11-06-smf-m2-delivery.md) and [first musical-clock implementation plan](superpowers/plans/2026-11-06-smf-musical-clock.md) written and self-reviewed, awaiting owner review. Start with canonical timing and an isolated clock lab, then six authored venues/local run flow, then the new online contract. Generic recovery/posting stays unchanged; SMF production play remains disabled. No M2 product code or backend changes yet.
+**Status:** [M2 delivery sequence](superpowers/plans/2026-11-06-smf-m2-delivery.md) and [first musical-clock implementation plan](superpowers/plans/2026-11-06-smf-musical-clock.md) approved; M2A canonical timing and isolated clock practice are implemented locally. [Clock validation](superpowers/smf-clock-preview-validation.md) records final tests/review/device limits. Next: owner timing preview, then six authored venues/local run flow and the new online contract. Generic recovery/posting stays unchanged; SMF production play remains disabled. No backend rollout or public release in M2A.
 
 - Author all six layouts with safe spawns, reachable pickups and touch-friendly routes. Develop in contrasting internal slices, then complete the full collection.
 - Use stable stage IDs/canonical route, finite four-perk builds/swapping, mode-aware save/finish/results and appropriately named discovery slots.

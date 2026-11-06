@@ -10,6 +10,7 @@ test('long scene starts and restores paused at its own clock without duplicate p
  const s=scene(),timing=getTiming('smf-living-room-clock-preview-1');s.startRound({stage:STAGES[0],timingId:timing.id});assert.equal(s.round.remainingMs,68571);
  const f=recoveryFixture();const round=createRound({},timing.id);advanceRound(round,20000);f.scene.round={...round};delete f.scene.round.rules;f.scene.round.sincePickupMs=null;
  s.restoreRecovery(f.scene,{stage:STAGES[0],rules:rulesFor([]),outfit:{}});assert.equal(s.running,false);assert.equal(s.round.remainingMs,48571);assert.equal(s.round.timingId,timing.id);assert.equal(s.crowd.elapsed,20000);assert.equal(s.crowd.timing,timing);assert.equal(s.background.args[3],timing);assert.equal(s.target,null);assert.equal(s.round.pickups,0);
+ s.crowd.people=f.scene.crowd.map(encounter=>({encounter}));assert.equal(s.captureRecovery().round.timingId,timing.id);
  s.update(90000,10000);assert.equal(s.round.remainingMs,48571);assert.equal(s.round.pickups,0);
  const bad=structuredClone(f.scene);bad.round.timingId='unknown';assert.throws(()=>s.restoreRecovery(bad,{stage:STAGES[0],rules:rulesFor([]),outfit:{}}));
 });
