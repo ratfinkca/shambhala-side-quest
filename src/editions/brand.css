@@ -3,3 +3,24 @@
 .neutral-title::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--ink),transparent 80%);z-index:-1}
 .neutral-wordmark{font:400 clamp(44px,6vw,86px)/.95 var(--display);letter-spacing:-1px;text-align:center;color:var(--paper);text-shadow:0 3px 0 var(--ink),0 0 40px var(--ink);max-width:7em;padding:30px;margin:0}
 @media(max-width:640px){.neutral-title{min-height:210px}.neutral-wordmark{font-size:clamp(42px,10vw,62px);padding:24px}}
+.scaffold-header{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:18px 0;color:var(--muted);font-size:12px}
+.scaffold-header .menu-eyebrow{margin:0}
+.scaffold-hero{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,5vw,72px);align-items:center;border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--ink);padding-right:clamp(20px,4vw,48px)}
+.scaffold-hero .title-art{aspect-ratio:1}
+.scaffold-hero h2{font:400 clamp(36px,4.5vw,66px)/1 var(--display);margin:16px 0;color:var(--paper)}
+.scaffold-hero .primary-button{display:inline-block;text-decoration:none;padding:12px 22px;margin:14px 0}
+.stage-catalogue{padding:42px 0;scroll-margin-top:20px}
+.stage-catalogue h2{font:400 clamp(28px,4vw,44px)/1.1 var(--display);color:var(--paper);margin:0 0 12px}
+.stage-preview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:24px;align-items:start}
+.stage-family{display:grid;gap:10px;min-width:0}
+.stage-preview{padding:24px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--muted)}
+.stage-preview h3{font:400 28px/1.1 var(--display);color:var(--paper);margin:12px 0}
+.stage-preview p{font-size:13px;line-height:1.6}
+.stage-preview .menu-eyebrow{font-size:9px;margin:0;color:var(--accent)}
+.stage-preview small{font-size:11px}
+.stage-preview.secret{border-color:var(--secondary);background:var(--ink);margin-left:16px}
+.stage-preview.secret h3{color:var(--secondary)}
+.scaffold-footer{padding:0 0 32px;color:var(--muted);font-size:12px;line-height:1.6}
+@media(max-width:700px){.scaffold-header{align-items:flex-start;flex-direction:column;gap:4px}.scaffold-hero{grid-template-columns:1fr;padding:0;gap:0}.scaffold-hero .title-art{max-height:320px;width:100%}.scaffold-hero>div:last-child{padding:24px}.stage-preview-grid{grid-template-columns:1fr}.stage-catalogue{padding:30px 0}.stage-preview{padding:20px}}
+
+.shell.edition-scaffold{height:auto;min-height:100dvh;overflow:visible;display:block}

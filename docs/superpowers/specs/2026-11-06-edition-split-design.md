@@ -1,6 +1,6 @@
 # Shared engine, generic edition and SMF edition
 
-Date: 2026-11-06. Status: proposed design for review; planning authorized, implementation not yet started. Published baseline: recovery PR #19 /67c44e0. This supersedes the existing-three-stages/universal 128 BPM music proposal.
+Date: 2026-11-06. Status: approved by the user on 2026-11-06; M0 foundation implemented locally, final review pending. Published baseline: recovery PR #19 /67c44e0. This supersedes the existing-three-stages/universal 128 BPM music proposal.
 
 ## Intent and user decisions
 
@@ -110,4 +110,4 @@ The shared-edition architecture and all nine venues respond to the user's reques
 
 Initial primary sources: [official six-stage descriptions](https://shambhalamusicfestival.com/stages), [Grove director's 2024 guide including Secret Garden](https://www.shambhalamusicfestival.com/blog/the-grove-stage-directors-guide-to-2024), and [2025 Grove lineup](https://www.shambhalamusicfestival.com/blog/2025-grove-stage-lineup). Full multi-year research is a planned deliverable, not claimed complete here.
 
-Planning validation: fresh read-only builder check on 2026-11-06 found no important unanswered questions. Relative documentation links and whitespace checks pass. This is documentation only; product tests/builds were not rerun and no runtime/release change is claimed. User review remains the next gate.
+Planning validation: fresh read-only builder check on 2026-11-06 found no important unanswered questions. Relative documentation links and whitespace checks pass. The user subsequently approved the design and native execution. Current local implementation/evidence is recorded in [M0 validation](../edition-foundation-preview-validation.md); no release change is claimed.

@@ -2,7 +2,7 @@
 
 A tiny, unofficial festival-inspired game: wander a glowing forest, collect good vibes, and chase your personal best in 60-second rounds.
 
-Development direction: [two-edition roadmap](docs/EDITION-ROADMAP.md) — a shared engine, compatible generic game and polished nine-stage SMF edition. This is a planning proposal; the playable features below describe the current release.
+Development direction: [two-edition roadmap](docs/EDITION-ROADMAP.md) — a shared engine, compatible generic game and polished nine-stage SMF edition. The approved M0 foundation is implemented locally; the playable features below describe the current public release.
 
 ## Festival Run
 
@@ -123,3 +123,9 @@ Open `http://127.0.0.1:5181/?rehearsal&recovery`. Recovery lab uses a persistent
 Normal local Endless saves about once a second and at important transitions when browser storage and Web Locks are available. Reopening offers Resume or confirmed Discard; live stages return paused with time, points, perks, pickup positions and active effects retained. A second participating tab is blocked. Sudden termination can lose the unsaved interval; clearing/evicting browser storage cannot be recovered. Rush/Festival recovery and cross-device sync are not included.
 
 Stage awards and checkpoints persist together. Local score saving stays separate from explicit online posting. Recovery preserves the original run/ticket/build and any attempted posting payload; uncertain posting retries are duplicate-safe. Unused tickets expire after 24 hours, while local play/saving continue. After a full reload, recovered-run playtest reporting stops rather than inventing missing measurements; new runs track under existing consent. No recovery map/positions/ticket are sent to analytics. Recovery ships in [PR #19](https://github.com/ratfinkca/shambhala-side-quest/pull/19); hosted acceptance is recorded on that PR and in the release evidence.
+
+## Local edition previews
+
+The default build/development edition is now `generic` (working title Festival Side Quest). `VITE_EDITION=smf npm run dev -- --port 5191 --strictPort` opens the non-playable nine-stage SMF catalogue. Unknown configured editions fail. Use `npm run build:generic` / `npm run build:smf` for separate `dist/generic` / `dist/smf` artifacts, and `npm run check:editions` for build/asset checks. Neither command publishes. The existing Pages workflow is unchanged; a public rebrand/release remains a later explicit decision.
+
+Generic retains existing same-origin saves/consent/recovery; SMF uses a separate context and currently initializes no game or online services. [M0 preview validation](docs/superpowers/edition-foundation-preview-validation.md) records tested flows and device/network observation limits.
