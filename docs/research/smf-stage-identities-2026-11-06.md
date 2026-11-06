@@ -6,7 +6,7 @@ Status: sourced first-pass briefs for owner review, not final artwork or composi
 
 Official stage-specific announcements establish advertised bookings and curator intent, not proof that every scheduled performance happened. Artist-uploaded recordings establish the uploader's stated venue/year, not a complete roster. Playlist inclusion alone is not booking evidence. The suggestions below are **our original game interpretation**; tempo/key/palette choices are not measurements of festival recordings.
 
-Research covers 2023–2026, with gaps shown below. Six current official stage photo carousels were visually inspected in a browser; individual capture years are not consistently provided, and some Living Room alt text explicitly refers to 2024. Treat these as silhouette/material references, not six verified 2026 site plans. The dated [2026 photo-album index](https://www.shambhalamusicfestival.com/blog/2026-photo-album-blog) is a further art-reference source, not a claim that every linked album was reviewed. Default visual target proposed: 2026 structures, subject to owner confirmation before art freeze. No full recorded set was audibly auditioned here; linked recordings are listening references for the composition pass.
+Research covers 2023–2026, with gaps shown below. Six current official stage photo carousels were visually inspected in a browser; individual capture years are not consistently provided, and some Living Room alt text explicitly refers to 2024. Treat these as silhouette/material references, not six verified 2026 site plans. The dated [2026 photo-album index](https://www.shambhalamusicfestival.com/blog/2026-photo-album-blog) is a further art-reference source, not a claim that every linked album was reviewed. The owner selected 2026 structures as the venue baseline. Individual final silhouettes still need dated reference checks; 2027 campaign art is a separate [title/menu reference](smf-2027-interface-direction-2026-11-06.md). No full recorded set was audibly auditioned here; linked recordings are listening references for the composition pass.
 
 ## Multi-year programming matrix
 
@@ -104,7 +104,7 @@ All names, identifying art and descriptions below remain developer/owner materia
 - Compose original rhythm, harmony and motifs. Reference sets explain the room's range; they are not a source of samples, melodies, voice clips or artist branding. Audition original compositions on headphones and phone speakers before acceptance.
 - Keep a coherent four/eight-bar vocabulary and larger 16/32-bar arcs. Fractal swings differently from Grove; AMP's space differs from Village's roll. A faster music grid never increases avatar speed automatically.
 - Foreground sparks, dancers, taps and bass edges stay legible. Use broad smooth sweeps, controlled projection changes and static reduced-motion alternatives; no harsh strobing.
-- Freeze final structures only after confirming the target year, dated images and the secret-stage gaps with the owner. This pass establishes a build direction, not nine final art approvals.
+- Use the selected 2026 baseline; freeze final structures only after checking dated images and the secret-stage gaps with the owner. This pass establishes a build direction, not nine final art approvals.
 
 ## Research completion limits
 

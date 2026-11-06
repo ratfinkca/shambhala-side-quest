@@ -24,13 +24,13 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Outcome:** nine dated, reviewable stage briefs and an agreed SMF route/music contract.
 
-**Status:** [sourced research briefs](research/smf-stage-identities-2026-11-06.md) and [concrete route/rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) drafted on 2026-11-06. Fresh builder check found no important unanswered questions beyond the recorded owner decisions. Visual-year and musical-clock choices are pending; secret reference gaps and listening acceptance are explicit. M1 is not yet approved/frozen, and no M2 product changes have started.
+**Status:** [sourced research briefs](research/smf-stage-identities-2026-11-06.md) and [concrete route/rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) drafted on 2026-11-06. Fresh builder check found no important unanswered questions beyond the recorded owner decisions. The owner selected 2026 venue structures and phrase-length rounds; 2027 official-site art is a separate [title/menu reference](research/smf-2027-interface-direction-2026-11-06.md). Secret reference gaps, final artwork and listening/layout acceptance remain explicit. The planning baseline is settled; ranked values are not frozen, and no M2 product changes have started.
 
 - Research 2023–2026 official stage lineups/curator statements and available primary sets; record gaps instead of inferring secret programming from unrelated stages.
 - For each venue: recognizable setting/materials, day/night identity, musical palette/tempo/form, lighting language, geometry/spawn constraints and asset sources.
 - Review all six main identities and three secrets with the owner; request stage-crew input through the owner rather than messaging anyone automatically.
 - Agree the six-main route/order, qualification/difficulty, four-perk policy, timed secret visit/discovery/reward behavior and gameplay/music clock alignment before freezing the first SMF scoring ruleset.
-- Confirm generic working title/presentation and the SMF pitch's dated visual target/brand references. These are quality gates, not reasons to delay M0 extraction.
+- Confirm generic working title/presentation; SMF uses the selected 2026 venue baseline and separate 2027 title/menu inspiration. These are quality gates, not reasons to delay M0 extraction.
 
 **Exit:** complete nine-stage matrix with source/confidence and no unresolved scoring/route contract; approved briefs and the next task plan. No blanket 128 BPM requirement.
 

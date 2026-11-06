@@ -8,7 +8,7 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 ## SMF stage research and proposed rules
 
-[Nine-venue research, 2023–2026](research/smf-stage-identities-2026-11-06.md) · [SMF route/gameplay/musical-clock proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md). Owner review pending; first-pass sources and gaps are dated, and proposed tempi/geometry/targets are not claims of measured music or tested balance. No new product behavior or deployment in this research pass.
+[Nine-venue research, 2023–2026](research/smf-stage-identities-2026-11-06.md) · [SMF route/gameplay/musical-clock proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md). Year/clock choices recorded; [2027 title/menu research](research/smf-2027-interface-direction-2026-11-06.md) is separate from the 2026 venue baseline. First-pass sources and gaps are dated, and proposed tempi/geometry/targets are not claims of measured music or tested balance. No new product behavior or deployment in this research pass.
 
 ## Completed Endless program and release evidence
 

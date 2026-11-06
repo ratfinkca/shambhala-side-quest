@@ -1,6 +1,6 @@
 # SMF route, gameplay and musical-clock proposal
 
-Date: 2026-11-06. Status: concrete M1 proposal for owner review. Not implemented or frozen as a ranked ruleset. Based on the approved [edition design](2026-11-06-edition-split-design.md) and [nine-venue research briefs](../../research/smf-stage-identities-2026-11-06.md). Generic gameplay/arcade-v1 remain unchanged.
+Date: 2026-11-06. Status: M1 planning baseline. On 2026-11-06 the owner selected 2026 venue structures, 2027 interface inspiration and complete musical phrases for SMF rounds. Route, initial composition profiles and preview targets remain builder recommendations; no ranked ruleset is implemented/frozen. Based on the approved [edition design](2026-11-06-edition-split-design.md) and [nine-venue research briefs](../../research/smf-stage-identities-2026-11-06.md). Generic gameplay/arcade-v1 remain unchanged.
 
 ## Recommended route and alternatives
 
@@ -10,13 +10,13 @@ Two alternatives considered: free stage order offers agency but makes main leade
 
 Secret branches stay tied to their parents: Living Room → Rabbit Hole, Grove → Secret Garden, Pagoda → Ikigai Mori. Player-facing names/art remain concealed until their unlock commits. All nine require finished content for pitch readiness.
 
-## Timing choice — recommendation awaiting the user's answer
+## Musical clock — owner selected complete phrases
 
-The owner has been asked whether SMF may end rounds on complete musical phrases rather than always exactly 60 seconds. **Recommendation: phrase-length rounds around 55–70 seconds, with canonical per-stage durations, qualification targets and bonus windows.** This allows coherent genre-appropriate tempi without forcing all music to 128 BPM. The generic game's 60-second clock and 15/30/45-second drops stay intact.
+The owner selected **complete musical phrases** on 2026-11-06. Use phrase-length SMF rounds around 55–70 seconds, with canonical per-stage durations, qualification targets and bonus windows. This allows coherent genre-appropriate tempi without forcing all music to 128 BPM. The generic game's 60-second clock and 15/30/45-second drops stay intact.
 
-Alternative: keep all SMF rounds at 60 seconds and use an independent musical transport with a composed ending/crossfade. This reduces timing refactoring, but a strict end may cut a musical phrase at many tempi. Do not silently choose 128 BPM everywhere or reinterpret a partially completed old run. No SMF scoring protocol freezes until this owner decision is resolved.
+Alternative considered but not selected: keep all SMF rounds at 60 seconds and use an independent musical transport with a composed ending/crossfade. This reduces timing refactoring, but a strict end may cut a musical phrase at many tempi. Do not silently choose 128 BPM everywhere or reinterpret a partially completed old run. The clock choice is resolved; final per-stage musical profiles/targets still require listening/layout acceptance before ranked publication.
 
-The following is the exact candidate **if phrase-length timing is accepted**. BPM values are composition choices, not measured artist-set values. All use 4/4. Display round time/target plainly in game; do not require players to understand bars.
+The following is the exact first-preview candidate under the selected phrase-length approach. BPM values are composition choices, not measured artist-set values. All use 4/4. Display round time/target plainly in game; do not require players to understand bars.
 
 | Order / ID | Initial original arrangement | BPM / bars | Duration ms (rounded once) | Target rate/min | First-tour sparks | Dancers |
 |---|---|---|---:|---:|---:|---:|
@@ -67,7 +67,7 @@ Once discovered, no invitation is required for later visits: offer at most one v
 
 ## Secret visit and return rules
 
-Secrets are short independent bonus visits, not additional main clears. If phrase-length timing is accepted, propose Rabbit Hole 140 BPM/32 bars (54857 ms), Secret Garden 96 BPM/24 bars (60000 ms), and Ikigai Mori 124 BPM/32 bars (61935 ms). This explicitly revises the earlier tentative universal 60-second secret visit; otherwise retain 60000 ms for all three. Their musical centres/art remain provisional where primary sources are thin.
+Secrets are short independent bonus visits, not additional main clears. Under the selected phrase-length approach, propose Rabbit Hole 140 BPM/32 bars (54857 ms), Secret Garden 96 BPM/24 bars (60000 ms), and Ikigai Mori 124 BPM/32 bars (61935 ms). This explicitly revises the earlier tentative universal 60-second secret visit; the Secret Garden candidate happens to remain exactly 60 seconds. Their musical centres/art remain provisional where primary sources are thin.
 
 Park the completed parent summary and its pending perk decision. Clone the equipped perk set **before** that pending choice into a new visit, with temporary items/boosts/exposure and Bass Head charge starting fresh. Keep parent time, score, history, perks, charge and result decisions unchanged. Return to the same pending main summary/decision; the following main stage has not started. A secret timeout or early return never fails the main run.
 
@@ -85,19 +85,20 @@ Consent stays independently opt-in per edition. Local score saving and optional 
 
 ## Build sequence and acceptance gates
 
-1. Owner reviews the nine briefs, visual target, fixed route and clock choice; confirm the secret-stage reference gaps before art is finalized. Targets/crowd budgets are first preview proposals, not balance conclusions.
+1. Carry the selected 2026 venue baseline and phrase-length clock into M2 planning. Review the nine briefs/fixed route and confirm secret-stage reference gaps before art is finalized. Targets/crowd budgets are first preview proposals, not balance conclusions.
 2. Write M2's task plan: parameterized gameplay/score/analytics/recovery clocks first, then two contrasting main venues in an isolated lab, then all six. Keep old generic fixture/ticket/recovery bytes as regressions. No fake SMF layout shipped behind a renamed generic stage.
 3. Validate all six targets/geometry, four-slot Festival and Endless, finish/results/reload, mute/pause/2× boundaries and actual audible phrasing. Test touch/reduced motion and sustained devices. Freeze ranked values only after acceptance; additive backend contract goes out before enabling posting.
 4. M3 implements all three secret visits, hidden-name gates and nested return/recovery; M4 completes all nine compositions/lighting identities. A partial vertical slice does not satisfy the polished nine-stage pitch scope.
 
 Current code audit: `src/game.js`, `src/festival.js`, `src/audio.js` and `src/playtest/summary.js` still contain 60000-based elapsed time/caps; `src/run.js`, recovery, scene rendering and server validators also need edition-aware treatment. M0 deliberately preserved those generic semantics. The phrase-clock option is a real scoped engine change, not a title-screen setting.
 
-## Decisions still requiring owner review
+## Recorded decisions and remaining acceptance
 
-- Target 2026 structures or select older iconic versions? Research proceeds with 2026 as a stated proposal; main carousel photos are mixed-date references.
-- Phrase-length SMF rounds or exactly 60 seconds? This is the pending clock question; generic stays unchanged either way.
-- Accept the proposed fixed route, initial profiles/preview targets, invitation/return rules and four-perk behavior as the M2 baseline? Secret art/music confidence gaps are visible in the research brief; owner corrections can refine them without inventing a history.
+- **Owner selected:** 2026 venue structures as baseline; 2027 official main/ticket-site art may inspire title GUI and menus, independently of venue identity. [Interface direction](../../research/smf-2027-interface-direction-2026-11-06.md).
+- **Owner selected:** SMF rounds finish on complete musical phrases. Generic remains unchanged, and the proposed SMF Quick Rush profile still lasts exactly 60 seconds.
+- **Builder baseline for review/playtesting:** fixed route, initial composition profiles, preview targets/density, invitation/return rules and four-perk behavior above. Musical values are original choices, not measured festival facts; ranked values freeze after audible/layout acceptance.
+- **Still outstanding:** owner/crew visual confirmation for secret venues, dated references for final 2026 silhouettes, full listening acceptance and final interface concepts. These are content acceptance gates, not unresolved year/clock questions.
 
-This document settles the builder's recommendation, not the owner's final approval. It does not mark M1 complete or authorize implementation of a new ranked ruleset by itself.
+This document records the resolved direction and a concrete build recommendation. It does not approve unseen artwork, claim playtested balance, or authorize a public ranked deployment.
 
-Builder check: a fresh read-only game/music systems reviewer on 2026-11-06 found no important unanswered questions beyond the recorded owner decisions. Documentation links/whitespace are checked separately; no game tests/builds are rerun for this documentation-only pass.
+Builder check: a fresh read-only game/music systems reviewer on 2026-11-06 found no important unanswered questions beyond the owner decisions then pending; those year/clock decisions are now recorded above. Documentation links/whitespace are checked separately; no game tests/builds are rerun for this documentation-only pass.
