@@ -91,6 +91,6 @@ body[data-mode="game"] .intro,body[data-mode="game"] .page-footer{display:none}
 #recovery-notice{position:relative;z-index:45;margin:0;padding:6px 12px;font:12px/1.4 var(--font-body,system-ui);color:#ffe3a3;background:#152430;text-align:center}
 #recovery-notice[hidden]{display:none}
 
-.game-frame[data-recovered-paused="true"]>.arena-wrap{visibility:visible}
+.game-frame[data-recovered-paused="true"][data-menu="paused"]>.arena-wrap{visibility:visible}
 .game-frame[data-recovered-paused="true"]>.screen-layer{background-image:none;background-color:#04121980}
 .game-frame[data-recovered-paused="true"] .menu-card{width:min(100%,440px)}

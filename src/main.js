@@ -27,7 +27,7 @@ import { createStorage } from './storage.js';
 import { preventGameKeyDefault } from './input.js';
 import { cycleAt } from './festival.js';
 import { setupResponsiveLayout } from './layout.js';
-import { PERKS, createRun, startStage, finishStage, finishRun, chooseUpgrade, keepPerks, stageFor, upgradeChoices, rulesFor } from './run.js';
+import { PERKS, createRun, startStage, finishStage, finishRun, chooseUpgrade, keepPerks, stageFor, upgradeChoices, rulesFor, stageLabel } from './run.js';
 import { STAGES } from './stages.js';
 import {bassMovementFactor} from './bass-head.js';
 import {updateBassButton,activationInput} from './bass-view.js';
@@ -75,6 +75,7 @@ function restoreRun(){
  if(v.inputType==='mixed'){runInputs.recordInput('mouse');runInputs.recordInput('touch');}else runInputs.recordInput(v.inputType);
  playtest.recover();screen={name:v.screen,returnTo:'title'};
  if(v.scene)scene.restoreRecovery(v.scene,{stage:stageFor(run),rules:rulesFor(run.perks),outfit:saved.profile.outfit});
+ $('#stage-name').textContent=stageLabel(run);
  render();recovery.save(true);
 }
 
@@ -118,8 +119,8 @@ function begin(){
  }
  playtest.stageStart(run.stageIndex,config.stage.variationId);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
- go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});refreshLayout();
- $('#stage-name').textContent=run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+config.stage.loop:'/3'} · ${config.stage.name.toUpperCase()}${config.stage.variationId&&config.stage.variationId!=='original'?' · '+config.stage.variationName:''}`;
+ go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});recovery.save(true);refreshLayout();
+ $('#stage-name').textContent=stageLabel(run);
 }
 function captureResult(){resultSnapshot={id:run.id,score:run.totalScore,stagesCleared:run.stagesCleared,inputType:runInputs.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};}
 function navigateResults(destination,confirmed=false){

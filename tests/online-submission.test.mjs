@@ -45,7 +45,7 @@ test('results retain partially typed or cleared initials when a warning is cance
 });
 
 test('reload after uncertain posting keeps the exact original ticket, build and payload for explicit retry',async()=>{
- const a=createSubmission('id');a.setTicket('id',{ticket:'a'.repeat(64),expiresAt:'2026-11-06T00:00:00Z'});let finish;
+ const a=createSubmission('id');a.setTicket('id',{ticket:'a'.repeat(64),expiresAt:new Date(Date.now()+3600000).toISOString()});let finish;
  const pending=a.post({initials:'ABC',buildId:'original',totalScore:30},()=>new Promise(r=>finish=r));
  const b=createSubmission('id',a.snapshot());assert.equal(b.status,'error');assert.equal(b.code,'unavailable');assert.equal(b.initials,'ABC');let sent;
  await b.post({initials:'XYZ',buildId:'new',totalScore:99},async p=>{sent=p;return {ok:true}});

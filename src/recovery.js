@@ -1,4 +1,5 @@
 import {PERKS,rulesFor,stageFor} from './run.js';
+import {WARDROBE} from './wardrobe.js';
 import {THEMES} from './themes.js';
 import {UUID,INPUTS,MAX_ONLINE_STAGES,validateScore} from '../supabase/functions/_shared/score.js';
 export const RECOVERY_VERSION=1,RECOVERY_RULES='endless-recovery-1',RECOVERY_LIMIT=2*1024*1024;
@@ -11,6 +12,7 @@ const allowed=(v,keys)=>object(v)&&Object.keys(v).every(k=>keys.includes(k));
 const finite=(n,min=0,max=Number.MAX_SAFE_INTEGER)=>typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max;
 const integer=(n,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const bool=v=>typeof v==='boolean';
+const rewardKey=key=>{if(typeof key!=='string')return false;const parts=key.split(':');if(parts.length!==2)return false;const [category,id]=parts;return category==='perk'?Object.hasOwn(PERKS,id):Object.hasOwn(WARDROBE,category)&&WARDROBE[category].some(item=>item.id===id);};
 const point=p=>allowed(p,['x','y'])&&finite(p.x,0,960)&&finite(p.y,0,640);
 const perks=p=>Array.isArray(p)&&p.length<=8&&new Set(p).size===p.length&&p.every(k=>Object.hasOwn(PERKS,k));
 const counts=(a,n)=>Array.isArray(a)&&a.length===n&&a.every(v=>integer(v));
@@ -18,7 +20,7 @@ export function recoveryScreen(s,run){
  if(run.status==='playing')return 'paused';
  if(run.status==='ended')return 'results';
  if(run.status==='ready')return 'rules';
- return s.name==='upgrade'?'upgrade':'summary';
+ return (s.name==='confirmExit'?s.returnTo:s.name)==='upgrade'?'upgrade':'summary';
 }
 export function makeRecovery({run,screen,scene,summary=null,resultSnapshot=null,progressReward=null,submission=null,inputType='unknown',buildId='dev',now=Date.now()}){
  if(run?.mode!=='endless'||run.status==='ready'&&run.stageIndex===0)return null;
@@ -27,8 +29,9 @@ export function makeRecovery({run,screen,scene,summary=null,resultSnapshot=null,
  return structuredClone({version:RECOVERY_VERSION,rules:RECOVERY_RULES,scoringVersion:'arcade-v1',savedAt:now,run:{...pick(run,runKeys),buildId:run.buildId||buildId},screen:recoveryScreen(screen,run),scene:run.status==='playing'?logical:null,summary:summary?pick(summary,['qualified','pickups','target','score','totalScore']):null,resultSnapshot,progressReward,submission:submission?.snapshot?submission.snapshot():submission,inputType});
 }
 function historyOK(r){
- const len=r.scoreStages?.length;if(!integer(len,0,MAX_ONLINE_STAGES))return false;
- if(!len)return r.totalScore===0&&r.stagesCleared===0&&r.stageIndex===0&&['playing','ready'].includes(r.status);
+ if(!Array.isArray(r.scoreStages))return false;
+ const len=r.scoreStages.length;if(!integer(len,0,MAX_ONLINE_STAGES))return false;
+ if(!len)return r.perks.length===0&&r.totalScore===0&&r.stagesCleared===0&&r.stageIndex===0&&['playing','ready'].includes(r.status);
  const cleared=r.scoreStages.filter((s,i)=>s.pickups>=Math.min(45,[20,25,30][i%3]+Math.floor(i/3)*3)).length;
  const total=r.scoreStages.reduce((a,s)=>a+s.score,0);
  if(!validateScore({runId:r.id,ticket:'a'.repeat(64),initials:'AAA',mode:'endless',scoringVersion:'arcade-v1',buildId:r.buildId,inputType:'unknown',totalScore:total,stagesCleared:cleared,stages:r.scoreStages}).ok)return false;
@@ -39,6 +42,8 @@ function historyOK(r){
   if(!indices.includes(r.stageIndex))return false;
  }
  if(r.status!=='ended'&&cleared!==len)return false;
+ // After the cap, unrecorded stages may add/swap perks; the retained prefix cannot validate those transitions.
+ if(r.scoreOverflow)return true;
  const prev=r.scoreStages.at(-1).perks;
  const added=r.perks.filter(p=>!prev.includes(p)).length,removed=prev.filter(p=>!r.perks.includes(p)).length;
  const nextStage=['playing','ready'].includes(r.status)||r.status==='ended'&&r.endedVoluntarily&&r.stageIndex===len;
@@ -57,7 +62,7 @@ function roundOK(s,r){
  const b=q.bass;if(!allowed(b,['chargeMs','exposureMs','activeMs','activeDurationMs'])||!finite(b.chargeMs,0,10000)||!finite(b.exposureMs,0,6000)||!finite(b.activeMs,0,6000)||!finite(b.activeDurationMs,0,6000)||b.activeMs>b.activeDurationMs||b.activeMs>0&&b.chargeMs!==0)return false;
  const m=q.mystery;if(!allowed(m,['phase','spawnAtMs','elapsedMs','effect','effectMs','wrapper','effectStartedAtMs'])||!['waiting','absent','available','spent'].includes(m.phase)||!integer(m.spawnAtMs,12000,39999)||!finite(m.elapsedMs,0,60000)||Math.abs(m.elapsedMs-(60000-q.remainingMs))>1||!['speed','dizzy','waves',null].includes(m.effect)||!finite(m.effectMs,0,rules.candyDurationMs)||!!m.effect!==(m.effectMs>0)||!allowed(m.wrapper,['colour','pattern'])||!integer(m.wrapper.colour,0,3)||!integer(m.wrapper.pattern,0,2)||m.effectStartedAtMs!==undefined&&!finite(m.effectStartedAtMs,0,m.elapsedMs))return false;
  const stage=stageFor(r);
- return Array.isArray(s.crowd)&&s.crowd.length===stage.crowdAnchors.length&&s.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&finite(e.travel)&&finite(e.cooldownUntil,0,63000)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&['touching','protected'].every(k=>e[k]===undefined||bool(e[k]))&&(e.nearest===undefined||finite(e.nearest)));
+ return Array.isArray(s.crowd)&&s.crowd.length===stage.crowdAnchors.length&&s.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&finite(e.travel)&&finite(e.cooldownUntil,0,63000)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&(e.previousPlayer===null)===(e.previousDancer===null)&&(!e.active||finite(e.nearest))&&['touching','protected'].every(k=>e[k]===undefined||bool(e[k]))&&(e.nearest===undefined||finite(e.nearest)));
 }
 export function readRecovery(raw){
  const fail=code=>({ok:false,code});
@@ -74,7 +79,7 @@ export function readRecovery(raw){
   if(['summary','upgrade'].includes(raw.screen)&&!raw.summary)return fail('invalid');
   if(raw.resultSnapshot!==null&&(!allowed(raw.resultSnapshot,['id','score','stagesCleared','inputType','outfit','completedAt'])||raw.resultSnapshot.id!==r.id||raw.resultSnapshot.score!==r.totalScore||raw.resultSnapshot.stagesCleared!==r.stagesCleared||!finite(raw.resultSnapshot.completedAt)))return fail('invalid');
   if(r.status==='ended'&&(!raw.resultSnapshot||!r.endedVoluntarily&&!raw.summary))return fail('invalid');
-  if(raw.progressReward!==null&&(!allowed(raw.progressReward,['xp','rewards','persisted','progress'])||!integer(raw.progressReward.xp)||!Array.isArray(raw.progressReward.rewards)||!raw.progressReward.rewards.every(x=>typeof x==='string'&&x.length<100)))return fail('invalid');
+  if(raw.progressReward!==null&&(!allowed(raw.progressReward,['xp','rewards','persisted','progress'])||!integer(raw.progressReward.xp)||!Array.isArray(raw.progressReward.rewards)||!raw.progressReward.rewards.every(rewardKey)))return fail('invalid');
   const sub=raw.submission;
   if(sub!==null){
    if(!allowed(sub,['runId','status','code','ticket','expiresAt','payload'])||sub.runId!==r.id||!['waiting','ready','pending','succeeded','ineligible','error'].includes(sub.status)||sub.ticket!==null&&!/^[a-f0-9]{64}$/.test(sub.ticket)||sub.expiresAt!==null&&!finite(sub.expiresAt)||sub.code!==null&&!['expired','conflict','limited','invalid','unfinished','invalid_ticket','unavailable'].includes(sub.code))return fail('invalid');

@@ -4,3 +4,7 @@ test('recovery prompt leads with explicit resume and clear partial points/time; 
  const confirm=renderRecovery('discardRecovery',state);assert.match(confirm,/Keep my run/);assert.match(confirm,/Discard this run/);assert.doesNotMatch(confirm,/data-action="recover-resume"/);
  assert.match(renderRecovery('recoveryBusy',null),/another tab/);assert.doesNotMatch(renderRecovery('recoveryInvalid',{code:'invalid'}),/Resume run/);
 });
+
+test('restored stage labels identify the actual Endless stage and loop before play resumes',async()=>{
+ const {stageLabel}=await import('../src/run.js');const {run}=recoveryFixture(4);assert.equal(stageLabel(run),'5 · LOOP 2 · NEON GROVE · Stereo Split');
+});

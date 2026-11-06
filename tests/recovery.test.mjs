@@ -32,3 +32,20 @@ test('online-history overflow keeps the full local run totals and oversized reco
  const r=makeRecovery(recoveryFixture(1441));assert.equal(r.run.scoreStages.length,1440);assert.equal(r.run.scoreOverflow,true);assert.equal(r.run.stagesCleared,1441);assert.equal(readRecovery(r).ok,true);
  const oversized=structuredClone(r);oversized.junk='x'.repeat(2*1024*1024);assert.equal(readRecovery(oversized).code,'oversized');
 });
+
+test('perks earned beyond retained online history remain locally recoverable through decisions and results',async()=>{
+ const {createRound,collect}=await import('../src/game.js');const {finishStage,chooseUpgrade,startStage,finishRun,rulesFor}=await import('../src/run.js');
+ const f=recoveryFixture(1440);f.run.perks=['boots'];const r=createRound(rulesFor(f.run.perks));while(r.pickups<45)collect(r);r.remainingMs=0;r.ended=true;f.summary=finishStage(f.run,r);f.scene=null;f.screen={name:'summary'};
+ assert.equal(f.run.scoreOverflow,true);assert.equal(readRecovery(makeRecovery(f)).ok,true);
+ chooseUpgrade(f.run,'bracelet');f.screen={name:'rules'};assert.equal(readRecovery(makeRecovery(f)).ok,true);
+ finishRun(f.run);f.resultSnapshot={id:f.run.id,score:f.run.totalScore,stagesCleared:f.run.stagesCleared,inputType:'touch',outfit:{onesie:'lime',hat:'none',totem:'none',flair:'none'},completedAt:1000};assert.equal(readRecovery(makeRecovery(f)).ok,true);
+});
+test('damaged encounter point pairs and incomplete active passes are rejected before resuming',()=>{
+ const base=makeRecovery(recoveryFixture());for(const change of [e=>e.previousPlayer={x:480,y:400},e=>e.previousDancer={x:300,y:300},e=>e.active=true]){const r=structuredClone(base);change(r.scene.crowd[0]);assert.equal(readRecovery(r).ok,false);}
+});
+
+test('malformed empty history objects and inherited wardrobe reward categories cannot reach gameplay or rendering',()=>{
+ for(const mutate of [v=>v.run.scoreStages={length:0},v=>v.progressReward={xp:10,rewards:['constructor:x'],persisted:true},v=>v.progressReward={xp:10,rewards:['onesie:not-real'],persisted:true}]){const r=makeRecovery(recoveryFixture());mutate(r);assert.equal(readRecovery(r).ok,false);}
+});
+
+test('interrupted exit confirmation returns to the original between-stage perk choice',()=>{assert.equal(recoveryScreen({name:'confirmExit',returnTo:'upgrade'},{status:'upgrade'}),'upgrade');});

@@ -15,3 +15,12 @@ test('an invalid recovery state cannot suppress earned XP or local score saving 
  const c=createRecoveryController({owner:{held:true,supported:true},storage,capture:()=>({version:99}),onStatus:s=>cleared=s==='unavailable'});
  assert.equal(c.commitStage({pickups:10}).xp,40);assert.equal(progress,10);assert.equal(c.commitScore('endless',{score:30}).accepted,true);assert.equal(score,30);assert.equal(cleared,true);
 });
+
+test('quota failures throttle checkpoint capture and persistence attempts rather than stalling every frame',()=>{
+ let now=0,writes=0,captures=0;const c=createRecoveryController({owner:{held:true,supported:true},storage:{saveRecovery(){writes++;return {persisted:false}}},capture:()=>{captures++;return makeRecovery(recoveryFixture())},clock:()=>now});
+ for(now=0;now<1000;now+=16)c.save();assert.equal(writes,1);assert.equal(captures,1);c.save(true);assert.equal(writes,2);now=2008;c.save();assert.equal(writes,3);
+});
+
+test('ordinary play under unavailable locks cannot silently discard an existing recoverable run',()=>{
+ let writes=0;const c=createRecoveryController({owner:{held:false,supported:false},storage:{saveRecovery(){writes++;return {persisted:true}}},capture:()=>makeRecovery(recoveryFixture())});assert.equal(c.clear(),false);assert.equal(writes,0);
+});
