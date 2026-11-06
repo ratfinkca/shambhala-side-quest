@@ -20,6 +20,7 @@ import {readOnlineConfig} from './online/config.js';
 import Phaser from 'phaser';
 import '../styles.css';
 import './themes.css';
+import './editions/brand.css';
 import {resolveTheme} from './themes.js';
 import {applyTheme} from './theme-view.js';
 import { GameScene } from './GameScene.js';
