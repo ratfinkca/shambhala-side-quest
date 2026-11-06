@@ -24,6 +24,7 @@ export function recoveryScreen(s,run){
  return (s.name==='confirmExit'?s.returnTo:s.name)==='upgrade'?'upgrade':'summary';
 }
 export function makeRecovery({run,screen,scene,summary=null,resultSnapshot=null,progressReward=null,submission=null,inputType='unknown',buildId='dev',now=Date.now()}){
+ if(scene?.round&&Object.hasOwn(scene.round,'timingId'))return null;
  if(run?.mode!=='endless'||run.status==='ready'&&run.stageIndex===0)return null;
  const logical=scene?{round:pick(scene.round,roundKeys),player:scene.player,sparks:scene.sparks,candy:scene.candy,crowd:scene.crowd.map(e=>pick(e,encounterKeys))}:null;
  if(logical&&logical.round.sincePickupMs===Infinity)logical.round.sincePickupMs=null;

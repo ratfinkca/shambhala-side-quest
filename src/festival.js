@@ -1,27 +1,14 @@
-const DROP_STARTS = [15000, 30000, 45000];
+import {getTiming,phaseAt,roundTiming,elapsedMs} from './stage-clock.js';
 
-export function cycleAt(elapsedMs) {
-  const elapsed = Math.max(0, elapsedMs);
-  if (elapsed >= 60000) return { phase: 'ended', bonus: 1, remainingMs: 0 };
-  for (const start of DROP_STARTS) {
-    if (elapsed >= start && elapsed < start + 4000) {
-      return { phase: 'drop', bonus: 2, remainingMs: start + 4000 - elapsed };
-    }
-    if (elapsed >= start - 3000 && elapsed < start) {
-      return { phase: 'build', bonus: 1, remainingMs: start - elapsed };
-    }
-  }
-  const next = DROP_STARTS.find(start => start > elapsed);
-  return { phase: 'cruise', bonus: 1, remainingMs: next ? next - elapsed : 0 };
-}
+export function cycleAt(elapsed,timing=getTiming()){return phaseAt(elapsed,timing);}
 
 export function awardClosePass(round) {
   if (round.ended) return 0;
-  const points = round.rules.closePassPoints * cycleAt(60000 - round.remainingMs).bonus;
+  const points = round.rules.closePassPoints * cycleAt(elapsedMs(round),roundTiming(round)).bonus;
   round.score += points;
   round.closePasses++;
   round.surferMs=round.rules.surferDurationMs||0;
-  round.scoreComponents.passes[cycleAt(60000-round.remainingMs).bonus-1]++;
+  round.scoreComponents.passes[cycleAt(elapsedMs(round),roundTiming(round)).bonus-1]++;
   return points;
 }
 
@@ -75,9 +62,9 @@ export function updateEncounter(encounter, player, dancer, elapsedMs) {
 
 const SPOTS = [[235,250],[385,255],[565,235],[735,260],[300,365],[665,365],[225,490],[410,490],[585,495],[750,485]];
 
-export function crowdPosition(index, elapsedMs, anchors = SPOTS, speed = 1) {
+export function crowdPosition(index, elapsedMs, anchors = SPOTS, speed = 1, timing = getTiming()) {
   // Integrate the extra drop speed; multiplying the timestamp would teleport dancers.
-  const extraMs = DROP_STARTS.reduce((sum, start) => sum + Math.max(0, Math.min(4000, elapsedMs - start)) * 0.65, 0);
+  const extraMs = timing.dropStartsMs.reduce((sum, start) => sum + Math.max(0, Math.min(timing.dropDurationMs, elapsedMs - start)) * 0.65, 0);
   const t = (elapsedMs + extraMs) / 1000 * speed;
   const [x, y] = anchors[index % anchors.length];
   const wander = index % 3 === 0;
