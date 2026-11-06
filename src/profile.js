@@ -1,3 +1,4 @@
+import {GENERIC_RULES} from '../supabase/functions/_shared/edition-rules.js';
 import {normalizeProgress} from './progression.js';
 import {normalizeThemePreference} from './themes.js';
 import {normalizeOutfit} from './wardrobe.js';
@@ -7,7 +8,7 @@ export function normalizeAudio(value={}){
  const volume=key=>typeof value?.[key]==='number'&&Number.isFinite(value[key])?Math.max(0,Math.min(1,value[key])):DEFAULT_AUDIO[key];
  return {enabled:typeof value?.enabled==='boolean'?value.enabled:true,music:volume('music'),effects:volume('effects')};
 }
-export function validScore(e,mode='rush'){return e&&typeof e.id==='string'&&e.id.length>0&&e.id.length<=100&&/^[A-Z0-9]{3}$/.test(e.initials)&&Number.isSafeInteger(e.score)&&e.score>=0&&Number.isInteger(e.stagesCleared)&&e.stagesCleared>=0&&(mode==='endless'?Number.isSafeInteger(e.stagesCleared):e.stagesCleared<=3)&&Number.isFinite(e.completedAt)&&e.completedAt>=0;}
+export function validScore(e,mode='rush'){return e&&typeof e.id==='string'&&e.id.length>0&&e.id.length<=100&&/^[A-Z0-9]{3}$/.test(e.initials)&&Number.isSafeInteger(e.score)&&e.score>=0&&Number.isInteger(e.stagesCleared)&&e.stagesCleared>=0&&(mode==='endless'?Number.isSafeInteger(e.stagesCleared):e.stagesCleared<=GENERIC_RULES.mainStageIds.length)&&Number.isFinite(e.completedAt)&&e.completedAt>=0;}
 export function rankScores(entries,mode='rush'){
  const seen=new Set();
  return (Array.isArray(entries)?entries:[]).filter(e=>validScore(e,mode)&&!seen.has(e.id)&&seen.add(e.id)).map(e=>({id:e.id,initials:e.initials,score:e.score,stagesCleared:e.stagesCleared,completedAt:e.completedAt,inputType:['mouse','touch','keyboard','mixed'].includes(e.inputType)?e.inputType:'unknown',outfit:normalizeOutfit(e.outfit)})).sort((a,b)=>(mode==='endless'?b.stagesCleared-a.stagesCleared:0)||b.score-a.score||b.stagesCleared-a.stagesCleared||a.completedAt-b.completedAt).slice(0,10);

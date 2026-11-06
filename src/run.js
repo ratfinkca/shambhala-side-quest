@@ -1,3 +1,4 @@
+import {GENERIC_RULES} from '../supabase/functions/_shared/edition-rules.js';
 import {MAX_ONLINE_STAGES} from '../supabase/functions/_shared/score.js';
 import {endlessStage} from './endless.js';
 import {THEME_DEFAULT,resolveTheme} from './themes.js';
@@ -25,10 +26,10 @@ export function startStage(run){if(run.status!=='ready')return null;run.status='
 export function finishStage(run,round){
  if(run.status!=='playing'||!round.ended||round.remainingMs!==0)return null;
  const qualified=run.mode==='rush'||round.pickups>=stageFor(run).target;
- if(run.scoreStages.length<MAX_ONLINE_STAGES)run.scoreStages.push({stageIndex:run.stageIndex,activeMs:60000,pickups:round.pickups,closePasses:round.closePasses,score:round.score,perks:[...run.perks],sparks:[...round.scoreComponents.sparks],passes:[...round.scoreComponents.passes]});
+ if(run.scoreStages.length<MAX_ONLINE_STAGES)run.scoreStages.push({stageIndex:run.stageIndex,activeMs:GENERIC_RULES.roundMs,pickups:round.pickups,closePasses:round.closePasses,score:round.score,perks:[...run.perks],sparks:[...round.scoreComponents.sparks],passes:[...round.scoreComponents.passes]});
  else run.scoreOverflow=true;
  run.totalScore+=round.score;if(qualified)run.stagesCleared++;
- run.status=qualified&&(run.mode==='endless'||run.mode==='festival'&&run.stageIndex<2)?'upgrade':'ended';
+ run.status=qualified&&(run.mode==='endless'||run.mode==='festival'&&run.stageIndex<GENERIC_RULES.mainStageIds.length-1)?'upgrade':'ended';
  run.bassChargeMs=round.bass.chargeMs;
  return {qualified,pickups:round.pickups,target:stageFor(run).target,score:round.score,totalScore:run.totalScore,progressContext:{mode:run.mode,stagesCleared:run.stagesCleared,variationId:stageFor(run).variationId,remixed:qualified&&run.mode==='endless'&&run.remixStageIndex===run.stageIndex}};
 }
@@ -49,4 +50,4 @@ export function finishRun(run){
  run.status='ended';run.endedVoluntarily=true;run.pendingPerk=null;return true;
 }
 
-export function stageLabel(run){const stage=stageFor(run);return run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+stage.loop:'/3'} · ${stage.name.toUpperCase()}${stage.variationId&&stage.variationId!=='original'?' · '+stage.variationName:''}`;}
+export function stageLabel(run){const stage=stageFor(run);return run.mode==='rush'?'QUICK RUSH':`${run.stageIndex+1}${run.mode==='endless'?' · LOOP '+stage.loop:'/'+GENERIC_RULES.mainStageIds.length} · ${stage.name.toUpperCase()}${stage.variationId&&stage.variationId!=='original'?' · '+stage.variationName:''}`;}

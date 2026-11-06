@@ -1,0 +1,487 @@
+{
+  "stageHashes": [
+    "ac482fc999843fbc4f1421ee44a64dfa31dc84c9c1ed385cbc921b7c2c6cc485",
+    "708435c44a636fbcf3a0b3e9d92a59502dd05a83ce869a9a3bcb94833ac40d10",
+    "7a07a0a7e674426f71698273589b7d95e04f345fbbc7f53a72e9c8b455abad25",
+    "7ee52ecb672920c287831fa216118997413db86af71654ed8bebbeb2f7f1f48d",
+    "3e96ce4bb70aeced024daf32cc6633a3cbe96dc31e6e3cf508c54632ccca351c",
+    "8a89e43cd8af6a0b5157cd4c3986cde3d4fe780e369ac1454a8d13ed462c319d",
+    "b27df2121cbeca58bf28b25e0a8e948b39583ee52ec326cc15d796c8d207b723",
+    "7f8b177d37c0c6c6d2bad0ce7139860b467e69472e788e9e2d76cbb03d573953",
+    "50823721e4ad2a4720630a946ca7f77955c03ca503f19b6ec783b6468cfbf879",
+    "81c005271d57ff75047194194714d9fd5afdf8c556e750d0c3984ca0de38160c",
+    "876e2989d90513953d0be2f993f8b2d09959a6682892ecee9a74bd11f7d53df1",
+    "a79db2b07fc21bbaabd6bbf906a773f36c228a71ed87f29e4a7ecd4069a75423",
+    "cf6ec770792f3ea9bd31b82e2d13484f87b2e7ed87df4325d031a487fea56937",
+    "487463f445c2cf10cd0af657b96b69a23d71a28691a289f127950324c0846f96",
+    "18885e34100cfde0ddbe848e7e95a6038d88b65b6ca331d7370e4665842bb83f"
+  ],
+  "score": {
+    "runId": "00000000-0000-4000-8000-000000000001",
+    "ticket": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "initials": "ABC",
+    "mode": "rush",
+    "scoringVersion": "arcade-v1",
+    "buildId": "test",
+    "inputType": "mixed",
+    "totalScore": 10,
+    "stagesCleared": 1,
+    "stages": [
+      {
+        "stageIndex": 0,
+        "activeMs": 60000,
+        "pickups": 1,
+        "closePasses": 0,
+        "score": 10,
+        "perks": [],
+        "sparks": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "passes": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "recovery": {
+    "version": 1,
+    "rules": "endless-recovery-1",
+    "scoringVersion": "arcade-v1",
+    "savedAt": 1000,
+    "run": {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "themeId": "moonlit-mycelium",
+      "mode": "endless",
+      "stageIndex": 4,
+      "totalScore": 3060,
+      "stagesCleared": 4,
+      "perks": [],
+      "scoreStages": [
+        {
+          "stageIndex": 0,
+          "activeMs": 60000,
+          "pickups": 20,
+          "closePasses": 0,
+          "score": 540,
+          "perks": [],
+          "sparks": [
+            4,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          "passes": [
+            0,
+            0
+          ]
+        },
+        {
+          "stageIndex": 1,
+          "activeMs": 60000,
+          "pickups": 25,
+          "closePasses": 0,
+          "score": 790,
+          "perks": [],
+          "sparks": [
+            4,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            6,
+            0,
+            0,
+            0
+          ],
+          "passes": [
+            0,
+            0
+          ]
+        },
+        {
+          "stageIndex": 2,
+          "activeMs": 60000,
+          "pickups": 30,
+          "closePasses": 0,
+          "score": 1040,
+          "perks": [],
+          "sparks": [
+            4,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            11,
+            0,
+            0,
+            0
+          ],
+          "passes": [
+            0,
+            0
+          ]
+        },
+        {
+          "stageIndex": 3,
+          "activeMs": 60000,
+          "pickups": 23,
+          "closePasses": 0,
+          "score": 690,
+          "perks": [],
+          "sparks": [
+            4,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          "passes": [
+            0,
+            0
+          ]
+        }
+      ],
+      "bassChargeMs": 0,
+      "status": "playing",
+      "submitted": false,
+      "availablePerks": [
+        "boots",
+        "bracelet"
+      ],
+      "pendingPerk": null,
+      "buildId": "original-build"
+    },
+    "screen": "paused",
+    "scene": {
+      "round": {
+        "surferMs": 0,
+        "scoreComponents": {
+          "sparks": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "passes": [
+            0,
+            0
+          ]
+        },
+        "bass": {
+          "chargeMs": 0,
+          "exposureMs": 0,
+          "activeMs": 0,
+          "activeDurationMs": 0
+        },
+        "mystery": {
+          "phase": "waiting",
+          "spawnAtMs": 21953,
+          "elapsedMs": 16000,
+          "effect": null,
+          "effectMs": 0,
+          "wrapper": {
+            "colour": 2,
+            "pattern": 0
+          }
+        },
+        "shieldsRemaining": 0,
+        "remainingMs": 44000,
+        "score": 20,
+        "chain": 1,
+        "multiplier": 1,
+        "bestMultiplier": 1,
+        "pickups": 1,
+        "closePasses": 0,
+        "slowedMs": 0,
+        "flowMs": 0,
+        "flowTaken": [],
+        "sincePickupMs": null,
+        "ended": false,
+        "runId": "00000000-0000-4000-8000-000000000001"
+      },
+      "player": {
+        "x": 480,
+        "y": 400
+      },
+      "sparks": [
+        {
+          "x": 100,
+          "y": 200
+        },
+        {
+          "x": 150,
+          "y": 200
+        },
+        {
+          "x": 200,
+          "y": 200
+        },
+        {
+          "x": 250,
+          "y": 200
+        },
+        {
+          "x": 300,
+          "y": 200
+        },
+        {
+          "x": 350,
+          "y": 200
+        },
+        {
+          "x": 400,
+          "y": 200
+        },
+        {
+          "x": 450,
+          "y": 200
+        },
+        {
+          "x": 500,
+          "y": 200
+        },
+        {
+          "x": 550,
+          "y": 200
+        },
+        {
+          "x": 600,
+          "y": 200
+        },
+        {
+          "x": 650,
+          "y": 200
+        }
+      ],
+      "candy": {
+        "placed": false,
+        "x": 0,
+        "y": 0
+      },
+      "crowd": [
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        },
+        {
+          "active": false,
+          "spoiled": false,
+          "travel": 0,
+          "cooldownUntil": 0,
+          "previousPlayer": null,
+          "previousDancer": null
+        }
+      ]
+    },
+    "summary": null,
+    "resultSnapshot": null,
+    "progressReward": null,
+    "submission": null,
+    "inputType": "touch"
+  }
+}
