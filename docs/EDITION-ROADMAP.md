@@ -20,7 +20,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Exit:** current 207-test baseline expanded with edition/context/migration isolation tests; both builds verified, generic play/recovery/online contract unchanged, independent review clean. [Task plan](superpowers/plans/2026-11-06-edition-foundation.md).
 
-## M1 — Stage identity and product rules (owner review)
+## M1 — Stage identity and product rules (planning baseline settled)
 
 **Outcome:** nine dated, reviewable stage briefs and an agreed SMF route/music contract.
 
@@ -37,6 +37,8 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 ## M2 — Six main SMF stages and edition-safe online services
 
 **Outcome:** a complete six-stage SMF tour and Endless main loop with all parent stages recognizable.
+
+**Status:** [M2 delivery sequence](superpowers/plans/2026-11-06-smf-m2-delivery.md) and [first musical-clock implementation plan](superpowers/plans/2026-11-06-smf-musical-clock.md) written and self-reviewed, awaiting owner review. Start with canonical timing and an isolated clock lab, then six authored venues/local run flow, then the new online contract. Generic recovery/posting stays unchanged; SMF production play remains disabled. No M2 product code or backend changes yet.
 
 - Author all six layouts with safe spawns, reachable pickups and touch-friendly routes. Develop in contrasting internal slices, then complete the full collection.
 - Use stable stage IDs/canonical route, finite four-perk builds/swapping, mode-aware save/finish/results and appropriately named discovery slots.

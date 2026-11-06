@@ -86,7 +86,7 @@ Consent stays independently opt-in per edition. Local score saving and optional 
 ## Build sequence and acceptance gates
 
 1. Carry the selected 2026 venue baseline and phrase-length clock into M2 planning. Review the nine briefs/fixed route and confirm secret-stage reference gaps before art is finalized. Targets/crowd budgets are first preview proposals, not balance conclusions.
-2. Write M2's task plan: parameterized gameplay/score/analytics/recovery clocks first, then two contrasting main venues in an isolated lab, then all six. Keep old generic fixture/ticket/recovery bytes as regressions. No fake SMF layout shipped behind a renamed generic stage.
+2. Follow the [M2 delivery sequence](../plans/2026-11-06-smf-m2-delivery.md), starting with the [musical-clock task plan](../plans/2026-11-06-smf-musical-clock.md), now written and self-reviewed for owner review. Parameterize active-time gameplay/counters and guard legacy recovery first; exercise isolated audio/scene clocks, then two contrasting main venues and all six. New durable SMF recovery and online schemas follow their own contract plan before enablement. Keep old generic fixture/ticket/recovery bytes as regressions. No fake SMF layout shipped behind a renamed generic stage.
 3. Validate all six targets/geometry, four-slot Festival and Endless, finish/results/reload, mute/pause/2× boundaries and actual audible phrasing. Test touch/reduced motion and sustained devices. Freeze ranked values only after acceptance; additive backend contract goes out before enabling posting.
 4. M3 implements all three secret visits, hidden-name gates and nested return/recovery; M4 completes all nine compositions/lighting identities. A partial vertical slice does not satisfy the polished nine-stage pitch scope.
 

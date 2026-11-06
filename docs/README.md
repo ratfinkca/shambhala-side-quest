@@ -10,6 +10,10 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 [Nine-venue research, 2023–2026](research/smf-stage-identities-2026-11-06.md) · [SMF route/gameplay/musical-clock proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md). Year/clock choices recorded; [2027 title/menu research](research/smf-2027-interface-direction-2026-11-06.md) is separate from the 2026 venue baseline. First-pass sources and gaps are dated, and proposed tempi/geometry/targets are not claims of measured music or tested balance. No new product behavior or deployment in this research pass.
 
+## M2 implementation planning
+
+[M2 delivery sequence](superpowers/plans/2026-11-06-smf-m2-delivery.md) · [musical-clock foundation task plan](superpowers/plans/2026-11-06-smf-musical-clock.md). Self-reviewed, awaiting owner review. First build an isolated timing/audio/lighting lab; then the six authored mains and local run flow, then edition-safe online integration. Generic gameplay/recovery/wire compatibility stays protected. SMF product implementation and backend rollout have not started. Native execution remains selected.
+
 ## Completed Endless program and release evidence
 
 [M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). M1 shipped in PR #14; [release evidence](superpowers/m1-release-validation.md) records backend checks. M2 stage variations has an [implementation plan and local QA record](superpowers/plans/2026-11-03-stage-variations-preview.md). Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.
