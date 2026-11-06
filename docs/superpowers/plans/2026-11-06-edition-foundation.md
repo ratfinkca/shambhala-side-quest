@@ -92,8 +92,10 @@
 - [x] **Step 3: Implement** edition-first boot, scaffold branch and generic labels. Avoid initializing game/services in the scaffold, even if their buttons would be hidden. All current generic control/save/post/recovery paths remain available.
 - [x] **Step 4: Run** `npm test`, `npm run build`, `npm run check:editions` and `git diff --check`. Require all pass; record actual counts and known bundle warning. Do not run backend deploy commands.
 - [x] **Step 5: Browser acceptance** on separate local generic/SMF previews at desktop and 390×844: title/themes/assets, generic click/tap destination, three-stage upgrade/results, Endless four-slot swap/finish/local save, opt-in/off controls, paused reload recovery, simultaneous-edition storage/locks, SMF catalogue and zero arcade/analytics requests. Use isolated profile/test endpoints or rehearsal; do not send synthetic production scores/events. Rehearsal alone cannot prove real-save recovery, so use a disposable browser profile with online configuration disabled. Record physical phone/audio/performance as untested unless actually exercised.
-- [ ] **Step 6: Independent review** of the entire foundation branch after native implementation; resolve important findings, repeat only affected checks, update validation/docs and commit as `feat: preview isolated generic and SMF editions`.
+- [x] **Step 6: Independent review** of the entire foundation branch after native implementation; resolve important findings, repeat only affected checks, update validation/docs and commit as `feat: preview isolated generic and SMF editions`.
 
 ## Completion and handoff
 
 M0 completes with a working generic preview and separate static SMF content scaffold, not six new layouts or secret visits. Keep the public game untouched until the user approves a release. Next create M1's dated nine-stage research matrix and freeze SMF gameplay/music rules; only then write the task plan for M2's six-stage engine/content and additive backend protocol. All nine venues remain required for the final polished pitch build.
+
+Completed locally on 2026-11-06: 224 tests, default/dual build checks, browser acceptance and independent review fixes verified. See [validation](../edition-foundation-preview-validation.md). The checker uses temporary output for isolation; explicit build commands retain the planned artifact paths. No deployment.

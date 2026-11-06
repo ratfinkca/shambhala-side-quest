@@ -4,7 +4,7 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 ## Current forward program — two editions
 
-[Master edition design](superpowers/specs/2026-11-06-edition-split-design.md) · [M0–M6 roadmap and nine-stage pitch checklist](EDITION-ROADMAP.md) · [first foundation implementation plan](superpowers/plans/2026-11-06-edition-foundation.md). Approved design; M0 edition foundation is implemented locally (fresh review pending), with [preview validation](superpowers/edition-foundation-preview-validation.md). No new deployment yet. The generic engine/content remains compatible while SMF gains six main stages and all three requested optional secrets. Prior three-stage/128 BPM music scope is superseded.
+[Master edition design](superpowers/specs/2026-11-06-edition-split-design.md) · [M0–M6 roadmap and nine-stage pitch checklist](EDITION-ROADMAP.md) · [first foundation implementation plan](superpowers/plans/2026-11-06-edition-foundation.md). Approved design; M0 edition foundation is implemented locally (independent review fixes verified), with [preview validation](superpowers/edition-foundation-preview-validation.md). No new deployment yet. The generic engine/content remains compatible while SMF gains six main stages and all three requested optional secrets. Prior three-stage/128 BPM music scope is superseded.
 
 ## Completed Endless program and release evidence
 

@@ -23,3 +23,22 @@ test('DEV public middleware serves allowlisted files and refuses unowned title p
  const allowed=await request('/themes/forest-freakout/backdrop.webp?v=1');assert.equal(allowed.status,200);assert.ok(Buffer.isBuffer(allowed.body));
  assert.equal((await request('/src/main.js')).body,'next');
 });
+
+test('all DEV public aliases enforce the same edition ownership',async()=>{
+ const {fileURLToPath}=await import('node:url');
+ let handle;editionAssetsPlugin('generic').configureServer({middlewares:{use(fn){handle=fn}}});
+ const request=async url=>{let status=200,body;await handle({url},{setHeader(){},set statusCode(v){status=v},end(v){body=v}},()=>{body='next'});return {status,body}};
+ const absolute=fileURLToPath(new URL('../public/themes/forest-freakout/title.webp',import.meta.url));
+ for(const url of ['/public/themes/forest-freakout/title.webp','/@fs'+absolute,'/@fs/'+absolute])assert.equal((await request(url)).status,404,url);
+});
+
+test('actual Vite requests cannot retrieve another edition\'s public artwork',async()=>{
+ const {createServer}=await import('vite');const {fileURLToPath}=await import('node:url');
+ const server=await createServer({configFile:false,root:fileURLToPath(new URL('..',import.meta.url)),publicDir:false,plugins:[editionAssetsPlugin('generic')],server:{host:'127.0.0.1',port:0}});
+ try{
+  await server.listen();const origin=`http://127.0.0.1:${server.httpServer.address().port}`;
+  const absolute=fileURLToPath(new URL('../public/themes/forest-freakout/title.webp',import.meta.url));
+  for(const path of ['/themes/forest-freakout/title.webp','/public/themes/forest-freakout/title.webp','/@fs'+absolute,'/@fs/'+absolute])assert.equal((await fetch(origin+path)).status,404,path);
+  for(const path of ['/themes/forest-freakout/backdrop.webp','/public/fonts/DMSans.ttf'])assert.equal((await fetch(origin+path)).status,200,path);
+ }finally{await server.close();}
+});

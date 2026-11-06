@@ -11,7 +11,7 @@ Date: 2026-11-06. Local feature branch only; public release remains PR #19 /67c4
 
 ## Automated/build checks
 
-- Baseline: 207 tests passed before changes. Current suite: **221 tests pass**, including legacy geometry hashes for 15 Endless stages, unchanged score/recovery fixtures, storage/consent/lock names, exact pending-retry payload preservation, duplicate award/post protection, context rejection, asset lists and boot/service gating.
+- Baseline: 207 tests passed before changes. Current suite: **224 tests pass**, including legacy geometry hashes for 15 Endless stages, unchanged score/recovery fixtures, storage/consent/lock names, exact pending-retry payload preservation, duplicate award/post protection, context rejection, asset lists and boot/service gating.
 - `npm run build` passes (default generic, `dist/`). `npm run check:editions` builds generic and SMF, verifies allowlisted files/static references, and confirms an invalid edition fails. Existing large Phaser chunk warning remains.
 - `git diff --check` and relative documentation links pass.
 - No backend deploy is required for this local preview. Shared validator imports changed structurally; a future authorized release must deploy the updated shared function bundles first, even though arcade-v1 payloads/rules remain identical. No SQL migration is introduced.
@@ -40,4 +40,10 @@ Screenshots: `/tmp/edition-smf-desktop.jpg`, `/tmp/edition-smf-mobile.jpg`, `/tm
 
 ## Limits and next gate
 
-Physical phones, native touch, sustained device performance, audible music acceptance and production online posting were not tested in this milestone. Static catalogue entries are not completed SMF levels. A fresh whole-branch review follows; release/public acceptance would be separate and requires an explicit ship instruction. Next program milestone is M1: dated research briefs for all nine venues and agreed SMF gameplay/music rules.
+Physical phones, native touch, sustained device performance, audible music acceptance and production online posting were not tested in this milestone. Static catalogue entries are not completed SMF levels. A fresh whole-branch review found two asset-boundary defects; both are fixed with failing-then-passing regression tests and a green 224-test suite; release/public acceptance would be separate and requires an explicit ship instruction. Next program milestone is M1: dated research briefs for all nine venues and agreed SMF gameplay/music rules.
+
+## Final review and decisions
+
+The independent reviewer found no generic compatibility defect. Two important findings were reproduced and fixed: `check:editions` now builds under its own temporary root and leaves the default generic `dist/` byte-for-byte unchanged; DEV policy now covers canonical, `/public/` and `/@fs/` artwork URLs. The new test makes actual local Vite requests, verifies title art returns 404 and shared backdrop/font requests return 200. No minor findings were deferred.
+
+Implementation calls and their limits: the loader imports the existing game bootstrap only for generic (bootstrap regression would affect startup, covered by browser/recovery checks); available CUA controls replaced missing Playwright (manual browser checks rather than a headless script); checker outputs are temporary (use the explicit build commands for retained artifacts). Shared unused code/catalogue metadata may remain in both artifacts, with service/game boot gated; this is an edition/content boundary, not code secrecy. Same-origin browser concurrency and a browser network trace remain unobserved despite automated isolation/service checks. Hosted CI/posting, physical-device performance and audible acceptance are separate later gates. SMF content/research/new protocol/final brands remain M1–M6, so the current SMF preview stays non-playable.

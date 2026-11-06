@@ -1,14 +1,14 @@
 # Two-edition delivery roadmap
 
-Updated 2026-11-06. Approved program; M0 implemented locally with final review pending, not published. Authority: [edition split design](superpowers/specs/2026-11-06-edition-split-design.md). User target: nearly fully polished SMF edition before pitching; no fixed pitch date. Published recovery baseline remains PR #19 /67c44e0.
+Updated 2026-11-06. Approved program; M0 implemented locally with independent review fixes verified, not published. Authority: [edition split design](superpowers/specs/2026-11-06-edition-split-design.md). User target: nearly fully polished SMF edition before pitching; no fixed pitch date. Published recovery baseline remains PR #19 /67c44e0.
 
 ## Product target
 
 One shared engine; separately built generic and SMF editions. SMF ships six mains plus Rabbit Hole/Living Room, Secret Garden/Grove and Ikigai Mori/Pagoda. All nine are full content scope. Generic preserves today's game/progression and gains its own neutral identity. Ownership-driven repository separation can follow the engine boundary; no external fork or deployment is created by this plan.
 
-## M0 — Edition foundation (start here)
+## M0 — Edition foundation (local preview complete)
 
-**Status:** implemented locally; 221 tests, dual builds and browser preview checks pass; fresh branch review pending. [Validation](superpowers/edition-foundation-preview-validation.md).
+**Status:** implemented locally; 224 tests, dual builds and browser preview checks pass; independent review fixes verified. [Validation](superpowers/edition-foundation-preview-validation.md).
 
 **Outcome:** a safe local engineering preview, not the pitch build.
 
@@ -20,7 +20,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Exit:** current 207-test baseline expanded with edition/context/migration isolation tests; both builds verified, generic play/recovery/online contract unchanged, independent review clean. [Task plan](superpowers/plans/2026-11-06-edition-foundation.md).
 
-## M1 — Stage identity and product rules
+## M1 — Stage identity and product rules (next)
 
 **Outcome:** nine dated, reviewable stage briefs and an agreed SMF route/music contract.
 
