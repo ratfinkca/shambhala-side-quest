@@ -55,3 +55,8 @@ test('timed audio queues absolute onsets, stays silent without injected voices, 
 test('diagnostic transport can exercise the legacy clock without changing default legacy music',()=>{
  const f=fake(),audio=createAudio(()=>f.ctx,{useTransport:true,timedVoices:()=>[{frequency:333,type:'sine',duration:.1,volume:.02}]});audio.setEnabled(true);audio.sync({remainingMs:60000,multiplier:1,flowMs:0},'clock-lab');assert.equal(f.voices[0].frequency.value,333);
 });
+
+test('timed notes honor a bounded swing offset without shifting the shared clock',()=>{
+ const f=fake(),starts=[],original=f.ctx.createOscillator;f.ctx.createOscillator=()=>{const n=original();n.start=t=>starts.push(t);return n};
+ const a=createAudio(()=>f.ctx,{timedVoices:()=>[{frequency:440,type:'sine',duration:.1,volume:.02,offsetMs:24}]});a.setEnabled(true);a.sync({timingId:'smf-living-room-clock-preview-1',remainingMs:68571,multiplier:1,flowMs:0});assert.deepEqual(starts,[.024]);
+});

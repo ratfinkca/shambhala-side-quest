@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {smfPreviewVoices} from '../src/editions/smf-music.js';import {getTiming} from '../src/stage-clock.js';
+for(const id of ['smf-living-room','smf-pagoda'])test(`${id} has a complete four-section original sketch with bounded voice tails`,()=>{
+ const timing=getTiming(id+'-clock-preview-1'),sections=[[],[],[],[]];for(let step=0;step<512;step++){const voices=smfPreviewVoices({timing,step,phase:'cruise',multiplier:1,flowActive:false});sections[Math.floor(step/128)].push(...voices);for(const v of voices){assert.ok(v.duration>0&&v.duration<=3);assert.ok(v.volume>0&&v.volume<=.12);assert.ok(Number.isFinite(v.offsetMs??0)&&(v.offsetMs??0)>=0&&(v.offsetMs??0)<=24);if(!v.noise)assert.ok(v.frequency>=30&&v.frequency<=3000);assert.ok(Math.round(step*60000/(timing.bpm*4))+(v.offsetMs??0)+v.duration*1000+20<=timing.durationMs+1);}}
+ for(const section of sections)for(const kind of ['kick','bass','hat','pad','melody'])assert.ok(section.some(v=>v.kind===kind),kind);
+ assert.notDeepEqual(sections[0],sections[1]);assert.notDeepEqual(sections[1],sections[2]);assert.notDeepEqual(sections[2],sections[3]);
+ const first=smfPreviewVoices({timing,step:0,phase:'cruise'}).find(v=>v.kind==='pad'),last=smfPreviewVoices({timing,step:384,phase:'cruise'}).find(v=>v.kind==='pad');assert.equal(first.frequency,last.frequency);
+ assert.deepEqual(smfPreviewVoices({timing,step:512,phase:'ended',flowActive:true}),[]);assert.ok(smfPreviewVoices({timing,step:2,phase:'drop',flowActive:true}).some(v=>v.kind==='flow'));
+});
+test('the two sketches differ and unsupported clocks are silent',()=>{const phrase=id=>Array.from({length:128},(_,step)=>smfPreviewVoices({timing:getTiming(id+'-clock-preview-1'),step,phase:'cruise'}));assert.notDeepEqual(phrase('smf-living-room'),phrase('smf-pagoda'));assert.deepEqual(smfPreviewVoices({timing:getTiming('smf-grove-clock-preview-1'),step:0,phase:'cruise'}),[]);});

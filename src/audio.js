@@ -12,6 +12,7 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
   const musicNodes = new Set();
   function cancelNode(node){try {node.stop();}catch {} nodes.get(node)?.();}
   const transport=createMusicTransport({voices:timedVoices||(()=>[]),schedule:(voice,at)=>{
+    at+=Number.isFinite(voice.offsetMs)?Math.max(0,Math.min(24,voice.offsetMs))/1000:0;
     if(voice.noise)percussion(voice,at);
     else tone(voice.frequency,voice.duration,0,voice.type,voice.volume,voice.endFrequency,'music',voice.attack,at);
   },cancel:()=>{for(const node of [...musicNodes])cancelNode(node);}});
