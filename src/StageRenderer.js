@@ -1,3 +1,4 @@
+import {getTiming} from './stage-clock.js';
 import Phaser from 'phaser';
 import {concertLighting,LIGHT_SHOWS} from './concert-lighting.js';
 import {BASS_RADIUS,BASS_CORE,speakerCones} from './geometry.js';
@@ -62,15 +63,15 @@ export class StageRenderer {
   }
   this.objects=this.scene.children.list.filter(o=>!before.has(o));
  }
- update(elapsed,phase,reduced){
+ update(elapsed,phase,reduced,timing=getTiming()){
   {
-    const light=concertLighting(elapsed,reduced,this.stageId);
+    const light=concertLighting(elapsed,reduced,this.stageId,timing);
     this.concertBeams.forEach((b,i)=>{b.rotation=(i-2.5)*.17*light.spread+light.sweep*(i%2?1:-1);b.setAlpha(light.alpha);b.setScale(1+light.fan*.25,1);});
     this.lamps.forEach(l=>l.setAlpha(light.glow));
     this.canopyLights.forEach((l,i)=>{l.setAlpha(reduced?.65:.65+.25*Math.sin(elapsed*.0007+i*1.5));l.setScale(reduced?1:1+.09*Math.sin(elapsed*.0004+i));});
   }
-  const pulse=bassBeat(elapsed),strength=phase==='drop'?1.5:1;
-  this.bassPulses?.forEach(p=>{p.clear();drawSpeakerBass(p,elapsed,phase,reduced);});
+  const pulse=bassBeat(elapsed,timing),strength=phase==='drop'?1.5:1;
+  this.bassPulses?.forEach(p=>{p.clear();drawSpeakerBass(p,elapsed,phase,reduced,timing);});
   this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
  }
  destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];}

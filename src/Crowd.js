@@ -1,3 +1,4 @@
+import {getTiming,roundTiming,elapsedMs} from './stage-clock.js';
 import { STAGES } from './stages.js';
 import {bassOffset} from './bass-motion.js';
 import {cycleAt} from './festival.js';
@@ -60,17 +61,17 @@ export class Crowd {
     this.lastBumpAt = -Infinity;
   }
 
-  restoreRecovery(encounters,elapsed) {
-    this.people.forEach((person,index)=>{const p=crowdPosition(index,elapsed,this.stage.crowdAnchors,this.stage.crowdSpeed??1);person.node.setPosition(p.x,p.y);person.encounter=structuredClone(encounters[index]);});
+  restoreRecovery(encounters,elapsed,timing=getTiming()) {
+    this.people.forEach((person,index)=>{const p=crowdPosition(index,elapsed,this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);person.node.setPosition(p.x,p.y);person.encounter=structuredClone(encounters[index]);});
   }
 
   update(player, round, reducedMotion) {
-    const elapsed = 60000 - round.remainingMs;
+    const elapsed = elapsedMs(round),timing=roundTiming(round);
     this.people.forEach((person, index) => {
-      const position = crowdPosition(index, elapsed, this.stage.crowdAnchors,this.stage.crowdSpeed??1);
+      const position = crowdPosition(index, elapsed, this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);
       person.node.setPosition(position.x, position.y);
       person.body.rotation = reducedMotion ? 0 : Math.sin(elapsed * .005 + index) * .14;
-      const shake=bassOffset(position,this.stage.obstacles,elapsed,cycleAt(elapsed).phase,reducedMotion);
+      const shake=bassOffset(position,this.stage.obstacles,elapsed,cycleAt(elapsed,timing).phase,reducedMotion,timing);
       person.body.setPosition(shake.x,shake.y);
       const distance = Math.hypot(player.x - position.x, player.y - position.y);
       person.ring.setAlpha(distance < 100 ? .7 : 0);

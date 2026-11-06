@@ -1,3 +1,4 @@
+import {getTiming,roundTiming,elapsedMs,phaseProgress} from './stage-clock.js';
 import {GENERIC_RULES} from '../supabase/functions/_shared/edition-rules.js';
 import {getEdition,editionIdFromEnv,editionServices} from './editions/registry.js';
 import {storageContext} from './editions/storage-context.js';
@@ -246,10 +247,10 @@ game.events.on('round:update',round=>{
  $('#score').textContent=fmt((run?.totalScore??0)+round.score);
  const seconds=Math.ceil(round.remainingMs/1000);$('#time').textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;$('#time').style.color=seconds<=10?'#f5b3bd':'';
  $('#multiplier').textContent=`${round.multiplier}×`;$('#combo-label').textContent=round.chain?`${round.chain} IN THE FLOW`:'FIND YOUR FLOW';$('#combo-fill').style.width=`${round.chain?Math.max(0,1-round.sincePickupMs/round.rules.comboGraceMs)*100:0}%`;
- const cycle=cycleAt(60000-round.remainingMs),count=Math.ceil(cycle.remainingMs/1000);$('.game-frame').dataset.phase=cycle.phase;
- $('#phase-title').textContent=cycle.phase==='drop'?'BASS DROP':cycle.phase==='build'?'HERE IT COMES':cycle.phase==='ended'?'GOOD WANDER':count?'NEXT DROP':'LAST DANCE';
+ const timing=roundTiming(round),timed=timing!==getTiming(),elapsed=elapsedMs(round),cycle=cycleAt(elapsed,timing),count=Math.ceil(cycle.remainingMs/1000);$('.game-frame').dataset.phase=cycle.phase;
+ $('#phase-title').textContent=cycle.phase==='drop'?(timed?'2× VIBES':'BASS DROP'):cycle.phase==='build'?'HERE IT COMES':cycle.phase==='ended'?'GOOD WANDER':count?(timed?'NEXT LIFT':'NEXT DROP'):'LAST DANCE';
  $('#phase-detail').textContent=cycle.phase==='ended'?'COMPLETE':cycle.phase==='drop'?`2× POINTS · ${count}s`:cycle.phase==='build'?`IN ${count}…`:count?`${count}s`:'MAKE IT COUNT';
- const progress=cycle.phase==='drop'?cycle.remainingMs/4000:cycle.phase==='build'?1-cycle.remainingMs/3000:1-cycle.remainingMs/15000;$('#phase-fill').style.width=`${Math.max(0,Math.min(1,progress))*100}%`;
+ const progress=timed?phaseProgress(elapsed,timing):cycle.phase==='drop'?cycle.remainingMs/4000:cycle.phase==='build'?1-cycle.remainingMs/3000:1-cycle.remainingMs/15000;$('#phase-fill').style.width=`${Math.max(0,Math.min(1,progress))*100}%`;
  $('#flow-status').textContent=round.flowMs>0&&!round.ended?`✦ FLOW ${Math.ceil(round.flowMs/1000)}s`:'◇ FIND FLOW';$('#flow-status').classList.toggle('active',round.flowMs>0&&!round.ended);
  $('#passes').textContent=round.closePasses;$('#spark-goal').textContent=run&&run.mode!=='rush'?`✦ ${round.pickups} / ${stageFor(run).target} sparks`:`✦ ${round.pickups} sparks`;
  $('#shield-status').textContent=round.shieldsRemaining?'◌ SHIELD READY':'';
