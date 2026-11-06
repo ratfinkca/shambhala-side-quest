@@ -43,3 +43,11 @@ After the fix pass the in-app lab was rechecked: all seven choices, ten rapid sw
 Deferred minors from review: a rounded-down phrase onset can show the preceding bar/beat for one rendered frame (less than0.5ms of logical time); holding Escape can repeat the lab pause/resume toggle; the exhaustive generic comparison currently delegates to the same phase function, although independent existing boundary fixtures remain. These do not alter scored 2× windows, default generic controls or saved data. Address them during the next clock/UI refinement.
 
 Owner preview precedes the six-venue Part B task plan; backend/schema work precedes enabling any SMF posting. Screenshots are local QA artifacts outside the repository (`/tmp/sidequest-clock-mobile.png`, `/tmp/sidequest-clock-desktop.png`, `/tmp/sidequest-clock-end.png`).
+
+## Follow-up: running HUD readout jitter
+
+The owner reported rapid twitching in Phrase position and Time left. The earlier screenshot/value checks missed animated layout movement. Live DOM measurements reproduced the failure: the proportional timer changed width by9.664px and flex space distribution moved the phrase column by4.836px over12 samples, even while its text stayed unchanged. The font did not produce equal-width digits despite the tabular-numeral request.
+
+Fix: fixed grid tracks for the three HUD columns, explicit monospace numeric readouts, right-aligned timer and centered phrase position. Main time remaining rounds up to tenths instead of rewriting three decimal places every frame. Unchanged text is no longer replaced on every update. The precise active-time diagnostic remains available below the main readout.
+
+Post-fix in-app checks:60 desktop samples (including a beat change and five countdown values) and45 samples at390×844 both measured0px movement in x/width for each readout. Mobile text did not clip. Start/pause worked and console remained clean. Screenshot: `/tmp/sidequest-clock-readout-fixed.png`. Targeted16 tests and final258-test suite passed; default build and both edition checks passed. This records measured live stability, not a claim of physical-phone testing.

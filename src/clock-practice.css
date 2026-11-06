@@ -6,8 +6,8 @@
 .clock-lab label{font-size:12px;display:grid;gap:6px;color:var(--muted)}
 .clock-lab select{max-width:100%;background:#1e2930;border:1px solid #526b72;border-radius:7px;color:#f0f6ef;padding:10px;font:inherit}
 .clock-lab .clock-panel{border:1px solid #536970;border-radius:12px;overflow:hidden;background:#101e25}
-.clock-lab .clock-hud{display:flex;justify-content:space-between;gap:10px;padding:14px 18px;color:#e1f1f2;font-variant-numeric:tabular-nums}
-.clock-lab .clock-hud strong{font-size:22px}.clock-lab .clock-hud span{display:grid;gap:5px;font-size:11px}
+.clock-lab .clock-hud{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);gap:10px;padding:14px 18px;color:#e1f1f2;font-variant-numeric:tabular-nums}
+.clock-lab .clock-hud strong{font-size:22px;font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;white-space:nowrap}.clock-lab .clock-hud>span{display:grid;gap:5px;font-size:11px;min-width:0}.clock-lab .clock-hud>span:nth-child(2){text-align:center}.clock-lab .clock-hud>span:last-child{text-align:right}
 .clock-lab .clock-arena{position:relative;aspect-ratio:3/2;width:100%}
 .clock-lab #game{width:100%;height:100%;display:block}
 .clock-lab #game canvas{display:block;margin:auto;max-width:100%;max-height:100%}
@@ -16,6 +16,8 @@
 .clock-lab .clock-note{font-size:12px;color:var(--muted);max-width:76ch}
 .clock-lab #clock-pause-note{position:absolute;inset:35% 10% auto;background:#101e25ed;border:1px solid #9ac8c5;border-radius:10px;padding:20px;text-align:center;pointer-events:none}
 .clock-lab .bass-control{z-index:3}
-@media(max-width:620px){.shell.clock-lab{padding:14px 10px}.clock-lab header{align-items:start;gap:8px}.clock-lab .clock-controls{gap:8px;margin:14px 0}.clock-lab .clock-controls label{flex-basis:100%}.clock-lab .clock-hud{padding:10px;font-size:11px}.clock-lab .clock-hud strong{font-size:18px}.clock-lab .clock-status{padding:10px;font-size:11px;flex-wrap:wrap}.clock-lab .clock-note{font-size:11px}.clock-lab #clock-pause-note{padding:12px}}
+@media(max-width:620px){.shell.clock-lab{padding:14px 10px}.clock-lab header{align-items:start;gap:8px}.clock-lab .clock-controls{gap:8px;margin:14px 0}.clock-lab .clock-controls label{flex-basis:100%}.clock-lab .clock-hud{padding:10px;font-size:11px}.clock-lab .clock-hud strong{font-size:16px}.clock-lab .clock-status{padding:10px;font-size:11px;flex-wrap:wrap}.clock-lab .clock-note{font-size:11px}.clock-lab #clock-pause-note{padding:12px}}
 .clock-lab{--display:'Lilita One','Trebuchet MS',sans-serif;--body:'DM Sans',Arial,sans-serif;--paper:#dcefe8;--ink:#14252c;--surface:#20373e;--accent:#91c6bd;--hover:#304d54;--muted:#b1c7c9;font-family:var(--body)}
 .clock-lab .primary-button{padding:9px 18px;font-size:20px}
+
+.clock-lab #clock-elapsed{font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;white-space:nowrap}
