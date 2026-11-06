@@ -1,13 +1,14 @@
+import {genericContext} from './editions/storage-context.js';
 import {awardStage,requirement} from './progression.js';
 import {isThemePreference} from './themes.js';
-import {readProfile,PROFILE_KEY,normalizeAudio,rankScores,validScore} from './profile.js';
+import {readProfile,normalizeAudio,rankScores,validScore} from './profile.js';
 import {normalizeOutfit} from './wardrobe.js';
-export function createStorage(storage,{canWrite=()=>true}={}){
- const profile=readProfile(storage),submitted=new Set([...profile.boards.rush,...profile.boards.festival,...profile.boards.endless].map(e=>e.id));
- try{const raw=JSON.parse(storage?.getItem(PROFILE_KEY)||'null');if(raw?.version===1&&Object.hasOwn(raw,'recovery'))profile.recovery=raw.recovery;}catch{}
+export function createStorage(storage,{canWrite=()=>true,context=genericContext}={}){
+ const profile=readProfile(storage,context),submitted=new Set([...profile.boards.rush,...profile.boards.festival,...profile.boards.endless].map(e=>e.id));
+ try{const raw=JSON.parse(storage?.getItem(context.profileKey)||'null');if(raw?.version===1&&Object.hasOwn(raw,'recovery'))profile.recovery=raw.recovery;}catch{}
  function persist(){try{if(!storage||!canWrite())return false;// Anything successfully read back from this write is durable, including its award notice.
  const record=profile.recovery?.progressReward?{...profile,recovery:{...profile.recovery,progressReward:{...profile.recovery.progressReward,persisted:true}}}:profile;
- storage.setItem(PROFILE_KEY,JSON.stringify(record));if(record!==profile)profile.recovery=record.recovery;return true;}catch{return false;}}
+ storage.setItem(context.profileKey,JSON.stringify(record));if(record!==profile)profile.recovery=record.recovery;return true;}catch{return false;}}
  return {
   get profile(){const {recovery,...publicProfile}=profile;return structuredClone(publicProfile)},get recovery(){return structuredClone(profile.recovery??null)},
   saveRecovery(value){profile.recovery=structuredClone(value);return {persisted:persist()};},

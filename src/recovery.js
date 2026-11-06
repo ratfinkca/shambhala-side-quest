@@ -65,8 +65,9 @@ function roundOK(s,r){
  const stage=stageFor(r);
  return Array.isArray(s.crowd)&&s.crowd.length===stage.crowdAnchors.length&&s.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&finite(e.travel)&&finite(e.cooldownUntil,0,63000)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&(e.previousPlayer===null)===(e.previousDancer===null)&&(!e.active||finite(e.nearest))&&['touching','protected'].every(k=>e[k]===undefined||bool(e[k]))&&(e.nearest===undefined||finite(e.nearest)));
 }
-export function readRecovery(raw){
+export function readRecovery(raw,{editionId='generic'}={}){
  const fail=code=>({ok:false,code});
+ if(editionId!=='generic')return fail('incompatible');
  try{
   if(!object(raw))return fail('invalid');
   if(raw.version!==RECOVERY_VERSION||raw.rules!==RECOVERY_RULES||raw.scoringVersion!=='arcade-v1')return fail('incompatible');

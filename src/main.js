@@ -1,3 +1,5 @@
+import {getEdition,editionIdFromEnv} from './editions/registry.js';
+import {storageContext} from './editions/storage-context.js';
 import {makeRecovery,readRecovery} from './recovery.js';
 import {createRecoveryOwner} from './recovery-owner.js';
 import {createRecoveryController} from './recovery-controller.js';
@@ -34,6 +36,7 @@ import {updateBassButton,activationInput} from './bass-view.js';
 import { bassFactor } from './geometry.js';
 import {MYSTERY_EFFECTS} from './mystery.js';
 import { createScreenState, transition, createScreens } from './screens.js';
+const edition=getEdition(editionIdFromEnv(import.meta.env));
 const $=s=>document.querySelector(s);
 let local;try{local=window.localStorage}catch{}
 const rehearsal=import.meta.env.DEV && new URLSearchParams(location.search).has('rehearsal');
@@ -41,12 +44,13 @@ const recoveryLab=import.meta.env.DEV && rehearsal && new URLSearchParams(locati
 const rewardLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('rewards');
 const candyLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('candy');
 const bassLab=import.meta.env.DEV && rehearsal && new URLSearchParams(location.search).has('bass');
+const context=storageContext(edition,{rehearsal,recoveryLab});
 // Every rehearsal uses a disposable profile; only recovery practice persists in its own namespace.
 const recoveryPractice=recoveryLab?await import('./recovery-practice.js'):null;
-const profileStorage=recoveryLab?recoveryPractice.practiceStorage(local):rehearsal?{getItem:()=>null,setItem:()=>{}}:local;
-const recoveryOwner=createRecoveryOwner({locks:!rehearsal||recoveryLab?navigator.locks:null,name:recoveryLab?'sidequest.recovery-practice':'sidequest.profile.v1'});
+const profileStorage=recoveryLab?recoveryPractice.practiceStorage(local,context):rehearsal?{getItem:()=>null,setItem:()=>{}}:local;
+const recoveryOwner=createRecoveryOwner({locks:!rehearsal||recoveryLab?navigator.locks:null,name:context.lockName});
 const ownership=!rehearsal||recoveryLab?await recoveryOwner.acquire():'unsupported';
-const saved=createStorage(profileStorage,{canWrite:()=>!recoveryOwner.supported||recoveryOwner.held}),audio=createAudio();audio.setVolumes(saved.profile.audio);
+const saved=createStorage(profileStorage,{context,canWrite:()=>!recoveryOwner.supported||recoveryOwner.held}),audio=createAudio();audio.setVolumes(saved.profile.audio);
 const onlineConfig=rehearsal?{enabled:false}:readOnlineConfig(import.meta.env);
 const playtest=createPlaytestSession({config:onlineConfig,consent:createConsent({storage:saved}),send:onlineConfig.enabled?createPlaytestSender(onlineConfig.endpoint):async()=>false});
 const arcadeConfig=rehearsal?{}:readArcadeConfig(import.meta.env);
@@ -58,7 +62,7 @@ let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surpris
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,progressReward,previewAvatar,previewReady=false;
 let runInputs=createInputTracker(),recoveryRecord=null,recoveredRun=false;
 if(ownership==='busy')screen={name:'recoveryBusy'};
-else if(recoveryOwner.held&&saved.recovery!==null){recoveryRecord=readRecovery(saved.recovery);screen={name:recoveryRecord.ok?'recovery':'recoveryInvalid'};}
+else if(recoveryOwner.held&&saved.recovery!==null){recoveryRecord=readRecovery(saved.recovery,{editionId:edition.id});screen={name:recoveryRecord.ok?'recovery':'recoveryInvalid'};}
 const recoveryNotice=document.createElement('p');recoveryNotice.id='recovery-notice';recoveryNotice.setAttribute('role','status');recoveryNotice.hidden=true;document.querySelector('.game-frame').append(recoveryNotice);
 const recovery=createRecoveryController({owner:recoveryOwner,storage:saved,capture:captureCheckpoint,onStatus:state=>{recoveryNotice.hidden=state==='saved'||rehearsal&&!recoveryLab;recoveryNotice.textContent=state==='saved'?'':'Run recovery unavailable; keep this page open.';}});
 if(ownership==='unsupported'&&(!rehearsal||recoveryLab)){recoveryNotice.hidden=false;recoveryNotice.textContent='Run recovery unavailable; keep this page open.';}
@@ -287,7 +291,7 @@ if(import.meta.env.DEV && rehearsal && ownership!=='busy')import('./rehearsal.js
  const openRewards=()=>{scene?.pauseRound();audio.stop();screen=createScreenState();go('WARDROBE');};
  installRehearsal(()=>scene,()=>screen.name==='playing',{
   previewStage:index=>{const load=()=>{scene.pauseRound();audio.stop();screen=createScreenState();newRun('endless');run.stageIndex=index;go('RULES');};if(scene)load();else game.events.once('forest:ready',load);},
-  ...(recoveryLab?{previewRecovery:preset=>{const value=recoveryPractice.recoveryPreview(preset,activeTheme);if(value){saved.saveRecovery(value);recoveryRecord=readRecovery(value);screen={name:'recovery'};run=null;scene?.pauseRound();audio.stop();render();}},resetRecovery:()=>{recoveryPractice.resetPractice(local);location.reload();}}:{}),
+  ...(recoveryLab?{previewRecovery:preset=>{const value=recoveryPractice.recoveryPreview(preset,activeTheme);if(value){saved.saveRecovery(value);recoveryRecord=readRecovery(value,{editionId:edition.id});screen={name:'recovery'};run=null;scene?.pauseRound();audio.stop();render();}},resetRecovery:()=>{recoveryPractice.resetPractice(local,context);location.reload();}}:{}),
   ...(rewardLab?{openRewards,previewReward:(stages,key)=>{
    const results=stages.map(stage=>saved.awardProgress(stage));
    progressReward={xp:results.reduce((sum,r)=>sum+r.xp,0),rewards:[...new Set(results.flatMap(r=>r.rewards))],persisted:true};
