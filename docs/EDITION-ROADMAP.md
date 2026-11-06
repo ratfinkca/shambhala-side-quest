@@ -20,9 +20,11 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Exit:** current 207-test baseline expanded with edition/context/migration isolation tests; both builds verified, generic play/recovery/online contract unchanged, independent review clean. [Task plan](superpowers/plans/2026-11-06-edition-foundation.md).
 
-## M1 — Stage identity and product rules (next)
+## M1 — Stage identity and product rules (owner review)
 
 **Outcome:** nine dated, reviewable stage briefs and an agreed SMF route/music contract.
+
+**Status:** [sourced research briefs](research/smf-stage-identities-2026-11-06.md) and [concrete route/rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) drafted on 2026-11-06. Fresh builder check found no important unanswered questions beyond the recorded owner decisions. Visual-year and musical-clock choices are pending; secret reference gaps and listening acceptance are explicit. M1 is not yet approved/frozen, and no M2 product changes have started.
 
 - Research 2023–2026 official stage lineups/curator statements and available primary sets; record gaps instead of inferring secret programming from unrelated stages.
 - For each venue: recognizable setting/materials, day/night identity, musical palette/tempo/form, lighting language, geometry/spawn constraints and asset sources.

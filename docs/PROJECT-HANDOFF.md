@@ -30,6 +30,12 @@ M1 insights, M2 layouts, M3 souvenirs, M4 candy, Bass Head and recovery are publ
 
 The user wants optional discoveries tied to parent stages. Builder recommendation: collect an invitation in the parent round, choose a separate secret visit after clearing, and retain discovered Explore access; secret rewards cannot inflate the main score or carry power into it. Detailed parameters and proposed route are in the approved design; M1 research/rules review precedes actual SMF stage implementation. Original music with proper electronic phrasing remains planned, now stage-specific after research; the previous three-stage/128 BPM proposal is superseded. Weekend feedback still informs balance and physical-device reliability; absent telemetry does not prove inactivity.
 
+## M1 research and rule proposal — owner review
+
+The [nine-venue research](research/smf-stage-identities-2026-11-06.md) links 2023–2026 official announcements, primary artist/curator testimony and visual references, separating observed evidence from original game choices. Two stage/year announcement gaps and uneven secret-stage evidence are explicit; full-set listening and final dated-art acceptance remain open.
+
+The [rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) recommends Living Room → Fractal → Grove → AMP → Pagoda → Village, four-slot earned perk choices, fair independent secret visits, and phrase-length SMF rounds with canonical targets/timing. Visual-year and round-clock questions are awaiting owner response. This is a researched recommendation, not an approved server ruleset or product implementation. Keep the current M0 catalogue order/code until approval. A fresh builder check found no additional build-changing gaps. M2's detailed task plan follows rule/identity review.
+
 ## Architecture
 
 Vite/Phaser static frontend on GitHub Pages. Local M0 uses `src/main.js` as an edition-first loader, `src/game-entry.js` for the existing playable bootstrap, and `src/editions/` for trusted identity, storage context and the static SMF catalogue. Pure game/run/stage rules live in `src/game.js`, `src/run.js`, `src/stages.js`, `src/endless.js`; Phaser rendering in GameScene/StageRenderer/Crowd/Avatar. `src/screens.js` controls navigation and `src/results-view.js` renders score decisions. `src/progression.js`, profile/storage own local XP and saves. Theme registry/art and stage music/lighting are independent.

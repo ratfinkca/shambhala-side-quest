@@ -6,6 +6,10 @@ Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and 
 
 [Master edition design](superpowers/specs/2026-11-06-edition-split-design.md) · [M0–M6 roadmap and nine-stage pitch checklist](EDITION-ROADMAP.md) · [first foundation implementation plan](superpowers/plans/2026-11-06-edition-foundation.md). Approved design; M0 edition foundation is implemented locally (independent review fixes verified), with [preview validation](superpowers/edition-foundation-preview-validation.md). No new deployment yet. The generic engine/content remains compatible while SMF gains six main stages and all three requested optional secrets. Prior three-stage/128 BPM music scope is superseded.
 
+## SMF stage research and proposed rules
+
+[Nine-venue research, 2023–2026](research/smf-stage-identities-2026-11-06.md) · [SMF route/gameplay/musical-clock proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md). Owner review pending; first-pass sources and gaps are dated, and proposed tempi/geometry/targets are not claims of measured music or tested balance. No new product behavior or deployment in this research pass.
+
 ## Completed Endless program and release evidence
 
 [M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). M1 shipped in PR #14; [release evidence](superpowers/m1-release-validation.md) records backend checks. M2 stage variations has an [implementation plan and local QA record](superpowers/plans/2026-11-03-stage-variations-preview.md). Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.
