@@ -8,7 +8,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 ## M0 — Edition foundation (local preview complete)
 
-**Status:** implemented locally; 224 tests, dual builds and browser preview checks pass; independent review fixes verified. [Validation](superpowers/edition-foundation-preview-validation.md).
+**Status:** implemented locally; 225 tests, dual builds and browser preview checks pass; independent review fixes verified. [Validation](superpowers/edition-foundation-preview-validation.md).
 
 **Outcome:** a safe local engineering preview, not the pitch build.
 
@@ -47,7 +47,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Outcome:** Rabbit Hole, Secret Garden and Ikigai Mori are complete optional visits associated with their parents.
 
-- Build distinctive discoverable invitations, earned entry after parent clear, optional choice and persistent Explore access.
+- Build distinctive discoverable invitations, earned entry after parent clear, optional choice and persistent Explore access. Keep undiscovered names/art hidden behind mystery tiles until earned.
 - Secret scores/items/boosts never alter main competitive totals or parked main state. Souvenirs reward discovery; no extra main perk choice/XP advantage from detours.
 - Keep main/secret visit identities, return menus and parked/active recovery atomic and bounded. Handle invitation collection, death/timeout, replay, discard, reload and finish/save without duplicate rewards.
 - Test one secret at a time against its actual parent, then the full six-main/three-secret journey. Complete all three before pitch acceptance.

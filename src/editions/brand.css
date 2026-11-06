@@ -24,3 +24,8 @@
 @media(max-width:700px){.scaffold-header{align-items:flex-start;flex-direction:column;gap:4px}.scaffold-hero{grid-template-columns:1fr;padding:0;gap:0}.scaffold-hero .title-art{max-height:320px;width:100%}.scaffold-hero>div:last-child{padding:24px}.stage-preview-grid{grid-template-columns:1fr}.stage-catalogue{padding:30px 0}.stage-preview{padding:20px}}
 
 .shell.edition-scaffold{height:auto;min-height:100dvh;overflow:visible;display:block}
+
+.stage-preview.secret.is-locked{position:relative;text-align:center;border-style:dashed;border-color:color-mix(in srgb,var(--secondary) 45%,transparent);background:repeating-linear-gradient(135deg,transparent 0 12px,#b697d008 12px 14px),radial-gradient(ellipse at center,#b697d00b,transparent 75%),var(--ink)}
+.secret-seal{display:grid;place-items:center;width:58px;height:58px;border:1px solid color-mix(in srgb,var(--secondary) 45%,transparent);border-radius:50%;margin:20px auto 16px;font:400 38px/1 var(--display);color:var(--secondary);box-shadow:0 0 0 6px #b697d008}
+.stage-preview.secret.is-locked h3{font-size:24px;color:var(--muted)}
+.stage-preview.secret.is-locked small{letter-spacing:2px;text-transform:uppercase;font-size:9px}

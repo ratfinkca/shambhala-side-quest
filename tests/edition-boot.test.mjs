@@ -16,14 +16,26 @@ test('edition-first boot rejects bad context before side effects and never initi
  await startEdition({VITE_EDITION:'smf',...live},actions);assert.deepEqual(calls,['scaffold:smf']);
  await startEdition({},actions);assert.deepEqual(calls,['scaffold:smf','game:generic']);
 });
-test('scaffold renders all nine planned stages and parent relationships without playable or posting actions',()=>{
+test('scaffold keeps nine tiles but conceals undiscovered stage identities',()=>{
  const classes=new Set(),root={innerHTML:'',classList:{add:v=>classes.add(v),remove:v=>classes.delete(v)}},dispose=renderScaffold(root,getEdition('smf'));
  assert.ok(classes.has('edition-scaffold'));
  assert.match(root.innerHTML,/Content preview — gameplay coming next/);
- for(const c of getEdition('smf').catalogue)assert.ok(root.innerHTML.includes(`data-stage-id="${c.id}"`));
- assert.equal((root.innerHTML.match(/data-stage-id=/g)||[]).length,9);
- assert.match(root.innerHTML,/Discovered from The Living Room/);assert.match(root.innerHTML,/Discovered from The Grove/);assert.match(root.innerHTML,/Discovered from The Pagoda/);
+ for(const c of getEdition('smf').catalogue){
+  if(c.kind==='main')assert.ok(root.innerHTML.includes(`data-stage-id="${c.id}"`));
+  else{assert.ok(!root.innerHTML.includes(c.name));assert.ok(!root.innerHTML.includes(c.id));}
+ }
+ assert.equal((root.innerHTML.match(/<article class="stage-preview/g)||[]).length,9);
+ assert.equal((root.innerHTML.match(/aria-label="Undiscovered stage"/g)||[]).length,3);
+ assert.equal((root.innerHTML.match(/Somewhere secret/g)||[]).length,3);
  assert.doesNotMatch(root.innerHTML,/data-action=|<canvas|<button|Share playtest data|Post score/);
  dispose();assert.equal(root.innerHTML,'');assert.equal(classes.size,0);
  const generic=renderTitle('forest-freakout','unknown',false);assert.match(generic,/Three stages/);assert.match(generic,/Festival Side Quest/);
+});
+
+test('only discovered secrets reveal their name and parent while others remain concealed',()=>{
+ const root={innerHTML:'',classList:{add(){},remove(){}}},edition=getEdition('smf');
+ renderScaffold(root,edition,{discoveredStageIds:['smf-rabbit-hole','not-a-stage']});
+ assert.match(root.innerHTML,/Rabbit Hole/);assert.match(root.innerHTML,/Discovered from The Living Room/);
+ assert.doesNotMatch(root.innerHTML,/Secret Garden|Ikigai Mori|smf-secret-garden|smf-ikigai-mori/);
+ assert.equal((root.innerHTML.match(/aria-label="Undiscovered stage"/g)||[]).length,2);
 });
