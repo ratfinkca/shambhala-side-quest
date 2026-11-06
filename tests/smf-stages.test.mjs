@@ -11,3 +11,7 @@ for(const [id,target,crowd,speakers,duration]of [['smf-living-room',23,10,2,6857
  let seed=10;const rng=()=>((seed=(seed*16807)%2147483647)/2147483647);for(let i=0;i<200;i++){const p=findSpawn(s,rng,[],i%2===0);assert.ok(isOpen(p,24,s.obstacles));}assert.ok(isOpen(findSpawn(s,()=>0),24,s.obstacles));const candy=findCandySpawn(s,[],rng);assert.ok(candy&&isOpen(candy,24,s.obstacles));
 });
 test('only two authored previews are available; unknown and secret IDs fail',()=>{assert.equal(SMF_PREVIEW_STAGES.length,2);for(const id of ['forest','unknown','smf-rabbit-hole','smf-ikigai-mori',null,undefined])assert.throws(()=>smfPreviewStage(id));assert.notDeepEqual(SMF_PREVIEW_STAGES[0].obstacles,SMF_PREVIEW_STAGES[1].obstacles);});
+
+test('both venues provide arrival space without an opening dancer collision',()=>{
+ for(const stage of SMF_PREVIEW_STAGES){const timing=getTiming(stage.timingId);for(let ms=0;ms<=1500;ms+=10)for(let i=0;i<stage.crowdAnchors.length;i++){const p=crowdPosition(i,ms,stage.crowdAnchors,1,timing),distance=Math.hypot(p.x-stage.spawn.x,p.y-stage.spawn.y);assert.ok(distance>=27,`${stage.id} dancer${i} collides with a stationary arrival at${ms}ms`);if(ms===0)assert.ok(distance>=64,`${stage.id} dancer${i} lacks opening breathing room`);}}
+});

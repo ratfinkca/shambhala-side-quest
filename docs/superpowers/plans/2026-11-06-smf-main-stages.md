@@ -10,6 +10,8 @@
 
 **Spec:** [Approved route/rules](../specs/2026-11-06-smf-route-rules-design.md), [M2 delivery](2026-11-06-smf-m2-delivery.md), [nine-venue briefs](../../research/smf-stage-identities-2026-11-06.md). The owner explicitly requested this two-venue preview after accepting the clock/readout fix. Continue native execution under that authorization; this is the first subset of Part B, not the full six-stage run.
 
+**Execution record (2026-11-06):** Four tasks implemented locally under native execution;271/271 final tests, both edition builds and browser playtests pass. One independent review found two Important issues, fixed with regressions/live layout measurements. [Evidence and limits](../smf-venue-preview-validation.md). Owner music/layout feedback remains; no publishing.
+
 ## Global Constraints
 
 - Living Room112BPM/68571ms/target23/10dancers/2speaker islands; Pagoda128BPM/60000ms/target28/18dancers/3islands. Use existing canonical clocks.

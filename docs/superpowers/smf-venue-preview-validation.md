@@ -12,13 +12,13 @@ Reference refresh: [official stage descriptions/current photo carousels](https:/
 
 ## Isolation and lifecycle
 
-DEV SMF `/?rehearsal&venues` only. Two real stage choices; the seven-clock neutral lab remains at `/?rehearsal&clock`. Both use one Phaser engine across resets, paused hidden-page/BFCache behavior, fixed-width stable HUD columns and separate music/effects controls. The venue arena scales to available window height to keep the entire floor visible and its Bass Head button aligned; short desktops get a smaller floor.
+DEV SMF `/?rehearsal&venues` only. Two real stage choices; the seven-clock neutral lab remains at `/?rehearsal&clock`. Both use one Phaser engine across resets, paused hidden-page/BFCache behavior, fixed-width stable HUD columns and separate music/effects audio channels with one Sound on/off control. The venue arena scales to available window height to keep the entire floor visible and its Bass Head button aligned; short desktops get a smaller floor.
 
 No profile, storage, lock, XP, score ticket, posting or playtest client is initialized. All practice progress resets on reload. Normal SMF stays the catalogue with three anonymous locked secrets. Generic gameplay/recovery/protocol and online clients remain unchanged. Both production outputs omit venue practice, authored fixtures and scenery/music modules through guarded dynamic imports/injection.
 
 ## Evidence
 
-- Starting suite258/258. Each task observed a failing regression and a green targeted test before completion. Integrated suite270/270; default build and both edition checks pass. Independent review/fix outcome follows below.
+- Starting suite258/258. Each task observed a failing regression and a green targeted test before completion. Integrated suite270/270 before review;271/271 after the fix pass. Default build and both edition checks pass. Independent review/fix outcome follows below.
 - Layout tests sample full dancer trajectories at50ms,14px cabinet clearance,24px spawn/Flow clearance, connected pickup-grid cells and left/centre/right routes. Seeded random and fallback spawns remain open.
 - Rendering tests distinguish the venues, preserve geometry, freeze the water/projection layers under reduced motion and destroy old owned scenery nodes on switches.
 - Music tests cover all512steps per venue, arrangement differences, low-score completeness, returning root, finite/bounded voices, swing offsets, Flow, silence at end and voice tails ending within the round.
@@ -33,3 +33,15 @@ No profile, storage, lock, XP, score ticket, posting or playtest client is initi
 Physical phone/touch hardware, actual speaker/headphone listening and sustained mobile performance remain unobserved. A phone-sized viewport is layout evidence. Generation/scheduling tests do not establish musicality or device latency.
 
 This two-venue preview does not complete M2B. Four venues, six-stage Festival/Endless transitions and four-slot perk decisions/progression remain. Tagged durable SMF recovery/new online contract precede enabling normal play/posting; secrets remain M3 and final nine-stage music/lighting M4.
+
+## Independent review and fix pass
+
+One fresh read-only gpt-6-astra high review found no Critical issues and two Important ones; both were addressed in one author-verified fix pass. No second review was requested.
+
+- Pagoda dancer17 originally overlapped the arrival position and caused immediate slowdown. Its anchor moved from500,445 to555,445. A failing-then-passing regression requires at least64px initial player/dancer distance in both venues and no standing-arrival collision during the first1500ms, sampled every10ms. Full-round cabinet trajectory checks still pass.
+- The mobile target auto-column moved6.63px when elapsed time gained a digit, despite the two main HUD cells staying fixed. Status columns now reserve16characters for the target and14 for desktop elapsed time, with monospace text and a left-anchored target. At390×844 the target stayed at x263.0390625,width105.9609375 from0.2s to16.430s, including a pickup; desktop also has fixed capacity for two-digit counts. No clipping/console errors after fixes.
+- A minor factual wording error was corrected: audio has separate music/effects channels, while the preview exposes a single Sound on/off control. It does not promise independent volume controls.
+
+Final checks:271/271 tests, default production build, both edition builds/asset checks, relative documentation links and whitespace all pass. Existing large-Phaser-chunk warning remains. No new deferred product findings from this review. Earlier clock bar-boundary display/exhaustive-reference-test follow-ups remain documented separately.
+
+Builder decision: fit the practice arena to window height so the complete floor and on-field control stay aligned; short desktop windows trade some arena size for a complete view. Final2026 facade accuracy and musicality still require owner/crew/device feedback. This is an original two-venue interpretation, not a surveyed festival replica or the final pitch build.
