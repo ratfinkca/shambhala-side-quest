@@ -43,3 +43,11 @@ test('stage transitions select their own instrument voices and stop previous sou
   audio.stop();assert.ok(f.voices.every(v=>v.stopped));
  }
 });
+
+test('timed audio queues absolute onsets, stays silent without injected voices, and cancels on stop',()=>{
+ const f=fake();const starts=[];const create=f.ctx.createOscillator;f.ctx.createOscillator=()=>{const n=create();n.start=at=>starts.push(at);return n};
+ const timingId='smf-living-room-clock-preview-1',round={timingId,remainingMs:68571-17140,multiplier:1,flowMs:0};f.ctx.currentTime=20;
+ const audio=createAudio(()=>f.ctx,{timedVoices:()=>[{frequency:120,duration:.1,type:'sine',volume:.02}]});audio.setEnabled(true);audio.sync(round,'clock-lab');assert.deepEqual(starts,[20.003]);audio.sync(round,'clock-lab');assert.equal(starts.length,1);audio.stop();assert.ok(f.voices.every(v=>v.stopped));
+ const silent=fake(),s=createAudio(()=>silent.ctx);s.setEnabled(true);s.sync(round,'smf-living-room');assert.equal(silent.voices.length,0);
+ f.ctx.state='suspended';audio.sync(round);assert.equal(starts.length,1);f.ctx.state='running';audio.setEnabled(true);audio.sync({...round,remainingMs:68571-18000});assert.ok(starts.length>1);audio.setEnabled(false);assert.ok(f.voices.every(v=>v.stopped));
+});
