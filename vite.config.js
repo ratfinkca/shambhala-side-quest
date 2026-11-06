@@ -7,6 +7,8 @@ export default defineConfig(({mode})=>{
  return {
   // Relative assets support separate edition previews and Pages subpaths.
   base:'./',publicDir:false,
+  // Concurrent edition previews optimize different entry graphs.
+  cacheDir:`node_modules/.vite/${id}`,
   plugins:[editionAssetsPlugin(id),{name:'edition-document',transformIndexHtml:html=>html.replaceAll('__EDITION_TITLE__',edition.brand.title).replaceAll('__EDITION_WORDMARK__',id==='smf'?'SHAMBHALA':'FESTIVAL')}],
  };
 });

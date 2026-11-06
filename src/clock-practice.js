@@ -23,3 +23,16 @@ export function createClockPractice({createSession}){
  };
  return lab;
 }
+
+// One Phaser game per document: Phaser does not remove its core visibility
+// listener on destroy. Round resets must reuse it rather than create another.
+export function createPracticeEngine(createGame){
+ let engine=null;
+ return {createSession(){
+  engine??=createGame();const owned=engine;
+  return {start:config=>owned.start(config),pause:()=>owned.pause(),resume:()=>owned.resume(),destroy:()=>owned.pause()};
+ },destroy(){engine?.destroy();engine=null;}};
+}
+export function handlePracticePageHide(event,{pause,dispose}){
+ if(event.persisted)pause();else dispose();
+}

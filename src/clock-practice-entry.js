@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import './clock-practice.css';
 import {GameScene} from './GameScene.js';
-import {createClockPractice,CLOCK_CHOICES,diagnosticVoices} from './clock-practice.js';
+import {createClockPractice,createPracticeEngine,handlePracticePageHide,CLOCK_CHOICES,diagnosticVoices} from './clock-practice.js';
 import {createAudio} from './audio.js';
 import {elapsedMs,roundTiming,musicalPosition,phaseAt,phaseProgress} from './stage-clock.js';
 import {updateBassButton} from './bass-view.js';
@@ -33,15 +33,16 @@ function update(round){
  updateBassButton($('#bass-head'),round.bass,{playing:lab.state==='playing'&&!round.ended,hasSpeakers:true});
  if(lab.state==='playing')audio.sync(round,'clock-lab');
 }
-const lab=createClockPractice({createSession(){
+const enginePool=createPracticeEngine(()=>{
  let scene=null,config=null,destroyed=false,playing=true,game;
- class PracticeScene extends GameScene{create(){super.create();scene=this;if(destroyed){game.destroy(true);return;}currentScene=this;if(config){this.startRound(config);if(!playing)this.pauseRound();}}}
+ class PracticeScene extends GameScene{create(){super.create();scene=this;if(destroyed){this.game.destroy(true);return;}currentScene=this;if(config){this.startRound(config);if(!playing)this.pauseRound();}}}
  game=new Phaser.Game({type:Phaser.CANVAS,parent:'game',width:960,height:640,banner:false,audio:{noAudio:true},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:PracticeScene});
  game.events.on('round:update',round=>{if(!destroyed)update(round)});
  game.events.on('round:pickup',()=>audio.pickup(scene.round.multiplier));game.events.on('round:closepass',()=>audio.closePass());
  game.events.on('round:end',()=>{if(destroyed)return;audio.stop();lab.finish();controls();});
- return {start(value){config=value;if(scene)scene.startRound(value);},pause(){playing=false;scene?.pauseRound();audio.stop();},resume(){playing=true;scene?.resumeRound();audio.setEnabled(soundOn);},destroy(){destroyed=true;audio.stop();if(currentScene===scene)currentScene=null;if(scene)game.destroy(true);}};
-}});
+ return {start(value){config=value;playing=true;if(scene)scene.startRound(value);},pause(){playing=false;scene?.pauseRound();audio.stop();},resume(){playing=true;scene?.resumeRound();audio.setEnabled(soundOn);},destroy(){destroyed=true;audio.stop();if(currentScene===scene)currentScene=null;if(scene)game.destroy(true);}};
+});
+const lab=createClockPractice({createSession:enginePool.createSession});
 function start(){audio.stop();audio.setEnabled(soundOn);lab.start();controls();}
 function pause(){if(lab.state==='paused')lab.resume();else lab.pause();controls();if(currentScene)update(currentScene.round);}
 $('#clock-start').addEventListener('click',start);
@@ -52,6 +53,7 @@ $('#bass-head').addEventListener('click',()=>{currentScene?.activateBassHead();i
 function keydown(e){if(e.target.matches('select,input,textarea'))return;if(e.code==='Escape'&&['playing','paused'].includes(lab.state)){e.preventDefault();pause();}if(e.code==='KeyB'&&lab.state==='playing'&&!e.repeat){e.preventDefault();currentScene?.activateBassHead();}}
 function hidden(){if(document.hidden){lab.pause();audio.stop();controls();if(currentScene)update(currentScene.round);}}
 document.addEventListener('keydown',keydown);document.addEventListener('visibilitychange',hidden);
-function cleanup(){if(disposed)return;disposed=true;lab.destroy();audio.stop();document.removeEventListener('keydown',keydown);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',cleanup);root.classList.remove('clock-lab');}
-window.addEventListener('pagehide',cleanup);
+function cleanup(){if(disposed)return;disposed=true;lab.destroy();enginePool.destroy();audio.stop();document.removeEventListener('keydown',keydown);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',pagehide);root.classList.remove('clock-lab');}
+function pagehide(event){handlePracticePageHide(event,{pause(){lab.pause();audio.stop();controls();if(currentScene)update(currentScene.round);},dispose:cleanup});}
+window.addEventListener('pagehide',pagehide);
 if(import.meta.hot)import.meta.hot.dispose(cleanup);

@@ -11,7 +11,7 @@ DEV SMF `/?rehearsal&clock` opens Find the pulse: a neutral timing floor with mi
 ## Verification record
 
 - Baseline: 225/225 tests. Initial restricted run could not bind the existing local asset-test server; permitted rerun passed.
-- Final suite before independent review:254/254 tests.
+- Final suite after the review fix pass:258/258 tests (254 before review).
 - Each implementation task observed a failing regression before implementation, then its targeted tests and complete suite passed. Final totals and review follow below.
 - Generic compatibility covers stored first-15-Endless-stage hashes, score validation, legacy recovery and frozen attempted submission bytes.
 - Default production build and dual-edition asset/reference checker pass. Existing Phaser large-chunk warning remains. The checker preserves the default generic release artifact.
@@ -23,4 +23,23 @@ A phone-sized browser is not a physical touch/audio/performance test. Actual dev
 
 ## Final review and remaining work
 
-Final totals, completion/production/recovery browser checks and independent review outcome are recorded here before handoff. Owner preview precedes the six-venue Part B task plan; backend/schema work precedes enabling any SMF posting.
+One fresh read-only review by gpt-6-astra high found three Important issues. All were reproduced with failing regressions, fixed in one pass, and verified with258/258 tests plus both builds/checker. No second review was requested; these are author-verified fixes, not a claim that the reviewer re-approved the final diff.
+
+1. A running-but-stalled/slow audio clock could compress queued notes. The transport now cancels on clock-rate divergence and schedules from current gameplay time when audio advances normally. Tests independently advance gameplay and audio clocks.
+2. Recreating Phaser on every reset leaked its core document visibility listener. The lab now owns one Phaser engine and resets rounds inside it. Ten resets keep a single engine/listener registration; destruction occurs only at permanent page disposal.
+3. A cached pagehide previously dismantled the lab before browser Back. Persisted pagehide now pauses without disposing. Browser Back was exercised and returned usable controls; this browser reloaded, so actual BFCache restoration remains unit-tested rather than directly observed.
+
+Additional acceptance fix: simultaneous generic/SMF development servers shared an optimized-dependency cache, producing a504 for Phaser and a generic dynamic-import failure. Edition-specific Vite caches now prevent that collision. A failing-then-passing configuration regression and actual generic recovery UI confirm the fix. The disposable generic recovery fixture survived reload, returned paused and reached explicit finish/bank/initials with online posting unavailable; no production score or analytics entry was sent.
+
+After the fix pass the in-app lab was rechecked: all seven choices, ten rapid switches, one canvas, clean console, phone/desktop screenshots and Back navigation. Production query guards are covered by boot tests and both built artifacts exclude lab entry/UI/fixtures. Actual production deployment/browser smoke is outside this local preview.
+
+## Rulings and remaining minor follow-ups
+
+- Include Flow's previously omitted elapsed consumer so its existing8/20/33/48-second windows follow active stage time. A wrong mapping could shift availability; regression tests pin both long/short clocks.
+- Add explicit `useTransport` audio opt-in for the lab's generic-clock diagnostic sound. Default generic arrangements stay unchanged; a wrong selection would affect lab diagnostics, which are tested separately.
+- Reviewer declined actual speaker/headphone latency and physical-phone behavior: keep these unobserved and hand listening/device acceptance to the owner. Unknown device latency/performance is the remaining risk.
+- Reviewer declined finished venue content, tagged SMF recovery and new online schemas as outside M2A: retain disabled normal SMF play/posting and build these in B/C. This engineering preview is not the polished pitch candidate.
+
+Deferred minors from review: a rounded-down phrase onset can show the preceding bar/beat for one rendered frame (less than0.5ms of logical time); holding Escape can repeat the lab pause/resume toggle; the exhaustive generic comparison currently delegates to the same phase function, although independent existing boundary fixtures remain. These do not alter scored 2× windows, default generic controls or saved data. Address them during the next clock/UI refinement.
+
+Owner preview precedes the six-venue Part B task plan; backend/schema work precedes enabling any SMF posting. Screenshots are local QA artifacts outside the repository (`/tmp/sidequest-clock-mobile.png`, `/tmp/sidequest-clock-desktop.png`, `/tmp/sidequest-clock-end.png`).

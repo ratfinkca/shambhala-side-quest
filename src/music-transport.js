@@ -2,15 +2,22 @@ import {assertTiming,phaseAt} from '../supabase/functions/_shared/stage-timing.j
 // Driven only by active game time. A cursor bounds memory, even during Endless.
 export function createMusicTransport({voices,schedule,cancel,lookaheadMs=100}){
  if(!Number.isFinite(lookaheadMs)||lookaheadMs<=0||lookaheadMs>250)throw new Error('Invalid audio lookahead');
- let current=null,lastElapsed=-1,lastStep=-1;
- function stop(){cancel();current=null;lastElapsed=-1;lastStep=-1;}
+ let current=null,lastElapsed=-1,lastStep=-1,lastAudio=null,stalled=false;
+ function stop(){cancel();current=null;lastElapsed=-1;lastStep=-1;lastAudio=null;stalled=false;}
  return {stop,sync({timing,elapsedMs,audioNowSec,multiplier,flowActive}){
   assertTiming(timing);
   if(!Number.isFinite(elapsedMs)||!Number.isFinite(audioNowSec))throw new Error('Invalid audio position');
   const elapsed=Math.max(0,elapsedMs);
   if(current&&(current!==timing||elapsed<lastElapsed))stop();
   if(elapsed>=timing.durationMs){if(current)stop();return;}
-  current=timing;lastElapsed=elapsed;
+  // A context can report running while its hardware clock is stalled. Never
+  // keep stacking different game frames into the same short audio window.
+  const gameDelta=elapsed-lastElapsed,audioDelta=lastAudio===null?null:(audioNowSec-lastAudio)*1000;
+  if(current&&gameDelta>0&&audioDelta!==null&&audioDelta<gameDelta*.5){
+   if(!stalled){cancel();lastStep=-1;}
+   stalled=true;lastElapsed=elapsed;lastAudio=audioNowSec;return;
+  }
+  current=timing;lastElapsed=elapsed;lastAudio=audioNowSec;stalled=false;
   const interval=60000/(timing.bpm*timing.stepsPerBeat),end=Math.min(elapsed+lookaheadMs,timing.durationMs);
   for(let step=Math.max(lastStep+1,Math.floor(elapsed/interval));;step++){
    const onset=Math.round(step*interval);

@@ -10,6 +10,8 @@
 
 **Spec:** [Route/rules design](../specs/2026-11-06-smf-route-rules-design.md), musical clock and first-preview timing table; [edition design](../specs/2026-11-06-edition-split-design.md). Native execution remains selected; one final independent branch review.
 
+**Execution record (2026-11-06):** All five software tasks implemented locally with failing-then-passing regressions,258/258 final tests, both builds and one independent review/fix pass. [Validation and rulings](../smf-clock-preview-validation.md) record browser evidence, three deferred minors and unobserved physical-device/listening acceptance. Native execution retained; no push/deployment.
+
 ## Global Constraints
 
 - Generic stays 60000 ms, 120 BPM, existing 15/30/45-second 4-second drops, 3000-ms pre-cues, score components, geometry and progression.

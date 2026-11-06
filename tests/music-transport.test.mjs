@@ -18,3 +18,7 @@ test('stop, backward seek and profile changes cancel the prior generation',()=>{
 test('no event is queued at or beyond canonical end and invalid clocks cannot schedule',()=>{
  const h=harness(),t=getTiming('smf-amp-clock-preview-1');h.sync(t.durationMs-50,0,t);assert.ok(h.seen.every(e=>Math.round(e.step*60000/(140*4))<t.durationMs));h.sync(t.durationMs,1,t);const n=h.scheduled.length;h.sync(t.durationMs+1,2,t);assert.equal(h.scheduled.length,n);assert.throws(()=>h.sync(0,0,{...t}));
 });
+
+test('a stopped or slow audio clock cannot compress advancing gameplay into a stale audio queue',()=>{
+ for(const speed of [0,.1]){const h=harness();for(let ms=0;ms<=5000;ms+=16)h.sync(ms,1+ms/1000*speed,getTiming('smf-amp-clock-preview-1'));assert.ok(h.scheduled.length<=2,`queued ${h.scheduled.length} steps at audio speed ${speed}`);assert.ok(h.cancelled>=1);const n=h.scheduled.length;h.sync(5016,1+5000/1000*speed+.016,getTiming('smf-amp-clock-preview-1'));assert.ok(h.scheduled.slice(n).every(e=>e.at>=1+5000/1000*speed+.016));assert.ok(h.scheduled.length-n<=1);}
+});
