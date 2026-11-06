@@ -2,6 +2,8 @@
 
 A tiny, unofficial festival-inspired game: wander a glowing forest, collect good vibes, and chase your personal best in 60-second rounds.
 
+Development direction: [two-edition roadmap](docs/EDITION-ROADMAP.md) — a shared engine, compatible generic game and polished nine-stage SMF edition. This is a planning proposal; the playable features below describe the current release.
+
 ## Festival Run
 
 The game includes a title screen, wardrobe, independent music/effects volume controls, and local plus optional online arcade scores. Play any mode using the GitHub Pages link below.

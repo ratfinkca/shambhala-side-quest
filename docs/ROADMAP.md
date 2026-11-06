@@ -1,6 +1,6 @@
 # Development roadmap
 
-Updated 2026-11-06. Milestone labels below define the next development sequence; they are not retroactive release numbers. User approved features/atmosphere/rewards ahead of candy/bass fine-tuning. Build and preview one milestone at a time, then ship through PR/backend-first release checks when authorized.
+Updated 2026-11-06. The current forward plan is the [two-edition roadmap](EDITION-ROADMAP.md): shared engine, generic game and a polished nine-stage SMF edition. Its M0–M6 labels are a new program; the M1–M4 sections below retain the completed Endless program history. Build/preview one milestone at a time, then release only when authorized.
 
 ## Completed foundation
 
@@ -60,10 +60,12 @@ Next: validate the Bass Head button and feedback on physical phones, including t
 
 Acceptance: before/after measurements and actual playtests, specific improvements with denominators, no speculative difficulty changes. Keep scoring-version boundaries explicit.
 
-## Next direction — stage atmosphere and music
+## Next direction — shared engine and two editions
 
-Selected by the user on 2026-11-06 while weekend playtests gather gameplay feedback. Investigate deeper arrangements and coordinated lighting for the existing Living Forest, Neon Grove and Sunrise Clearing. Keep the current stage rotation, timers, scoring, hazards, targets and reward thresholds. The user chose original synthesized music and proper electronic phrasing/structure. [Proposed design](superpowers/specs/2026-11-06-stage-music-phrasing-design.md):128BPM/32-bar excerpts, genre-specific grooves/harmony and shared musical lighting cues; design approval is pending. Establish an audible/visual preview before settling the scope; a fourth stage or externally authored music assets needs a separate design and asset/licensing decision.
+The user requested an official split plan before further music work, aiming to pitch a nearly fully polished SMF version with no fixed date. Start with [M0 edition foundation](superpowers/plans/2026-11-06-edition-foundation.md), then research all six main stages and three secrets, author the full tour, add optional secret detours and complete original music/lighting for every venue. [Master design](superpowers/specs/2026-11-06-edition-split-design.md) · [program milestones and pitch checklist](EDITION-ROADMAP.md).
+
+Rabbit Hole belongs to Living Room, Secret Garden to Grove, and Ikigai Mori to Pagoda. Recommended discovery: an invitation collected during the parent round opens an optional after-clear visit, with independent secret outcomes and no main-board score inflation. This recommendation and the detailed plan await review. The older three-stage/128 BPM music proposal is superseded; proper electronic phrasing and original synthesis remain requirements, now informed by each venue's researched identity. Generic gameplay, saves and legacy online contracts remain compatible. No fork, new backend or public release has been created by planning.
 
 ## Later backlog
 
-More stages/authored music assets, additional cosmetics, optional currency/shop, cloud profiles/saves, stronger score verification and a public itch.io launch package. Itch launch remains on hold at the user's request. No dates or automatic publishing commitments are assigned.
+Additional cosmetics beyond the edition scope, optional currency/shop, cloud profiles/saves, stronger score verification and a public itch.io launch package. Itch launch remains on hold at the user's request. No dates or automatic publishing commitments are assigned.

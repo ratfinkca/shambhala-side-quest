@@ -1,6 +1,6 @@
 # Stage music and atmosphere — phrased original arrangements
 
-Date: 2026-11-06. Status: proposed, pending design approval. Baseline: recovery PR #19 /67c44e0.
+Date: 2026-11-06. Status: **superseded, not implemented** by the [two-edition design](2026-11-06-edition-split-design.md). Retained as a historical proposal. Do not implement its universal 128 BPM/three-stage scope; research stage-specific music first. Proper electronic phrasing/original synthesis remain current requirements. Baseline: recovery PR #19 /67c44e0.
 
 ## Intent and decisions
 

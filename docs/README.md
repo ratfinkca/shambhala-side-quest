@@ -2,7 +2,11 @@
 
 Start with the [current handoff](PROJECT-HANDOFF.md), [roadmap](ROADMAP.md) and [online operations](online-operations.md). Those three files own current release status, development priorities and operating procedures respectively. The root [README](../README.md) is the player/developer quick start.
 
-## M1 release and next milestone
+## Current forward program — two editions
+
+[Master edition design](superpowers/specs/2026-11-06-edition-split-design.md) · [M0–M6 roadmap and nine-stage pitch checklist](EDITION-ROADMAP.md) · [first foundation implementation plan](superpowers/plans/2026-11-06-edition-foundation.md). Planning proposal awaiting review; no edition code or new deployment yet. The generic engine/content remains compatible while SMF gains six main stages and all three requested optional secrets. Prior three-stage/128 BPM music scope is superseded.
+
+## Completed Endless program and release evidence
 
 [M1: Endless insights design](superpowers/specs/2026-11-03-endless-insights-design.md) and [implementation plan](superpowers/plans/2026-11-03-endless-insights.md). M1 shipped in PR #14; [release evidence](superpowers/m1-release-validation.md) records backend checks. M2 stage variations has an [implementation plan and local QA record](superpowers/plans/2026-11-03-stage-variations-preview.md). Later milestones are outlined in the roadmap and get detailed implementation plans when their scope is ready to build.
 
@@ -31,4 +35,4 @@ Bass Head release scope and hosted acceptance: [release evidence](superpowers/m4
 
 Endless run recovery: [approved design](superpowers/specs/2026-11-05-run-recovery-design.md), [plan](superpowers/plans/2026-11-05-run-recovery.md) and [local preview validation](superpowers/run-recovery-preview-validation.md). Approved for release as [PR #19](https://github.com/ratfinkca/shambhala-side-quest/pull/19); see [release evidence](superpowers/run-recovery-release-validation.md).
 
-Stage atmosphere/music: [proposed phrasing design](superpowers/specs/2026-11-06-stage-music-phrasing-design.md), not implemented.
+Historical stage atmosphere/music: [superseded phrasing proposal](superpowers/specs/2026-11-06-stage-music-phrasing-design.md); use the current edition design for scope.
