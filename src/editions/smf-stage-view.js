@@ -1,4 +1,4 @@
-import {FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY} from './smf-venue-assets.js';
+import {FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY,VILLAGE_ART_KEY} from './smf-venue-assets.js';
 // Scenery is decorative; stage data owns collision. Illustrated venues retain
 // their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
@@ -389,7 +389,7 @@ function amp(scene){
  }};
 }
 
-function village(scene){
+function villageSketch(scene){
  const scenery=scene.add.graphics();
  scenery.fillStyle(0x3b353c).fillRect(0,0,W,H);
  scenery.fillStyle(0x51434c).fillRect(0,0,W,177);
@@ -431,6 +431,37 @@ function village(scene){
   }
   const glow=!reduced&&phase==='drop'?.18:.11;
   portal.fillStyle(0xf3a97c,glow).fillEllipse(480,125,66,27);
+ }};
+}
+
+function village(scene){
+ if(!scene.textures?.exists(VILLAGE_ART_KEY))return villageSketch(scene);
+ scene.add.image(0,0,VILLAGE_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ const screens=scene.add.graphics().setDepth(.12);
+ // Insets measured on the final 1536 x 1024 plate. Keep the cut-out tower
+ // panels, hanging speaker arrays and dancefloor clear of screen animation.
+ const panels=[
+  [283,273,42,54],[412,242,42,56],[556,148,47,43],[559,264,44,54],
+  [932,148,45,43],[932,264,45,54],[1080,242,43,56],[1213,273,40,54],
+  [671,342,59,26],[739,342,58,26],[806,342,59,26],
+ ].map(([x,y,w,h])=>({x:x*W/1536,y:y*H/1024,w:w*W/1536,h:h*H/1024}));
+ return {lampPositions:[645,686,727,768,809,850].map(x=>[x*W/1536,202*H/1024]),update(elapsed,phase,reduced,timing){
+  screens.clear();
+  const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
+  const energy=!reduced&&phase==='drop'?1:.8;
+  panels.forEach((p,i)=>{
+   const breathe=.5+.5*Math.sin(turn+i*.55);
+   screens.fillStyle(0x66ccda,(.025+.045*breathe)*energy).fillRect(p.x,p.y,p.w,p.h);
+   screens.fillStyle(0xc78ac9,(.025+.045*(1-breathe))*energy).fillRect(p.x,p.y,p.w,p.h);
+   for(let band=0;band<3;band++){
+    const points=[];
+    for(let step=0;step<=12;step++){
+     const u=step/12,v=.24+band*.23+Math.sin(u*Math.PI*2+turn+i*.5+band*.6)*.09;
+     points.push({x:p.x+u*p.w,y:p.y+v*p.h});
+    }
+    screens.lineStyle(.8,band%2?0xe0a2d0:0x8ce4df,.2*energy).strokePoints(points,false);
+   }
+  });
  }};
 }
 
