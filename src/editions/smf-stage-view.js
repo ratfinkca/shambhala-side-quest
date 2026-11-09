@@ -217,10 +217,99 @@ function grove(scene){
  }};
 }
 
+function amp(scene){
+ const scenery=scene.add.graphics();
+ scenery.fillStyle(0x243341).fillRect(0,0,W,H);
+ scenery.fillStyle(0x152632).fillRect(0,0,W,177);
+ for(const [x,lean] of [[62,-15],[163,18],[810,-16],[915,17]])cedar(scenery,x,lean);
+ grain(scenery,[0xa5d0dc,0xe6bd8e,0x8fa5d1]);
+ for(let i=0;i<4;i++){
+  scenery.lineStyle(1,0x9cbecc,.06).strokeEllipse(480,361,420+i*136,179+i*77);
+ }
+ // Timber stage face and recessed light panels above the pit.
+ scenery.fillStyle(0x594638).fillRect(247,65,466,104);
+ scenery.fillStyle(0x7b6150).fillPoints([
+  {x:231,y:68},{x:270,y:39},{x:690,y:39},{x:729,y:68},{x:718,y:78},{x:242,y:78},
+ ],true);
+ scenery.lineStyle(3,0xbe9c79,.74).lineBetween(242,75,718,75);
+ for(const x of [260,345,605,690]){
+  scenery.fillStyle(0x846752).fillRect(x,77,10,91);
+  scenery.lineStyle(1,0xc4a381,.56).lineBetween(x+3,79,x+3,165);
+ }
+ for(const x of [276,364,528,616]){
+  scenery.fillStyle(0x172832).fillRoundedRect(x,88,68,59,3);
+  scenery.lineStyle(1,0x719fae,.45).strokeRoundedRect(x,88,68,59,3);
+ }
+ scenery.fillStyle(0x14252e).fillRoundedRect(430,123,100,37,4);
+ scenery.lineStyle(2,0x9cbcc0,.68).strokeRoundedRect(430,123,100,37,4);
+ scenery.fillStyle(0x4a3e35).fillRect(242,166,476,10);
+
+ const panels=scene.add.graphics().setDepth(.12);
+ return {update(elapsed,phase,reduced){
+  const time=reduced?0:elapsed/1000;
+  const glow=!reduced&&phase==='drop'?.37:.24;
+  panels.clear();
+  for(const [index,x] of [276,364,528,616].entries()){
+   const colour=index%2?0x8dd7f3:0xe5ac76;
+   for(let row=0;row<5;row++){
+    const width=27+16*Math.sin(time*1.2+index+row*.7);
+    panels.fillStyle(colour,glow).fillRect(x+34-width/2,97+row*8,width,3);
+   }
+  }
+ }};
+}
+
+function village(scene){
+ const scenery=scene.add.graphics();
+ scenery.fillStyle(0x3b353c).fillRect(0,0,W,H);
+ scenery.fillStyle(0x51434c).fillRect(0,0,W,177);
+ scenery.fillStyle(0xc68165,.25).fillRect(0,86,W,91);
+ scenery.fillStyle(0xffbd84,.57).fillCircle(480,100,49);
+ for(const [x,lean] of [[57,-13],[175,13],[783,-18],[910,12]])cedar(scenery,x,lean);
+ grain(scenery,[0xdcb19b,0x9eafbe,0xe6be88]);
+ for(let i=0;i<4;i++){
+  scenery.fillStyle(0xcf9c74,.022).fillEllipse(482,381,695-i*105,438-i*62);
+ }
+
+ // A central portal with timber towers and two levels of railings.
+ scenery.fillStyle(0x513f3d).fillRoundedRect(253,100,454,75,4);
+ for(const x of [254,590]){
+  scenery.fillStyle(0x372f37).fillRect(x,57,116,116);
+  scenery.fillStyle(0x6b5042).fillTriangle(x-14,66,x+58,26,x+130,66);
+  scenery.lineStyle(2,0xd49f73,.74).lineBetween(x-13,66,x+58,29).lineBetween(x+58,29,x+129,66);
+  for(const railY of [102,143]){
+   scenery.lineStyle(3,0xbc916d,.8).lineBetween(x+8,railY,x+108,railY);
+   for(let dx=10;dx<110;dx+=16)scenery.lineBetween(x+dx,railY-14,x+dx,railY);
+  }
+  for(const postX of [x+4,x+106])scenery.fillStyle(0x88634d).fillRect(postX,65,8,108);
+ }
+ scenery.fillStyle(0x302934).fillCircle(480,117,55);
+ scenery.lineStyle(8,0x8e6558,.92).strokeCircle(480,117,54);
+ scenery.lineStyle(2,0xf8bf8b,.72).strokeCircle(480,117,44);
+ scenery.fillStyle(0x272831).fillRoundedRect(419,138,122,31,3);
+ scenery.lineStyle(2,0xc99572,.72).strokeRoundedRect(419,138,122,31,3);
+
+ const portal=scene.add.graphics().setDepth(.12);
+ return {update(elapsed,phase,reduced){
+  const time=reduced?0:elapsed/1000;
+  const light=reduced?.45:.44+.12*Math.sin(time*.95);
+  portal.clear();
+  for(let i=0;i<9;i++){
+   const angle=Math.PI+i*Math.PI/8;
+   const x=480+49*Math.cos(angle),y=117+49*Math.sin(angle);
+   portal.fillStyle(0xffcc98,light).fillCircle(x,y,3);
+  }
+  const glow=!reduced&&phase==='drop'?.18:.11;
+  portal.fillStyle(0xf3a97c,glow).fillEllipse(480,125,66,27);
+ }};
+}
+
 export function createSMFStageView(scene,stage){
  if(stage.id==='smf-living-room')return livingRoom(scene);
  if(stage.id==='smf-fractal')return fractalForest(scene);
  if(stage.id==='smf-grove')return grove(scene);
+ if(stage.id==='smf-amp')return amp(scene);
  if(stage.id==='smf-pagoda')return pagoda(scene);
+ if(stage.id==='smf-village')return village(scene);
  return null;
 }

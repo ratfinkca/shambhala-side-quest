@@ -1,7 +1,10 @@
-// Original, short 32-bar sketches: establish / main / contrast / tonal return.
+// Original phrase-length sketches, including a 48-bar Village arrangement.
 // No samples, quoted hooks or claims to reproduce a particular artist.
 export function smfPreviewVoices({timing,step,phase,multiplier=1,flowActive=false}){
- if(phase==='ended'||step<0||step>=512)return [];
+ const totalSteps=Math.round(timing.durationMs*timing.bpm*timing.stepsPerBeat/60000);
+ if(phase==='ended'||step<0||step>=totalSteps)return [];
+ if(timing.id==='smf-amp-clock-preview-1')return ampVoices(timing,step,flowActive);
+ if(timing.id==='smf-village-clock-preview-1')return villageVoices(timing,step,flowActive);
  const fractal=timing.id==='smf-fractal-clock-preview-1',grove=timing.id==='smf-grove-clock-preview-1';
  if(fractal||grove)return forestVoices(timing,step,fractal,multiplier,flowActive);
  const living=timing.id==='smf-living-room-clock-preview-1',pagoda=timing.id==='smf-pagoda-clock-preview-1';
@@ -73,6 +76,77 @@ function forestVoices(timing,step,fractal,multiplier,flowActive){
    fractal?'triangle':'sine',{offsetMs:beatStep%2?14:0});
  }
  if(flowActive&&beatStep%4===2)tone('flow',root*[8,10,12,15][Math.floor(beatStep/4)],.18,.012);
+ return trimVoices(voices,timing,step);
+}
+
+function ampVoices(timing,step,flowActive){
+ const bar=Math.floor(step/16),local=step%16,section=Math.floor(bar/8);
+ const answer=bar%8>=4;
+ const root=[41.2,36.71,49,41.2][section];
+ const voices=[];
+ const kickSteps=section===2?[0]:answer?[0,6,11]:[0,7];
+ if(kickSteps.includes(local))voices.push({kind:'kick',frequency:122,endFrequency:37,duration:.18,volume:.088});
+ if(local===8)voices.push({kind:'snare',noise:true,filter:2100,duration:.15,volume:.036});
+ if((section===2?[2,14]:[2,6,10,14]).includes(local)){
+  voices.push({kind:'hat',noise:true,filter:7000,duration:.045,volume:.012});
+ }
+ const bassSteps=section===2?[0,11]:answer?[0,5,10,13]:[0,3,11];
+ if(bassSteps.includes(local)){
+  const frequency=root*(local>=10&&answer?1.5:1);
+  voices.push({kind:'bass',frequency,duration:local===0?.39:.21,volume:.055});
+  if(section===1||section===3){
+   voices.push({kind:'bass',frequency:frequency*2,type:'triangle',duration:.19,volume:.013});
+  }
+ }
+ if(local===0&&bar%4===0){
+  for(const ratio of [4,6,8])voices.push({kind:'pad',frequency:root*ratio,duration:1.45,attack:.17,volume:.006});
+ }
+ if(local===(answer?13:5)||local===15&&bar%4===3){
+  voices.push({kind:'melody',frequency:root*(answer?9:6),type:'triangle',duration:.16,volume:.016});
+ }
+ if(flowActive&&local%4===2)voices.push({kind:'flow',frequency:root*12,duration:.17,volume:.01});
+ return trimVoices(voices,timing,step);
+}
+
+function villageVoices(timing,step,flowActive){
+ const bar=Math.floor(step/16),local=step%16;
+ // 16 bars of rolling drums, a second 16-bar arc with a halftime break,
+ // then eight bars back on the groove and an eight-bar dawn payoff.
+ const halfTime=bar>=16&&bar<24;
+ const finale=bar>=40;
+ const roots=bar<16||finale?[49,58.27,65.41,43.65]:[43.65,49,41.2,58.27];
+ const harmonyBar=finale?bar-40:bar;
+ const root=bar>=47?roots[0]:roots[Math.floor(harmonyBar/4)%4];
+ const voices=[];
+ const kickSteps=halfTime?[0,10]:bar%2?[0,7,11]:[0,10];
+ if(kickSteps.includes(local))voices.push({kind:'kick',frequency:133,endFrequency:42,duration:.13,volume:.075});
+ if(halfTime?local===8:local===4||local===12){
+  voices.push({kind:'snare',noise:true,filter:2650,duration:.09,volume:.038});
+ }
+ if(!halfTime&&[7,15].includes(local))voices.push({kind:'snare',noise:true,filter:3300,duration:.035,volume:.008,offsetMs:9});
+ if((halfTime?[2,6,14]:[2,6,8,10,14]).includes(local)){
+  voices.push({kind:'hat',noise:true,filter:8200,duration:.032,volume:.014});
+ }
+ if((halfTime?[0,11]:[0,6,11]).includes(local)){
+  const frequency=root*(local===11&&bar%4===3?1.5:1);
+  voices.push({kind:'bass',frequency,duration:halfTime?.38:.26,volume:.046});
+  if(!halfTime){
+   for(const detune of [.995,1.006]){
+    voices.push({kind:'bass',frequency:frequency*2*detune,type:'sawtooth',duration:.21,attack:.045,volume:.006});
+   }
+  }
+ }
+ if(local===0&&bar%4===0){
+  for(const ratio of [4,4.76,6,8])voices.push({kind:'pad',frequency:root*ratio,duration:finale?1.65:1.15,attack:.14,volume:.007});
+ }
+ const melodySteps=finale?[2,6,10,14]:halfTime?[5,13]:[3,9,14];
+ const noteIndex=melodySteps.indexOf(local);
+ if(noteIndex>=0){
+  const motif=finale?[8,10,12,9,8,6]:[6,8,7.12,4.76,6,8];
+  const frequency=root*motif[(noteIndex+bar%4)%motif.length];
+  voices.push({kind:'melody',frequency,type:finale?'sine':'triangle',duration:finale?.27:.14,volume:finale?.019:.012});
+ }
+ if(flowActive&&local%4===2)voices.push({kind:'flow',frequency:root*15,duration:.16,volume:.01});
  return trimVoices(voices,timing,step);
 }
 

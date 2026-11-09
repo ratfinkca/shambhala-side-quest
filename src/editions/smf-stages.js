@@ -28,10 +28,41 @@ export const SMF_PREVIEW_STAGES=[
   palette:{wash:0x53795d,accent:0xc6e0b2},
   lighting:lighting([0xa0d4b4,0xd7b377,0x7bc5b9,0xc7d79a,0xf1cc88,0x7eb9ab],[0x6ba695,0xbca469,0x8fa477,0x709d9a],{width:182,period:11600,sweep:.2,alpha:.039}),
  },
+ {
+  id:'smf-amp',name:'The AMP',caption:'Deep 140 · open pit · four pockets of bass',
+  timingId:'smf-amp-clock-preview-1',target:24,spawn:{x:480,y:425},
+  crowdAnchors:[
+   [244,220],[390,250],[566,246],[500,271],[769,254],[385,332],[183,385],[795,370],
+   [380,395],[530,346],[595,450],[177,485],[475,537],[603,546],[240,542],[794,563],
+  ],
+  obstacles:[
+   {x:270,y:274,width:66,height:70},{x:648,y:285,width:66,height:70},
+   {x:318,y:466,width:66,height:70},{x:686,y:445,width:66,height:70},
+  ],
+  mud:[],flowSpawns:[{x:408,y:281},{x:610,y:519}],
+  palette:{wash:0x456e8c,accent:0xb8effa},
+  lighting:lighting([0x7de0ee,0x86a6fa,0xf7bd77,0xc2eaf2,0x8bbaf4,0xeda673],[0x5d8fc1,0x6bb8bb,0xc69c6e,0x6c8bb5],{width:205,period:9300,sweep:.36,spread:1.25,alpha:.052}),
+ },
  {id:'smf-pagoda',name:'The Pagoda',caption:'A temple of light · twin lanes · follow the returning pulse',timingId:'smf-pagoda-clock-preview-1',target:28,
   spawn:{x:480,y:430},crowdAnchors:[[185,245],[380,240],[500,225],[610,235],[790,250],[185,390],[390,375],[500,350],[590,400],[790,415],[380,515],[500,520],[620,520],[185,550],[790,550],[450,285],[720,515],[555,445]],
   obstacles:[{x:255,y:265,width:60,height:70},{x:655,y:305,width:60,height:70},{x:250,y:460,width:60,height:65}],mud:[],flowSpawns:[{x:395,y:290},{x:740,y:465}],palette:{wash:0x6463c7,accent:0xd6ccff},
   lighting:lighting([0xc9c2ff,0x81d9e5,0xffce8b,0xe4d9ff,0x86cde3,0xbcb0ff],[0x8680d9,0x77b9d0,0xc6a16a,0x7977bb],{width:190,core:30,period:6500,sweep:.34,spread:1.1,alpha:.05}),
+ },
+ {
+  id:'smf-village',name:'The Village',caption:'Rolling drum and bass · timber towers · dance into dawn',
+  timingId:'smf-village-clock-preview-1',target:34,spawn:{x:480,y:420},
+  crowdAnchors:[
+   [330,225],[478,230],[760,242],[192,229],[330,316],[517,310],[840,303],[549,480],
+   [794,350],[351,378],[190,478],[661,432],[241,538],[452,555],[585,540],[805,552],
+   [565,373],[680,369],[455,277],[824,478],
+  ],
+  obstacles:[
+   {x:214,y:315,width:64,height:70},{x:610,y:248,width:66,height:68},
+   {x:362,y:458,width:66,height:68},{x:722,y:416,width:64,height:66},
+  ],
+  mud:[],flowSpawns:[{x:340,y:407},{x:682,y:489}],
+  palette:{wash:0x966c58,accent:0xffd3a0},
+  lighting:lighting([0xffc88a,0xe5a08d,0x9dcadd,0xf8dba0,0xb2c5de,0xf4b582],[0xb9836b,0x80a1b8,0xd2ab77,0xa1777b],{width:201,period:7800,sweep:.31,alpha:.051}),
  },
 ];
 function freeze(value){if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
