@@ -16,3 +16,14 @@ test('venue scenery has different silhouettes and materials',()=>{
  });
  assert.equal(new Set(drawings).size,SMF_PREVIEW_STAGES.length);
 });
+test('loaded Fractal illustration is owned by its venue and its chase respects reduced motion',()=>{
+ const d=drawing();d.scene.textures={exists:key=>key==='smf-fractal-art-v1'};
+ const stage=SMF_PREVIEW_STAGES.find(s=>s.id==='smf-fractal');
+ const r=new StageRenderer(d.scene,{venueView:createSMFStageView});r.show(stage);
+ assert.equal(d.calls.filter(c=>c[0]==='image'&&c[3]==='smf-fractal-art-v1').length,1);
+ const update=(elapsed,reduced)=>{d.calls.length=0;r.venueView.update(elapsed,'drop',reduced,getTiming(stage.timingId));return structuredClone(d.calls)};
+ assert.deepEqual(update(0,true),update(30000,true));
+ assert.notDeepEqual(update(1000,false),update(2000,false));
+ const owned=[...d.nodes];r.show(SMF_PREVIEW_STAGES[0]);assert.ok(owned.every(n=>n.dead));
+ r.destroy();assert.ok(d.nodes.every(n=>n.dead));
+});

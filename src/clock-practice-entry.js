@@ -42,7 +42,10 @@ function update(round){
 }
 const enginePool=createPracticeEngine(()=>{
  let scene=null,config=null,destroyed=false,playing=true,game;
- class PracticeScene extends GameScene{create(){if(venueOptions)this.stageRendererOptions={venueView:venueOptions.venueView};super.create();scene=this;if(destroyed){this.game.destroy(true);return;}currentScene=this;if(config){this.startRound(config);if(!playing)this.pauseRound();}}}
+ class PracticeScene extends GameScene{
+  preload(){venueOptions?.preload(this);}
+  create(){if(venueOptions)this.stageRendererOptions={venueView:venueOptions.venueView};super.create();scene=this;if(destroyed){this.game.destroy(true);return;}currentScene=this;if(config){this.startRound(config);if(!playing)this.pauseRound();}}
+ }
  game=new Phaser.Game({type:Phaser.CANVAS,parent:'game',width:960,height:640,banner:false,audio:{noAudio:true},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:PracticeScene});
  game.events.on('round:update',round=>{if(!destroyed)update(round)});
  game.events.on('round:pickup',()=>audio.pickup(scene.round.multiplier));game.events.on('round:closepass',()=>audio.closePass());

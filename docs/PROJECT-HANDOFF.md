@@ -1,6 +1,6 @@
 # Side Quest — current project handoff
 
-Updated 2026-11-06. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
+Updated 2026-11-09. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
 
 ## Current release and prior baseline
 
@@ -47,6 +47,8 @@ The first two authored SMF venues are implemented locally at `http://127.0.0.1:5
 The 2026-11-09 preview adds Fractal Forest (120 BPM, 64 seconds, 24 sparks, two speaker islands) and the Grove (132 BPM, about 58.2 seconds, 24 sparks, three islands and a small mud patch). They use original funk breaks and dub two-step sketches with simple canopy and timber scenery.
 
 All six main venues are now playable in the rehearsal picker. The AMP runs at 140 BPM for 54.857 seconds with a 24-spark target and four speaker islands. The Village runs at 172 BPM for 66.977 seconds with a 34-spark target and four speaker islands. The AMP uses a 32-bar halftime sketch. The Village uses a 48-bar drum-and-bass sketch with a halftime break and a dawn finale. Detailed art remains a separate pass, and the six-stage run flow is still ahead.
+
+Fractal Forest now has the first ImageGen art pilot, guided by the owner's three photo references: a broad central pyramid, two smaller roofed speaker towers, branching curved supports and animated neon edges. The locally stored illustration is preloaded only in venue practice, with the canvas sketch retained if loading fails. Lighting originates at the illustrated fixtures; gameplay and other venue artwork are unchanged. [Asset, references and exact generation prompt](../src/editions/assets/README.md). Fresh checks: 284 tests, default production build and both edition build checks pass. In-app browser at 390×844 and 1280×720 verified the artwork, click-to-move/collect, pause and venue switching without console errors. Physical-phone performance and owner art acceptance remain open. No deployment; review this Fractal pilot before applying the approach to other stages.
 
 ## Architecture
 

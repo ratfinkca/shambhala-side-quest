@@ -1,4 +1,6 @@
-// Original canvas interpretations. Scenery is decorative; stage data owns collision.
+import {FRACTAL_ART_KEY} from './smf-venue-assets.js';
+// Scenery is decorative; stage data owns collision. Fractal has an illustrated
+// plate; the original canvas sketch is retained as an asset-load fallback.
 const W=960,H=640;
 function cedar(g,x,lean){
  g.fillStyle(0x122d2c).fillPoints([{x:x-22,y:164},{x:x+9,y:164},{x:x+lean+12,y:42},{x:x+lean-6,y:15}],true);
@@ -111,7 +113,7 @@ function pagoda(scene){
   for(let i=0;i<3;i++){const x=290+i*190+(reduced?0:Math.sin(t*.22+i)*24);for(let r=4;r>0;r--)floor.fillStyle(colour,.006).fillEllipse(x,330+i%2*170,r*45,r*75);}
  }};
 }
-function fractalForest(scene){
+function fractalForestSketch(scene){
  const scenery=scene.add.graphics();
  scenery.fillStyle(0x28253b).fillRect(0,0,W,H);
  scenery.fillStyle(0x1c1b32).fillRect(0,0,W,177);
@@ -154,6 +156,52 @@ function fractalForest(scene){
    ornaments.fillStyle(colour,.12*strength).fillCircle(x,y,9);
    ornaments.fillStyle(colour,.72).fillCircle(x,y,2.5);
   }
+ }};
+}
+
+// Paths measured on the 1536 x 1024 art plate. They follow the roof eaves and
+// branching supports, so the animation belongs to the structure itself.
+const FRACTAL_TRACES=[
+ [[440,166],[768,43],[1093,166],[440,166]],
+ [[217,102],[350,31],[485,106],[336,74],[217,102]],
+ [[1052,106],[1184,30],[1320,103],[1205,73],[1052,106]],
+ [[515,207],[558,216],[604,232],[645,253],[680,282],[711,318],[735,355],[754,389]],
+ [[1020,207],[976,216],[930,232],[889,253],[854,282],[823,318],[799,355],[780,389]],
+].map(points=>{
+ const scaled=points.map(([x,y])=>({x:x*W/1536,y:y*H/1024}));
+ let length=0;const segments=[];
+ for(let i=1;i<scaled.length;i++){
+  const from=scaled[i-1],to=scaled[i],size=Math.hypot(to.x-from.x,to.y-from.y);
+  segments.push({from,to,start:length,size});length+=size;
+ }
+ return {segments,length};
+});
+function traceSection(g,path,start,span,width,colour,alpha){
+ for(const segment of path.segments){
+  const low=Math.max(start,segment.start),high=Math.min(start+span,segment.start+segment.size);
+  if(high<=low)continue;
+  const a=(low-segment.start)/segment.size,b=(high-segment.start)/segment.size;
+  const {from,to}=segment;
+  g.lineStyle(width,colour,alpha).lineBetween(from.x+(to.x-from.x)*a,from.y+(to.y-from.y)*a,from.x+(to.x-from.x)*b,from.y+(to.y-from.y)*b);
+ }
+}
+function fractalForest(scene){
+ if(!scene.textures?.exists(FRACTAL_ART_KEY))return fractalForestSketch(scene);
+ scene.add.image(0,0,FRACTAL_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ const neon=scene.add.graphics().setDepth(.12);
+ return {lampPositions:[420,444,468,492,516,540].map(x=>[x,137]),update(elapsed,phase,reduced,timing){
+  neon.clear();
+  const turns=reduced?0:elapsed*timing.bpm/60000/8;
+  const energy=!reduced&&phase==='drop'?1:.78;
+  FRACTAL_TRACES.forEach((path,i)=>{
+   const colour=[0x91fff0,0xe796ff,0xb9ff76,0xb9ff76,0x86efff][i];
+   const head=((turns+i*.19)%1)*path.length,span=path.length*.19;
+   // Wrap short trails smoothly; no flashes or full-screen brightness jumps.
+   for(const start of [head-span,head-span+path.length]){
+    traceSection(neon,path,start,span,6,colour,.10*energy);
+    traceSection(neon,path,start,span,1.6,colour,.8*energy);
+   }
+  });
  }};
 }
 

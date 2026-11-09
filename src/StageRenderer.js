@@ -14,13 +14,14 @@ export class StageRenderer {
   this.concertBeams=[];this.lamps=[];this.canopyLights=[];
   {
     const show=this.lightShow;
-    for(const [i,x] of [330,390,450,510,570,630].entries()){
+    const lampPositions=this.venueView?.lampPositions??[330,390,450,510,570,630].map(x=>[x,92]);
+    for(const [i,[x,y]] of lampPositions.entries()){
       const color=show.colours[i];
-      const beam=this.scene.add.graphics().setPosition(x,92).setDepth(.2);
+      const beam=this.scene.add.graphics().setPosition(x,y).setDepth(.2);
       beam.fillStyle(color,.55).fillTriangle(0,0,-show.width,760,show.width,760);
       beam.fillStyle(color,.45).fillTriangle(0,0,-show.core,760,show.core,760).setAlpha(.045);
       this.concertBeams.push(beam);
-      this.lamps.push(this.scene.add.circle(x,92,5,color,.3).setDepth(.3));
+      this.lamps.push(this.scene.add.circle(x,y,5,color,.3).setDepth(.3));
     }
     for(const [i,x,y] of [[0,95,240],[1,865,240],[2,135,510],[3,825,510]]){
       const pool=this.scene.add.graphics().setPosition(x,y).setDepth(.15);
