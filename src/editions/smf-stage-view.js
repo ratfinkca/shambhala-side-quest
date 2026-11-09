@@ -111,8 +111,116 @@ function pagoda(scene){
   for(let i=0;i<3;i++){const x=290+i*190+(reduced?0:Math.sin(t*.22+i)*24);for(let r=4;r>0;r--)floor.fillStyle(colour,.006).fillEllipse(x,330+i%2*170,r*45,r*75);}
  }};
 }
+function fractalForest(scene){
+ const scenery=scene.add.graphics();
+ scenery.fillStyle(0x28253b).fillRect(0,0,W,H);
+ scenery.fillStyle(0x1c1b32).fillRect(0,0,W,177);
+ for(const [x,lean] of [[70,-15],[212,18],[747,-16],[902,17]])cedar(scenery,x,lean);
+ grain(scenery,[0xd89fce,0x9ad9c3,0xbda4df]);
+ for(let i=0;i<4;i++){
+  scenery.lineStyle(1,0xb898ce,.055).strokeEllipse(480,374,320+i*125,157+i*85);
+ }
+
+ // A stretched radial canopy frames the booth above the active floor.
+ const point=(angle,scale)=>({x:480+Math.cos(angle)*191*scale,y:77+Math.sin(angle)*69*scale});
+ const colours=[0x733d7a,0x256354,0x4d408a,0x88564e];
+ for(let i=0;i<16;i++){
+  const angle=i*Math.PI/8,next=angle+Math.PI/8,mid=(angle+next)/2;
+  const panel=[point(angle,.18),point(angle,1),point(mid,.82),point(next,1),point(next,.18)];
+  scenery.fillStyle(colours[i%colours.length],.9).fillPoints(panel,true);
+  scenery.lineStyle(1,0xe3b5db,.44).strokePoints(panel,true);
+ }
+ for(const x of [312,648]){
+  scenery.lineStyle(5,0x5b586f,.9).lineBetween(x,79,x,169);
+  scenery.lineStyle(1,0xb9a6c8,.56).lineBetween(x+3,79,x+3,169);
+ }
+ scenery.fillStyle(0x19162c).fillRoundedRect(404,116,152,52,5);
+ scenery.lineStyle(2,0xe8a6d7,.65).strokeRoundedRect(404,116,152,52,5);
+ scenery.fillStyle(0x5d356a).fillRect(409,137,142,26);
+ for(const x of [434,480,526]){
+  const diamond=[{x,y:141},{x:x+13,y:150},{x,y:159},{x:x-13,y:150}];
+  scenery.lineStyle(1.5,0xb5e2b9,.75).strokePoints(diamond,true);
+ }
+
+ const ornaments=scene.add.graphics().setDepth(.12);
+ return {update(elapsed,phase,reduced){
+  const time=reduced?0:elapsed/1000;
+  const strength=!reduced&&phase==='drop'?1.22:1;
+  ornaments.clear();
+  for(let i=0;i<8;i++){
+   const angle=i*Math.PI/4+time*.21;
+   const {x,y}=point(angle,.64);
+   const colour=i%2?0xe898d8:0x92e3c3;
+   ornaments.fillStyle(colour,.12*strength).fillCircle(x,y,9);
+   ornaments.fillStyle(colour,.72).fillCircle(x,y,2.5);
+  }
+ }};
+}
+
+function grove(scene){
+ const scenery=scene.add.graphics();
+ scenery.fillStyle(0x253d35).fillRect(0,0,W,H);
+ scenery.fillStyle(0x142d29).fillRect(0,0,W,177);
+ for(const [x,lean] of [[27,-13],[109,15],[250,-28],[721,24],[841,-16],[943,10]])cedar(scenery,x,lean);
+ grain(scenery,[0x8db699,0xa9ba9d,0xd8b985]);
+
+ // Moss and low ferns frame the clearing without implying a blocked route.
+ for(let i=0;i<10;i++){
+  const y=181+i*49;
+  for(const x of [26+(i%3)*14,W-26-(i%3)*14]){
+   scenery.fillStyle(i%2?0x19352c:0x1c382f,.72).fillEllipse(x,y,110,69);
+   for(const side of [-1,1]){
+    scenery.lineStyle(1.5,0x779a73,.48).lineBetween(x,y+9,x+side*19,y-11);
+    scenery.lineBetween(x+side*8,y,x+side*21,y-1);
+   }
+  }
+ }
+ scenery.fillStyle(0x152b26).fillRoundedRect(315,57,330,111,8);
+ for(let x=333;x<642;x+=21){
+  scenery.lineStyle(1,0x557451,.45).lineBetween(x,70,x,155);
+ }
+ scenery.fillStyle(0x594838).fillPoints([
+  {x:295,y:85},{x:355,y:39},{x:603,y:39},{x:665,y:85},{x:642,y:97},{x:318,y:97},
+ ],true);
+ scenery.lineStyle(4,0xaa8860,.9).lineBetween(318,92,642,92);
+ scenery.lineStyle(2,0xb89a70,.55).lineBetween(355,42,603,42);
+ for(const x of [327,386,562,621]){
+  scenery.fillStyle(0x89694c).fillRect(x,94,10,71);
+  scenery.lineStyle(2,0xc0a478,.52).lineBetween(x+2,97,x+2,163);
+ }
+ scenery.fillStyle(0x4a4232).fillRoundedRect(306,164,348,11,4);
+ scenery.fillStyle(0x263b30).fillRoundedRect(421,126,118,38,4);
+ scenery.lineStyle(2,0xc9b08a,.62).strokeRoundedRect(421,126,118,38,4);
+ const lamps=[[352,121],[407,109],[553,109],[608,121]];
+ for(const [x,y] of lamps){
+  scenery.lineStyle(1,0xb09673,.75).lineBetween(x,95,x,y);
+  scenery.fillStyle(0xe7c28a,.9).fillRoundedRect(x-4,y,8,12,2);
+ }
+
+ const light=scene.add.graphics().setDepth(.12);
+ return {update(elapsed,phase,reduced){
+  const time=reduced?0:elapsed/1000;
+  light.clear();
+  for(const [x,y] of lamps){
+   const breathe=.86+.14*Math.sin(time*.76+x);
+   for(let radius=3;radius>0;radius--){
+    light.fillStyle(0xffd49b,.033*breathe).fillEllipse(x,y+9,radius*17,radius*14);
+   }
+  }
+  for(let i=0;i<3;i++){
+   const x=232+i*252+Math.sin(time*.24+i)*22;
+   const colour=i%2?0xe5c698:0x8cd6af;
+   for(let radius=4;radius>0;radius--){
+    light.fillStyle(colour,!reduced&&phase==='drop'?.012:.008).fillEllipse(x,270+i%2*142,radius*38,radius*54);
+   }
+  }
+ }};
+}
+
 export function createSMFStageView(scene,stage){
  if(stage.id==='smf-living-room')return livingRoom(scene);
+ if(stage.id==='smf-fractal')return fractalForest(scene);
+ if(stage.id==='smf-grove')return grove(scene);
  if(stage.id==='smf-pagoda')return pagoda(scene);
  return null;
 }

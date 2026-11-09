@@ -4,7 +4,37 @@ test('venue preview is only DEV SMF rehearsal, including forced options',async()
  for(const DEV of [true,false])for(const VITE_EDITION of ['generic','smf'])for(const search of ['','?venues','?rehearsal','?rehearsal&venues'])assert.equal(venuePracticeRequested({DEV,VITE_EDITION},search),DEV&&VITE_EDITION==='smf'&&search==='?rehearsal&venues');
  for(const [env,expected]of [[{DEV:false,VITE_EDITION:'smf'},'scaffold'],[{DEV:true,VITE_EDITION:'generic'},'game'],[{DEV:true,VITE_EDITION:'smf'},'venues']]){const calls=[];await startEdition(env,Object.fromEntries(['venues','clock','scaffold','game'].map(key=>[key,()=>calls.push(key)])),{venuePractice:true});assert.deepEqual(calls,[expected]);}
 });
-test('two real venues reuse a disposable engine, switch clocks and reset the whole round config',()=>{
- const fetch=globalThis.fetch,storage=Object.getOwnPropertyDescriptor(globalThis,'localStorage');globalThis.fetch=()=>{throw Error('unexpected network')};Object.defineProperty(globalThis,'localStorage',{configurable:true,get(){throw Error('unexpected persistence')}});
- try{const config=venuePracticeConfig();assert.deepEqual(config.choices.map(c=>c.id),['smf-living-room','smf-pagoda']);let created=0,started=[],paused=0;const pool=createPracticeEngine(()=>{created++;return {start:c=>started.push(c),pause:()=>paused++,resume(){},destroy(){}}});const lab=createClockPractice({createSession:pool.createSession,...config});assert.equal(lab.stage.id,'smf-living-room');assert.equal(lab.timing.durationMs,68571);lab.start();for(let i=0;i<10;i++)lab.select(i%2?'smf-living-room':'smf-pagoda');assert.equal(created,1);assert.equal(started.length,11);assert.equal(started[1].stage.target,28);assert.equal(started[1].timingId,'smf-pagoda-clock-preview-1');assert.ok(paused>=10);assert.throws(()=>lab.select('smf-grove'));assert.throws(()=>lab.select('smf-ikigai-mori'));lab.destroy();pool.destroy();}finally{globalThis.fetch=fetch;if(storage)Object.defineProperty(globalThis,'localStorage',storage);else delete globalThis.localStorage;}
+test('four venues share one disposable engine and each starts its own round',()=>{
+ const fetch=globalThis.fetch,storage=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+ globalThis.fetch=()=>{throw Error('unexpected network')};
+ Object.defineProperty(globalThis,'localStorage',{configurable:true,get(){throw Error('unexpected persistence')}});
+ try{
+  const config=venuePracticeConfig();
+  const expected=[['smf-living-room',68571,23],['smf-fractal',64000,24],['smf-grove',58182,24],['smf-pagoda',60000,28]];
+  assert.deepEqual(config.choices.map(c=>c.id),expected.map(([id])=>id));
+  let created=0,paused=0;
+  const started=[];
+  const pool=createPracticeEngine(()=>{created++;return {start:c=>started.push(c),pause:()=>paused++,resume(){},destroy(){}}});
+  const lab=createClockPractice({createSession:pool.createSession,...config});
+  assert.equal(lab.stage.id,'smf-living-room');
+  lab.start();
+  for(let repeat=0;repeat<3;repeat++)for(const [id,duration,target] of expected){
+   lab.select(id);
+   assert.equal(lab.timing.durationMs,duration);
+   const last=started.at(-1);
+   assert.equal(last.stage.id,id);
+   assert.equal(last.stage.target,target);
+   assert.equal(last.timingId,id+'-clock-preview-1');
+  }
+  assert.equal(created,1);
+  assert.equal(started.length,13);
+  assert.ok(paused>=12);
+  assert.throws(()=>lab.select('smf-secret-garden'));
+  lab.destroy();
+  pool.destroy();
+ }finally{
+  globalThis.fetch=fetch;
+  if(storage)Object.defineProperty(globalThis,'localStorage',storage);
+  else delete globalThis.localStorage;
+ }
 });

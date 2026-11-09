@@ -25,7 +25,7 @@ function controls(){
  $('#clock-pause').disabled=!playing&&!paused;$('#clock-pause').textContent=paused?'Resume':'Pause';
  $('#clock-pause-note').hidden=playing;
  if(paused)$('#clock-pause-note').textContent='Paused · press Resume when you’re ready.';
- if(ended)$('#clock-pause-note').textContent=venueMode?`${currentScene.round.pickups>=lab.stage.target?'Target met!':'Keep exploring.'} ${currentScene.round.pickups} / ${lab.stage.target} sparks · Start fresh or try the other venue.`:'Phrase complete. Start fresh or choose another clock.';
+ if(ended)$('#clock-pause-note').textContent=venueMode?`${currentScene.round.pickups>=lab.stage.target?'Target met!':'Keep exploring.'} ${currentScene.round.pickups} / ${lab.stage.target} sparks · Start fresh or try another venue.`:'Phrase complete. Start fresh or choose another clock.';
  if(venueMode){setText('#practice-heading',lab.stage.name);setText('#practice-caption',lab.stage.caption);$('#game').setAttribute('aria-label',`${lab.stage.name} practice. Click or tap a destination, or use arrows or WASD. Escape pauses.`);}
 }
 function setText(id,value){const node=$(id);if(node.textContent!==value)node.textContent=value;}

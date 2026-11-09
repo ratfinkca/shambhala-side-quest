@@ -8,4 +8,11 @@ for(const stage of SMF_PREVIEW_STAGES)test(`${stage.id} draws distinct owned sce
  const update=(time,reduced)=>{d.calls.length=0;view.update(time,'drop',reduced,getTiming(stage.timingId));return structuredClone(d.calls)};assert.deepEqual(update(0,true),update(30000,true));assert.notDeepEqual(update(1000,false),update(2000,false));assert.deepEqual(stage,before);
  const owned=drawing(),r=new StageRenderer(owned.scene,{venueView:createSMFStageView});r.show(stage);const old=[...owned.nodes];r.show(SMF_PREVIEW_STAGES.find(s=>s!==stage));assert.ok(old.every(n=>n.dead));r.destroy();assert.ok(owned.nodes.every(n=>n.dead));
 });
-test('venue scenery has different silhouettes and materials',()=>{const a=drawing(),b=drawing();createSMFStageView(a.scene,SMF_PREVIEW_STAGES[0]);createSMFStageView(b.scene,SMF_PREVIEW_STAGES[1]);assert.notDeepEqual(a.calls,b.calls);});
+test('venue scenery has different silhouettes and materials',()=>{
+ const drawings=SMF_PREVIEW_STAGES.map(stage=>{
+  const {scene,calls}=drawing();
+  createSMFStageView(scene,stage);
+  return JSON.stringify(calls);
+ });
+ assert.equal(new Set(drawings).size,SMF_PREVIEW_STAGES.length);
+});
