@@ -1,4 +1,4 @@
-import {FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY,VILLAGE_ART_KEY} from './smf-venue-assets.js';
+import {LIVING_ROOM_ART_KEY,FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY,VILLAGE_ART_KEY} from './smf-venue-assets.js';
 // Scenery is decorative; stage data owns collision. Illustrated venues retain
 // their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
@@ -8,7 +8,7 @@ function cedar(g,x,lean){
  for(let i=0;i<7;i++){const y=22+i*20,span=95-i*7;g.fillStyle(i%2?0x163b33:0x20463b,.95).fillTriangle(x+lean,y-25,x-span,y+25,x+span,y+25);}
 }
 function grain(g,colours){for(let i=0;i<150;i++){const x=155+(i*137%660),y=195+(i*83%410);g.fillStyle(colours[i%colours.length],.06).fillEllipse(x,y,2+i%3,1);}}
-function livingRoom(scene){
+function livingRoomSketch(scene){
  const g=scene.add.graphics();g.fillStyle(0x324c45).fillRect(0,0,W,H);g.fillStyle(0x3a5c58).fillRect(0,0,W,175);
  g.fillStyle(0xf4c47d,.22).fillCircle(775,74,54);g.fillStyle(0xffdea1,.22).fillCircle(775,74,31);
  for(let i=0;i<6;i++)g.fillStyle(0x244c44,.4).fillTriangle(i*190-100,160,i*190+40,15+(i%3)*18,i*190+170,160);
@@ -50,6 +50,41 @@ function livingRoom(scene){
   for(const [x,y]of lampPositions){const breathe=reduced?1:1+Math.sin(t*.6+x)*.08;for(let r=4;r>0;r--)glow.fillStyle(0xffd590,.008*breathe).fillEllipse(x,y+10,r*22,r*13);}
  }};
 }
+function livingRoom(scene){
+ if(!scene.textures?.exists(LIVING_ROOM_ART_KEY))return livingRoomSketch(scene);
+ scene.add.image(0,0,LIVING_ROOM_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ const ambience=scene.add.graphics().setDepth(.12);
+ // Screen and lamp positions measured on the 1536 x 1024 illustration.
+ // Water movement stays inside the tiny left-edge inlet, off the dancefloor.
+ const panels=[[716,172,117,72],[677,326,195,69],[440,333,72,68],[1028,333,99,68],[700,416,154,16]]
+  .map(([x,y,w,h])=>({x:x*W/1536,y:y*H/1024,w:w*W/1536,h:h*H/1024}));
+ const shades=[[111,160,53],[224,224,30],[1328,224,30],[1438,160,53]]
+  .map(([x,y,r])=>({x:x*W/1536,y:y*H/1024,r:r*W/1536}));
+ return {lampPositions:[600,660,715,770,825,880].map(x=>[x*W/1536,302*H/1024]),update(elapsed,phase,reduced,timing){
+  ambience.clear();
+  const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
+  const energy=!reduced&&phase==='drop'?1:.8;
+  panels.forEach((p,i)=>{
+   for(let band=0;band<3;band++){
+    const points=[];
+    for(let step=0;step<=16;step++){
+     const u=step/16,v=.24+band*.23+Math.sin(u*Math.PI*2+turn+i*.7+band*.6)*.1;
+     points.push({x:p.x+u*p.w,y:p.y+v*p.h});
+    }
+    ambience.lineStyle(.8,band%2?0xf0b590:0x9bd9c3,.22*energy).strokePoints(points,false);
+   }
+  });
+  for(const [i,p]of shades.entries()){
+   const breathe=1+Math.sin(turn*.5+i)*.08;
+   for(let r=3;r>0;r--)ambience.fillStyle(0xffcf83,.012*breathe).fillEllipse(p.x,p.y,p.r*r,p.r*r*.55);
+  }
+  for(let i=0;i<6;i++){
+   const x=(6+Math.sin(turn*.4+i)*3)*W/1536,y=(439+i*10)*H/1024;
+   ambience.lineStyle(.8,0x92d8c7,.18).lineBetween(x,y,x+13*W/1536,y);
+  }
+ }};
+}
+
 // Filled rounded arch sampled as a polygon for both Canvas and WebGL.
 function arch(g,x,y,width,height){
  const points=[{x:x-width/2,y:y+height},{x:x-width/2,y:y+width*.48}];
