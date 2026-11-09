@@ -16,7 +16,7 @@ test('venue scenery has different silhouettes and materials',()=>{
  });
  assert.equal(new Set(drawings).size,SMF_PREVIEW_STAGES.length);
 });
-for(const id of ['fractal','grove'])test(`loaded ${id} illustration is owned by its venue and its lighting respects reduced motion`,()=>{
+for(const id of ['fractal','grove','amp'])test(`loaded ${id} illustration is owned by its venue and its lighting respects reduced motion`,()=>{
  const artKey=`smf-${id}-art-v1`;
  const d=drawing();d.scene.textures={exists:key=>key===artKey};
  const stage=SMF_PREVIEW_STAGES.find(s=>s.id===`smf-${id}`);

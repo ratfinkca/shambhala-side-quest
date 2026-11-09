@@ -1,4 +1,4 @@
-import {FRACTAL_ART_KEY,GROVE_ART_KEY} from './smf-venue-assets.js';
+import {FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY} from './smf-venue-assets.js';
 // Scenery is decorative; stage data owns collision. Illustrated venues retain
 // their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
@@ -291,7 +291,7 @@ function grove(scene){
  }};
 }
 
-function amp(scene){
+function ampSketch(scene){
  const scenery=scene.add.graphics();
  scenery.fillStyle(0x243341).fillRect(0,0,W,H);
  scenery.fillStyle(0x152632).fillRect(0,0,W,177);
@@ -330,6 +330,32 @@ function amp(scene){
     panels.fillStyle(colour,glow).fillRect(x+34-width/2,97+row*8,width,3);
    }
   }
+ }};
+}
+
+function amp(scene){
+ if(!scene.textures?.exists(AMP_ART_KEY))return ampSketch(scene);
+ scene.add.image(0,0,AMP_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ const leds=scene.add.graphics().setDepth(.12);
+ // Insets measured on the 1536 x 1024 plate keep motion inside the screens,
+ // clear of carved corner brackets, speakers and the playable dancefloor.
+ const screens=[[246,253,237,119],[1054,253,237,119],[641,368,254,41]].map(([x,y,width,height])=>({x:x*W/1536,y:y*H/1024,width:width*W/1536,height:height*H/1024}));
+ return {lampPositions:[595,653,707,827,881,940].map(x=>[x*W/1536,205*H/1024]),update(elapsed,phase,reduced,timing){
+  leds.clear();
+  const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
+  const energy=!reduced&&phase==='drop'?1:.8;
+  screens.forEach((screen,index)=>{
+   for(let band=0;band<5;band++){
+    const points=[];
+    for(let step=0;step<=16;step++){
+     const u=step/16;
+     // Smooth bounded ribbons; no bright full-panel fills or flashing cuts.
+     const v=.2+band*.15+Math.sin(u*Math.PI*2+turn+band*.4+index*.8)*.10;
+     points.push({x:screen.x+u*screen.width,y:screen.y+v*screen.height});
+    }
+    leds.lineStyle(1,band%2?0xc792f2:0x6bcbdc,.22*energy).strokePoints(points,false);
+   }
+  });
  }};
 }
 
