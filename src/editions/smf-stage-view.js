@@ -1,4 +1,4 @@
-import {FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY} from './smf-venue-assets.js';
+import {FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY} from './smf-venue-assets.js';
 // Scenery is decorative; stage data owns collision. Illustrated venues retain
 // their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
@@ -57,7 +57,7 @@ function arch(g,x,y,width,height){
  points.push({x:x+width/2,y:y+height});
  g.fillStyle(0x152332).fillPoints(points,true);g.lineStyle(2,0xe1d8c7,.9).strokePoints(points,true);
 }
-function pagoda(scene){
+function pagodaSketch(scene){
  const g=scene.add.graphics();g.fillStyle(0x172a35).fillRect(0,0,W,H);g.fillStyle(0x151c30).fillRect(0,0,W,175);
  for(const x of [70,125,835,895]){g.fillStyle(0x0f202b).fillRect(x,0,17,185);for(let i=0;i<5;i++)g.fillTriangle(x+8,12+i*25,x-48,63+i*25,x+68,63+i*25);}
  for(let i=0;i<7;i++)g.lineStyle(1,i%2?0xa59de1:0x67a2b8,.07).strokeEllipse(480,390,250+i*105,120+i*58);
@@ -113,6 +113,36 @@ function pagoda(scene){
   for(let i=0;i<3;i++){const x=290+i*190+(reduced?0:Math.sin(t*.22+i)*24);for(let r=4;r>0;r--)floor.fillStyle(colour,.006).fillEllipse(x,330+i%2*170,r*45,r*75);}
  }};
 }
+function pagoda(scene){
+ if(!scene.textures?.exists(PAGODA_ART_KEY))return pagodaSketch(scene);
+ scene.add.image(0,0,PAGODA_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ const mapping=scene.add.graphics().setDepth(.12);
+ // Facade panels measured on the 1536 x 1024 plate. Keep projection out of
+ // arched openings and off the balcony rails, porch and playable dancefloor.
+ const panels=[
+  [[599,143],[665,125],[662,197],[590,209]],
+  [[871,125],[937,143],[946,209],[874,197]],
+  [[688,245],[848,245],[862,315],[674,315]],
+ ].map(points=>points.map(([x,y])=>({x:x*W/1536,y:y*H/1024})));
+ const point=(p,u,v)=>({x:(p[0].x*(1-u)+p[1].x*u)*(1-v)+(p[3].x*(1-u)+p[2].x*u)*v,y:(p[0].y*(1-u)+p[1].y*u)*(1-v)+(p[3].y*(1-u)+p[2].y*u)*v});
+ return {lampPositions:[[440,369],[585,361],[700,353],[834,353],[950,361],[1095,369]].map(([x,y])=>[x*W/1536,y*H/1024]),update(elapsed,phase,reduced,timing){
+  mapping.clear();
+  const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
+  const energy=!reduced&&phase==='drop'?1:.8;
+  panels.forEach((panel,i)=>{
+   const breathe=.5+.5*Math.sin(turn+i*.9);
+   // Overlapping soft tints fade continuously; no phrase-boundary colour cut.
+   mapping.fillStyle(0x8ce5d7,(.025+.065*breathe)*energy).fillPoints(panel,true);
+   mapping.fillStyle(0xc2a1ee,(.025+.065*(1-breathe))*energy).fillPoints(panel,true);
+   for(let ring=0;ring<3;ring++){
+    const radius=.17+ring*.105+Math.sin(turn-ring*.6+i*.5)*.025;
+    const diamond=[[.5,.5-radius],[.5+radius,.5],[.5,.5+radius],[.5-radius,.5]].map(([u,v])=>point(panel,u,v));
+    mapping.lineStyle(1.2,ring%2?0xa9f6e9:0xf6e2bc,(.13+.13*breathe)*energy).strokePoints(diamond,true);
+   }
+  });
+ }};
+}
+
 function fractalForestSketch(scene){
  const scenery=scene.add.graphics();
  scenery.fillStyle(0x28253b).fillRect(0,0,W,H);

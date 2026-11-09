@@ -90,3 +90,35 @@ Composition is essential: elevated, nearly orthographic front view from the danc
 The lower 64 percent is EMPTY spacious smooth dark desaturated blue-slate dancefloor, very subtle painterly grain and soft diffuse cyan/amber/violet ambient pools. No people, speakers, vegetation, paths, fences, markings, laser beams, props, stars or bright dots on this open playable floor. No stairs or barrier projecting from stage into arena. Foliage only at extreme upper outer sides.
 Style: polished hand-painted indie arcade environment matching image 4, cohesive tactile illustrative shading, clean readable structure. Warm ochre and amber timber against midnight blue forest, restrained cool cyan/violet screen glow. Structure should read at phone width 370px. Not photorealistic. No tent, no pyramids, no pagoda roofs, no floating mandala canopy. No text, logos, watermarks, crowd, people, game sprites, collectibles, HUD, border or UI. Keep visual effects controlled and floor calm.
 ```
+
+
+## The Pagoda art pass
+
+`pagoda-v1.jpg` is an original ImageGen illustration based on the dated 2026 JRM.RAW gallery. It preserves the pale faceted tower, one dominant peaked/upturned roof, ornamental arches, horizontal balcony bands and wide lower porch. It replaces the sketch only in DEV venue practice; failed asset loading keeps the original canvas Pagoda. Gameplay, music, timing, collision and scoring are unchanged.
+
+Three measured facade panels receive softly crossfading aquamarine/lilac tints and slow diamond contours on a 16-beat cycle. The projection stays within those surfaces, avoiding the arched openings, balcony rails and floor. Reduced motion fixes the initial pose and pauses follow round time. Common lights originate under the illustrated porch.
+
+### Pagoda references and provenance
+
+The [official 2026 photo-album index](https://www.shambhalamusicfestival.com/blog/2026-photo-album-blog) links [JRM.RAW / Jeremy Quaglia's 2026 Party Time gallery](https://jeremyquagliaphoto.pixieset.com/shambhala2026/partytime/), whose displayed collection date is July 23rd, 2026.
+
+- `Shambs26@JRM.RAW-3409.jpg` — clear pale facade, used as the architectural authority. The full-screen photograph was visually checked and supplied to ImageGen as a browser capture.
+- `Shambs26@JRM.RAW-2129.jpg` — projection-mapped facade, used for the relationship between building and illumination. Its projected face artwork was not copied; the illustration and animated contours are original.
+- The accepted `amp-v1.jpg` was supplied only for painterly consistency and the empty-floor composition, not the Pagoda's structure.
+
+The [2026 EDM Maniac report](https://edmmaniac.com/festival-report-card-shambhala-music-festival-2026/) corroborates the white facade and projection mapping. Its descriptive storey count was not interpreted as multiple stacked roofs. The two actual facade photographs determine the silhouette.
+
+Reference photos remain outside the repository. Only the original generated illustration is distributed. The venue is compressed into the shallow game arena and the empty floor enlarged for readability; it is not a measured reconstruction. Photo people, performers, lasers and UI are excluded. Generated as 1536×1024 PNG, converted to an opaque quality-88 JPEG without changing composition.
+
+### Pagoda generation prompt
+
+```text
+Use case: stylized-concept
+Asset type: original finished 2D browser-game environment background, landscape 3:2, 1536x1024. Artwork to install behind moving game sprites, not a mockup.
+Input images: Image 1 contains the real 2026 Pagoda white facade photographed by JRM.RAW. It is authoritative for architecture. Image 2 shows projection mapping across that same building, only a mood reference; do not copy its face artwork. Ignore browser/gallery controls and white margins around both photographs. Image 3 is our accepted AMP game art; use ONLY its polished painterly rendering, game composition and empty-floor treatment, not its timber structure.
+Primary request: illustrate Shambhala's real PAGODA stage recognizably. It is a tall, broad, PALE WHITE FACETED tower: three visible flat wall faces (central face and angled side faces) with one dominant peaked polygonal roof and small upward-curving eave tips. The central roof has a triangular face/gable, timber ribs and projecting eaves matching reference 1. The tower facade has ornamental scalloped arches, delicate white carved filigree around openings and horizontal railing bands halfway up. One tall central dark arched opening high on the front, two lower arched side openings. Small pale roofs extend behind the tower's lower sides. Across the entire base is a BROAD, low, wraparound PORCH roof with thin white support columns, dark open performance bay and a low central DJ booth. Preserve this exact overall silhouette from reference 1. The real stage has wall levels, NOT seven stacked roofs. No multi-tier fantasy pagoda tower, no generic temple, no red walls.
+Composition: nearly orthographic elevated frontal view from the dancefloor, like the game example. Fit the COMPLETE stage and forest backdrop in the TOP 38 percent of the image. Main roof apex x50%,y3%; roof eave tips x34% and66%,y9%. Tower body x36%-64%,y10%-29%, divided into three visible facets. The broad porch stretches x22%-78%,y29%-38%, with a low central booth and pale columns. Small side roofs are at y25%-29%. Tall dark cedars behind, sparse trees and ferns at only the upper outer edges. No floating fabric canopy.
+Lighting: the white tower is the star. Keep its pale surfaces and carved geometry readable, subtly lit by lilac, aquamarine and warm pearl. Add restrained original symmetrical geometric projection patterns on the actual wall faces: delicate nested diamonds, rosette-like tracery, fine luminous contours, low contrast enough to see arches and rails beneath. No giant projected face, eyes, words, logos or photographic content. Soft lavender/cyan glow on eaves, small warm lights below the porch. Do not draw beams or lasers across the scene; moving light will be added separately in the game.
+BOTTOM 62 percent from y38% downward must be a large EMPTY dark blue-slate dancefloor with very subtle painterly grain and broad low-contrast ambient lilac/teal pools. No people, sprites, particles, stars, speakers, vegetation, stairs, paths, fence or props on this floor. It is playable negative space. The bottom foreground must remain calm and completely uncluttered.
+Style: beautiful hand-painted indie arcade illustration consistent with image 3, confident readable silhouettes, intricate but controlled architecture, tactile illustrative shading, forest at blue hour. Pale silver/ivory architecture against deep navy and teal forest, distinctive lilac/aquamarine projections. Recognizable at 370px phone width. Full rectangular background, no frame, no UI, no text, no watermarks, no people, no crowd, no collectible objects. This is an original interpretation of the real venue, not a photo composite. Keep the single main roof, faceted white tower and broad porch faithful to image 1.
+```
