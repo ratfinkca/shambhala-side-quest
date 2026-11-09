@@ -16,11 +16,12 @@ test('venue scenery has different silhouettes and materials',()=>{
  });
  assert.equal(new Set(drawings).size,SMF_PREVIEW_STAGES.length);
 });
-test('loaded Fractal illustration is owned by its venue and its chase respects reduced motion',()=>{
- const d=drawing();d.scene.textures={exists:key=>key==='smf-fractal-art-v1'};
- const stage=SMF_PREVIEW_STAGES.find(s=>s.id==='smf-fractal');
+for(const id of ['fractal','grove'])test(`loaded ${id} illustration is owned by its venue and its lighting respects reduced motion`,()=>{
+ const artKey=`smf-${id}-art-v1`;
+ const d=drawing();d.scene.textures={exists:key=>key===artKey};
+ const stage=SMF_PREVIEW_STAGES.find(s=>s.id===`smf-${id}`);
  const r=new StageRenderer(d.scene,{venueView:createSMFStageView});r.show(stage);
- assert.equal(d.calls.filter(c=>c[0]==='image'&&c[3]==='smf-fractal-art-v1').length,1);
+ assert.equal(d.calls.filter(c=>c[0]==='image'&&c[3]===artKey).length,1);
  const update=(elapsed,reduced)=>{d.calls.length=0;r.venueView.update(elapsed,'drop',reduced,getTiming(stage.timingId));return structuredClone(d.calls)};
  assert.deepEqual(update(0,true),update(30000,true));
  assert.notDeepEqual(update(1000,false),update(2000,false));

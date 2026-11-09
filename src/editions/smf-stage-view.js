@@ -1,6 +1,6 @@
-import {FRACTAL_ART_KEY} from './smf-venue-assets.js';
-// Scenery is decorative; stage data owns collision. Fractal has an illustrated
-// plate; the original canvas sketch is retained as an asset-load fallback.
+import {FRACTAL_ART_KEY,GROVE_ART_KEY} from './smf-venue-assets.js';
+// Scenery is decorative; stage data owns collision. Illustrated venues retain
+// their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
 function cedar(g,x,lean){
  g.fillStyle(0x122d2c).fillPoints([{x:x-22,y:164},{x:x+9,y:164},{x:x+lean+12,y:42},{x:x+lean-6,y:15}],true);
@@ -205,7 +205,7 @@ function fractalForest(scene){
  }};
 }
 
-function grove(scene){
+function groveSketch(scene){
  const scenery=scene.add.graphics();
  scenery.fillStyle(0x253d35).fillRect(0,0,W,H);
  scenery.fillStyle(0x142d29).fillRect(0,0,W,177);
@@ -262,6 +262,32 @@ function grove(scene){
     light.fillStyle(colour,!reduced&&phase==='drop'?.012:.008).fillEllipse(x,270+i%2*142,radius*38,radius*54);
    }
   }
+ }};
+}
+
+function grove(scene){
+ if(!scene.textures?.exists(GROVE_ART_KEY))return groveSketch(scene);
+ scene.add.image(0,0,GROVE_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ const projection=scene.add.graphics().setDepth(.12);
+ // These outlines follow the illustrated timber inlays, in 1536 x 1024 art
+ // coordinates. A slow eight-beat breath keeps the wood legible without flashes.
+ const diamond=(x,y,rx,ry)=>[{x,y:y-ry},{x:x+rx,y},{x,y:y+ry},{x:x-rx,y}].map(p=>({x:p.x*W/1536,y:p.y*H/1024}));
+ const panels=[[261,327,20,30],[464,294,20,28],[1075,294,20,28],[1276,327,20,30]].map(p=>diamond(...p));
+ const booth=[20,38,57].map(rx=>diamond(768,377,rx,rx*.66));
+ return {lampPositions:[570,620,666,872,921,970].map(x=>[x*W/1536,228*H/1024]),update(elapsed,phase,reduced,timing){
+  projection.clear();
+  const turn=reduced?0:elapsed*timing.bpm/60000/8*Math.PI*2;
+  const energy=!reduced&&phase==='drop'?1:.8;
+  panels.forEach((points,i)=>{
+   const glow=(.24+.12*Math.sin(turn+i*.5))*energy;
+   projection.lineStyle(5,0xe5abff,glow*.14).strokePoints(points,true);
+   projection.lineStyle(1,0xe5abff,glow).strokePoints(points,true);
+  });
+  booth.forEach((points,i)=>{
+   const glow=(.25+.15*Math.sin(turn-i*.55))*energy;
+   projection.lineStyle(4,0xffd997,glow*.15).strokePoints(points,true);
+   projection.lineStyle(1.2,0xffdfaa,glow).strokePoints(points,true);
+  });
  }};
 }
 
