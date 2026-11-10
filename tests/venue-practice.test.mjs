@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {venuePracticeRequested,startEdition} from '../src/editions/registry.js';import {venuePracticeConfig} from '../src/venue-practice.js';import {createClockPractice,createPracticeEngine} from '../src/clock-practice.js';
 test('venue preview is only DEV SMF rehearsal, including forced options',async()=>{
  for(const DEV of [true,false])for(const VITE_EDITION of ['generic','smf'])for(const search of ['','?venues','?rehearsal','?rehearsal&venues'])assert.equal(venuePracticeRequested({DEV,VITE_EDITION},search),DEV&&VITE_EDITION==='smf'&&search==='?rehearsal&venues');
- for(const [env,expected]of [[{DEV:false,VITE_EDITION:'smf'},'scaffold'],[{DEV:true,VITE_EDITION:'generic'},'game'],[{DEV:true,VITE_EDITION:'smf'},'venues']]){const calls=[];await startEdition(env,Object.fromEntries(['venues','clock','scaffold','game'].map(key=>[key,()=>calls.push(key)])),{venuePractice:true});assert.deepEqual(calls,[expected]);}
+ for(const [env,expected]of [[{DEV:false,VITE_EDITION:'smf'},'tour'],[{DEV:true,VITE_EDITION:'generic'},'game'],[{DEV:true,VITE_EDITION:'smf'},'venues']]){const calls=[];await startEdition(env,Object.fromEntries(['venues','clock','scaffold','tour','game'].map(key=>[key,()=>calls.push(key)])),{venuePractice:true});assert.deepEqual(calls,[expected]);}
 });
 test('six venues share one disposable engine and each starts its own round',()=>{
  const fetch=globalThis.fetch,storage=Object.getOwnPropertyDescriptor(globalThis,'localStorage');

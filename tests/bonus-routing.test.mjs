@@ -11,8 +11,8 @@ test('bonus URL is recognised only for four explicit DEV SMF rehearsals',()=>{
  for(const url of ['?bonus=rabbit-hole','?rehearsal&bonus=unknown','?rehearsal&bonus='])assert.equal(bonusPracticeRequested({DEV:true,VITE_EDITION:'smf'},url),false);
 });
 test('even a forged bonus routing flag cannot enter production or generic preview',async()=>{
- const actions={bonus:()=> 'bonus',game:()=> 'game',scaffold:()=> 'scaffold'};
+ const actions={bonus:()=> 'bonus',game:()=> 'game',tour:()=> 'tour',scaffold:()=> 'scaffold'};
  assert.equal(await startEdition({DEV:true,VITE_EDITION:'smf'},actions,{bonusPractice:true}),'bonus');
- assert.equal(await startEdition({DEV:false,VITE_EDITION:'smf'},actions,{bonusPractice:true}),'scaffold');
+ assert.equal(await startEdition({DEV:false,VITE_EDITION:'smf'},actions,{bonusPractice:true}),'tour');
  assert.equal(await startEdition({DEV:true},actions,{bonusPractice:true}),'game');
 });

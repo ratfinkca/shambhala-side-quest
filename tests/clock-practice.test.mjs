@@ -4,7 +4,7 @@ import {createClockPractice,CLOCK_CHOICES,diagnosticVoices} from '../src/clock-p
 import {getTiming} from '../src/stage-clock.js';
 test('clock practice requires DEV, SMF and both flags; production and generic cannot be forced',async()=>{
  for(const DEV of [true,false])for(const VITE_EDITION of ['generic','smf'])for(const query of ['','?clock','?rehearsal','?clock&rehearsal'])assert.equal(clockPracticeRequested({DEV,VITE_EDITION},query),DEV&&VITE_EDITION==='smf'&&query==='?clock&rehearsal');
- for(const [env,expected] of [[{DEV:false,VITE_EDITION:'smf'},'scaffold'],[{DEV:true,VITE_EDITION:'generic'},'game'],[{DEV:true,VITE_EDITION:'smf'},'clock']]){const calls=[];await startEdition(env,Object.fromEntries(['game','scaffold','clock'].map(key=>[key,()=>calls.push(key)])),{clockPractice:true});assert.deepEqual(calls,[expected]);}
+ for(const [env,expected] of [[{DEV:false,VITE_EDITION:'smf'},'tour'],[{DEV:true,VITE_EDITION:'generic'},'game'],[{DEV:true,VITE_EDITION:'smf'},'clock']]){const calls=[];await startEdition(env,Object.fromEntries(['game','scaffold','tour','clock'].map(key=>[key,()=>calls.push(key)])),{clockPractice:true});assert.deepEqual(calls,[expected]);}
 });
 test('memory-only lab resets, switches and tears down every old session without persistence or requests',()=>{
  const oldFetch=globalThis.fetch,oldStorage=Object.getOwnPropertyDescriptor(globalThis,'localStorage');let calls=0;globalThis.fetch=()=>{calls++;throw Error('network forbidden')};Object.defineProperty(globalThis,'localStorage',{configurable:true,get(){calls++;throw Error('storage forbidden')}});

@@ -22,6 +22,27 @@ export function createPuttingPractice(){
   holeIndex:0,strokes:0,ball:{...PUTTING_HOLES[0].tee,vx:0,vy:0},phase:'aim',elapsedMs:0,
  });
  let state=fresh(),status='ready',remainder=0,ticks=0;
+ const keys=(value,names)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===names.length&&names.every(name=>Object.hasOwn(value,name));
+ function restore(snapshot){
+  if(!keys(snapshot,['version','kind','status','state','remainderMs','ticks'])||snapshot.version!==1||snapshot.kind!=='putting'||!['ready','playing','paused','complete','ended'].includes(snapshot.status))return false;
+  const s=snapshot.state;
+  if(!keys(s,Object.keys(fresh()))||s.goal!==2||!Number.isInteger(s.progress)||s.progress<0||s.progress>2||!Number.isInteger(s.holeIndex)||s.holeIndex<0||s.holeIndex>=PUTTING_HOLES.length||!Number.isInteger(s.strokes)||s.strokes<s.progress||s.strokes>MAX_STROKES||!['aim','rolling','between','won','lost'].includes(s.phase))return false;
+  if(typeof s.complete!=='boolean'||s.complete!==(s.phase==='won')||(snapshot.status==='complete')!==s.complete||(snapshot.status==='ended')!==(s.phase==='lost'))return false;
+  if(!Array.isArray(s.collectedIds)||s.collectedIds.length||!Array.isArray(s.greetedIds)||s.greetedIds.length||s.carrying!==null||!Array.isArray(s.visitedIds)||s.visitedIds.length!==s.progress||s.visitedIds.some((id,i)=>id!==PUTTING_HOLES[i].id))return false;
+  if(!Number.isInteger(snapshot.ticks)||snapshot.ticks<0||snapshot.ticks>7*24*60*60*120||!Number.isFinite(s.elapsedMs)||s.elapsedMs!==snapshot.ticks*1000/120||!Number.isFinite(snapshot.remainderMs)||snapshot.remainderMs<0||snapshot.remainderMs>=physics.stepMs)return false;
+  const b=s.ball,h=PUTTING_HOLES[s.holeIndex];
+  if(!keys(b,['x','y','vx','vy'])||!Object.values(b).every(Number.isFinite))return false;
+  const speed=Math.hypot(b.vx,b.vy),inside=((b.x-h.center.x)/(h.radiusX-physics.ballRadius))**2+((b.y-h.center.y)/(h.radiusY-physics.ballRadius))**2;
+  if(inside>1.000001||speed>physics.maxSpeed+1e-8||(s.phase!=='rolling'&&speed!==0))return false;
+  if(s.strokes===0&&(b.x!==h.tee.x||b.y!==h.tee.y))return false;
+  if(s.phase==='rolling'&&(speed<=physics.stopSpeed||s.progress!==s.holeIndex||s.strokes<s.holeIndex+1))return false;
+  if(s.phase==='aim'&&(s.progress!==s.holeIndex||s.strokes<s.holeIndex||s.strokes>=MAX_STROKES))return false;
+  if(s.phase==='between'&&(s.holeIndex!==0||s.progress!==1||s.strokes<1||s.strokes>=MAX_STROKES||b.x!==h.cup.x||b.y!==h.cup.y))return false;
+  if(s.phase==='won'&&(s.holeIndex!==1||s.progress!==2||s.strokes<2||b.x!==h.cup.x||b.y!==h.cup.y))return false;
+  if(s.phase==='lost'&&(s.progress!==s.holeIndex&&!(s.holeIndex===0&&s.progress===1&&s.strokes===MAX_STROKES)))return false;
+  if(snapshot.status==='ready'&&(s.phase!=='aim'||s.strokes||s.progress||s.holeIndex||s.elapsedMs||snapshot.remainderMs||b.x!==h.tee.x||b.y!==h.tee.y))return false;
+  state=structuredClone(s);remainder=snapshot.remainderMs;ticks=snapshot.ticks;status=snapshot.status==='playing'?'paused':snapshot.status;return true;
+ }
  function exhaust(){
   state.phase='lost';status='ended';state.ball.vx=0;state.ball.vy=0;
   return {type:'exhausted',strokes:state.strokes};
@@ -61,6 +82,8 @@ export function createPuttingPractice(){
  }
  return {
   get state(){return state;},get status(){return status;},
+  capture(){return {version:1,kind:'putting',status,state:structuredClone(state),remainderMs:remainder,ticks};},
+  restore,
   start(){state=fresh();status='playing';remainder=0;ticks=0;},
   pause(){if(status==='playing')status='paused';},
   resume(){if(status==='paused')status='playing';},

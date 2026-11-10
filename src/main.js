@@ -5,7 +5,7 @@ import {startEdition,clockPracticeRequested,venuePracticeRequested,backstagePrac
 
 await startEdition(import.meta.env,{
  ...(import.meta.env.DEV?{clock:()=>import('./clock-practice-entry.js'),venues:()=>import('./clock-practice-entry.js'),backstage:()=>import('./amp-delivery-entry.js'),bonus:()=>import('./bonus-practice/entry.js')}:{}),
- game:()=>import('./game-entry.js'),
+ ...(import.meta.env.VITE_EDITION==='smf'?{tour:()=>import('./smf-tour/entry.js')}:{game:()=>import('./game-entry.js')}),
  scaffold:async edition=>{
   const [{renderScaffold},{applyTheme}]=await Promise.all([import('./editions/scaffold-view.js'),import('./theme-view.js')]);
   applyTheme('forest-freakout');

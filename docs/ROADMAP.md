@@ -60,22 +60,35 @@ Next: validate the Bass Head button and feedback on physical phones, including t
 
 Acceptance: before/after measurements and actual playtests, specific improvements with denominators, no speculative difficulty changes. Keep scoring-version boundaries explicit.
 
-## Next direction — shared engine and two editions
+## Current direction — integrated local SMF Festival
 
-The user requested an official split plan before further music work, aiming to pitch a nearly fully polished SMF version with no fixed date. Start with [M0 edition foundation](superpowers/plans/2026-11-06-edition-foundation.md), then research the six main stages and five planned bonus spaces, author the full tour, add optional detours and complete music/lighting for every venue. [Master design](superpowers/specs/2026-11-06-edition-split-design.md) · [program milestones and pitch checklist](EDITION-ROADMAP.md).
+The user requested a nearly fully polished SMF edition before pitching, with no fixed date. The [edition roadmap](EDITION-ROADMAP.md) owns that M0–M6 program. Its foundation, researched main venues, richer original music, lighting and bonus activities now feed a **playable local Festival tour** at [http://127.0.0.1:5191/](http://127.0.0.1:5191/). The generic public game remains separate and compatible. No SMF fork, backend rollout or public deployment is claimed.
 
-Rabbit Hole belongs to Living Room, Secret Garden to Grove, and Ikigai Mori to Pagoda. Recommended discovery: an invitation collected during the parent round opens an optional after-clear visit, with independent secret outcomes and no main-board score inflation. The user approved the design and native execution; M0 is implemented locally with independent review fixes verified. [Preview validation](superpowers/edition-foundation-preview-validation.md). The older three-stage/128 BPM music proposal is superseded; proper electronic phrasing and original synthesis remain requirements, now informed by each venue's researched identity. Generic gameplay, saves and legacy online contracts remain compatible. No fork, new backend or public release has been created by planning.
+The route is Living Room → Fractal Forest → Grove → AMP → Pagoda → Village. Four distinct earned perks support adding, keeping and swapping. Anonymous invitations appear after 18 active seconds; collecting one and qualifying its parent discovers an optional bonus party. Discovery stays available when skipped, and Explore revisits are available outside a Festival. The eleven-entry map conceals secret names/art until discovery.
 
-The [2026-11-10 secret/backstage update](superpowers/specs/2026-11-10-secret-backstage-expansion-design.md) expands the original three with Villagio/Village (Subvert) and AMP backstage (S2). Rabbit Hole uses Hoola b2b Lioness, Secret Garden uses Footprints, and Ikigai Mori uses Soup. All five now have disposable DEV-only SMF previews: AMP's accepted costume-led sandwich delivery at `?rehearsal&backstage=amp`, plus a four-venue selector at `?rehearsal&bonus=rabbit-hole`.
+| Parent | Bonus / DJ identity | Permanent local reward |
+|---|---|---|
+| Living Room | Rabbit Hole / Hoola b2b Lioness | Rabbit Ears: complete the phrase-long visit or its trinket activity early |
+| Grove | Secret Garden / Footprints | Glow Blossom: complete the visit or its planting activity early |
+| AMP | AMP backstage / S2 | Cheese Totem: three correct costume-led sandwich deliveries |
+| Pagoda | Ikigai Mori / Soup | Lantern Totem: complete the visit or its clean-pass activity early |
+| Village | Villagio / Subvert | Golden Chicken Totem: both putting cups within eight shots |
 
-The new previews offer six sequential Rabbit Hole trinkets, three Secret Garden seed-and-plant trips, and five distinct clean passes at Ikigai Mori, with temporary rabbit ears, a glowing blossom and a lantern totem. These are playtest objectives and cosmetic sketches; they do not replace the original three's first-completed-visit souvenir release plan. Villagio now offers two playable putting greens, eight total shots and a temporary Golden Chicken Totem for sinking both cups. Pull back anywhere to aim/set power; the active green is enlarged, and music loops without a countdown. The animated chicken tube remains scenery; slide ride and squawk sounds are later polish. All four use illustrated rooms with animated accents. Villagio now has a painted timber clubhouse, textured greens, warm fountain lights and a glossy chicken tube, replacing its initial procedural placeholder. All use original phrase-structured synthesis, not artist recordings.
+Early exits earn no visit souvenir; waiting alone cannot win either challenge prize. Detours preserve main score, XP, charge and the pending perk decision. Final Villagio returns to already-earned Festival results. Atomic device-local saves preserve discoveries, ownership, the parked main run and the active child; reloading resumes paused, including held sandwiches and rolling putts. There is no SMF online posting or data collection connection.
 
-Four-room baseline checks before putting: 448 tests, production build and both edition checks passed. Native browser play completed all four activities; phone layouts, pause/reset/switching, timeout without a reward, mixer controls and navigation passed. [Validation](superpowers/bonus-venue-preview-validation.md). Owner venue-reference review, physical-phone play and listening remain open. No backend deployment or public publishing occurred; normal secret catalogue entries remain concealed and no preview grants persistent progress.
+**Current verification:** 516 automated tests and both edition build checks pass, including generic compatibility and exclusion of development tools. Integrated desktop/phone-size preview checks are complete. [Integration plan](superpowers/plans/2026-11-10-smf-tour-integration.md) · [validation](superpowers/smf-tour-validation.md). Older [four-room](superpowers/bonus-venue-preview-validation.md) and [putting](superpowers/villagio-putting-validation.md) evidence applies to isolated rehearsals, not full-tour acceptance.
 
-Next: playtest the five bonus activities, including Villagio putting, then connect the six-stage tour and optional detours with discovery, return/recovery and one-time cosmetic receipts. Full tour integration remains unimplemented; isolated activities do not demonstrate that journey. [Four-preview plan](superpowers/plans/2026-11-10-bonus-venue-previews.md).
+**Next development sequence:**
+
+1. Owner playtesting on real phones: invitation clarity, tour pacing, delivery/putting difficulty, perk choices and interruption recovery. Integrated desktop/phone-size browser checks are complete.
+2. Polish transitions, instructions, cosmetic presentation and stage atmosphere from that feedback. Keep original synthesis and proper musical phrasing; recorded-track use needs its separate cue/permission work.
+3. Add the remaining SMF Endless journey and an explicit edition-specific score/validation contract with separate boards, tickets and reporting. Deploy needed backend changes before enabling frontend services.
+4. Complete the pitch checklist and agree a separate SMF release destination before publishing. No release is implied by local preview completion.
+
+The normal tour owns real local SMF progress. The DEV-only [tour lab](http://127.0.0.1:5191/?rehearsal&tour) has a separate profile for repeatable transition/recovery checks. Earlier main-venue, AMP and four-bonus rehearsals remain disposable. Villagio's illustrated two-hole putting game is implemented; a slide ride and chicken squawk finale remain later polish.
 
 ## Later backlog
 
 Additional cosmetics beyond the edition scope, optional currency/shop, cloud profiles/saves, stronger score verification and a public itch.io launch package. Itch launch remains on hold at the user's request. No dates or automatic publishing commitments are assigned.
 
-The putting follow-up has separate [design](superpowers/specs/2026-11-10-villagio-putting-design.md), [plan](superpowers/plans/2026-11-10-villagio-putting.md) and [validation](superpowers/villagio-putting-validation.md). Its cosmetic remains local to the disposable rehearsal until full-tour reward receipts are implemented.
+The putting follow-up has separate [design](superpowers/specs/2026-11-10-villagio-putting-design.md), [plan](superpowers/plans/2026-11-10-villagio-putting.md) and [validation](superpowers/villagio-putting-validation.md). The disposable rehearsal still offers a temporary try-on; the integrated Festival and discovered Explore visit now award the permanent local Golden Chicken Totem on a valid win.

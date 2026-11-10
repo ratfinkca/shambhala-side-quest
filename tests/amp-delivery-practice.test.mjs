@@ -7,8 +7,8 @@ test('AMP backstage can only enter through explicit DEV SMF rehearsal',async()=>
  for(const DEV of [true,false])for(const VITE_EDITION of ['generic','smf'])for(const search of ['', '?backstage=amp','?rehearsal&backstage=village','?rehearsal&backstage=amp']){
   assert.equal(backstagePracticeRequested({DEV,VITE_EDITION},search),DEV&&VITE_EDITION==='smf'&&search==='?rehearsal&backstage=amp');
  }
- for(const [env,expected] of [[{DEV:false,VITE_EDITION:'smf'},'scaffold'],[{DEV:true,VITE_EDITION:'generic'},'game'],[{DEV:true,VITE_EDITION:'smf'},'backstage']]){
-  const calls=[];await startEdition(env,Object.fromEntries(['backstage','venues','clock','game','scaffold'].map(key=>[key,()=>calls.push(key)])),{backstagePractice:true});
+ for(const [env,expected] of [[{DEV:false,VITE_EDITION:'smf'},'tour'],[{DEV:true,VITE_EDITION:'generic'},'game'],[{DEV:true,VITE_EDITION:'smf'},'backstage']]){
+  const calls=[];await startEdition(env,Object.fromEntries(['backstage','venues','clock','game','scaffold','tour'].map(key=>[key,()=>calls.push(key)])),{backstagePractice:true});
   assert.deepEqual(calls,[expected]);
  }
 });

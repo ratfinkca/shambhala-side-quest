@@ -32,11 +32,13 @@ export function bonusPracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&['rabbit-hole','secret-garden','ikigai-mori','villagio'].includes(params.get('bonus'));
 }
-export async function startEdition(env,actions,{clockPractice=false,venuePractice=false,backstagePractice=false,bonusPractice=false}={}){
+export async function startEdition(env,actions={}, {clockPractice=false,venuePractice=false,backstagePractice=false,bonusPractice=false}={}){
  const edition=getEdition(editionIdFromEnv(env));
- if(env.DEV===true&&edition.id==='smf'&&bonusPractice&&actions.bonus)return actions.bonus(edition);
- if(env.DEV===true&&edition.id==='smf'&&backstagePractice&&actions.backstage)return actions.backstage(edition);
- if(env.DEV===true&&edition.id==='smf'&&venuePractice&&actions.venues)return actions.venues(edition);
- if(env.DEV===true&&edition.id==='smf'&&clockPractice&&actions.clock)return actions.clock(edition);
- return edition.playable?actions.game(edition):actions.scaffold(edition);
+ if(env.DEV===true&&edition.id==='smf'&&bonusPractice&&typeof actions?.bonus==='function')return actions.bonus(edition);
+ if(env.DEV===true&&edition.id==='smf'&&backstagePractice&&typeof actions?.backstage==='function')return actions.backstage(edition);
+ if(env.DEV===true&&edition.id==='smf'&&venuePractice&&typeof actions?.venues==='function')return actions.venues(edition);
+ if(env.DEV===true&&edition.id==='smf'&&clockPractice&&typeof actions?.clock==='function')return actions.clock(edition);
+ const entry=edition.id==='smf'?'tour':edition.playable?'game':'scaffold';
+ if(typeof actions?.[entry]!=='function')throw new Error(`Missing ${entry} entry for ${edition.id} edition`);
+ return actions[entry](edition);
 }
