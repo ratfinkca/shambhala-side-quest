@@ -1,9 +1,33 @@
 import {LIVING_ROOM_ART_KEY,FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY,VILLAGE_ART_KEY} from './smf-venue-assets.js';
 import {createSMFStageLighting} from './smf-stage-lighting.js';
+import {smfLightCue} from './smf-light-cues.js';
+import {drawSMFStageFront} from './smf-stage-front.js';
+import {drawSMFScreen} from './smf-screen-visuals.js';
+import {drawTowerScreen} from './smf-tower-screen.js';
 // Scenery is decorative; stage data owns collision. Illustrated venues retain
 // their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
 const artPoint=([x,y])=>({x:x*W/1536,y:y*H/1024});
+// Added fixtures attach to the actual outboard roofs/towers in each plate.
+const SIDE_FIXTURES={
+ 'smf-living-room':[[526,134],[1010,134]],
+ 'smf-fractal':[[350,122],[1184,122]],
+ 'smf-grove':[[312,250],[1224,250]],
+ 'smf-amp':[[327,220],[1209,220]],
+ 'smf-pagoda':[[498,310],[1038,310]],
+ 'smf-village':[[307,184],[1234,184]],
+};
+const VILLAGE_FLOWERS=[[307,165],[435,108],[580,50],[958,50],[1105,108],[1234,165]];
+const fixturePoints=points=>points.map(p=>{const {x,y}=artPoint(p);return [x,y]});
+function mountSideFixtures(scene,positions){
+ const g=scene.add.graphics().setDepth(.24);
+ for(const [x,y]of positions){
+  g.lineStyle(2,0x536066,.9).lineBetween(x,y-12,x,y-7);
+  g.fillStyle(0x101c24,.95).fillRoundedRect(x-5,y-8,10,8,2);
+  g.lineStyle(1,0x66818a,.6).lineBetween(x-4,y-7,x+4,y-7);
+ }
+}
+
 // Architectural projections stay on measured surfaces. Their soft outer stroke
 // reads at phone size without washing out the underlying timber or carving.
 function surfaceLine(g,points,colour,alpha,closed=false,width=1.8){
@@ -68,24 +92,13 @@ function livingRoom(scene){
   .map(([x,y,w,h])=>({x:x*W/1536,y:y*H/1024,w:w*W/1536,h:h*H/1024}));
  const shades=[[111,160,53],[224,224,30],[1328,224,30],[1438,160,53]]
   .map(([x,y,r])=>({x:x*W/1536,y:y*H/1024,r:r*W/1536}));
- return {lampPositions:[600,660,715,770,825,880].map(x=>[x*W/1536,302*H/1024]),update(elapsed,phase,reduced,timing){
+ return {lampPositions:[600,660,715,770,825,880].map(x=>[x*W/1536,302*H/1024]),update(elapsed,phase,reduced,timing,show){
   ambience.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
-  panels.forEach((p,i)=>{
-   const breathe=.5+.5*Math.sin(turn+i*.5);
-   ambience.fillStyle(0x9bd9c3,(.035+.04*breathe)*energy).fillRect(p.x,p.y,p.w,p.h);
-   for(let band=0;band<4;band++){
-    const points=[];
-    for(let step=0;step<=16;step++){
-     const u=step/16,v=.18+band*.2+Math.sin(u*Math.PI*2+turn+i*.7+band*.6)*.1;
-     points.push({x:p.x+u*p.w,y:p.y+v*p.h});
-    }
-    surfaceLine(ambience,points,band%2?0xf0b590:0x9bd9c3,.36*energy,false,1.5);
-   }
-  });
+  const energy=reduced?.72:.65+show.architecture*.65;
+  panels.forEach((p,i)=>drawSMFScreen(ambience,p,turn+(i%2?-.4:.4),energy,'liquid'));
   for(const [i,p]of shades.entries()){
-   const breathe=.88+Math.sin(turn*.5+i)*.12;
+   const breathe=(.80+Math.sin(turn*.5+i)*.20)*energy;
    for(let r=4;r>0;r--)ambience.fillStyle(0xffcf83,.025*breathe).fillEllipse(p.x,p.y,p.r*r,p.r*r*.55);
    ambience.fillStyle(0xffe2a8,.12*breathe).fillEllipse(p.x,p.y,p.r*.9,p.r*.22);
   }
@@ -172,19 +185,19 @@ function pagoda(scene){
  ].map(points=>points.map(([x,y])=>({x:x*W/1536,y:y*H/1024})));
  const roof=[[538,53],[558,88],[653,90],[768,15],[883,90],[978,88],[998,53]].map(artPoint);
  const point=(p,u,v)=>({x:(p[0].x*(1-u)+p[1].x*u)*(1-v)+(p[3].x*(1-u)+p[2].x*u)*v,y:(p[0].y*(1-u)+p[1].y*u)*(1-v)+(p[3].y*(1-u)+p[2].y*u)*v});
- return {lampPositions:[[440,369],[585,361],[700,353],[834,353],[950,361],[1095,369]].map(([x,y])=>[x*W/1536,y*H/1024]),update(elapsed,phase,reduced,timing){
+ return {lampPositions:[[440,369],[585,361],[700,353],[834,353],[950,361],[1095,369]].map(([x,y])=>[x*W/1536,y*H/1024]),update(elapsed,phase,reduced,timing,show){
   mapping.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
+  const energy=reduced?.72:.65+show.architecture*.65;
   panels.forEach((panel,i)=>{
    const breathe=.5+.5*Math.sin(turn+i*.9);
    // Overlapping soft tints fade continuously; no phrase-boundary colour cut.
-   mapping.fillStyle(0x8ce5d7,(.035+.075*breathe)*energy).fillPoints(panel,true);
-   mapping.fillStyle(0xc2a1ee,(.035+.075*(1-breathe))*energy).fillPoints(panel,true);
+   mapping.fillStyle(0x8ce5d7,(.055+.09*breathe)*energy).fillPoints(panel,true);
+   mapping.fillStyle(0xc2a1ee,(.055+.09*(1-breathe))*energy).fillPoints(panel,true);
    for(let ring=0;ring<4;ring++){
     const radius=.12+ring*.095+Math.sin(turn-ring*.6+i*.5)*.025;
     const diamond=[[.5,.5-radius],[.5+radius,.5],[.5,.5+radius],[.5-radius,.5]].map(([u,v])=>point(panel,u,v));
-    surfaceLine(mapping,diamond,ring%2?0xa9f6e9:0xf6e2bc,(.25+.13*breathe)*energy,true,1.6);
+    surfaceLine(mapping,diamond,ring%2?0xa9f6e9:0xf6e2bc,(.4+.18*breathe)*energy,true,2);
    }
    // A slowly breathing rosette is mapped through each actual wall quadrilateral.
    // Arches and balcony rails remain free of projection, preserving the facade.
@@ -193,9 +206,9 @@ function pagoda(scene){
     const angle=step/32*Math.PI*2,radius=.21+Math.sin(angle*4+turn*.5)*.055;
     flower.push(point(panel,.5+Math.cos(angle)*radius,.5+Math.sin(angle)*radius));
    }
-   surfaceLine(mapping,flower,0xe7c8ff,.33*energy,true,1.4);
+   surfaceLine(mapping,flower,0xe7c8ff,.52*energy,true,1.9);
   });
-  surfaceLine(mapping,roof,0xc8e7ff,(.22+.13*(.5+.5*Math.sin(turn)))*energy,false,1.7);
+  surfaceLine(mapping,roof,0xc8e7ff,(.38+.22*(.5+.5*Math.sin(turn)))*energy,false,2.3);
  }};
 }
 
@@ -276,23 +289,23 @@ function fractalForest(scene){
  scene.add.image(0,0,FRACTAL_ART_KEY).setOrigin(0).setDisplaySize(W,H);
  const neon=scene.add.graphics().setDepth(.12);
  const boothBars=[[[603,346],[735,346]],[[620,361],[735,361]],[[649,377],[735,377]],[[800,346],[934,346]],[[800,361],[917,361]],[[800,377],[888,377]]].map(points=>points.map(artPoint));
- return {lampPositions:[420,444,468,492,516,540].map(x=>[x,137]),update(elapsed,phase,reduced,timing){
+ return {lampPositions:[420,444,468,492,516,540].map(x=>[x,137]),update(elapsed,phase,reduced,timing,show){
   neon.clear();
   const turns=reduced?0:elapsed*timing.bpm/60000/8;
-  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turns*Math.PI*.5));
+  const energy=reduced?.72:.65+show.architecture*.65;
   FRACTAL_TRACES.forEach((path,i)=>{
    const colour=[0x91fff0,0xe796ff,0xb9ff76,0xb9ff76,0x86efff][i];
    const head=((turns+i*.19)%1)*path.length,span=path.length*.32;
-   traceSection(neon,path,0,path.length,1.8,colour,.13*energy);
+   traceSection(neon,path,0,path.length,2,colour,.24*energy);
    // Wrap short trails smoothly; no flashes or full-screen brightness jumps.
-   for(const start of [head-span,head-span+path.length]){
-    traceSection(neon,path,start,span,9,colour,.08*energy);
-    traceSection(neon,path,start,span,4,colour,.18*energy);
-    traceSection(neon,path,start,span,2,colour,.4*energy);
+   for(const headOffset of [0,path.length*.5])for(const start of [head+headOffset-span,head+headOffset-span-path.length,head+headOffset-span+path.length]){
+    traceSection(neon,path,start,span,13,colour,.1*energy);
+    traceSection(neon,path,start,span,5,colour,.25*energy);
+    traceSection(neon,path,start,span,2.2,colour,.65*energy);
    }
   });
   boothBars.forEach((points,i)=>{
-   const glow=.22+.16*(.5+.5*Math.sin(turns*Math.PI*2-i%3*.8));
+   const glow=.35+.23*(.5+.5*Math.sin(turns*Math.PI*2-i%3*.8));
    surfaceLine(neon,points,i%3===1?0xb9ff76:0x91fff0,glow*energy,false,2);
   });
  }};
@@ -376,22 +389,22 @@ function grove(scene){
    [768+Math.cos(angle+.16)*108,42+Math.sin(angle+.16)*18]].map(artPoint);
  });
  const canopyDiamonds=[430,1106].flatMap(x=>[48,82].map(rx=>diamond(x,24,rx,rx*.28)));
- return {lampPositions:[570,620,666,872,921,970].map(x=>[x*W/1536,228*H/1024]),update(elapsed,phase,reduced,timing){
+ return {lampPositions:[570,620,666,872,921,970].map(x=>[x*W/1536,228*H/1024]),update(elapsed,phase,reduced,timing,show){
   projection.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/8*Math.PI*2;
-  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
+  const energy=reduced?.72:.65+show.architecture*.65;
   canopyPetals.forEach((points,i)=>{
    const glow=.5+.5*Math.sin(turn*.5-i*Math.PI/6),colour=i%2?0x9be2d7:0xdfb2ff;
-   projection.fillStyle(colour,(.025+.055*glow)*energy).fillPoints(points,true);
-   surfaceLine(projection,points,colour,(.2+.18*glow)*energy,true,1.5);
+   projection.fillStyle(colour,(.035+.09*glow)*energy).fillPoints(points,true);
+   surfaceLine(projection,points,colour,(.3+.3*glow)*energy,true,2);
   });
-  canopyDiamonds.forEach((points,i)=>surfaceLine(projection,points,0xe9b9ff,(.24+.12*Math.sin(turn*.5+i))*energy,true,1.5));
+  canopyDiamonds.forEach((points,i)=>surfaceLine(projection,points,0xe9b9ff,(.4+.18*Math.sin(turn*.5+i))*energy,true,2));
   panels.forEach((points,i)=>{
-   const glow=(.29+.10*Math.sin(turn+i*.5))*energy;
+   const glow=(.42+.18*Math.sin(turn+i*.5))*energy;
    surfaceLine(projection,points,0xe5abff,glow,true,2);
   });
   booth.forEach((points,i)=>{
-   const glow=(.29+.10*Math.sin(turn-i*.55))*energy;
+   const glow=(.42+.18*Math.sin(turn-i*.55))*energy;
    surfaceLine(projection,points,0xffdfaa,glow,true,2);
   });
  }};
@@ -446,31 +459,11 @@ function amp(scene){
  // Insets measured on the 1536 x 1024 plate keep motion inside the screens,
  // clear of carved corner brackets, speakers and the playable dancefloor.
  const screens=[[246,253,237,119],[1054,253,237,119],[641,368,254,41]].map(([x,y,width,height])=>({x:x*W/1536,y:y*H/1024,width:width*W/1536,height:height*H/1024}));
- return {lampPositions:[595,653,707,827,881,940].map(x=>[x*W/1536,205*H/1024]),update(elapsed,phase,reduced,timing){
+ return {lampPositions:[595,653,707,827,881,940].map(x=>[x*W/1536,205*H/1024]),update(elapsed,phase,reduced,timing,show){
   leds.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
-  screens.forEach((screen,index)=>{
-   const mirror=index===1?-1:1,breathe=.5+.5*Math.sin(turn*mirror);
-   leds.fillStyle(index%2?0xba72de:0x63cfe0,(.04+.04*breathe)*energy).fillRect(screen.x,screen.y,screen.width,screen.height);
-   for(let band=0;band<5;band++){
-    const points=[];
-    for(let step=0;step<=16;step++){
-     const u=step/16;
-     // Smooth bounded ribbons; no bright full-panel fills or flashing cuts.
-     const v=.2+band*.15+Math.sin(u*Math.PI*2+turn*mirror+band*.4)*.10;
-     points.push({x:screen.x+u*screen.width,y:screen.y+v*screen.height});
-    }
-    surfaceLine(leds,points,band%2?0xd99cff:0x85e8f0,.34*energy,false,1.7);
-   }
-   // Mirrored large forms give the two walls a coordinated show at phone size.
-   if(index<2)for(let ring=0;ring<3;ring++){
-    const rx=.17+ring*.10,ry=.14+ring*.09,cx=.5+Math.sin(turn*mirror)*.07;
-    const points=[[cx,.5-ry],[cx+rx,.5],[cx,.5+ry],[cx-rx,.5]]
-     .map(([u,v])=>({x:screen.x+u*screen.width,y:screen.y+v*screen.height}));
-    surfaceLine(leds,points,ring%2?0xd9ffa0:0xddafff,(.26+.11*breathe)*energy,true,1.8);
-   }
-  });
+  const energy=reduced?.72:.65+show.architecture*.65;
+  screens.forEach((screen,index)=>drawSMFScreen(leds,screen,turn*(index===1?-1:1),energy,'tunnel'));
  }};
 }
 
@@ -523,8 +516,8 @@ function village(scene){
  if(!scene.textures?.exists(VILLAGE_ART_KEY))return villageSketch(scene);
  scene.add.image(0,0,VILLAGE_ART_KEY).setOrigin(0).setDisplaySize(W,H);
  const screens=scene.add.graphics().setDepth(.12);
- // Insets measured on the final 1536 x 1024 plate. Keep the cut-out tower
- // panels, hanging speaker arrays and dancefloor clear of screen animation.
+ // Insets measured on the final 1536 x 1024 plate. Tower LEDs glow through
+ // carved wooden masks; only the three booth panels are exposed screens.
  const panels=[
   [283,273,42,54],[412,242,42,56],[556,148,47,43],[559,264,44,54],
   [932,148,45,43],[932,264,45,54],[1080,242,43,56],[1213,273,40,54],
@@ -532,37 +525,38 @@ function village(scene){
  ].map(([x,y,w,h])=>({x:x*W/1536,y:y*H/1024,w:w*W/1536,h:h*H/1024}));
  const towers=[[307,184,158],[435,136,103],[580,80,48],[958,80,48],[1105,136,103],[1234,184,158]]
   .map(([x,top,crown])=>({x:x*W/1536,top:top*H/1024,crown:crown*H/1024,bottom:390*H/1024}));
- return {lampPositions:[645,686,727,768,809,850].map(x=>[x*W/1536,202*H/1024]),update(elapsed,phase,reduced,timing){
+ return {lampPositions:[645,686,727,768,809,850].map(x=>[x*W/1536,202*H/1024]),update(elapsed,phase,reduced,timing,show){
   screens.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
+  const energy=reduced?.72:.65+show.architecture*.65;
   towers.forEach((tower,i)=>{
    // Light climbs the six real tower faces in a staggered, continuous wave.
    // Narrow strips reveal the CNC edges rather than bleaching whole columns.
    for(let section=0;section<6;section++){
     const y=tower.bottom-(tower.bottom-tower.top)*(section+1)/6,height=(tower.bottom-tower.top)/6;
     const glow=.5+.5*Math.sin(turn-section*.55-i*.65);
-    screens.fillStyle(0xffcc83,(.02+.045*glow)*energy).fillRect(tower.x-17,y,34,height);
+    screens.fillStyle(0xffcc83,(.025+.07*glow)*energy).fillRect(tower.x-17,y,34,height);
     for(const side of [-1,1]){
-     screens.lineStyle(5,0xffc77f,(.02+.035*glow)*energy).lineBetween(tower.x+side*18,y,tower.x+side*18,y+height);
-     screens.lineStyle(1.5,0xffdc9e,(.12+.23*glow)*energy).lineBetween(tower.x+side*18,y,tower.x+side*18,y+height);
+     screens.lineStyle(5,0xffc77f,(.035+.065*glow)*energy).lineBetween(tower.x+side*18,y,tower.x+side*18,y+height);
+     screens.lineStyle(1.5,0xffdc9e,(.22+.35*glow)*energy).lineBetween(tower.x+side*18,y,tower.x+side*18,y+height);
     }
    }
    const crownGlow=.5+.5*Math.sin(turn-3.3-i*.65);
-   screens.fillStyle(0xffc87e,(.035+.045*crownGlow)*energy).fillEllipse(tower.x,tower.crown+4,55,23);
-   screens.fillStyle(0xffe0a1,(.025+.035*crownGlow)*energy).fillEllipse(tower.x,tower.crown+3,25,12);
+   screens.fillStyle(0xffc87e,(.055+.075*crownGlow)*energy).fillEllipse(tower.x,tower.crown+4,55,23);
+   screens.fillStyle(0xffe0a1,(.04+.06*crownGlow)*energy).fillEllipse(tower.x,tower.crown+3,25,12);
   });
   panels.forEach((p,i)=>{
+   if(i<8){drawTowerScreen(screens,p,turn,energy,i);return;}
    const breathe=.5+.5*Math.sin(turn+i*.55);
-   screens.fillStyle(0x66ccda,(.035+.06*breathe)*energy).fillRect(p.x,p.y,p.w,p.h);
-   screens.fillStyle(0xc78ac9,(.035+.06*(1-breathe))*energy).fillRect(p.x,p.y,p.w,p.h);
+   screens.fillStyle(0x66ccda,(.055+.08*breathe)*energy).fillRect(p.x,p.y,p.w,p.h);
+   screens.fillStyle(0xc78ac9,(.055+.08*(1-breathe))*energy).fillRect(p.x,p.y,p.w,p.h);
    for(let band=0;band<3;band++){
     const points=[];
     for(let step=0;step<=12;step++){
      const u=step/12,v=.24+band*.23+Math.sin(u*Math.PI*2+turn+i*.5+band*.6)*.09;
      points.push({x:p.x+u*p.w,y:p.y+v*p.h});
     }
-    surfaceLine(screens,points,band%2?0xe0a2d0:0x8ce4df,.34*energy,false,1.5);
+    surfaceLine(screens,points,band%2?0xe0a2d0:0x8ce4df,.52*energy,false,2);
    }
   });
  }};
@@ -572,12 +566,16 @@ export function createSMFStageView(scene,stage){
  const draw={'smf-living-room':livingRoom,'smf-fractal':fractalForest,'smf-grove':grove,'smf-amp':amp,'smf-pagoda':pagoda,'smf-village':village}[stage.id];
  if(!draw)return null;
  const view=draw(scene);
+ drawSMFStageFront(scene,stage);
  // Illustrated stages supply exact fixture positions. Their own venue light
  // rig replaces the generic one; missing-texture sketches retain the fallback.
  if(!view.lampPositions)return view;
- const rig=createSMFStageLighting(scene,stage,view.lampPositions);
+ const sideLampPositions=fixturePoints(SIDE_FIXTURES[stage.id]);
+ const skyLampPositions=stage.id==='smf-village'?fixturePoints(VILLAGE_FLOWERS):[];
+ mountSideFixtures(scene,sideLampPositions);
+ const rig=createSMFStageLighting(scene,stage,view.lampPositions,sideLampPositions,skyLampPositions);
  return {...view,ownsLighting:true,destroy:()=>rig.destroy(),update(elapsed,phase,reduced,timing){
-  view.update(elapsed,phase,reduced,timing);
+  view.update(elapsed,phase,reduced,timing,smfLightCue(stage.id,elapsed,timing,reduced));
   rig.update(elapsed,reduced,timing);
  }};
 }

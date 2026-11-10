@@ -49,7 +49,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.removeCapture(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT']);
     const point = pointer => {
       if (!this.running || pointer.event?.target !== this.game.canvas || pointer.x < 0 || pointer.y < 0 || pointer.x > W || pointer.y > H) return;
-      this.target = mysteryTarget(this.round.mystery,this.dancer,{x:pointer.x,y:pointer.y});
+      this.target = mysteryTarget(this.round.mystery,this.dancer,{x:pointer.x,y:pointer.y},{playBounds:this.stage.playBounds});
       this.game.events.emit('round:input',{kind:pointer.wasTouch?'touch':'mouse',runId:this.round.runId});
       document.querySelector('#game').focus({ preventScroll: true });
     };
@@ -116,7 +116,7 @@ export class GameScene extends Phaser.Scene {
     if(!this.running)return null;
     const effect=collectMystery(this.round,rng);
     if(effect){
-      if(effect==='dizzy'&&this.target)this.target=mysteryTarget(this.round.mystery,this.dancer,this.target);
+      if(effect==='dizzy'&&this.target)this.target=mysteryTarget(this.round.mystery,this.dancer,this.target,{playBounds:this.stage?.playBounds});
       this.game.events.emit('round:mystery',effect);this.game.events.emit('playtest:candy',{effect,runId:this.round.runId});
     }
     return effect;
@@ -162,11 +162,11 @@ export class GameScene extends Phaser.Scene {
       this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});
       this.target=null;
       direction=mysteryDirection(this.round.mystery,direction);
-      moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,obstacles:this.stage.obstacles,speed});
+      moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
     } else if(this.target) {
       direction={x:this.target.x-this.dancer.x,y:this.target.y-this.dancer.y};
       const distance=Math.hypot(direction.x,direction.y),step=Math.min(movementDelta,distance/speed*1000);
-      moveInArena(this.dancer,direction,step,{width:W,height:H,obstacles:this.stage.obstacles,speed});
+      moveInArena(this.dancer,direction,step,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
       if(Math.hypot(this.target.x-this.dancer.x,this.target.y-this.dancer.y)<1)this.target=null;
     }
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;

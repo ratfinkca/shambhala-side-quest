@@ -73,3 +73,15 @@ test('Dizzy mirrors a tap once, clamps edges, and its destination remains reacha
  assert.deepEqual(mysteryTarget({...m,effectMs:0},player,{x:580,y:420}),{x:580,y:420});
  assert.deepEqual(mysteryTarget({...m,effect:'waves'},player,{x:580,y:420}),{x:580,y:420});
 });
+
+test('ordinary and Dizzy destinations stop at the venue floor and remain reachable during Sugar Rush',()=>{
+ const options={playBounds:{minX:0,minY:285,maxX:960,maxY:640}},player={x:480,y:425};
+ assert.deepEqual(mysteryTarget({effect:null,effectMs:0},player,{x:450,y:40},options),{x:450,y:299});
+ const target=mysteryTarget({effect:'dizzy',effectMs:5000},player,{x:480,y:630},options);
+ assert.deepEqual(target,{x:480,y:299});
+ for(let i=0;i<40;i++){
+  const direction={x:target.x-player.x,y:target.y-player.y},distance=Math.hypot(direction.x,direction.y);
+  moveInArena(player,direction,Math.min(16,distance/750*1000),{...options,speed:750});
+ }
+ assert.deepEqual(player,target);
+});
