@@ -1,10 +1,10 @@
 # Two-edition delivery roadmap
 
-Updated 2026-11-09. Approved program; M0 implemented locally with independent review fixes verified, not published. Authority: [edition split design](superpowers/specs/2026-11-06-edition-split-design.md). User target: nearly fully polished SMF edition before pitching; no fixed pitch date. Published recovery baseline remains PR #19 /67c44e0.
+Updated 2026-11-10. Approved program with expanded owner-selected content direction; M0 implemented locally with independent review fixes verified, not published. Authority: [edition split design](superpowers/specs/2026-11-06-edition-split-design.md), updated by the [secret/backstage direction](superpowers/specs/2026-11-10-secret-backstage-expansion-design.md). User target: nearly fully polished SMF edition before pitching; no fixed pitch date. Published recovery baseline remains PR #19 /67c44e0.
 
 ## Product target
 
-One shared engine; separately built generic and SMF editions. SMF ships six mains plus Rabbit Hole/Living Room, Secret Garden/Grove and Ikigai Mori/Pagoda. All nine are full content scope. Generic preserves today's game/progression and gains its own neutral identity. Ownership-driven repository separation can follow the engine boundary; no external fork or deployment is created by this plan.
+One shared engine; separately built generic and SMF editions. Target content is six mains plus Rabbit Hole/Living Room, Secret Garden/Grove, Ikigai Mori/Pagoda, Villagio/Village and the AMP backstage grilled-cheese area: eleven venues. The two additional backstages are planning scope, not implemented catalogue entries. Villagio starts as a small couple-hole putt-putt-themed dance area; a prize-winning putting mini-game is a likely later addition with rules still open. Generic preserves today's game/progression and gains its own neutral identity. Ownership-driven repository separation can follow the engine boundary; no external fork or deployment is created by this plan.
 
 ## M0 — Edition foundation (local preview complete)
 
@@ -22,17 +22,17 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 ## M1 — Stage identity and product rules (planning baseline settled)
 
-**Outcome:** nine dated, reviewable stage briefs and an agreed SMF route/music contract.
+**Outcome:** dated, reviewable briefs for the six mains and five bonus spaces, plus an agreed SMF route/music contract.
 
 **Status:** [sourced research briefs](research/smf-stage-identities-2026-11-06.md) and [concrete route/rules proposal](superpowers/specs/2026-11-06-smf-route-rules-design.md) drafted on 2026-11-06. Fresh builder check found no important unanswered questions beyond the recorded owner decisions. The owner selected 2026 venue structures and phrase-length rounds; 2027 official-site art is a separate [title/menu reference](research/smf-2027-interface-direction-2026-11-06.md). Secret reference gaps, final artwork and listening/layout acceptance remain explicit. The planning baseline is settled; ranked values are not frozen, and M2A clock practice is implemented locally.
 
 - Research 2023–2026 official stage lineups/curator statements and available primary sets; record gaps instead of inferring secret programming from unrelated stages.
 - For each venue: recognizable setting/materials, day/night identity, musical palette/tempo/form, lighting language, geometry/spawn constraints and asset sources.
-- Review all six main identities and three secrets with the owner; request stage-crew input through the owner rather than messaging anyone automatically.
+- Review all six main identities and five bonus spaces with the owner; request stage-crew input through the owner rather than messaging anyone automatically. Existing research covers the original nine; Villagio and AMP backstage need their own briefs.
 - Agree the six-main route/order, qualification/difficulty, four-perk policy, timed secret visit/discovery/reward behavior and gameplay/music clock alignment before freezing the first SMF scoring ruleset.
 - Confirm generic working title/presentation; SMF uses the selected 2026 venue baseline and separate 2027 title/menu inspiration. These are quality gates, not reasons to delay M0 extraction.
 
-**Exit:** complete nine-stage matrix with source/confidence and no unresolved scoring/route contract; approved briefs and the next task plan. No blanket 128 BPM requirement.
+**Exit:** complete eleven-venue matrix with source/confidence and no unresolved scoring/route contract; approved briefs and the next task plan. No blanket 128 BPM requirement.
 
 ## M2 — Six main SMF stages and edition-safe online services
 
@@ -47,23 +47,24 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Exit:** every main stage playable, all scores reconcile with its ruleset, separate boards/configurations, saved/unfinished run handling verified. Visual/audio polish can still be in progress; this is an internal milestone.
 
-## M3 — Three secret discoveries and return/recovery
+## M3 — Five secret/backstage discoveries and return/recovery
 
-**Outcome:** Rabbit Hole, Secret Garden and Ikigai Mori are complete optional visits associated with their parents.
+**Outcome:** Rabbit Hole, Secret Garden, Ikigai Mori, Villagio and AMP backstage are optional visits associated with their parents. [Latest direction](superpowers/specs/2026-11-10-secret-backstage-expansion-design.md) records Hoola b2b Lioness, Footprints, Soup, Subvert and S2 respectively.
 
 - Build distinctive discoverable invitations, earned entry after parent clear, optional choice and persistent Explore access. Keep undiscovered names/art hidden behind mystery tiles until earned.
 - Secret scores/items/boosts never alter main competitive totals or parked main state. Souvenirs reward discovery; no extra main perk choice/XP advantage from detours.
+- Original three visits keep their first-completed-visit souvenir. AMP's grilled cheese / cheese totem requires the vendor's smooth-pass challenge; the earlier delivery idea is superseded. Villagio's putting prize belongs to a later agreed mini-game, not the first themed-area preview. Do not auto-award activity prizes on timeout.
 - Keep main/secret visit identities, return menus and parked/active recovery atomic and bounded. Handle invitation collection, death/timeout, replay, discard, reload and finish/save without duplicate rewards.
-- Test one secret at a time against its actual parent, then the full six-main/three-secret journey. Complete all three before pitch acceptance.
+- Test one bonus space at a time against its actual parent, then the full six-main/five-bonus journey. Build Rabbit Hole's complete preview first, then the other original secrets and two backstage spaces. Explicitly test Villagio returning to Festival final results or the Endless loop decision.
 
 **Exit:** first discovery, revisit, skip, interrupted detour and return work for every secret on desktop/touch; main-only board claims remain identical with or without optional visits.
 
-## M4 — Original music and coordinated atmosphere across all nine
+## M4 — Music and coordinated atmosphere across all eleven
 
 **Outcome:** recognizable, properly phrased music and lighting for every venue.
 
 - Compose from the approved per-stage briefs, using appropriate genre tempos/rhythms/harmony and musically coherent phrase/section structure.
-- Develop the common scheduling/instrument/transport foundation, then audition all six mains and three more intimate secret arrangements.
+- Develop the common scheduling/instrument/transport foundation, then audition all six mains and five more intimate secret/backstage arrangements. Owner-selected main artist targets are KR3TURE, The Funk Hunters, Melo.Nade, AHEE, BTSM and Phibes for Living Room, Fractal, Grove, AMP, Pagoda and Village respectively. Recorded-track candidates are not selected or licensed assets; preserve original synthesis while cue/permission work proceeds.
 - Coordinate lights, speaker response and stage details with musical form while preserving scoring cues/readability and reduced motion.
 - Verify pause/mute/end/recovery and performance; use audible comparisons and actual listening acceptance, not just note-generation tests.
 
@@ -71,7 +72,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 
 **Further local preview:** [Stronger mapping and private recording audition](superpowers/plans/2026-11-09-smf-mapping-recording-preview.md) adds Grove canopy/timber patterns, saturated AMP screens, stronger Pagoda projections and clearer Village masks. The owner supplied Hellhound (Woofax & Bryx Remix); it can be auditioned from a local file without distributing it. Waveform-derived174 BPM timing and a132.4s cue are documented, but the canonical172 BPM Village show is not automatically synchronized. Next if accepted: author recorded-track phrase/cue timing and confirm public game-use permission before distributing audio. Original synth arrangements remain available. 388 tests/build/edition checks pass; physical-phone and owner listening acceptance remain open.
 
-**Exit:** nine complete musical/lighting identities, no unintended audio tails or resume glitches, sustained phone audio/visual checks recorded.
+**Exit:** eleven complete musical/lighting identities, no unintended audio tails or resume glitches, sustained phone audio/visual checks recorded.
 
 ## M5 — Product identities, progression and whole-game polish
 
@@ -89,7 +90,7 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 **Outcome:** a consistent SMF build and presentation that represent the complete game.
 
 - Freeze the candidate's edition/ruleset/content versions; record tests, performance devices, known limitations and rollback.
-- Prepare a concise experience guide plus screenshots/gameplay capture from that exact build, showing all nine venues and secret discoveries honestly.
+- Prepare a concise experience guide plus screenshots/gameplay capture from that exact build, showing all eleven venues and bonus discoveries honestly. Do not depict an unimplemented putting mini-game as playable.
 - Owner approves the external pitch/demo release and audience; then deploy backend first where needed, verify Pages/hosting separately and test the actual shared URL.
 - Any separate SMF repository/project ownership or access grants are explicit owner decisions. No automatic outreach or publishing.
 
@@ -104,7 +105,9 @@ One shared engine; separately built generic and SMF editions. SMF ships six main
 - [ ] Rabbit Hole, discovered from Living Room and revisit tested
 - [ ] Secret Garden, discovered from Grove and revisit tested
 - [ ] Ikigai Mori, discovered from Pagoda and revisit tested
-- [ ] Nine authored visual/music/lighting identities accepted
+- [ ] Villagio, discovered from Village; small dance/golf area and final-results return tested
+- [ ] AMP backstage, discovered from AMP; vendor smooth-pass challenge and cheese-totem receipt tested
+- [ ] Eleven authored visual/music/lighting identities accepted
 - [ ] Generic/SMF brand, asset, save, recovery, consent and score isolation accepted
 - [ ] Complete tour, Endless, four-perk builds, discoveries and finish/save tested
 - [ ] Real-phone controls, interruptions, audio, reduced motion and sustained runs tested

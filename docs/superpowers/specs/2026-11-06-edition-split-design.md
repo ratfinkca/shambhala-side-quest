@@ -2,6 +2,8 @@
 
 Date: 2026-11-06. Status: approved by the user on 2026-11-06; M0 foundation implemented locally, independent review fixes verified. Published baseline: recovery PR #19 /67c44e0. This supersedes the existing-three-stages/universal 128 BPM music proposal.
 
+**Content update, 2026-11-10:** the [secret/backstage direction](2026-11-10-secret-backstage-expansion-design.md) supersedes this original document's nine-venue/three-secret scope and blanket completed-visit reward rule. Target content is now six mains plus five bonus spaces, adding Villagio/Subvert from Village and the AMP vendor/S2. Villagio begins as a small couple-hole themed dance area; a prize-winning putting game is a later design. AMP's cheese totem requires a smooth-pass challenge. The shared-engine, privacy, generic compatibility and main-score boundaries below remain in force; the historical M0 catalogue still has nine entries.
+
 ## Intent and user decisions
 
 Build toward a nearly fully polished SMF game before pitching it, with no fixed pitch deadline. The user works for SMF and has been asked to pitch the game. Preserve a maintainable generic product alongside the SMF version. The agreed direction from the preceding discussion is a shared engine with two editions, initially in one repository; separate repositories remain a later ownership/distribution option.
