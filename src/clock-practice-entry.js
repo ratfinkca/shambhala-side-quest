@@ -18,7 +18,7 @@ root.innerHTML=`<header><div><span class="clock-eyebrow">SMF ${venueMode?'venue'
 <div class="clock-track"><div id="clock-progress"></div></div><div class="clock-status"><strong id="clock-phase" role="status">Ready to practice</strong>${venueMode?`<span id="clock-goal">Sparks 0 / ${initialStage.target}</span>`:''}<span id="clock-elapsed">0.000s active</span></div>
 <div class="clock-arena"><div id="game" tabindex="0" role="application" aria-label="Clock practice. Click or tap a destination, or use arrows or WASD. Escape pauses."></div><button id="bass-head" class="bass-control" hidden disabled aria-label="Bass Head"><span class="bass-control-icon" aria-hidden="true">ϟ</span><span class="bass-control-name" aria-hidden="true">Bass Head</span><span class="bass-control-detail" aria-hidden="true">0%</span></button><div id="clock-pause-note">Start fresh to try the clock.<br>Nothing here affects your real game.</div></div></section>
 <p class="clock-note">Click/tap a destination or use WASD/arrows. Collect sparks and pass the dancers. B activates Bass Head when charged. Escape pauses. ${venueMode?'Changing venues':'Changing clocks'} starts fresh; hidden tabs pause. Reduced motion follows your device setting. This preview never saves scores, XP or playtest data.${venueMode?' Original venue art and music sketches · final detail and balance still to come.':''}</p>`;
-const $=id=>root.querySelector(id),audio=createAudio(undefined,{timedVoices:venueOptions?.timedVoices??diagnosticVoices,useTransport:true});
+const $=id=>root.querySelector(id),audio=createAudio(undefined,{timedVoices:venueOptions?.timedVoices??diagnosticVoices,useTransport:true,createMusicRenderer:venueOptions?.createMusicRenderer});
 let soundOn=true,currentScene=null,disposed=false;
 function controls(){
  const playing=lab.state==='playing',paused=lab.state==='paused',ended=lab.state==='ended';
@@ -63,7 +63,8 @@ $('#bass-head').addEventListener('click',()=>{currentScene?.activateBassHead();i
 function keydown(e){if(e.target.matches('select,input,textarea'))return;if(e.code==='Escape'&&!e.repeat&&['playing','paused'].includes(lab.state)){e.preventDefault();pause();}if(e.code==='KeyB'&&lab.state==='playing'&&!e.repeat){e.preventDefault();currentScene?.activateBassHead();}}
 function hidden(){if(document.hidden){lab.pause();audio.stop();controls();if(currentScene)update(currentScene.round);}}
 document.addEventListener('keydown',keydown);document.addEventListener('visibilitychange',hidden);
-function cleanup(){if(disposed)return;disposed=true;lab.destroy();enginePool.destroy();audio.stop();document.removeEventListener('keydown',keydown);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',pagehide);root.classList.remove('clock-lab','venue-lab');}
+const disposeSoundCheck=venueOptions?.mountSoundCheck(root,{getStage:()=>lab.stage,pause(){lab.pause();controls();if(currentScene)update(currentScene.round);}});
+function cleanup(){if(disposed)return;disposed=true;disposeSoundCheck?.();lab.destroy();enginePool.destroy();audio.stop();document.removeEventListener('keydown',keydown);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',pagehide);root.classList.remove('clock-lab','venue-lab');}
 function pagehide(event){handlePracticePageHide(event,{pause(){lab.pause();audio.stop();controls();if(currentScene)update(currentScene.round);},dispose:cleanup});}
 window.addEventListener('pagehide',pagehide);
 if(import.meta.hot)import.meta.hot.dispose(cleanup);

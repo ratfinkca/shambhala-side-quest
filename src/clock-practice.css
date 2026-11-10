@@ -30,3 +30,5 @@
 /* Keep the complete arena visible on typical desktop windows. */
 .venue-lab .clock-panel{max-width:min(100%,calc(max(260px,100dvh - 390px)*1.5));margin-inline:auto;container-type:inline-size}
 .venue-lab .clock-hud strong{font-size:clamp(14px,3cqw,22px)}
+.sound-check{margin:20px auto;padding:14px;border:1px solid #536970;border-radius:10px;max-width:760px;background:#13262e;font-size:13px;line-height:1.5}
+.sound-check summary{cursor:pointer;font-weight:700;color:#dcefe8}.sound-check p{color:#b1c7c9}.sound-check-buttons{display:flex;flex-wrap:wrap;gap:10px}.sound-check audio{display:block;width:100%;margin:12px 0}.sound-check [hidden]{display:none}.sound-check a{display:inline-block}

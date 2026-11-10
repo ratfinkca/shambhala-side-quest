@@ -60,3 +60,20 @@ test('timed notes honor a bounded swing offset without shifting the shared clock
  const f=fake(),starts=[],original=f.ctx.createOscillator;f.ctx.createOscillator=()=>{const n=original();n.start=t=>starts.push(t);return n};
  const a=createAudio(()=>f.ctx,{timedVoices:()=>[{frequency:440,type:'sine',duration:.1,volume:.02,offsetMs:24}]});a.setEnabled(true);a.sync({timingId:'smf-living-room-clock-preview-1',remainingMs:68571,multiplier:1,flowMs:0});assert.deepEqual(starts,[.024]);
 });
+
+test('optional venue renderer stays lazy, shares music volume and flushes on pause, mute and clock changes',()=>{
+ const f=fake(),scheduled=[],factories=[];let stops=0;
+ const audio=createAudio(()=>f.ctx,{useTransport:true,timedVoices:()=>[{kind:'bass',frequency:55,duration:.2,volume:.04,offsetMs:12}],createMusicRenderer:(context,bus)=>{
+  factories.push({context,bus});return {schedule:(voice,at)=>scheduled.push({voice,at}),stop:()=>stops++};
+ }});
+ assert.equal(factories.length,0);audio.setVolumes({music:.3,effects:.5});audio.setEnabled(true);
+ const round={timingId:'smf-fractal-clock-preview-1',remainingMs:64000,multiplier:1,flowMs:0};
+ audio.sync(round);assert.equal(factories.length,1);assert.equal(factories[0].bus.gain.value,.3);
+ assert.equal(scheduled.length,1);assert.equal(scheduled[0].at,.012);assert.equal(f.voices.length,0);
+ audio.sync(round);assert.equal(scheduled.length,1);
+ audio.pickup(1);assert.equal(f.voices.length,1,'game feedback retains its own synthesis');
+ audio.stop();assert.ok(stops>0);const stopped=stops;
+ audio.sync(round);assert.equal(scheduled.length,2);assert.equal(factories.length,1);
+ audio.sync({...round,timingId:'smf-pagoda-clock-preview-1',remainingMs:60000});assert.ok(stops>stopped);
+ audio.setEnabled(false);const muted=scheduled.length;audio.sync(round);assert.equal(scheduled.length,muted);
+});

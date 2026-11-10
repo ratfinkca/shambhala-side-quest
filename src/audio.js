@@ -3,9 +3,9 @@ import {createMusicTransport} from './music-transport.js';
 import { cycleAt } from './festival.js';
 import { stageVoices, BEAT_MS } from './music.js';
 
-export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)(), {timedVoices,useTransport=false}={}) {
+export function createAudio(contextFactory = () => new (window.AudioContext || window.webkitAudioContext)(), {timedVoices,useTransport=false,createMusicRenderer}={}) {
   let noiseBuffer;
-  let context, musicBus, effectsBus, enabled = false, lastStep = -1;
+  let context, musicBus, effectsBus, musicRenderer, enabled = false, lastStep = -1;
   let volumes = { music: .45, effects: .65 };
   function applyVolumes() { if (context) { musicBus.gain.setValueAtTime(volumes.music, context.currentTime); effectsBus.gain.setValueAtTime(volumes.effects, context.currentTime); } }
   const nodes = new Map();
@@ -13,9 +13,10 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
   function cancelNode(node){try {node.stop();}catch {} nodes.get(node)?.();}
   const transport=createMusicTransport({voices:timedVoices||(()=>[]),schedule:(voice,at)=>{
     at+=Number.isFinite(voice.offsetMs)?Math.max(0,Math.min(24,voice.offsetMs))/1000:0;
+    if(musicRenderer){try{musicRenderer.schedule(voice,at);}catch{/* Optional music must not interrupt play. */}return;}
     if(voice.noise)percussion(voice,at);
     else tone(voice.frequency,voice.duration,0,voice.type,voice.volume,voice.endFrequency,'music',voice.attack,at);
-  },cancel:()=>{for(const node of [...musicNodes])cancelNode(node);}});
+  },cancel:()=>{musicRenderer?.stop();for(const node of [...musicNodes])cancelNode(node);}});
 
   function stop() {
     transport.stop();
@@ -69,7 +70,7 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
       enabled = value;
       if (!value) { stop(); return; }
       try {
-        if (!context) { context = contextFactory(); musicBus = context.createGain(); effectsBus = context.createGain(); musicBus.connect(context.destination); effectsBus.connect(context.destination); applyVolumes(); }
+        if (!context) { context = contextFactory(); musicBus = context.createGain(); effectsBus = context.createGain(); musicBus.connect(context.destination); effectsBus.connect(context.destination); applyVolumes(); musicRenderer=createMusicRenderer?.(context,musicBus); }
         context.resume().catch(() => {});
       } catch {}
     },
