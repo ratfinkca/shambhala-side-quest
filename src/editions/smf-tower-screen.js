@@ -1,16 +1,16 @@
 // Village tower LEDs sit behind carved timber. The wood never changes shape;
-// only the light visible through these CNC-like spiral openings moves.
-const WOOD=0x80502b,WOOD_FACE=0xb67a3e,WOOD_EDGE=0xf1bd75,DARK=0x06191d;
-const COLOURS=[0x74edf0,0xffbc65,0xcf8ffa];
+// only the light visible through these broad CNC-like spiral openings moves.
+const WOOD=0x80502b,WOOD_FACE=0x88552c,WOOD_EDGE=0xf1bd75,DARK=0x030612;
+const COLOURS=[0x22fff0,0xffc52f,0xc561ff];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 function scroll(cx,cy,mirror){
  const sides=[[],[]],steps=24;
  for(let i=0;i<=steps;i++){
-  const u=i/steps,angle=-Math.PI*.72+u*Math.PI*1.78,r=.225*(1-u*.76);
+  const u=i/steps,angle=-Math.PI*.72+u*Math.PI*1.78,r=.225*(1-u*.72);
   const x=cx+Math.cos(angle)*r*mirror,y=cy+Math.sin(angle)*r*.9;
-  const next=angle+.01,nextRadius=r-.225*.76*.01/(Math.PI*1.78);
+  const next=angle+.01,nextRadius=r-.225*.72*.01/(Math.PI*1.78);
   const dx=(Math.cos(next)*nextRadius-Math.cos(angle)*r)*mirror,dy=(Math.sin(next)*nextRadius-Math.sin(angle)*r)*.9,length=Math.hypot(dx,dy);
-  const width=.038*Math.sin(Math.PI*(.13+u*.74));
+  const width=.068*Math.sin(Math.PI*(.13+u*.74));
   sides[0].push({x:x-dy/length*width,y:y+dx/length*width});
   sides[1].push({x:x+dy/length*width,y:y-dx/length*width});
  }
@@ -41,15 +41,15 @@ export function drawTowerScreen(g,p,turn,energy,index=0){
  g.fillStyle(WOOD,1).fillRect(p.x,p.y,p.w,p.h);
  g.fillStyle(WOOD_FACE,1).fillPoints(scale(FACE),true);
  g.lineStyle(Math.min(p.w,p.h)*.028,WOOD_EDGE,.8).strokePoints(scale(FACE),true);
- const phase=turn*.7+index*.58;
+ const phase=turn*1.05+index*.58;
  OPENINGS.forEach((opening,i)=>{
   const points=scale(opening),wave=.5+.5*Math.sin(phase+i*.9),a=COLOURS[(index+i)%3],b=COLOURS[(index+i+1)%3];
   g.fillStyle(DARK,1).fillPoints(points,true);
   // The coloured field and travelling highlight are both bounded by the
   // opening polygon; no glow wash covers the wooden face or neighbours.
-  g.fillStyle(mixColour(a,b,wave),clamp((.43+wave*.28)*energy,.15,.9)).fillPoints(points,true);
-  const band=.5+.52*Math.sin(phase*.8+i*.7),clipped=clipY(clipY(opening,band-.09,true),band+.09,false);
-  if(clipped.length>=3)g.fillStyle(0xe9fff0,clamp(.42*energy,0,.6)).fillPoints(scale(clipped),true);
+  g.fillStyle(mixColour(a,b,wave),clamp((.76+wave*.22)*(.8+energy*.2),.65,1)).fillPoints(points,true);
+  const band=.5+.52*Math.sin(phase*.8+i*.7),clipped=clipY(clipY(opening,band-.14,true),band+.14,false);
+  if(clipped.length>=3)g.fillStyle(0xe9fff0,clamp(.78*energy,.4,.95)).fillPoints(scale(clipped),true);
   g.lineStyle(Math.min(p.w,p.h)*.025,0x553019,.95).strokePoints(points,true);
  });
  // A narrow wooden spine remains in front of every lighting state.

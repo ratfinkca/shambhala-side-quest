@@ -4,6 +4,7 @@ import {smfLightCue} from './smf-light-cues.js';
 import {drawSMFStageFront} from './smf-stage-front.js';
 import {drawSMFScreen} from './smf-screen-visuals.js';
 import {drawTowerScreen} from './smf-tower-screen.js';
+import {drawMappedPanel,drawCanopyMapping} from './smf-surface-mapping.js';
 // Scenery is decorative; stage data owns collision. Illustrated venues retain
 // their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
@@ -184,30 +185,11 @@ function pagoda(scene){
   [[688,245],[848,245],[862,315],[674,315]],
  ].map(points=>points.map(([x,y])=>({x:x*W/1536,y:y*H/1024})));
  const roof=[[538,53],[558,88],[653,90],[768,15],[883,90],[978,88],[998,53]].map(artPoint);
- const point=(p,u,v)=>({x:(p[0].x*(1-u)+p[1].x*u)*(1-v)+(p[3].x*(1-u)+p[2].x*u)*v,y:(p[0].y*(1-u)+p[1].y*u)*(1-v)+(p[3].y*(1-u)+p[2].y*u)*v});
  return {lampPositions:[[440,369],[585,361],[700,353],[834,353],[950,361],[1095,369]].map(([x,y])=>[x*W/1536,y*H/1024]),update(elapsed,phase,reduced,timing,show){
   mapping.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
   const energy=reduced?.72:.65+show.architecture*.65;
-  panels.forEach((panel,i)=>{
-   const breathe=.5+.5*Math.sin(turn+i*.9);
-   // Overlapping soft tints fade continuously; no phrase-boundary colour cut.
-   mapping.fillStyle(0x8ce5d7,(.055+.09*breathe)*energy).fillPoints(panel,true);
-   mapping.fillStyle(0xc2a1ee,(.055+.09*(1-breathe))*energy).fillPoints(panel,true);
-   for(let ring=0;ring<4;ring++){
-    const radius=.12+ring*.095+Math.sin(turn-ring*.6+i*.5)*.025;
-    const diamond=[[.5,.5-radius],[.5+radius,.5],[.5,.5+radius],[.5-radius,.5]].map(([u,v])=>point(panel,u,v));
-    surfaceLine(mapping,diamond,ring%2?0xa9f6e9:0xf6e2bc,(.4+.18*breathe)*energy,true,2);
-   }
-   // A slowly breathing rosette is mapped through each actual wall quadrilateral.
-   // Arches and balcony rails remain free of projection, preserving the facade.
-   const flower=[];
-   for(let step=0;step<=32;step++){
-    const angle=step/32*Math.PI*2,radius=.21+Math.sin(angle*4+turn*.5)*.055;
-    flower.push(point(panel,.5+Math.cos(angle)*radius,.5+Math.sin(angle)*radius));
-   }
-   surfaceLine(mapping,flower,0xe7c8ff,.52*energy,true,1.9);
-  });
+  panels.forEach((panel,i)=>drawMappedPanel(mapping,panel,turn,energy,i,'facade'));
   surfaceLine(mapping,roof,0xc8e7ff,(.38+.22*(.5+.5*Math.sin(turn)))*energy,false,2.3);
  }};
 }
@@ -376,10 +358,17 @@ function grove(scene){
  scene.add.image(0,0,GROVE_ART_KEY).setOrigin(0).setDisplaySize(W,H);
  const projection=scene.add.graphics().setDepth(.12);
  // These outlines follow the illustrated timber inlays, in 1536 x 1024 art
- // coordinates. A slow eight-beat breath keeps the wood legible without flashes.
+ // coordinates. Moving colour belongs to the carving, with its texture visible.
  const diamond=(x,y,rx,ry)=>[{x,y:y-ry},{x:x+rx,y},{x,y:y+ry},{x:x-rx,y}].map(p=>({x:p.x*W/1536,y:p.y*H/1024}));
  const panels=[[261,327,20,30],[464,294,20,28],[1075,294,20,28],[1276,327,20,30]].map(p=>diamond(...p));
  const booth=[20,38,57].map(rx=>diamond(768,377,rx,rx*.66));
+ const timberPanels=[
+  [[439,188],[491,188],[491,410],[439,410]],
+  [[1045,188],[1100,188],[1100,410],[1045,410]],
+  [[241,243],[284,243],[284,410],[241,410]],
+  [[1252,243],[1294,243],[1294,410],[1252,410]],
+  [[617,347],[920,347],[920,410],[617,410]],
+ ].map(points=>points.map(artPoint));
  // The suspended mandala stays physically still. Light walks across its radial
  // segments, measured within the shallow canopy band of the illustration.
  const canopyPetals=Array.from({length:12},(_,i)=>{
@@ -393,12 +382,8 @@ function grove(scene){
   projection.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/8*Math.PI*2;
   const energy=reduced?.72:.65+show.architecture*.65;
-  canopyPetals.forEach((points,i)=>{
-   const glow=.5+.5*Math.sin(turn*.5-i*Math.PI/6),colour=i%2?0x9be2d7:0xdfb2ff;
-   projection.fillStyle(colour,(.035+.09*glow)*energy).fillPoints(points,true);
-   surfaceLine(projection,points,colour,(.3+.3*glow)*energy,true,2);
-  });
-  canopyDiamonds.forEach((points,i)=>surfaceLine(projection,points,0xe9b9ff,(.4+.18*Math.sin(turn*.5+i))*energy,true,2));
+  drawCanopyMapping(projection,{petals:canopyPetals,diamonds:canopyDiamonds},turn,energy);
+  timberPanels.forEach((panel,i)=>drawMappedPanel(projection,panel,turn,energy,i,'timber'));
   panels.forEach((points,i)=>{
    const glow=(.42+.18*Math.sin(turn+i*.5))*energy;
    surfaceLine(projection,points,0xe5abff,glow,true,2);

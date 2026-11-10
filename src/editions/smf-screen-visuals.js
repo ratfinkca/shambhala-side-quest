@@ -1,10 +1,40 @@
 // Original screen artwork. Normalized geometry keeps every petal and mirrored
 // fold inside the measured LED inset, without a mask or extra render texture.
 const TAU=Math.PI*2;
+const TUNNEL_COLOURS=[0x3ffff0,0xa85dff,0xd4ff58,0xff65ca];
+function drawTunnel(g,{x,y,w,h},turn,strength){
+ // Opaque near-black gaps make the LED bands read at phone scale. The
+ // geometry expands continuously from the centre; its outer edge fades
+ // before recycling, so no full-wall flash occurs at the loop boundary.
+ g.fillStyle(0x080c24,.94).fillRect(x,y,w,h);
+ const phase=((turn*.21)%1+1)%1,rotation=Math.sin(turn*.27)*.24;
+ const point=(angle,r)=>({x:x+(.5+Math.cos(angle)*r)*w,y:y+(.5+Math.sin(angle)*r)*h});
+ const loop=(r,offset)=>Array.from({length:37},(_,i)=>{
+  const a=i/36*TAU,fold=.88+.12*Math.cos(a*6+Math.sin(turn*.7)*.85);
+  return point(a+rotation+offset,r*fold);
+ });
+ const rings=Array.from({length:6},(_,i)=>({i,u:(phase+i/6)%1})).sort((a,b)=>b.u-a.u);
+ for(const {i,u} of rings){
+  const r=.035+u*.435,edge=Math.min(1,u*8,(1-u)*12),offset=Math.sin(turn*.38+u*2)*.16;
+  const outer=loop(r,offset),inner=loop(Math.max(.012,r-.025-.012*u),offset),colour=TUNNEL_COLOURS[i%4];
+  g.fillStyle(colour,Math.min(.94,(.58+strength*.28)*edge)).fillPoints(outer,true);
+  g.fillStyle(0x080c24,.97).fillPoints(inner,true);
+  g.lineStyle(.8,colour,Math.min(.85,.5*strength*edge)).strokePoints(outer,true);
+ }
+ // Six shifting shards connect the expanding bands into a folded tunnel,
+ // leaving the dark negative space between the saturated fields intact.
+ for(let sector=0;sector<6;sector++){
+  const a=sector/6*TAU+rotation,bend=Math.sin(turn*.55+sector*.8)*.11;
+  const points=[point(a,.065),point(a+bend,.25),point(a+.06,.455),point(a-.015,.25)];
+  g.fillStyle(TUNNEL_COLOURS[sector%4],Math.min(.42,.22*strength)).fillPoints(points,true);
+ }
+}
+
 export function drawSMFScreen(g,panel,turn,energy,style='liquid'){
  const {x,y}=panel,w=panel.w??panel.width,h=panel.h??panel.height;
  const tunnel=style==='tunnel',colours=tunnel?[0x79ffe5,0xca96ff,0xd8ff8b,0x8bdfff]:[0xffcd93,0x9fe8d0,0xe9afe4,0xffe1ad];
  const strength=Math.min(1.3,Math.max(0,energy));
+ if(tunnel&&h>=14){drawTunnel(g,{x,y,w,h},turn,strength);return;}
  g.fillStyle(tunnel?0x101c38:0x1c2631,.24).fillRect(x,y,w,h);
  const centre={x:.5+Math.sin(turn*.5)*.018,y:.5+Math.cos(turn*.4)*.018};
  const point=(angle,r)=>({x:x+(centre.x+Math.cos(angle)*r)*w,y:y+(centre.y+Math.sin(angle)*r)*h});

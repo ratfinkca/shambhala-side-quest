@@ -8,6 +8,7 @@ import {updateBassButton} from './bass-view.js';
 import {venuePracticeRequested} from './editions/registry.js';
 const venueMode=venuePracticeRequested(import.meta.env,window.location.search);
 const venueOptions=venueMode?(await import('./venue-practice.js')).venuePracticeConfig():null;
+const trackAuditionModule=venueMode?await import('./editions/smf-track-audition.js'):null;
 const choices=venueOptions?.choices??CLOCK_CHOICES,initialId=venueOptions?.initialId??CLOCK_CHOICES[1].id,initialStage=venueOptions?.resolveStage(initialId);
 
 const root=document.querySelector('.shell');root.classList.add('clock-lab');if(venueMode)root.classList.add('venue-lab');
@@ -18,7 +19,8 @@ root.innerHTML=`<header><div><span class="clock-eyebrow">SMF ${venueMode?'venue'
 <div class="clock-track"><div id="clock-progress"></div></div><div class="clock-status"><strong id="clock-phase" role="status">Ready to practice</strong>${venueMode?`<span id="clock-goal">Sparks 0 / ${initialStage.target}</span>`:''}<span id="clock-elapsed">0.000s active</span></div>
 <div class="clock-arena"><div id="game" tabindex="0" role="application" aria-label="Clock practice. Click or tap a destination, or use arrows or WASD. Escape pauses."></div><button id="bass-head" class="bass-control" hidden disabled aria-label="Bass Head"><span class="bass-control-icon" aria-hidden="true">ϟ</span><span class="bass-control-name" aria-hidden="true">Bass Head</span><span class="bass-control-detail" aria-hidden="true">0%</span></button><div id="clock-pause-note">Start fresh to try the clock.<br>Nothing here affects your real game.</div></div></section>
 <p class="clock-note">Click/tap a destination or use WASD/arrows. Collect sparks and pass the dancers. B activates Bass Head when charged. Escape pauses. ${venueMode?'Changing venues':'Changing clocks'} starts fresh; hidden tabs pause. Reduced motion follows your device setting. This preview never saves scores, XP or playtest data.${venueMode?' Original venue art and music sketches · final detail and balance still to come.':''}</p>`;
-const $=id=>root.querySelector(id),audio=createAudio(undefined,{timedVoices:venueOptions?.timedVoices??diagnosticVoices,useTransport:true,createMusicRenderer:venueOptions?.createMusicRenderer});
+const $=id=>root.querySelector(id),baseAudio=createAudio(undefined,{timedVoices:venueOptions?.timedVoices??diagnosticVoices,useTransport:true,createMusicRenderer:venueOptions?.createMusicRenderer});
+const trackAudition=trackAuditionModule?.createTrackAudition(baseAudio),audio=trackAudition?.audio??baseAudio;
 let soundOn=true,currentScene=null,disposed=false;
 function controls(){
  const playing=lab.state==='playing',paused=lab.state==='paused',ended=lab.state==='ended';
@@ -50,21 +52,22 @@ const enginePool=createPracticeEngine(()=>{
  game.events.on('round:update',round=>{if(!destroyed)update(round)});
  game.events.on('round:pickup',()=>audio.pickup(scene.round.multiplier));game.events.on('round:closepass',()=>audio.closePass());
  game.events.on('round:end',()=>{if(destroyed)return;audio.stop();lab.finish();controls();});
- return {start(value){config=value;playing=true;if(scene)scene.startRound(value);},pause(){playing=false;scene?.pauseRound();audio.stop();},resume(){playing=true;scene?.resumeRound();audio.setEnabled(soundOn);},destroy(){destroyed=true;audio.stop();if(currentScene===scene)currentScene=null;if(scene)game.destroy(true);}};
+ return {start(value){config=value;playing=true;if(scene)scene.startRound(value);},pause(){playing=false;scene?.pauseRound();audio.stop();},resume(){playing=true;scene?.resumeRound();audio.setEnabled(soundOn);trackAudition?.playFromGesture(scene?.round);},destroy(){destroyed=true;audio.stop();if(currentScene===scene)currentScene=null;if(scene)game.destroy(true);}};
 });
 const lab=createClockPractice({createSession:enginePool.createSession,...venueOptions});
-function start(){audio.stop();audio.setEnabled(soundOn);lab.start();controls();}
+function start(){root.querySelector('.sound-check audio')?.pause();audio.stop();audio.setEnabled(soundOn);lab.start();controls();trackAudition?.playFromGesture(currentScene?.round);}
 function pause(){if(lab.state==='paused')lab.resume();else lab.pause();controls();if(currentScene)update(currentScene.round);}
 $('#clock-start').addEventListener('click',start);
 $('#clock-pause').addEventListener('click',pause);
-$('#clock-lab-select').addEventListener('change',e=>{audio.stop();audio.setEnabled(soundOn);lab.select(e.target.value);controls();});
-$('#clock-sound').addEventListener('click',()=>{soundOn=!soundOn;audio.setEnabled(soundOn);$('#clock-sound').textContent=soundOn?'Sound on':'Sound off';$('#clock-sound').setAttribute('aria-pressed',String(soundOn));});
+$('#clock-lab-select').addEventListener('change',e=>{audio.stop();audio.setEnabled(soundOn);lab.select(e.target.value);controls();trackAudition?.playFromGesture(currentScene?.round);});
+$('#clock-sound').addEventListener('click',()=>{soundOn=!soundOn;audio.setEnabled(soundOn);if(soundOn&&lab.state==='playing')trackAudition?.playFromGesture(currentScene?.round);$('#clock-sound').textContent=soundOn?'Sound on':'Sound off';$('#clock-sound').setAttribute('aria-pressed',String(soundOn));});
 $('#bass-head').addEventListener('click',()=>{currentScene?.activateBassHead();if(currentScene)update(currentScene.round);});
 function keydown(e){if(e.target.matches('select,input,textarea'))return;if(e.code==='Escape'&&!e.repeat&&['playing','paused'].includes(lab.state)){e.preventDefault();pause();}if(e.code==='KeyB'&&lab.state==='playing'&&!e.repeat){e.preventDefault();currentScene?.activateBassHead();}}
 function hidden(){if(document.hidden){lab.pause();audio.stop();controls();if(currentScene)update(currentScene.round);}}
 document.addEventListener('keydown',keydown);document.addEventListener('visibilitychange',hidden);
 const disposeSoundCheck=venueOptions?.mountSoundCheck(root,{getStage:()=>lab.stage,pause(){lab.pause();controls();if(currentScene)update(currentScene.round);}});
-function cleanup(){if(disposed)return;disposed=true;disposeSoundCheck?.();lab.destroy();enginePool.destroy();audio.stop();document.removeEventListener('keydown',keydown);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',pagehide);root.classList.remove('clock-lab','venue-lab');}
+const disposeTrackAudition=trackAuditionModule?.mountTrackAudition(root,{audition:trackAudition,start,pause(){root.querySelector('.sound-check audio')?.pause();lab.pause();controls();if(currentScene)update(currentScene.round);}});
+function cleanup(){if(disposed)return;disposed=true;disposeSoundCheck?.();disposeTrackAudition?.();lab.destroy();enginePool.destroy();audio.stop();trackAudition?.dispose();document.removeEventListener('keydown',keydown);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',pagehide);root.classList.remove('clock-lab','venue-lab');}
 function pagehide(event){handlePracticePageHide(event,{pause(){lab.pause();audio.stop();controls();if(currentScene)update(currentScene.round);},dispose:cleanup});}
 window.addEventListener('pagehide',pagehide);
 if(import.meta.hot)import.meta.hot.dispose(cleanup);

@@ -17,11 +17,11 @@ test('tower lighting is confined to carved openings and leaves opaque timber in 
  for(let turn=0;turn<Math.PI*4;turn+=.17){
   const {fills,lines}=draw(panel,turn,1.2,3);
   assert.equal(fills[0].colour,0x80502b);assert.equal(fills[0].alpha,1);assert.deepEqual(fills[0].rect,panel);
-  assert.equal(fills[1].colour,0xb67a3e);assert.equal(fills[1].alpha,1);
+  assert.equal(fills[1].colour,0x88552c);assert.equal(fills[1].alpha,1);
   assert.equal(fills.filter(fill=>fill.rect).length,1,'LED colour never floods a rectangular screen');
   let opening;
   for(const fill of fills.slice(2)){
-   if(fill.colour===0x06191d)opening=fill.points;
+   if(fill.colour===0x030612)opening=fill.points;
    else for(const p of fill.points)assert.ok(pointInPolygon(p,opening),'coloured light stays inside the negative space');
   }
   for(const op of [...fills,...lines]){
@@ -36,7 +36,7 @@ test('wood and cutout shapes stay fixed while venue light moves deterministicall
  assert.deepEqual(draw(panel,0,.72,0),first);
  assert.notDeepEqual(later.fills,first.fills);
  assert.deepEqual(later.lines,first.lines,'carved wood is not a warped animated screen');
- assert.deepEqual(later.fills.filter(f=>f.colour===0x06191d),first.fills.filter(f=>f.colour===0x06191d));
+ assert.deepEqual(later.fills.filter(f=>f.colour===0x030612),first.fills.filter(f=>f.colour===0x030612));
  assert.notDeepEqual(draw(panel,0,.72,1).fills,first.fills,'neighbouring towers chase different colours');
 });
 test('panel rendering handles the measured short/tall sizes and bad optional inputs without invalid commands',()=>{

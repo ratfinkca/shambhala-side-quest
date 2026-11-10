@@ -12,7 +12,7 @@ test('kaleidoscope geometry remains inside narrow and wide measured LED panels',
    assert.ok(Number.isFinite(point.x)&&Number.isFinite(point.y));
    assert.ok(point.x>=p.x&&point.x<=p.x+w&&point.y>=p.y&&point.y<=p.y+h);
   }
-  assert.ok(calls.length<45,'bounded drawing work per screen');
+  assert.ok(calls.length<65,'bounded drawing work per screen');
  }
 });
 test('screen patterns are deterministic, distinct and respond to musical motion',()=>{
