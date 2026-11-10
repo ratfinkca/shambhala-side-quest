@@ -42,7 +42,7 @@ export class Crowd {
         body.lineStyle(1, color).lineBetween(13, -53, 13, -41).lineBetween(13, -46, 8, -42).lineBetween(13, -46, 18, -42);
       }
       node.add(body);
-      return { node, body, ring, smooth, smoothAt: -Infinity, smoothStrength: 0, encounter: createEncounter() };
+      return { id: `dancer-${index}`, node, body, ring, smooth, smoothAt: -Infinity, smoothStrength: 0, encounter: createEncounter() };
     });
     this.reset();
   }
@@ -67,7 +67,7 @@ export class Crowd {
 
   update(player, round, reducedMotion) {
     const elapsed = elapsedMs(round),timing=roundTiming(round);
-    this.people.forEach((person, index) => {
+    return this.people.map((person, index) => {
       const position = crowdPosition(index, elapsed, this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);
       person.node.setPosition(position.x, position.y);
       person.body.rotation = reducedMotion ? 0 : Math.sin(elapsed * .005 + index) * .14;
@@ -95,6 +95,8 @@ export class Crowd {
       const progress = Math.min(1, Math.max(0, (elapsed - person.smoothAt) / 650));
       person.smooth.setAlpha((.3 + person.smoothStrength * .5) * (1 - progress));
       person.smooth.setScale(reducedMotion ? 1 : 1 + progress * .14);
+      // Report physical contact even when a shield or sound cooldown suppresses feedback.
+      return { id: person.id, ...encounter, active: person.encounter.active };
     });
   }
 }

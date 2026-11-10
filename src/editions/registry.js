@@ -24,8 +24,13 @@ export function venuePracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.has('venues');
 }
-export async function startEdition(env,actions,{clockPractice=false,venuePractice=false}={}){
+export function backstagePracticeRequested(env,search){
+ const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
+ return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.get('backstage')==='amp';
+}
+export async function startEdition(env,actions,{clockPractice=false,venuePractice=false,backstagePractice=false}={}){
  const edition=getEdition(editionIdFromEnv(env));
+ if(env.DEV===true&&edition.id==='smf'&&backstagePractice&&actions.backstage)return actions.backstage(edition);
  if(env.DEV===true&&edition.id==='smf'&&venuePractice&&actions.venues)return actions.venues(edition);
  if(env.DEV===true&&edition.id==='smf'&&clockPractice&&actions.clock)return actions.clock(edition);
  return edition.playable?actions.game(edition):actions.scaffold(edition);

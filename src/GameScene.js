@@ -172,7 +172,8 @@ export class GameScene extends Phaser.Scene {
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
     if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
     animateAvatar(this.avatar,elapsedMs(this.round),this.reducedMotion,cycle.phase==='drop');
-    this.crowd.update(this.dancer, this.round, this.reducedMotion);
+    const encounters=this.crowd.update(this.dancer, this.round, this.reducedMotion);
+    this.onCrowdEncounters?.(encounters);
     const mystery=this.round.mystery;
     if(mystery.phase==='available'&&!this.mysteryView.placed){
       const avoid=[{x:this.dancer.x,y:this.dancer.y,radius:100},...this.sparks.map(s=>({x:s.x,y:s.y,radius:45})),...this.stage.flowSpawns.map(p=>({...p,radius:50})),...this.crowd.people.map(p=>({x:p.node.x,y:p.node.y,radius:38}))];

@@ -1,6 +1,6 @@
 # SMF secret and backstage direction
 
-Date: 2026-11-10. Status: owner-selected content direction with implementation details identified below as proposals. This updates the venue/reward scope of the [edition split](2026-11-06-edition-split-design.md) and [route rules](2026-11-06-smf-route-rules-design.md); it does not change game code, production assets or scored rules. The current catalogue still has nine entries and playable rehearsal still has only the six main venues.
+Date: 2026-11-10. Status: owner-selected content direction, now including an implemented isolated AMP delivery preview; remaining details are identified below as proposals. This updates the venue/reward scope of the [edition split](2026-11-06-edition-split-design.md) and [route rules](2026-11-06-smf-route-rules-design.md). Production assets and scored rules remain unchanged. The catalogue still has nine entries and the six main rehearsals remain available; AMP backstage is a separate DEV-only rehearsal, not a discovered or persistent venue.
 
 ## Owner decisions
 
@@ -8,7 +8,7 @@ The intended content now comprises six main venues and five optional secret/back
 
 | Parent | Secret / backstage | Owner-selected DJ identity | Activity direction |
 |---|---|---|---|
-| Living Room | Rabbit Hole | Hoola b2b Lioness | Previously welcomed lost-and-found party / trinket trails; first full bonus preview |
+| Living Room | Rabbit Hole | Hoola b2b Lioness | Previously welcomed lost-and-found party / trinket trails |
 | Grove | Secret Garden | Footprints | Previously welcomed seed collection / garden bloom celebration |
 | Pagoda | Ikigai Mori | Soup | Previously welcomed intimate crew afterparty / smooth-pass party meter |
 | Village | Villagio | Subvert | Small putt-putt-themed dance area with a couple of holes and a twisty tube slide full of squawking chickens; a putting mini-game to earn its cosmetic is a likely later addition |
@@ -34,6 +34,10 @@ For the first art/space preview, no putting challenge or reward can be represent
 
 ### AMP backstage
 
+**Implemented isolated preview (2026-11-10):** the latest owner approval prioritized AMP ahead of the previous Rabbit Hole-first sequence. Open [AMP backstage rehearsal](http://127.0.0.1:5191/?rehearsal&backstage=amp) from the DEV SMF build or its venue-rehearsal link. The current challenge requires three deliveries within the existing 32-bar, 54.857-second AMP clock. Sunny has a sun crown, Orbit headphones and a diamond, and Violet a star hat; matching portraits and badges show the next recipient. These are first-preview targets and pacing, still subject to playtesting. The soundtrack is original AMP synthesis; S2 is the planned DJ identity, not a supplied or cleared recording.
+
+Desktop play verified cart pickup, the three correct handoffs, temporary grilled-cheese/totem reward display, wrong recipient, retained progress after a bump, replacements, reset, pause freezing and arrow movement without page scrolling. Final checks passed 430 tests, the production build and dual-edition isolation. Phone-size (390×844) pickup/layout, unfinished-visit timeout without a prize, mute/effects controls and venue navigation were checked without browser errors. Physical-device playtesting and listening remain open. There are no profile/recovery writes, saved rewards, XP, telemetry or online requests; reload starts fresh. Full discovery, parent return/recovery and persistent unlocks remain unimplemented. The production catalogue and six main rehearsals are unchanged, with nothing published. See the [implementation plan](../plans/2026-11-10-amp-backstage-delivery.md) and [current handoff](../../PROJECT-HANDOFF.md#amp-backstage-delivery-preview).
+
 **Owner-selected delivery loop:** get one sandwich from the vendor, navigate to the correct recipient, then smooth-pass them to hand it over. Recipients need distinct sprites/identities; any dancer cannot count as a valid delivery. The player must avoid both bumps and accidental smooth passes around other dancers while carrying.
 
 | Event | Sandwich in hand | Delivery progress | Feedback |
@@ -46,13 +50,13 @@ For the first art/space preview, no putting challenge or reward can be represent
 
 Already-completed deliveries are banked for that visit. A wrong recipient or bump costs only the current sandwich, never all progress. There is no handoff just for walking into a recipient or tapping their portrait. A replacement must come from the vendor; a ground-drop visual is not an additional collectible.
 
-**Builder recommendations for the preview:** start with three successful deliveries, retaining progress after mistakes. Keep the same outstanding recipient after losing a sandwich, so the player can return for a replacement rather than reroll the order. Choose the next recipient only after a correct delivery. Exact delivery count, repeat-recipient policy, recipient movement and challenge duration remain playtest choices, not owner-selected values.
+**Implemented preview choices:** three successful deliveries, retaining progress after mistakes. The same outstanding recipient remains after losing a sandwich, so the player returns for a replacement rather than rerolling the order. The next recipient is chosen only after a correct delivery. Exact delivery count, repeat-recipient policy, recipient movement and challenge duration remain playtest choices rather than frozen release rules.
 
 **Readable target art:** use a small set of recognizable hungry-recipient sprites with different silhouettes/accessories. Match the current recipient's portrait and a shape/icon on the vendor's order cue and the recipient's overhead badge; do not rely on colour alone. Keep ordinary dancers visually distinct from order targets. A visible sandwich on the player makes carrying versus empty-handed clear. Use `Delivered 0 / 3` for the suggested counter, not the superseded generic `Smooth passes` count. Keep the arena free of persistent text labels and give targets enough surrounding space to complete a clean pass at phone size.
 
 Use the familiar clean-pass distance feedback rather than introducing an unexplained tighter ring. Delivery classification needs a stable actual dancer identity; today's `round:closepass` does not include that ID. One sandwich can resolve only once, even if multiple encounter events occur close together. Track actual contact rather than only today's `round:bump` notification, which is throttled and can be suppressed by shields. A physical bump must not become a successful delivery because a perk suppressed its usual penalty; normal perk effects remain unchanged outside the held item. Collision versus handoff ordering and encounters already in progress at pickup need explicit tests before implementation acceptance. Save relevant encounter state with the order to prevent reloading from replaying a pass.
 
-At the delivery goal the vendor awards the player's own grilled cheese and the cheese totem. The carried sandwich exists only inside this activity; neither it nor the final meal grants a main-run stat boost, extra XP or transferable inventory. Preserve the outstanding order, held/empty state, completed-delivery count and prize receipt through pause/recovery, so reload neither replenishes a lost sandwich nor repeats a delivery/prize. Exact cheese-totem artwork and final reward presentation remain to be reviewed.
+At the delivery goal the vendor awards the player's own grilled cheese and the cheese totem. The carried sandwich exists only inside this activity; neither it nor the final meal grants a main-run stat boost, extra XP or transferable inventory. For the later integrated visit, preserve the outstanding order, held/empty state, completed-delivery count and prize receipt through pause/recovery, so reload neither replenishes a lost sandwich nor repeats a delivery/prize. The current disposable preview freezes during pause but resets on reload. Exact cheese-totem artwork and final reward presentation remain to be reviewed.
 
 ## Reward and fairness boundaries
 
@@ -66,8 +70,8 @@ The existing parent-clear invitation/revisit flow remains the default for all fi
 
 ## Delivery sequence and open details
 
-1. Prepare reference-led concepts for the original three; build Rabbit Hole's first disposable art/activity/reward preview, then Secret Garden and Ikigai Mori. Names remain concealed in normal player-facing catalogues until actual discovery is wired.
-2. Add the two new backstage spaces with their owner-selected DJ identities. Villagio's initial slice is its small themed area; AMP's slice includes vendor pickup, recognizable recipients, sandwich handoffs/losses and delivery reward interaction.
+1. Complete acceptance of the implemented AMP delivery preview, which the latest owner approval moved ahead of the earlier Rabbit Hole-first proposal. Check phone readability and pacing before freezing its target count or duration.
+2. Continue reference-led concepts and disposable previews for Rabbit Hole, Secret Garden and Ikigai Mori, then Villagio's small themed area with its owner-selected DJ identity. Names remain concealed in normal player-facing catalogues until actual discovery is wired.
 3. Settle and build Villagio's putting mini-game as its own small follow-up. Its control scheme and reward condition remain open, not prerequisites to the first art preview.
 4. Integrate all five with the six-main run, discovery, rewards, return/recovery and final-stage results. An isolated rehearsal is not evidence that this full journey works.
 
