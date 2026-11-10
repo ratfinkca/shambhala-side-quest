@@ -66,13 +66,14 @@ export function createAudio(contextFactory = () => new (window.AudioContext || w
 
   return {
     setVolumes(value) { for (const key of ['music', 'effects']) if (Number.isFinite(value[key])) volumes[key] = Math.max(0, Math.min(1, value[key])); applyVolumes(); },
-    setEnabled(value) {
+    async setEnabled(value) {
       enabled = value;
-      if (!value) { stop(); return; }
+      if (!value) { stop(); return false; }
       try {
         if (!context) { context = contextFactory(); musicBus = context.createGain(); effectsBus = context.createGain(); musicBus.connect(context.destination); effectsBus.connect(context.destination); applyVolumes(); musicRenderer=createMusicRenderer?.(context,musicBus); }
-        context.resume().catch(() => {});
-      } catch {}
+        await context.resume();
+        return !!enabled && context.state === 'running';
+      } catch { return false; }
     },
     // Active game time drives the groove; no independent timer survives pause.
     sync(round,stageId) {

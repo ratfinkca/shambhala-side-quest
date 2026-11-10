@@ -1,6 +1,6 @@
 # Side Quest — current project handoff
 
-Updated 2026-11-09. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
+Updated 2026-11-10. This document is the current starting point. [Roadmap](ROADMAP.md) owns priorities; [operations](online-operations.md) owns deployment/reporting. [Historical snapshots](history/) retain earlier observations without defining today's backlog.
 
 ## Current release and prior baseline
 
@@ -69,6 +69,8 @@ The [lasers and separated dancefloor pass](superpowers/plans/2026-11-09-smf-lase
 
 The next [projection/recording preview](superpowers/plans/2026-11-09-smf-mapping-recording-preview.md) responds to the owner's requests for more life: Grove has brighter moving canopy petals and mapped timber columns/booth, AMP has saturated expanding sixfold screen bands, Pagoda has higher-contrast animated facade projections, and Village has larger CNC openings with brighter light behind the wood. A DEV-only **Try a local track** panel can replace synthesized rehearsal music while preserving game effects and pause/restart/mute controls. Files are device-local object URLs only; no upload, storage or bundled recording. The owner supplied the artist-download Hellhound (Woofax & Bryx Remix) WAV. Verified duration4:14.455; waveform analysis suggests174 BPM/87 half-time. The local audition starts132.4s; canonical Village timing remains172 BPM, so recording-to-show synchronization is still future work. 388 tests, build, dual-edition checks and independent review pass; actual WAV playback/control flow and four venues at phone/desktop widths inspected. Physical-device listening/performance and owner acceptance remain open. Nothing published; the next music task is an authored cue sheet if this recording direction is accepted.
 
+
+The 2026-11-10 [rehearsal mixer](superpowers/rehearsal-audio-mix-validation.md) addresses quiet effects beneath mastered recordings: independent Music / Effects sliders, Reset mix and real pickup/near-miss test sounds, starting at 20% / 100% in disposable practice only. Audio readiness is awaitable; pending tests cancel on mute/pause/restart/hiding/disposal. Music also synchronizes with the comparison player's native volume control. 397 tests, default/dual-edition builds and independent review pass; actual WAV controls and phone/desktop layout were checked without console errors. Physical listening acceptance remains with the owner. [Streaming research](research/music-service-options-2026-11-10.md) recommends artist-cleared SMF track packs plus authored timing cues; SoundCloud login alone does not provide game-use rights. No integration or soundtrack distribution is implemented.
 
 ## Architecture
 

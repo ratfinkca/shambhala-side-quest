@@ -18,7 +18,31 @@ test('audio remains lazy and routes music and effects through separate adjustabl
 });
 test('failed resume is caught and the next sound gesture retries',async()=>{
  const f=fake();let tries=0;f.ctx.resume=()=>{tries++;return Promise.reject(Error('blocked'))};
- const a=createAudio(()=>f.ctx);a.setEnabled(true);await Promise.resolve();a.setEnabled(true);await Promise.resolve();assert.equal(tries,2);
+ const a=createAudio(()=>f.ctx);assert.equal(await a.setEnabled(true),false);assert.equal(await a.setEnabled(true),false);assert.equal(tries,2);
+});
+
+test('first effects can wait for a suspended context to become ready',async()=>{
+ const f=fake();f.ctx.state='suspended';let resume,created=0;
+ f.ctx.resume=()=>new Promise(resolve=>{resume=()=>{f.ctx.state='running';resolve();};});
+ const a=createAudio(()=>{created++;return f.ctx;}),ready=a.setEnabled(true);
+ assert.ok(ready instanceof Promise);assert.equal(created,1,'context creation stays inside the sound gesture');
+ a.pickup(1);assert.equal(f.voices.length,0);
+ resume();assert.equal(await ready,true);a.pickup(1);assert.equal(f.voices.length,1);
+});
+
+test('mute prevents a pending audio unlock from reporting readiness or playing feedback',async()=>{
+ const f=fake();f.ctx.state='suspended';let resume;
+ f.ctx.resume=()=>new Promise(resolve=>{resume=()=>{f.ctx.state='running';resolve();};});
+ const a=createAudio(()=>f.ctx),ready=a.setEnabled(true);
+ assert.equal(await a.setEnabled(false),false);
+ resume();assert.equal(await ready,false);a.pickup(1);assert.equal(f.voices.length,0);
+});
+
+test('audio readiness stays false when resume leaves the context suspended or initialization fails',async()=>{
+ const f=fake();f.ctx.state='suspended';const a=createAudio(()=>f.ctx);
+ assert.equal(await a.setEnabled(true),false);a.pickup(1);assert.equal(f.voices.length,0);
+ const unavailable=createAudio(()=>{throw new Error('Audio unavailable');});
+ assert.equal(await unavailable.setEnabled(true),false);
 });
 
 test('forest percussion is deduplicated per step and all music stops on pause or mute',()=>{

@@ -16,14 +16,25 @@ class Player extends Node{
  pause(){this.pauses++;this.paused=true;this.emit('pause');}
  load(){this.loads++;}
 }
-function fixture(){
+function fixture(enable=value=>Promise.resolve(!!value)){
  const players=[],revoked=[],calls={sync:0,stop:0,effects:0,enabled:[]};
- const base={sync(){calls.sync++;},stop(){calls.stop++;},setEnabled(value){calls.enabled.push(value);},setVolumes(){},pickup(){calls.effects++;},closePass(){calls.effects++;}};
+ const base={sync(){calls.sync++;},stop(){calls.stop++;},setEnabled(value){calls.enabled.push(value);return enable(value);},setVolumes(){},pickup(){calls.effects++;},closePass(){calls.effects++;}};
  const audition=createTrackAudition(base,{createPlayer(){const p=new Player();players.push(p);return p;},createURL:file=>`blob:${file.name}`,revokeURL:url=>revoked.push(url)});
  const load=(name='song.wav')=>{audition.loadFile({name,size:100});const player=players.at(-1);player.emit('loadedmetadata');return player;};
  return{audition,audio:audition.audio,calls,players,revoked,load};
 }
 const round=elapsed=>({timingId:'smf-village-clock-preview-1',remainingMs:66977-elapsed,multiplier:1,flowMs:0});
+
+test('track controls remain synchronous while callers await effects audio readiness',async()=>{
+ let resolve;const pending=new Promise(done=>{resolve=done;});
+ const f=fixture(value=>value?pending:Promise.resolve(false)),p=f.load();f.audition.useTrack();
+ const ready=f.audio.setEnabled(true);assert.ok(ready instanceof Promise);
+ f.audition.playFromGesture(round(0));assert.equal(p.paused,false,'recording starts in its original control gesture');
+ resolve(true);assert.equal(await ready,true);
+ const muted=f.audio.setEnabled(false);assert.equal(p.paused,true,'mute does not wait for effects readiness');
+ assert.equal(await muted,false);
+ f.audition.dispose();
+});
 
 test('local recording replaces music only and stays at normal speed on the canonical game clock',async()=>{
  const f=fixture();f.audio.setEnabled(true);f.audio.sync(round(0),'clock-lab');assert.equal(f.calls.sync,1);

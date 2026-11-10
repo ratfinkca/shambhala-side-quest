@@ -32,7 +32,7 @@ export function createTrackAudition(base,{createPlayer=()=>new Audio(),createURL
   }
  }
  const audio={...base,
-  setEnabled(value){enabled=!!value;base.setEnabled(value);if(!enabled)pauseTrack();else{blocked=false;if(error.startsWith('Playback was blocked.')){error='';notify();}}},
+  setEnabled(value){enabled=!!value;const ready=base.setEnabled(value);if(!enabled)pauseTrack();else{blocked=false;if(error.startsWith('Playback was blocked.')){error='';notify();}}return ready;},
   setVolumes(value){base.setVolumes(value);if(Number.isFinite(value.music)){musicVolume=Math.max(0,Math.min(1,value.music));if(player)player.volume=musicVolume;}},
   stop(){base.stop();pauseTrack();},
   sync(round,stageId){
