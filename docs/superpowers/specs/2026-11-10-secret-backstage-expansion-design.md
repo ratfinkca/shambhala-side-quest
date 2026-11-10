@@ -11,7 +11,7 @@ The intended content now comprises six main venues and five optional secret/back
 | Living Room | Rabbit Hole | Hoola b2b Lioness | Previously welcomed lost-and-found party / trinket trails |
 | Grove | Secret Garden | Footprints | Previously welcomed seed collection / garden bloom celebration |
 | Pagoda | Ikigai Mori | Soup | Previously welcomed intimate crew afterparty / smooth-pass party meter |
-| Village | Villagio | Subvert | Small putt-putt-themed dance area with a couple of holes and a twisty tube slide full of squawking chickens; a putting mini-game to earn its cosmetic is a likely later addition |
+| Village | Villagio | Subvert | Small putt-putt-themed dance area with a couple of holes and a twisty tube slide full of squawking chickens; two-hole putting now earns a temporary Golden Chicken Totem in rehearsal |
 | AMP | Backstage vendor; final venue name undecided | S2 | Pick up a sandwich from the vendor and deliver it by smooth-passing its designated recipient. Wrong passes give it away without progress; bumps drop only the held sandwich. Successful deliveries earn your own grilled cheese and cheese totem. |
 
 The DJ identities above are the owner's project direction. Their inclusion does not assert any specific recording, artwork or performer permission has been obtained. “The Melt” was a builder-suggested working name for AMP backstage, not an owner-selected name.
@@ -21,7 +21,7 @@ The owner also selected main soundtrack artist targets: KR3TURE / Living Room, T
 ## Approaches and current choices
 
 - **Original three secrets:** the owner welcomed distinct small bonus parties with cosmetic rewards. Carry the earlier trinket / bloom / party-meter concepts into their design previews. Exact objectives, thresholds and reward artwork are still builder proposals to review in play.
-- **Villagio:** a full golf game immediately versus a small themed dance space first. The owner's clarification selects the small space first, with a couple of holes; preserve room to add a simple cosmetic-winning putting activity later. Do not make golf physics, three holes, stroke limits or a particular aiming control an already-approved requirement. The earlier three-hole proposal is superseded.
+- **Villagio:** a full golf game immediately versus a small themed dance space first. The owner's clarification selects the small space first, with a couple of holes; preserve room to add a simple cosmetic-winning putting activity later. The later mini-game request authorizes a first preview; its pull-back controls and eight-shot allowance are builder-selected playtest choices, not permanent release rules. The earlier three-hole proposal is superseded.
 - **AMP backstage, latest owner refinement:** combine delivery with precision smooth passes. This supersedes both the generic sandwich-delivery suggestion and the subsequent untargeted pass-count challenge. The vendor supplies one sandwich for a specific, visibly recognizable recipient. Correct smooth pass delivers it; a wrong smooth pass gives it to the wrong dancer, who is happy but contributes no challenge progress; any bump drops the held sandwich. Neither mistake resets completed deliveries. Reuse familiar movement; cooking, multiple simultaneous orders and service-pressure queues are not part of this direction.
 
 ## Preview behavior and remaining rules
@@ -36,9 +36,9 @@ The 6/3/5 activity targets and cosmetic sketches are first-preview choices. The 
 
 ### Villagio
 
-**Implemented space preview:** select Villagio or use `?rehearsal&bonus=villagio`. A replaceable illustrated miniature club surrounds two walkable putting greens and a glossy twisty tube, with native animated chickens, fountain glints and warm light chasers. This replaces the initial flat procedural art and matches the other illustrated bonus rooms. Visiting the two greens and slide exit completes an exploration checklist, with no cosmetic or putting-win claim. Original Subvert-labelled rehearsal synthesis is included; no Subvert recording is bundled. The owner's slide and golf theme are defining features; club facade, lights and exact motifs are creative proposals.
+**Implemented illustrated putting preview:** select Villagio or use `?rehearsal&bonus=villagio`. A replaceable illustrated miniature club surrounds two walkable putting greens and a glossy twisty tube, with native animated chickens, fountain glints and warm light chasers. This replaces the initial flat procedural art and matches the other illustrated bonus rooms. The original exploration checklist has been replaced with two sequential putting holes. Sink both within eight total shots to try the Golden Chicken Totem; merely entering or waiting never awards it. Original Subvert-labelled rehearsal synthesis is included; no Subvert recording is bundled. The owner's slide and golf theme are defining features; club facade, lights and exact motifs are creative proposals.
 
-Putting, a player slide ride and squawk sounds are not implemented. The next mini-game should remain short, approachable with mouse or touch and optional; controls, success criteria and cosmetic are still to be settled. A celebratory slide ride may supply the finale. Future chicken sounds must respect Effects volume and use brief cues; reduced motion needs a restrained slide/arrival alternative.
+Pull-back/release controls work anywhere on the canvas, with a close view of the active green and optional button/keyboard controls. The music loops without a countdown. A player slide ride and squawk sounds are not implemented. The preview is disposable: the totem is displayed for this visit only; permanent qualification and receipts will be integrated with the tour. See the [putting design](2026-11-10-villagio-putting-design.md). A celebratory slide ride may supply the finale. Future chicken sounds must respect Effects volume and use brief cues; reduced motion needs a restrained slide/arrival alternative.
 
 ### AMP backstage
 
@@ -79,9 +79,9 @@ The existing parent-clear invitation/revisit flow remains the default for all fi
 ## Delivery sequence and open details
 
 1. Review all five local previews with the owner, including phone readability, activity pacing, venue details and listening. AMP's costume-led delivery was accepted; the four subsequent previews are now available for review. Keep thresholds provisional and normal catalogue identities concealed.
-2. Settle and build Villagio's putting mini-game as the next small feature. Its control scheme, reward condition and timing remain open; add the slide/sound gag without making it obscure play.
+2. Playtest the implemented Villagio putting preview: two holes, eight shots, pull-back controls and a Golden Chicken Totem. Tune comfort and difficulty from feedback; a slide/sound finale remains later polish.
 3. Connect the six-main run and all five optional detours with discovery, rewards, return/recovery and final-stage results. Preserve the original-three souvenir baseline and separate AMP/Villagio activity prizes. An isolated rehearsal is not evidence that this full journey works.
 
-Open content details: final AMP backstage name; actual visual references for each small space; exact soundtrack selection/cues and permissions; final reward/recipient sprites; delivery target count and pacing; Villagio putting controls/qualification/timing. None require inventing a DJ identity: all five have now been supplied by the owner.
+Open content details: final AMP backstage name; actual visual references for each small space; exact soundtrack selection/cues and permissions; final reward/recipient sprites; delivery target count and pacing; Villagio putting balance and final permanent qualification. None require inventing a DJ identity: all five have now been supplied by the owner.
 
 No automatic publishing, artist outreach, account integration or production reward grants follow from this planning update.

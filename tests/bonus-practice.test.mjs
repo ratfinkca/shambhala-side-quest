@@ -56,19 +56,18 @@ test('Ikigai counts distinct real dancers and prioritizes any physical bump in a
  for(let i=1;i<5;i++)p.step({encounters:[pass(`dancer-${i}`)]});
  assert.equal(p.state.progress,5);assert.equal(p.status,'complete');
 });
-test('Villagio exploration gives no cosmetic or putting win',()=>{
+test('Villagio requires actual putting; visiting greens or waiting never earns its cosmetic',()=>{
  const {config:c,practice:p}=setup('villagio');
- for(const point of [...c.points].reverse()){
-  const e=p.step({player:point});assert.equal(e.reward,undefined);
-  assert.equal(p.step({player:point}),null);
- }
- assert.equal(p.status,'complete');assert.equal(p.state.progress,3);assert.equal(c.reward,null);
+ assert.equal(c.activity,'putt');assert.equal(c.goal,2);assert.equal(c.reward,'Golden Chicken Totem');
+ for(const player of [{x:220,y:355},{x:720,y:500},{x:800,y:285}])assert.equal(p.step({player}),null);
+ for(let i=0;i<100;i++)assert.equal(p.advance(1000),null);
+ assert.equal(p.status,'playing');assert.equal(p.state.progress,0);assert.equal(p.state.complete,false);
 });
 test('ready, pause, timeout and reset gate progress and clear temporary rewards',()=>{
  for(const c of BONUS_VENUES){
   const p=createBonusPractice(c),frame={player:c.points[0],encounters:[{id:'dancer-0',closePass:true}]};
   assert.equal(p.step(frame),null);p.start();p.pause();assert.equal(p.step(frame),null);
-  p.resume();assert.ok(p.step(frame));p.finish();assert.equal(p.status,'ended');assert.equal(p.step(frame),null);
+  p.resume();if(c.activity==='putt')assert.ok(p.shoot({x:.1,y:0}));else assert.ok(p.step(frame));p.finish();assert.equal(p.status,'ended');assert.equal(p.step(frame),null);
   p.start();assert.equal(p.state.progress,0);assert.equal(p.state.carrying,null);assert.equal(p.state.complete,false);
   assert.deepEqual(p.state.greetedIds,[]);assert.deepEqual(p.state.collectedIds,[]);
  }

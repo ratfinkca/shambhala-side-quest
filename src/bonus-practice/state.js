@@ -1,5 +1,7 @@
+import {createPuttingPractice} from './putting-state.js';
 // Activity state never touches a profile, service, score, clock or browser API.
 export function createBonusPractice(config){
+ if(config.activity==='putt')return createPuttingPractice();
  const fresh=()=>({progress:0,goal:config.goal,complete:false,collectedIds:[],visitedIds:[],greetedIds:[],carrying:null});
  let state=fresh(),status='ready';
  const near=(player,point)=>player&&point&&Number.isFinite(player.x)&&Number.isFinite(player.y)&&Math.hypot(player.x-point.x,player.y-point.y)<=point.radius;

@@ -66,3 +66,7 @@ Fresh checks after this correction:
 - Actual phone-size screenshot: `/Users/mother/.codex/visualizations/2026/10/13/01a1368f-7ce7-7722-a6bd-8509627b4e12/villagio-illustrated-phone.png`.
 
 This is browser viewport validation, not a physical-phone performance test. The earlier `villagio-complete-phone.png` records the superseded procedural art. This correction remains a local preview and was not published.
+
+## Superseded Villagio activity
+
+The space/art checks above describe the initial exploration preview. The subsequent [Villagio putting preview](villagio-putting-validation.md) replaces the three-location checklist with two cups, eight total shots and a temporary Golden Chicken Totem. It has no deadline; the other three activity clocks remain unchanged.

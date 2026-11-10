@@ -12,10 +12,9 @@ const configs=[
  {id:'ikigai-mori',name:'Ikigai Mori',parent:'Pagoda',dj:'Soup',activity:'greet',goal:5,
   reward:'Lantern totem',caption:'Good company. Small room. Big feeling.',
   instruction:'Smooth-pass five different dancers. Each clean pass lights a lantern.',points:[]},
- {id:'villagio',name:'Villagio',parent:'Village',dj:'Subvert',activity:'explore',goal:3,reward:null,
+ {id:'villagio',name:'Villagio',parent:'Village',dj:'Subvert',activity:'putt',goal:2,reward:'Golden Chicken Totem',
   caption:'The least serious country club in the forest.',
-  instruction:'Explore both putting greens and the chicken slide. Putting comes later.',
-  points:points([['green-1',220,355,'First green'],['green-2',720,500,'Second green'],['slide',800,285,'Chicken slide']])},
+  instruction:'Sink both holes in 8 shots to win the Golden Chicken Totem.',points:[]},
 ];
 export const BONUS_VENUES=configs.map(config=>{
  const timingId=`smf-${config.id}-bonus-preview-1`;
