@@ -27,7 +27,7 @@ test('SMF Festival starts with its own empty profile and leaves input objects un
  const profile=createTourProfile(),before=structuredClone(profile),p=createFestival(profile,'tour-one');
  assert.deepEqual(profile,before);assert.equal(profile.active,null);
  assert.equal(profile.progress.xp,0);assert.deepEqual(profile.discoveries,[]);assert.deepEqual(profile.rewards,[]);
- assert.deepEqual(p.active,{id:'tour-one',stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null});
+ assert.deepEqual(p.active,{id:'tour-one',mode:'festival',themeId:'forest-freakout',stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
  assert.deepEqual(p.outfit,{onesie:'lime',hat:'bucket',totem:'none',flair:'none'});
  assert.equal(createFestival(p,'replacement'),p);
  assert.equal(createFestival(profile,''),profile);
@@ -170,7 +170,7 @@ test('six venues follow the approved route and final Villagio returns to earned 
  assert.equal(p.active.cleared,6);assert.equal(choosePerk(p,'boots'),p);
  assert.equal(p.progress.totals.festivals,1);
  p=closeResults(p);assert.equal(p.active,null);
- assert.deepEqual(p.lastResult,{id:'tour-one',score:600,cleared:6,completed:true});
+ assert.deepEqual(p.lastResult,{id:'tour-one',mode:'festival',score:600,cleared:6,completed:true});
 });
 
 test('voluntary finish discards current live progress and pending invitations',()=>{

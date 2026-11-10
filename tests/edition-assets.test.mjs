@@ -4,7 +4,7 @@ import {assetsForEdition,editionAssetsPlugin} from '../build/edition-assets.js';
 import {renderBrand} from '../src/editions/brand-view.js';
 import {getEdition} from '../src/editions/registry.js';
 test('edition asset allowlists exclude embedded SMF titles and unused concept boards',async()=>{
- const generic=assetsForEdition('generic'),smf=assetsForEdition('smf');assert.equal(new Set(generic).size,generic.length);
+ const generic=assetsForEdition('generic'),smf=assetsForEdition('smf');assert.equal(new Set(generic).size,generic.length);assert.ok(smf.includes('smf-playtest-data.html'));assert.ok(!generic.includes('smf-playtest-data.html'));
  for(const id of ['forest-freakout','moonlit-mycelium','neon-field-trip']){
   assert.ok(!generic.includes(`themes/${id}/title.webp`));assert.ok(smf.includes(`themes/${id}/title.webp`));
   for(const asset of ['backdrop','boots','moth','noodle','bracelet'])assert.ok(generic.includes(`themes/${id}/${asset}.webp`));

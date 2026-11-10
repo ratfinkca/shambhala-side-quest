@@ -60,9 +60,9 @@ Next: validate the Bass Head button and feedback on physical phones, including t
 
 Acceptance: before/after measurements and actual playtests, specific improvements with denominators, no speculative difficulty changes. Keep scoring-version boundaries explicit.
 
-## Current direction — integrated local SMF Festival
+## Current direction — SMF parity and public test candidate
 
-The user requested a nearly fully polished SMF edition before pitching, with no fixed date. The [edition roadmap](EDITION-ROADMAP.md) owns that M0–M6 program. Its foundation, researched main venues, richer original music, lighting and bonus activities now feed a **playable local Festival tour** at [http://127.0.0.1:5191/](http://127.0.0.1:5191/). The generic public game remains separate and compatible. No SMF fork, backend rollout or public deployment is claimed.
+The user requested a nearly fully polished SMF edition before pitching, with no fixed date. The [edition roadmap](EDITION-ROADMAP.md) owns that M0–M6 program. Its foundation, researched main venues, richer original music, lighting and bonus activities now feed a **playable local tour with Festival, Quick Rush and Endless** at [http://127.0.0.1:5191/](http://127.0.0.1:5191/). The generic public game remains separate and compatible. The SMF backend is deployed and harmless live checks passed; no SMF frontend publication or separate repository is claimed.
 
 The route is Living Room → Fractal Forest → Grove → AMP → Pagoda → Village. Four distinct earned perks support adding, keeping and swapping. Anonymous invitations appear after 18 active seconds; collecting one and qualifying its parent discovers an optional bonus party. Discovery stays available when skipped, and Explore revisits are available outside a Festival. The eleven-entry map conceals secret names/art until discovery.
 
@@ -74,16 +74,16 @@ The route is Living Room → Fractal Forest → Grove → AMP → Pagoda → Vil
 | Pagoda | Ikigai Mori / Soup | Lantern Totem: complete the visit or its clean-pass activity early |
 | Village | Villagio / Subvert | Golden Chicken Totem: both putting cups within eight shots |
 
-Early exits earn no visit souvenir; waiting alone cannot win either challenge prize. Detours preserve main score, XP, charge and the pending perk decision. Final Villagio returns to already-earned Festival results. Atomic device-local saves preserve discoveries, ownership, the parked main run and the active child; reloading resumes paused, including held sandwiches and rolling putts. There is no SMF online posting or data collection connection.
+Early exits earn no visit souvenir; waiting alone cannot win either challenge prize. Detours preserve main score, XP, charge and the pending perk decision. Final Villagio returns to already-earned Festival results. Atomic device-local saves preserve discoveries, ownership, the parked main run and the active child; reloading resumes paused, including held sandwiches and rolling putts. The candidate implements separate SMF online score and opt-in playtest services; the backend is deployed and harmless live checks passed; the frontend is not yet published.
 
-**Current verification:** 516 automated tests and both edition build checks pass, including generic compatibility and exclusion of development tools. Integrated desktop/phone-size preview checks are complete. [Integration plan](superpowers/plans/2026-11-10-smf-tour-integration.md) · [validation](superpowers/smf-tour-validation.md). Older [four-room](superpowers/bonus-venue-preview-validation.md) and [putting](superpowers/villagio-putting-validation.md) evidence applies to isolated rehearsals, not full-tour acceptance.
+**Current verification:** 549 automated tests, both edition builds and the combined Pages build passed locally. Browser acceptance has covered key paths; [parity validation](superpowers/smf-feature-parity-validation.md) records observed Quick Rush, controls, settings, recovery and local-score checks and the remaining work. Earlier [tour](superpowers/smf-tour-validation.md), [four-room](superpowers/bonus-venue-preview-validation.md) and [putting](superpowers/villagio-putting-validation.md) records apply to their respective previews.
 
 **Next development sequence:**
 
-1. Owner playtesting on real phones: invitation clarity, tour pacing, delivery/putting difficulty, perk choices and interruption recovery. Integrated desktop/phone-size browser checks are complete.
-2. Polish transitions, instructions, cosmetic presentation and stage atmosphere from that feedback. Keep original synthesis and proper musical phrasing; recorded-track use needs its separate cue/permission work.
-3. Add the remaining SMF Endless journey and an explicit edition-specific score/validation contract with separate boards, tickets and reporting. Deploy needed backend changes before enabling frontend services.
-4. Complete the pitch checklist and agree a separate SMF release destination before publishing. No release is implied by local preview completion.
+1. Continue owner playtesting on real phones for pacing, activities and interruptions; this is follow-up for pitch quality, not a blocker for the public test.
+2. Backend deployment and harmless live verification passed before frontend publication; leave production test scores/events untouched.
+3. Recheck the final candidate, open the reviewed PR, confirm CI, merge, wait for Pages and smoke-check generic root and the approved `/smf/` test edition. Each is a separate status.
+4. Continue visual, audio and balance polish against the pitch checklist. A public test build is not pitch acceptance.
 
 The normal tour owns real local SMF progress. The DEV-only [tour lab](http://127.0.0.1:5191/?rehearsal&tour) has a separate profile for repeatable transition/recovery checks. Earlier main-venue, AMP and four-bonus rehearsals remain disposable. Villagio's illustrated two-hole putting game is implemented; a slide ride and chicken squawk finale remain later polish.
 

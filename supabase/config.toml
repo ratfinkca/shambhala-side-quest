@@ -27,3 +27,15 @@ verify_jwt = false
 verify_jwt = false
 [functions.leaderboard]
 verify_jwt = false
+
+[functions.smf-run-ticket]
+verify_jwt = false
+
+[functions.smf-submit-score]
+verify_jwt = false
+
+[functions.smf-leaderboard]
+verify_jwt = false
+
+[functions.smf-playtest]
+verify_jwt = false

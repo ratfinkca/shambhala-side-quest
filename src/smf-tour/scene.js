@@ -11,8 +11,8 @@ import * as ikigai from '../bonus-practice/views/ikigai-mori.js';
 import * as villagio from '../bonus-practice/views/villagio.js';
 import {elapsedMs,getTiming,phaseAt} from '../stage-clock.js';
 import {rulesFor} from '../run.js';
-import {BONUSES,ROUTE} from './model.js';
-import {mainStage,bonusConfig,bonusController,INVITATIONS} from './content.js';
+import {BONUSES,stageForRun} from './model.js';
+import {bonusConfig,bonusController,INVITATIONS} from './content.js';
 import {createSouvenirView} from './cosmetic-view.js';
 
 const bonusViews=[rabbit,garden,ikigai,villagio];
@@ -39,7 +39,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    this.failed=false;this.clearVisit();const p=profile(),a=p.active;if(!a)return;
    const b=a.bonus;
    this.config=b?bonusConfig(b.id):null;
-   const stage=b?this.config.stage:mainStage(ROUTE[a.stageIndex]);
+   const stage=b?this.config.stage:stageForRun(a);
    const options={stage,timingId:stage.timingId,rules:rulesFor(a.perks),outfit:p.outfit,bassChargeMs:b?0:a.bassChargeMs,runId:b?b.visitId:a.id};
    const snapshot=b?b.scene:a.scene;
    if(snapshot)this.restoreRecovery(snapshot,options);else super.startRound(options);
@@ -83,7 +83,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
     this.background.venueView?.setProgress?.(this.practice.state);
    }
    this.souvenirView.update(profile().souvenir,elapsed,this.reducedMotion);
-   const a=profile().active,secret=!a?.bonus&&a?.status==='playing'&&BONUSES.find(b=>b.parentId===this.stage.id);
+   const a=profile().active,secret=a?.mode!=='rush'&&!a?.bonus&&a?.status==='playing'&&BONUSES.find(b=>b.parentId===this.stage.id);
    const show=secret&&!profile().discoveries.includes(secret.id)&&!a.pendingInvitation&&elapsed>=18000;
    this.invitation.setVisible(!!show);
    if(show){const point=INVITATIONS[this.stage.id];this.invitation.setPosition(point.x,point.y);this.invitation.setScale(this.reducedMotion?1:1+Math.sin(elapsed*.003)*.05);}

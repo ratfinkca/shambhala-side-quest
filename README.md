@@ -2,7 +2,15 @@
 
 A tiny, unofficial festival-inspired game: wander a glowing forest, collect good vibes, and chase your personal best in 60-second rounds.
 
-Development direction: [two-edition roadmap](docs/EDITION-ROADMAP.md) — a shared engine, compatible generic game and polished nine-stage SMF edition. The approved M0 foundation is implemented locally; the playable features below describe the current public release.
+Two editions share the same engine. The original generic game stays at the site root; the SMF public test build is published at `/smf/`. See the [two-edition roadmap](docs/EDITION-ROADMAP.md) and [release validation](docs/superpowers/smf-feature-parity-validation.md).
+
+## SMF public test edition
+
+[Play the SMF edition](https://ratfinkca.github.io/shambhala-side-quest/smf/): six main venues, five discoverable bonus parties, permanent souvenirs, venue-specific artwork, original synthesized music and animated lighting. Festival Run visits all six venues; Quick Rush is a 60-second Pagoda set; Endless repeats the six-venue route with rising difficulty and four active perk slots.
+
+Pause/resume, interrupted-run recovery, wardrobe progression, three visual themes, independent music/effects controls, local initials boards and optional online boards are included. SMF saves, scores and opt-in playtest sharing are separate from the generic edition. Bonus visits do not increase the main score. Recorded-track auditions and accelerated rehearsal tools remain local development features.
+
+The feature details below describe the **generic edition**. Build both published editions with `npm run build:pages`.
 
 ## Festival Run
 

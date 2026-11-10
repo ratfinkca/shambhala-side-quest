@@ -1,168 +1,271 @@
 import Phaser from 'phaser';
 import './style.css';
 import {applyTheme} from '../theme-view.js';
+import {resolveTheme,isThemePreference} from '../themes.js';
+import {createAvatar,setOutfit,animateAvatar} from '../Avatar.js';
+import {WARDROBE} from '../wardrobe.js';
+import {requirement} from '../progression.js';
 import {createAudio} from '../audio.js';
 import {smfPreviewVoices} from '../editions/smf-music.js';
 import {bonusPreviewVoices} from '../bonus-practice/music.js';
 import {createSMFInstrumentRack} from '../editions/smf-instruments.js';
 import {createRecoveryOwner} from '../recovery-owner.js';
-import {updateBassButton} from '../bass-view.js';
-import {elapsedMs} from '../stage-clock.js';
+import {updateBassButton,activationInput} from '../bass-view.js';
+import {createSubmission} from '../online/submission.js';
+import {createBoard} from '../online/board.js';
 import {DELIVERY_RECIPIENTS,recipientPortrait} from '../amp-delivery-view.js';
-import {BONUSES,ROUTE,createFestival,collectInvitation,finishMain,choosePerk,beginBonus,finishBonus,returnBonus,endFestival,closeResults} from './model.js';
+import {MYSTERY_EFFECTS} from '../mystery.js';
+import {SMF_RULES} from '../../supabase/functions/_shared/smf-rules.js';
+import {createTourRun,stageForRun,collectInvitation,finishMain,choosePerk,beginBonus,finishBonus,returnBonus,endFestival,closeResults,saveTourScore} from './model.js';
 import {createTourStore} from './store.js';
 import {tourScene} from './scene.js';
-import {mainStage} from './content.js';
 import {titleHTML,catalogueHTML,wardrobeHTML,summaryHTML,bonusResultHTML} from './view.js';
+import {shellHTML,settingsHTML,stylesHTML,rulesHTML,boardsHTML,confirmLeaveHTML,updateTourHUD} from './ui.js';
+import {createSmfOnlineClient,readSmfArcadeConfig,resumeSmfSubmission} from './online.js';
+import {createSmfTelemetry,readSmfTelemetryConfig} from './telemetry.js';
 
 const lab=import.meta.env.DEV&&new URLSearchParams(location.search).has('rehearsal')&&new URLSearchParams(location.search).has('tour');
 const key=lab?'sidequest.smf.tour-lab.v1':'sidequest.smf.profile.v1';
-let browserStorage;try{browserStorage=window.localStorage;}catch{/* Visible storage notice below. */}
+let browserStorage;try{browserStorage=window.localStorage;}catch{/* Session-only notice below. */}
 const store=createTourStore(browserStorage,{key}),owner=createRecoveryOwner({locks:navigator.locks,name:key});
-let profile=store.read(),scene=null,view='title',paused=true,ready=false,disposed=false,saved=true,saveClock=0,preparing=false,loadFailed=false;
-let soundOn=true,music=.45,effects=.65;
-const root=document.querySelector('.shell');root.className='shell smf-tour';applyTheme('forest-freakout');
-root.innerHTML=`<header class="tour-header"><span class="tour-wordmark">Shambhala · Side Quest</span><nav><button class="quiet-button" data-action="home">Festival home</button><button class="quiet-button" data-action="sound" id="tour-sound" aria-pressed="true">Sound on</button></nav></header><div id="tour-notice" class="tour-notice" role="status" hidden></div><div id="tour-lab" hidden></div><section id="tour-running" class="tour-running" hidden><div class="tour-hud"><div class="tour-progress"><span id="tour-stage"></span><strong id="tour-points"></strong></div><div class="tour-clock"><span id="tour-clock-label">TIME LEFT</span><strong id="tour-time"></strong></div></div><div class="tour-arena"><div id="game" tabindex="0" role="application" aria-label="Festival dancefloor. Click or tap to move, or use WASD or arrows. Escape pauses."></div><button id="bass-head" class="bass-control" data-action="bass" aria-keyshortcuts="B"><span class="bass-control-icon" aria-hidden="true">ϟ</span><span class="bass-control-name">Bass Head</span><span id="tour-bass-detail" class="bass-control-detail"></span></button><div id="tour-paused" class="tour-paused"><strong>Take a breather.</strong><span>Your adventure is paused.</span><button class="primary-button" data-action="pause">Resume</button></div></div><div id="tour-order" class="tour-strip"></div><p id="tour-status" class="tour-status" role="status"></p><div id="tour-putt" class="tour-putt" hidden><button id="tour-next-green" class="primary-button" data-action="green" hidden>Next green →</button><details><summary>Button controls for putting</summary><label>Aim <input id="tour-angle" aria-label="Putting aim" type="range" min="-180" max="180" value="0"></label><label>Power <input id="tour-power" aria-label="Putting power" type="range" min="5" max="100" value="50"></label><button class="primary-button" data-action="putt">Putt</button></details></div><div class="tour-game-actions"><button class="quiet-button" data-action="pause" id="tour-pause">Pause</button><button class="quiet-button" data-action="leave" id="tour-leave">Finish Festival</button></div></section><section id="tour-menu" class="tour-menu" aria-label="Festival menu"></section><details class="tour-mixer"><summary>Music & effects</summary><label>Music <input id="tour-music" type="range" min="0" max="100" value="45"></label><label>Effects <input id="tour-fx" type="range" min="0" max="100" value="65"></label></details>`;
-const $=s=>root.querySelector(s),text=(s,t)=>{const n=$(s);if(n.textContent!==String(t))n.textContent=String(t);};
+let profile=store.read(),scene=null,view='title',paused=true,ready=false,disposed=false,saved=true,saveClock=0,preparing=false,loadFailed=false,ownership=null;
+let returnView='title',feedback='',boardMode='rush',submission=null,exitDestination=null,telemetryStageAllowed=false,telemetryRunAllowed=false,lastBassPointer;
+let previewAvatar,previewReady=false,previewOutfit=null;
+const root=document.querySelector('.shell');root.className='shell smf-tour';root.innerHTML=shellHTML();
+let activeTheme=applyTheme(profile.active?.themeId||resolveTheme(profile.themePreference==='surprise'?undefined:profile.themePreference));
+const $=s=>root.querySelector(s),text=(s,t)=>{const n=$(s);if(n&&n.textContent!==String(t))n.textContent=String(t);};
+const arcadeConfig=lab?{}:readSmfArcadeConfig(import.meta.env),telemetryConfig=lab?{enabled:false}:readSmfTelemetryConfig(import.meta.env);
+const arcade=createSmfOnlineClient(arcadeConfig),board=createBoard(p=>arcade.getBoard({editionId:'smf',...p}));
+const telemetry=createSmfTelemetry({config:telemetryConfig,consent:()=>profile.playtestConsent==='accepted'});
 const audio=createAudio(undefined,{timedVoices:f=>f.timing.id.includes('bonus-preview')?bonusPreviewVoices(f):smfPreviewVoices(f),useTransport:true,createMusicRenderer:createSMFInstrumentRack});
+audio.setVolumes(profile.audio);audio.setEnabled(profile.audio.enabled);
+function canPlay(){return ready&&(ownership==='owned'||ownership==='unsupported');}
 function notice(message){$('#tour-notice').hidden=!message;text('#tour-notice',message);}
 function persist(){
- if(!owner.held){saved=false;return false;}
+ if(!owner.held){saved=false;if(ownership==='unsupported')notice('Saving is unavailable in this browser. You can play, but keep this page open to retain this session.');return false;}
  saved=store.write(profile);
  if(!saved)notice('Saving is unavailable. You can keep playing, but this session’s progress may be lost if you leave.');
  else if(!loadFailed)notice('');
  return saved;
 }
 function commit(next){profile=next;persist();}
+function saveSubmission(){if(submission&&profile.active?.id===submission.runId){profile.active.submission=submission.snapshot();persist();}}
 function checkpoint(){
  if(!scene||preparing||loadFailed||view!=='run')return;
- const a=profile.active;if(!a||(!a.bonus&&a.status!=='playing')||a.bonus?.status==='result')return;
+ const a=profile.active;if(!a||(!a.bonus&&(a.status!=='playing'||a.needsIntro))||a.bonus?.status==='result')return;
  const snap=scene.capture();
  if(a.bonus){a.bonus.scene=snap.scene;a.bonus.activity=snap.activity;}else a.scene=snap.scene;
- persist();saveClock=performance.now();
+ if(submission?.runId===a.id)a.submission=submission.snapshot();persist();saveClock=performance.now();
 }
 function setPaused(value){
  if(loadFailed&&!value)return;
- paused=value;if(value){scene?.pauseTour();audio.stop();checkpoint();}else{scene?.resumeTour();audio.setEnabled(soundOn);$('#game').focus({preventScroll:true});}
+ paused=value;
+ if(value){scene?.pauseTour();audio.stop();checkpoint();}
+ else{scene?.resumeTour();audio.setEnabled(profile.audio.enabled);$('#game').focus({preventScroll:true});}
  renderPause();
 }
 function renderPause(){
- $('#tour-paused').hidden=!paused; text('#tour-pause',paused?'Resume':'Pause');
- $('#tour-next-green').disabled=paused;
+ const live=isLive();$('#tour-paused').hidden=!paused||!live; text('#tour-pause',paused?'Resume':'Pause');$('#tour-pause').disabled=!live;
+ $('#tour-next-green').disabled=paused;$('#game').inert=!live||paused;
+ root.dataset.playing=String(live);root.dataset.paused=String(paused);
 }
-function isLive(){const a=profile.active;return view==='run'&&a&&(a.bonus?a.bonus.status==='playing':a.status==='playing');}
+function isLive(){const a=profile.active;return view==='run'&&a&&(a.bonus?a.bonus.status==='playing':a.status==='playing'&&!a.needsIntro);}
+function restoreSubmission(){submission=resumeSmfSubmission(profile.active,submission);}
+function enterStage(){
+ const a=profile.active;if(!a||a.status!=='playing'||a.bonus||!a.needsIntro)return;
+ a.needsIntro=false;
+ text('#tour-status','');
+ telemetryStageAllowed=profile.playtestConsent==='accepted';
+ if(a.stageIndex===0&&!a.scene&&!a.scoreStages.length){
+  a.buildId=arcadeConfig.buildId||import.meta.env.VITE_BUILD_ID||'dev';
+  submission=arcadeConfig.baseUrl?createSubmission(a.id):null;
+  if(submission){
+   const current=submission,id=a.id; a.submission=current.snapshot();
+   void arcade.startRun({editionId:'smf',runId:id,mode:a.mode,scoringVersion:SMF_RULES.id,buildId:a.buildId}).then(result=>{
+    if(disposed||profile.active?.id!==id||submission!==current)return;
+    current.setTicket(id,result.ok?result.data:null);saveSubmission();if(!isLive())render();
+   });
+  }
+ }
+ persist();load();
+}
 function load({recovered=false}={}){
  view='run';preparing=true;loadFailed=false;
  try{scene.loadActive({paused:recovered});paused=recovered;}
- catch(error){loadFailed=true;scene.failed=true;paused=true;scene.pauseTour();console.error('Festival scene could not load',error);notice('This visit could not be opened. Leave the visit to return safely to your Festival.');}
+ catch(error){loadFailed=true;scene.failed=true;paused=true;scene.pauseTour();console.error('Festival scene could not load',error);notice('This visit could not be opened. Finish or leave the visit to return safely.');}
  finally{preparing=false;}
- if(!paused)audio.setEnabled(soundOn);
+ if(!paused)audio.setEnabled(profile.audio.enabled);
  checkpoint();render();
 }
 function hud(round){
  if(!scene||!profile.active)return;
- const a=profile.active,b=a.bonus,p=scene.practice;
- text('#tour-stage',b?`${scene.config.name} · ${scene.config.dj}`:`${a.stageIndex+1} / 6 · ${mainStage(ROUTE[a.stageIndex]).name}`);
- text('#tour-points',b?(scene.config.activity==='delivery'?`${p.state.delivered} / 3 delivered`:`${p.state.progress} / ${p.state.goal} ${scene.config.activity==='putt'?'holes':'found'}`):`${round.score} points · ${round.pickups} / ${mainStage(ROUTE[a.stageIndex]).target} sparks`);
+ const a=profile.active,b=a.bonus,p=scene.practice,stage=b?scene.config.stage:stageForRun(a);
+ text('#tour-stage',b?`${scene.config.name} · ${scene.config.dj}`:a.mode==='rush'?`${stage.name} · Quick Rush`:a.mode==='endless'?`${stage.name} · Stage ${a.stageIndex+1} · Loop ${stage.loop}`:`${a.stageIndex+1} / 6 · ${stage.name}`);
+ text('#tour-points',b?(scene.config.activity==='delivery'?`${p.state.delivered} / 3 delivered`:`${p.state.progress} / ${p.state.goal} ${scene.config.activity==='putt'?'holes':'found'}`):`${a.score+round.score} points · ${round.pickups}${a.mode==='rush'?'':` / ${stage.target}`} sparks`);
  const putt=b&&scene.config.activity==='putt';text('#tour-clock-label',putt?'SHOTS':'TIME LEFT');text('#tour-time',putt?`${p.state.strokes} / 8`:`${Math.ceil(round.remainingMs/1000)}s`);
  $('#game').setAttribute('aria-label',putt?'Putting green. Drag anywhere opposite your shot and release, or use the aim and power controls below. Escape pauses.':'Festival dancefloor. Click or tap to move, or use WASD or arrows. Escape pauses.');
  updateBassButton($('#bass-head'),round.bass,{playing:!paused&&!b,hasSpeakers:!!scene.stage.obstacles.length});
+ updateTourHUD(root,{round,run:a,stage,paused,bonus:b,practice:p,config:scene.config});
  $('#tour-putt').hidden=!putt;$('#tour-next-green').hidden=!putt||p.state.phase!=='between';
  $('#tour-putt [data-action="putt"]').disabled=paused||!putt||p.state.phase!=='aim';
  if(b&&scene.config.activity==='delivery'){
   const person=DELIVERY_RECIPIENTS.find(x=>x.id===p.state.recipientId),signature=`${person?.id}|${p.state.carrying}|${p.state.complete}`;
   if($('#tour-order').dataset.state!==signature){$('#tour-order').dataset.state=signature;$('#tour-order').innerHTML=p.state.complete?'<p>All deliveries made. Enjoy your grilled cheese!</p>':`${recipientPortrait(person?.id)}<p><strong>${person?.name} · ${person?.costume}</strong><br>${p.state.carrying?'Sandwich in hand. Smooth-pass this costume.':'Return to the vendor to pick up a sandwich.'}</p>`;}
  }else{
-  const message=putt?'Drag anywhere opposite your shot, then release. No time limit.':b?scene.config.activity==='garden'&&p.state.carrying?'Seed in hand → return to the circular garden bed.':scene.config.instruction:a.pendingInvitation?'Sealed invitation found! Clear this stage to open it.':'Collect sparks · Clean passes build your score · B activates Bass Head';
+  const message=putt?'Drag opposite your shot, then release. No time limit.':b?scene.config.activity==='garden'&&p.state.carrying?'Seed in hand → return to the garden bed.':scene.config.instruction:a.pendingInvitation?'Invitation found! Clear this stage to open it.':'Collect sparks · Clean passes score · B activates Bass Head';
   if($('#tour-order').textContent!==message){$('#tour-order').textContent=message;delete $('#tour-order').dataset.state;}
  }
 }
+function menuOptions(){return {saved,themeId:activeTheme,onlineEnabled:!!arcadeConfig.baseUrl,playtestEnabled:telemetryConfig.enabled,noticeURL:telemetryConfig.notice||`${import.meta.env.BASE_URL}smf-playtest-data.html`,submission,boardMode,board,feedback};}
 function render(){
- const a=profile.active,live=isLive();$('#tour-running').hidden=!live;
- if(view==='title')$('#tour-menu').innerHTML=titleHTML(profile);
+ const a=profile.active,live=isLive(),options=menuOptions();$('#tour-running').hidden=!live;
+ root.dataset.view=view;root.dataset.playing=String(live);
+ if(view==='title')$('#tour-menu').innerHTML=titleHTML(profile,options);
  else if(view==='catalogue')$('#tour-menu').innerHTML=catalogueHTML(profile);
  else if(view==='wardrobe')$('#tour-menu').innerHTML=wardrobeHTML(profile);
+ else if(view==='settings')$('#tour-menu').innerHTML=settingsHTML(profile,options);
+ else if(view==='style')$('#tour-menu').innerHTML=stylesHTML(profile);
+ else if(view==='scores')$('#tour-menu').innerHTML=boardsHTML(profile,options);
+ else if(view==='rules')$('#tour-menu').innerHTML=rulesHTML(profile,{...options,stage:a?stageForRun(a):undefined});
+ else if(view==='confirm-leave')$('#tour-menu').innerHTML=confirmLeaveHTML(profile);
+ else if(view==='confirm-close')$('#tour-menu').innerHTML='<h2>Leave without saving this score?</h2><p>Your XP and souvenirs are already kept. Save this result to the local scoreboard or post online before leaving.</p><button class="primary-button" data-action="cancel-close">Back to score</button> <button class="quiet-button" data-action="confirm-close">Leave without saving</button>';
  else if(a?.bonus?.status==='result')$('#tour-menu').innerHTML=bonusResultHTML(profile,saved);
- else if(a&&a.status!=='playing'&&!a.bonus)$('#tour-menu').innerHTML=summaryHTML(profile,{saved});
+ else if(a&&a.status!=='playing'&&!a.bonus)$('#tour-menu').innerHTML=summaryHTML(profile,options);
  else $('#tour-menu').innerHTML='';
- text('#tour-leave',a?.bonus?'Leave bonus visit':'Finish Festival');renderPause();
- if(scene&&live&&!loadFailed&&(!a.bonus||scene.practice))hud(scene.round);
- root.querySelectorAll('[data-action="start"],[data-action="resume"],[data-action="explore"]').forEach(b=>b.disabled=b.disabled||!ready||!owner.held);
+ renderPause();if(scene&&live&&!loadFailed&&(!a.bonus||scene.practice))hud(scene.round);
+ root.querySelectorAll('[data-action="start"],[data-action="resume"],[data-action="explore"],[data-action="enter"]').forEach(b=>b.disabled=b.disabled||!canPlay());
+ $('#tour-avatar-preview').hidden=view!=='wardrobe';$('#tour-avatar-preview-label').hidden=view!=='wardrobe';
+ if(previewReady){if(view==='wardrobe'){setOutfit(previewAvatar,previewOutfit||profile.outfit);preview.loop.wake();}else preview.loop.sleep();}
+ scheduleLayout();
 }
 function completeBonus({completed=false,won=false}={}){
  scene?.pauseTour();audio.stop();paused=true;
  if(scene?.practice&&!loadFailed){const snap=scene.capture();profile.active.bonus.scene=snap.scene;profile.active.bonus.activity=snap.activity;}
- commit(finishBonus(profile,{completed,won}));if(won||completed)audio.celebrate();render();
+ commit(finishBonus(profile,{completed,won}));if(won||completed)audio.celebrate();view='run';render();
 }
 function activity(event){
  if(preparing||!isLive())return;
- const messages={pickup:'Picked up! Find the matching destination.',dropped:'Sandwich dropped. Pick up another at the vendor.',wrong:'You made their night! But this delivery does not count.',delivered:'Delivery made! Back to the vendor.',planted:'A little more colour in the garden.',collected:'Found it. Follow the next glow.',greeted:'Good company!',shot:'Let it roll…',holed:'In the cup! Head to the next green.',settled:'Line up your next putt.',exhausted:'Eight shots played. Come back for another try.'};
+ const messages={pickup:'Picked up! Find the matching destination.',dropped:'Sandwich dropped. Pick up another at the vendor.',wrong:'You made their night! This delivery does not count.',delivered:'Delivery made! Back to the vendor.',planted:'A little more colour in the garden.',collected:'Found it. Follow the next glow.',greeted:'Good company!',shot:'Let it roll…',holed:'In the cup! Head to the next green.',settled:'Line up your next putt.',exhausted:'Eight shots played. Come back for another try.'};
  text('#tour-status',messages[event.type]||'');
  if(event.type==='complete'){completeBonus({won:true,completed:true});return;}
  if(event.type==='exhausted'){completeBonus();return;}
- if(['pickup','collected','shot'].includes(event.type))audio.pickup(1);else audio.closePass();
- checkpoint();
+ if(['pickup','collected','shot'].includes(event.type))audio.pickup(1);else audio.closePass();checkpoint();
 }
+function trackRun(outcome){const a=profile.active;if(a&&telemetryRunAllowed){telemetry.record({type:'run',mode:a.mode,outcome,stagesCleared:a.cleared,totalScore:a.score});telemetryRunAllowed=false;void telemetry.flush();}}
 const Scene=tourScene({profile:()=>profile,onReady:s=>{scene=s;ready=true;render();},onFrame:round=>{
  if(!isLive()||preparing||loadFailed)return;hud(round);if(!paused){audio.sync(round,scene.stage.id);if(performance.now()-saveClock>=1000)checkpoint();}
-},onInvitation:()=>{profile=collectInvitation(profile);text('#tour-status','A sealed invitation! Clear this stage to find out where it leads.');audio.closePass();checkpoint();},onActivity:activity,onRoundEnd:round=>{
+},onInvitation:()=>{profile=collectInvitation(profile);text('#tour-status','A sealed invitation! Clear this stage to reveal its party.');audio.closePass();checkpoint();},onActivity:activity,onRoundEnd:round=>{
  if(preparing||!isLive())return;
  if(profile.active.bonus){completeBonus({completed:true});return;}
- scene.pauseTour();paused=true;audio.stop();commit(finishMain(profile,round));render();
+ const a=profile.active;
+ if(telemetryStageAllowed)telemetry.record({type:'stage',mode:a.mode,stageIndex:a.stageIndex,stageId:scene.stage.id,pickups:round.pickups,closePasses:round.closePasses,bassUses:round.bassUses||0});
+ scene.pauseTour();paused=true;audio.stop();commit(finishMain(profile,round));if(profile.active.status==='results')trackRun(profile.active.summary?.qualified?'complete':'failed');else void telemetry.flush();view='run';feedback='';render();
 },onAim:v=>text('#tour-status',v?`${Math.round(Math.hypot(v.x,v.y)*100)}% power`:'Pull back and release.')});
 const game=new Phaser.Game({type:Phaser.CANVAS,parent:'game',width:960,height:640,banner:false,audio:{noAudio:true},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:Scene});
-for(const [name,fn] of [['round:pickup',e=>audio.pickup(e.multiplier)],['round:closepass',()=>audio.closePass()],['round:flow',()=>audio.celebrate()],['round:bass',()=>{scene.round.bassUses=(scene.round.bassUses||0)+1;audio.drop();}]])game.events.on(name,fn);
+const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'tour-avatar-preview',width:240,height:200,transparent:true,banner:false,audio:{noAudio:true},fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,profile.outfit);previewAvatar.setPosition(116,125).setScale(2.4);previewReady=true;render();},update(time){animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches,false);}}});
+let layoutPending=false;
+function scheduleLayout(){if(layoutPending)return;layoutPending=true;requestAnimationFrame(()=>{layoutPending=false;if(disposed)return;const live=isLive(),arena=$('.tour-arena');if(live){const available=window.visualViewport?.height||innerHeight;const blocks=['.tour-header','.tour-hud','#tour-details','#tour-order','#tour-status','#tour-putt','#tour-notice','#tour-lab'].map(s=>$(s)).filter(n=>n&&!n.hidden);const chrome=blocks.reduce((n,e)=>n+e.getBoundingClientRect().height,0)+50;const height=Math.max(130,available-chrome);const width=Math.min($('#tour-running').clientWidth,height*1.5);arena.style.width=`${width}px`;arena.style.height=`${width/1.5}px`;arena.style.marginInline='auto';}game.scale.refresh();});}
+const layoutObserver=new ResizeObserver(scheduleLayout);layoutObserver.observe(root);window.addEventListener('resize',scheduleLayout);window.visualViewport?.addEventListener('resize',scheduleLayout);
+function input(kind){const a=profile.active;if(!a||a.bonus||!isLive())return;if(['mouse','touch','keyboard'].includes(kind))a.inputType=a.inputType==='unknown'?kind:a.inputType===kind?kind:'mixed';}
+for(const [name,fn] of [['round:pickup',e=>audio.pickup(e.multiplier)],['round:closepass',()=>audio.closePass()],['round:flow',()=>{audio.celebrate();text('#tour-status','FLOW · Sparks come to you');}],['round:bass',()=>{scene.round.bassUses=(scene.round.bassUses||0)+1;audio.drop();}],['round:mystery',effect=>{text('#tour-status',`${MYSTERY_EFFECTS[effect].name} · ${effect==='dizzy'?'Steering is reversed!':effect==='speed'?'Hold on!':'Ride the colours.'}`);audio.drop();}],['round:phase',phase=>{if(phase==='drop')audio.drop();}],['round:input',e=>{if(e.runId===profile.active?.id)input(e.kind);} ]])game.events.on(name,fn);
 function buttonVector(){const a=Number($('#tour-angle').value)*Math.PI/180,p=Number($('#tour-power').value)/100;return {x:Math.cos(a)*p,y:Math.sin(a)*p};}
+async function loadBoard(mode){boardMode=mode;const pending=board.select(mode,SMF_RULES.id);render();await pending;if(view==='scores')render();}
+function viewMenu(next){if(isLive())setPaused(true);returnView=view;view=next;feedback='';previewOutfit=null;render();}
+function startRun(mode){
+ if(profile.active||!['rush','festival','endless'].includes(mode))return;
+ activeTheme=applyTheme(resolveTheme(profile.themePreference));commit(createTourRun(profile,mode,crypto.randomUUID(),activeTheme));submission=null;telemetryRunAllowed=profile.playtestConsent==='accepted';view='rules';feedback='';render();
+}
+function finishAndClose(){commit(closeResults(profile));submission=null;view='title';render();if(exitDestination){const mode=exitDestination;exitDestination=null;startRun(mode);}}
+function initials(){return ($('#tour-initials')?.value||profile.active?.initialsDraft||profile.initials||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);}
+async function postScore(){
+ const a=profile.active;if(!a||a.bonus||a.status!=='results'||!submission||a.scoreOverflow||!a.scoreStages.length)return;
+ const name=initials();if(!/^[A-Z0-9]{3}$/.test(name)){feedback='Enter three letters or numbers for your initials.';render();return;}
+ a.initialsDraft=name;const current=submission,id=a.id;
+ const pending=current.post({editionId:'smf',initials:name,mode:a.mode,scoringVersion:SMF_RULES.id,buildId:a.buildId,inputType:a.inputType,totalScore:a.score,stagesCleared:a.cleared,stages:a.scoreStages},p=>arcade.submitScore(p));
+ saveSubmission();render();await pending;if(profile.active?.id!==id||submission!==current)return;saveSubmission();render();
+}
 function route(action,id){
- if(!['sound','pause','home','title','catalogue','wardrobe'].includes(action)&&(!ready||!owner.held))return;
- if(action==='sound'){soundOn=!soundOn;audio.setEnabled(soundOn);text('#tour-sound',soundOn?'Sound on':'Sound off');$('#tour-sound').setAttribute('aria-pressed',String(soundOn));return;}
+ if(!['fullscreen','back','home','title','settings','style','scores','catalogue','wardrobe','rules'].includes(action)&&!canPlay())return;
  if(action==='pause'){if(isLive())setPaused(!paused);return;}
  if(action==='home'||action==='title'){if(isLive())setPaused(true);view='title';audio.stop();render();return;}
- if(['catalogue','wardrobe'].includes(action)){view=action;render();return;}
- if(action==='start'){commit(createFestival(profile,crypto.randomUUID()));load();}
+ if(['settings','style','wardrobe','catalogue','scores'].includes(action)){viewMenu(action);if(action==='scores'&&arcadeConfig.baseUrl)void loadBoard(boardMode);return;}
+ if(action==='back'){view=returnView==='run'&&profile.active&&!profile.active.needsIntro?'run':'title';render();return;}
+ if(action==='rules'){viewMenu('rules');return;}
+ if(action==='theme'&&isThemePreference(id)){profile.themePreference=id;persist();if(!profile.active)activeTheme=applyTheme(resolveTheme(id==='surprise'?undefined:id));render();return;}
+ if(action==='start'){startRun(id||'festival');return;}
+ if(action==='enter'){enterStage();return;}
  if(action==='resume'){
-  view='run';if(profile.active?.status==='playing'||profile.active?.bonus?.status==='playing')load({recovered:true});else render();
+  const a=profile.active;if(!a)return;activeTheme=applyTheme(a.themeId);restoreSubmission();
+  if(a.needsIntro&&!a.bonus&&a.status==='playing'){view='rules';render();}
+  else if(a.status==='playing'||a.bonus?.status==='playing')load({recovered:true});else{view='run';render();}return;
  }
- if(action==='equip'){if(!id||profile.rewards.includes(id)){profile.souvenir=id||null;persist();render();}}
+ if(action==='equip'){if(!id||profile.rewards.includes(id)){profile.souvenir=id||null;persist();render();}return;}
+ if(action==='preview-outfit'){
+  const [category,value]=String(id).split(':');if(WARDROBE[category]?.some(o=>o.id===value)){previewOutfit={...profile.outfit,[category]:value};if(previewReady)setOutfit(previewAvatar,previewOutfit);text('#outfit-feedback','Preview only · not equipped.');text('#tour-avatar-preview-label',`Previewing ${WARDROBE[category].find(o=>o.id===value).name}`);}return;
+ }
  if(action==='perk'||action==='keep'){
-  const next=choosePerk(profile,action==='keep'?null:id,action==='keep'?undefined:$('#tour-replace')?.value);
-  if(next!==profile){commit(next);load();}
+  const a=profile.active,replaced=action==='perk'?$('#tour-replace')?.value:null,next=choosePerk(profile,action==='keep'?null:id,replaced||undefined);
+  if(next!==profile){if(telemetryStageAllowed)telemetry.record({type:'perk',mode:a.mode,stageIndex:a.stageIndex,action:action==='keep'?'keep':replaced?'swap':'take',perk:action==='keep'?null:id,replaced:replaced||null});commit(next);view='rules';render();}return;
  }
  if(action==='visit'||action==='explore'){
   const next=beginBonus(profile,id,crypto.randomUUID(),{explore:action==='explore'});
-  if(next!==profile){commit(next);$('#tour-angle').value='0';$('#tour-power').value='50';text('#tour-status','');load();}
+  if(next!==profile){commit(next);$('#tour-angle').value='0';$('#tour-power').value='50';text('#tour-status','');load();}return;
  }
- if(action==='skip'){profile.active.summary.bonusOffered=false;persist();render();}
- if(action==='return'){commit(returnBonus(profile));scene.clearVisit();if(!profile.active)view='catalogue';render();}
- if(action==='close'){commit(closeResults(profile));view='title';render();}
- if(action==='leave'){
-  setPaused(true);
-  $('#tour-menu').innerHTML=`<h2>${profile.active.bonus?'Leave this visit?':'Finish your Festival?'}</h2><p>${profile.active.bonus?'Your Festival place and discoveries are safe. An unfinished challenge earns no new souvenir.':'Only completed stages count toward your final score. Your current stage will be left unfinished.'}</p><button class="primary-button" data-action="confirm-leave">${profile.active.bonus?'Leave visit':'Finish & save results'}</button> <button class="quiet-button" data-action="cancel-leave">Keep playing</button>`;
-  $('#tour-menu').scrollIntoView({block:'nearest',behavior:'smooth'});
+ if(action==='skip'){profile.active.summary.bonusOffered=false;persist();render();return;}
+ if(action==='return'){commit(returnBonus(profile));scene.clearVisit();if(!profile.active)view='catalogue';render();return;}
+ if(action==='close'||action==='replay'){
+  exitDestination=action==='replay'?profile.active?.mode:null;
+  if(profile.active&&!profile.active.scoreSaved&&submission?.status!=='succeeded'&&(profile.active.scoreStages.length||profile.active.score>0||profile.active.cleared>0)){view='confirm-close';render();}else finishAndClose();return;
  }
- if(action==='confirm-leave'){if(profile.active.bonus)completeBonus();else{commit(endFestival(profile));render();}}
- if(action==='cancel-leave'){render();setPaused(false);}
- if(action==='bass'&&scene.activateBassHead())checkpoint();
- if(action==='green'&&!paused&&scene.practice?.nextHole()){scene.puttingView.cancelAim();$('#tour-angle').value='180';checkpoint();hud(scene.round);}
- if(action==='putt'&&!paused)scene.shoot(buttonVector());
+ if(action==='cancel-close'){view='run';exitDestination=null;render();return;}
+ if(action==='confirm-close'){finishAndClose();return;}
+ if(action==='save-score'){const next=saveTourScore(profile,initials());feedback=next===profile?'Enter three letters or numbers for your initials.':'';if(next!==profile){commit(next);feedback=saved?'Score saved on this device.':'Score kept for this session. Device saving is unavailable.';}render();return;}
+ if(action==='post-score'||action==='retry-score'){void postScore();return;}
+ if(action==='board-mode'||action==='online-board'){if(['rush','festival','endless'].includes(id)){boardMode=id;if(arcadeConfig.baseUrl)void loadBoard(id);else render();}return;}
+ if(action==='leave'){if(isLive())setPaused(true);view='confirm-leave';render();return;}
+ if(action==='confirm-leave'){if(profile.active.bonus)completeBonus();else{commit(endFestival(profile));trackRun('banked');view='run';render();}return;}
+ if(action==='cancel-leave'){view=profile.active.needsIntro&&!profile.active.bonus?'rules':'run';render();return;}
+ if(action==='bass'&&isLive()&&!paused&&scene.activateBassHead()){input(activationInput({detail:1},lastBassPointer));checkpoint();return;}
+ if(action==='green'&&!paused&&scene.practice?.nextHole()){scene.puttingView.cancelAim();$('#tour-angle').value='180';checkpoint();hud(scene.round);return;}
+ if(action==='putt'&&!paused){scene.shoot(buttonVector());return;}
+ if(action==='consent-accept'||action==='consent-decline'){
+  profile.playtestConsent=action==='consent-accept'?'accepted':'declined';persist();telemetryStageAllowed=false;telemetryRunAllowed=false;if(action==='consent-decline')telemetry.stop();render();return;
+ }
+ if(action==='fullscreen'){void (async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen();}catch{notice('Fullscreen is unavailable in this browser.');}})();}
 }
 root.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b&&!b.disabled)route(b.dataset.action,b.dataset.id);});
-for(const s of ['#tour-angle','#tour-power'])$(s).addEventListener('input',()=>scene?.puttingView?.setButtonAim(buttonVector()));
-$('#tour-music').addEventListener('input',()=>{music=Number($('#tour-music').value)/100;audio.setVolumes({music,effects});});
-$('#tour-fx').addEventListener('input',()=>{effects=Number($('#tour-fx').value)/100;audio.setVolumes({music,effects});});
+$('#bass-head').addEventListener('pointerdown',e=>{lastBassPointer=e.pointerType;});
+root.addEventListener('input',e=>{
+ const element=e.target;
+ if(element.matches('#tour-angle,#tour-power'))scene?.puttingView?.setButtonAim(buttonVector());
+ if(element.matches('#tour-initials')){element.value=element.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);if(profile.active){profile.active.initialsDraft=element.value;persist();}}
+ if(element.matches('#tour-music,#tour-fx')&&canPlay()){profile.audio[element.id==='tour-music'?'music':'effects']=Number(element.value)/100;persist();audio.setVolumes(profile.audio);if(element.id==='tour-fx')audio.pickup(1);}
+});
+root.addEventListener('change',e=>{
+ const element=e.target;
+ if(element.id==='tour-sound-enabled'&&canPlay()){profile.audio.enabled=element.checked;persist();audio.setEnabled(element.checked);}
+ const category=element.dataset.outfit,value=element.value;if(!category||!canPlay()||!WARDROBE[category]?.some(o=>o.id===value))return;
+ const need=category==='onesie'&&value==='mycelium'?(profile.progress.endless.smfVenues.length>=6?null:'Explore all six venues in Endless.'):requirement(profile.progress,`${category}:${value}`);
+ if(need)return;profile.outfit={...profile.outfit,[category]:value};previewOutfit=null;persist();if(previewReady)setOutfit(previewAvatar,profile.outfit);text('#outfit-feedback',saved?'Outfit saved.':'Outfit selected for this session.');text('#tour-avatar-preview-label','Your festival look');
+});
 function keys(e){
- if(e.target.matches('input,select,textarea')||!isLive())return;
- if(e.code==='Escape'&&!e.repeat){e.preventDefault();setPaused(!paused);}
- if(e.code==='KeyB'&&!e.repeat&&!paused&&!profile.active.bonus){e.preventDefault();route('bass');}
+ if(e.target.matches('input,select,textarea'))return;
+ if(e.code==='Escape'&&!e.repeat){if(isLive()){e.preventDefault();setPaused(!paused);}else if(view==='confirm-close')route('cancel-close');else if(view==='confirm-leave')route('cancel-leave');else if(['settings','wardrobe','style','scores','catalogue','rules'].includes(view))route('back');}
+ if(!isLive())return;
+ if(e.code==='KeyB'&&!e.repeat&&!paused&&!profile.active.bonus&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(scene.activateBassHead()){input('keyboard');checkpoint();}}
  if(document.activeElement===$('#game')&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
 }
-function hidden(){if(document.hidden&&isLive()&&!paused)setPaused(true);}
-function pagehide(e){if(isLive())setPaused(true);if(!e.persisted)dispose();}
-function dispose(){if(disposed)return;disposed=true;audio.stop();owner.release();scene?.clearVisit();scene?.souvenirView.destroy();game.destroy(true);document.removeEventListener('keydown',keys);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',pagehide);}
-document.addEventListener('keydown',keys);document.addEventListener('visibilitychange',hidden);window.addEventListener('pagehide',pagehide);
-const ownership=await owner.acquire();
-if(ownership!=='owned')notice(ownership==='busy'?'This Festival is open in another tab. Close that tab, then reload here to continue safely.':'This browser cannot protect saved progress between tabs. Use a browser with Web Locks support to play this preview.');
-else {profile=store.read();if(!browserStorage){saved=false;notice('Device storage is unavailable. Progress will last only for this session.');}}
-render();
-if(import.meta.env.DEV&&lab){const {mountTourLab}=await import('./lab.js');mountTourLab($('#tour-lab'),{getProfile:()=>profile,commit,load,render,scene:()=>scene,activity,finish:()=>{const r=scene.round;r.pickups=mainStage(ROUTE[profile.active.stageIndex]).target;r.remainingMs=0;r.ended=true;scene.pauseTour();paused=true;audio.stop();commit(finishMain(profile,r));render();},home:()=>{view='title';render();}});}
+function hidden(){if(document.hidden&&isLive()&&!paused)setPaused(true);if(document.hidden)void telemetry.flush();}
+function blurred(){if(isLive()&&!paused)setPaused(true);}
+function pagehide(e){if(isLive())setPaused(true);void telemetry.flush();if(!e.persisted)dispose();}
+function fullscreenChanged(){const b=$('[data-action="fullscreen"]');if(b)b.textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen';scheduleLayout();}
+function dispose(){if(disposed)return;disposed=true;audio.stop();telemetry.stop();owner.release();scene?.clearVisit();scene?.souvenirView.destroy();game.destroy(true);preview.destroy(true);layoutObserver.disconnect();document.removeEventListener('keydown',keys);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('fullscreenchange',fullscreenChanged);window.removeEventListener('blur',blurred);window.removeEventListener('pagehide',pagehide);window.removeEventListener('resize',scheduleLayout);window.visualViewport?.removeEventListener('resize',scheduleLayout);}
+document.addEventListener('keydown',keys);document.addEventListener('visibilitychange',hidden);document.addEventListener('fullscreenchange',fullscreenChanged);window.addEventListener('blur',blurred);window.addEventListener('pagehide',pagehide);
+const fullscreenButton=$('[data-action="fullscreen"]');if(fullscreenButton)fullscreenButton.hidden=!document.fullscreenEnabled;
+ownership=await owner.acquire();
+if(ownership==='busy')notice('This Festival is open in another tab. Close that tab, then reload here to continue safely.');
+else if(ownership==='unsupported'){saved=false;notice('Run recovery is unavailable in this browser. You can play, but keep this page open.');}
+else{profile=store.read();if(!browserStorage){saved=false;notice('Device storage is unavailable. Progress will last only for this session.');}}
+restoreSubmission();render();
+if(import.meta.env.DEV&&lab){const {mountTourLab}=await import('./lab.js');mountTourLab($('#tour-lab'),{getProfile:()=>profile,commit,load,render,scene:()=>scene,activity,finish:()=>{const r=scene.round,stage=stageForRun(profile.active);r.pickups=stage.target||24;r.score=r.pickups*10;r.scoreComponents={sparks:[r.pickups,...Array(19).fill(0)],passes:[0,0]};r.closePasses=0;r.remainingMs=0;r.ended=true;scene.pauseTour();paused=true;audio.stop();commit(finishMain(profile,r));view='run';render();},home:()=>{view='title';submission=null;render();}});}
 if(import.meta.hot)import.meta.hot.dispose(dispose);

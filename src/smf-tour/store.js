@@ -1,7 +1,9 @@
-import {BONUSES,ROUTE,createTourProfile} from './model.js';
+import {BONUSES,ROUTE,createTourProfile,stageForRun,mainStageId} from './model.js';
 import {mainStage,bonusConfig,bonusController} from './content.js';
 import {getTiming} from '../stage-clock.js';
 import {PERKS} from '../run.js';
+import {MAX_ONLINE_STAGES} from '../../supabase/functions/_shared/score.js';
+import {normalizeThemePreference,THEMES} from '../themes.js';
 import {WARDROBE} from '../wardrobe.js';
 
 const LIMIT=2*1024*1024;
@@ -21,13 +23,13 @@ const perkList=v=>Array.isArray(v)&&v.length<=4&&new Set(v).size===v.length&&v.e
 function boundedJSON(value){
  let nodes=0;const ancestors=new Set();
  function visit(v,depth){
-  if(++nodes>30000||depth>16)return false;
+  if(++nodes>200000||depth>16)return false;
   if(v===null||typeof v==='boolean')return true;
   if(typeof v==='number')return Number.isFinite(v)&&Math.abs(v)<=Number.MAX_SAFE_INTEGER;
   if(typeof v==='string')return v.length<=2048;
   if(typeof v!=='object'||ancestors.has(v))return false;
   if(!Array.isArray(v)&&Object.getPrototypeOf(v)!==Object.prototype&&Object.getPrototypeOf(v)!==null)return false;
-  const entries=Object.entries(v);if(entries.length>256)return false;
+  const entries=Object.entries(v);if(entries.length>(Array.isArray(v)?MAX_ONLINE_STAGES:256))return false;
   ancestors.add(v);const ok=entries.every(([key,child])=>key.length<=100&&!['__proto__','prototype','constructor'].includes(key)&&visit(child,depth+1));ancestors.delete(v);return ok;
  }
  try{return visit(value,0)&&new TextEncoder().encode(JSON.stringify(value)).length<=LIMIT;}catch{return false;}
@@ -49,30 +51,37 @@ function sceneOK(scene,stage,runId){
 
 function summaryOK(s,active,discoveries){
  if(s===null)return true;
- return allowed(s,['stageId','qualified','score','xp','bonusId','bonusOffered','target','pickups','totalScore'])&&s.stageId===ROUTE[active.stageIndex]&&bool(s.qualified)&&['score','xp','target','pickups','totalScore'].every(key=>integer(s[key]))&&s.target===mainStage(s.stageId).target&&s.qualified===(s.pickups>=s.target)&&s.totalScore===active.score&&bool(s.bonusOffered)&&(!s.bonusOffered||s.bonusId!==null)&&(s.bonusId===null||s.qualified&&discoveries.includes(s.bonusId)&&BONUSES.some(b=>b.id===s.bonusId&&b.parentId===s.stageId));
+ return allowed(s,['stageId','qualified','score','xp','bonusId','bonusOffered','target','pickups','totalScore'])&&s.stageId===mainStageId(active)&&bool(s.qualified)&&['score','xp','target','pickups','totalScore'].every(key=>integer(s[key]))&&s.target===stageForRun(active).target&&s.qualified===(active.mode==='rush'||s.pickups>=s.target)&&s.totalScore===active.score&&bool(s.bonusOffered)&&(!s.bonusOffered||s.bonusId!==null)&&(s.bonusId===null||s.qualified&&discoveries.includes(s.bonusId)&&BONUSES.some(b=>b.id===s.bonusId&&b.parentId===s.stageId));
 }
 function bonusOK(b,active,discoveries){
  if(b===null)return true;
  const config=BONUSES.find(item=>item.id===b?.id);
  if(!config||!discoveries.includes(b.id)||!allowed(b,['id','visitId','status','scene','activity','returnTo','completed','won','rewardId','newReward'])||!id(b.visitId)||!['playing','result'].includes(b.status))return false;
- if(active.status==='explore'?b.returnTo!=='title':b.returnTo!==active.status||!['summary','results'].includes(active.status)||config.parentId!==ROUTE[active.stageIndex])return false;
+ if(active.status==='explore'?b.returnTo!=='title':b.returnTo!==active.status||!['summary','results'].includes(active.status)||config.parentId!==mainStageId(active))return false;
  if(active.status!=='explore'&&(!active.summary?.qualified||active.summary.bonusId!==b.id||!active.summary.bonusOffered))return false;
- if(active.status==='results'&&(b.id!=='villagio'||active.cleared!==6))return false;
+ if(active.status==='results'&&(b.id!=='villagio'||active.mode!=='festival'||active.cleared!==6))return false;
  if(b.status==='result'&&(!bool(b.completed)||!bool(b.won)||!bool(b.newReward)||!(b.rewardId===null||b.rewardId===config.reward.id)))return false;
  const content=bonusConfig(b.id);
  if((b.activity===null)!==(b.scene===null))return false;
  if(b.activity!==null&&(!object(b.activity)||!boundedJSON(b.activity)||!bonusController(content).restore(b.activity)))return false;
  return b.scene===null||sceneOK(b.scene,content.stage,b.visitId);
 }
+function submissionOK(sub,run){
+ if(sub===null)return true;
+ if(!allowed(sub,['runId','status','code','ticket','expiresAt','payload'])||sub.runId!==run.id||!['waiting','ready','pending','succeeded','ineligible','error'].includes(sub.status)||!(sub.ticket===null||typeof sub.ticket==='string'&&/^[a-f0-9]{64}$/.test(sub.ticket))||!(sub.expiresAt===null||number(sub.expiresAt,0,Number.MAX_SAFE_INTEGER))||!(sub.code===null||typeof sub.code==='string'&&sub.code.length<=100))return false;
+ if(sub.payload!==null){const p=sub.payload;if(!object(p)||p.runId!==run.id||p.ticket!==sub.ticket||p.mode!==run.mode||p.buildId!==run.buildId||p.totalScore!==run.score||p.stagesCleared!==run.cleared||JSON.stringify(p.stages)!==JSON.stringify(run.scoreStages))return false;}
+ return !['pending','succeeded'].includes(sub.status)||sub.payload!==null;
+}
 function activeOK(active,discoveries){
- if(!allowed(active,['id','stageIndex','status','score','cleared','perks','bassChargeMs','pendingInvitation','summary','bonus','scene'])||!boundedJSON(active)||!id(active.id)||!integer(active.stageIndex,0,ROUTE.length-1)||!['playing','summary','results','explore'].includes(active.status)||!integer(active.score)||!integer(active.cleared,0,ROUTE.length)||!perkList(active.perks)||!number(active.bassChargeMs,0,10000)||!bool(active.pendingInvitation)||!summaryOK(active.summary,active,discoveries)||!bonusOK(active.bonus,active,discoveries))return false;
+ if(!allowed(active,['id','stageIndex','status','score','cleared','perks','bassChargeMs','pendingInvitation','summary','bonus','scene','mode','themeId','scoreStages','scoreOverflow','initialsDraft','inputType','submission','buildId','scoreSaved','needsIntro','remixPending'])||!boundedJSON(active)||!id(active.id)||!integer(active.stageIndex,0,active.mode==='endless'?1000000:active.mode==='rush'?0:ROUTE.length-1)||!['playing','summary','results','explore'].includes(active.status)||!integer(active.score)||!integer(active.cleared,0,active.mode==='endless'?1000000:ROUTE.length)||!perkList(active.perks)||!number(active.bassChargeMs,0,10000)||!bool(active.pendingInvitation)||!summaryOK(active.summary,active,discoveries)||!bonusOK(active.bonus,active,discoveries))return false;
+ if(!['rush','festival','endless'].includes(active.mode)||!THEMES.some(t=>t.id===active.themeId)||!Array.isArray(active.scoreStages)||active.scoreStages.length>MAX_ONLINE_STAGES||!['unknown','mouse','touch','keyboard','mixed'].includes(active.inputType)||!/^\w{0,3}$/.test(active.initialsDraft)||!id(active.buildId)||!bool(active.scoreSaved)||!bool(active.needsIntro)||!bool(active.remixPending)||active.scoreOverflow!==undefined&&!bool(active.scoreOverflow)||!submissionOK(active.submission,active))return false;
  if(active.status==='explore')return active.bonus!==null&&active.score===0&&active.cleared===0&&active.perks.length===0&&active.scene===null&&active.summary===null;
  if(active.cleared>active.stageIndex+1)return false;
  if(active.status==='playing'&&(active.cleared!==active.stageIndex||active.summary!==null||active.bonus!==null))return false;
- if(active.status==='summary'&&(active.stageIndex===ROUTE.length-1||active.cleared!==active.stageIndex+1||active.summary?.qualified!==true))return false;
- return active.scene===null||active.status==='playing'&&sceneOK(active.scene,mainStage(ROUTE[active.stageIndex]),active.id);
+ if(active.status==='summary'&&(active.mode==='rush'||active.mode==='festival'&&active.stageIndex===ROUTE.length-1||active.cleared!==active.stageIndex+1||active.summary?.qualified!==true))return false;
+ return active.scene===null||active.status==='playing'&&sceneOK(active.scene,stageForRun(active),active.id);
 }
-function resultOK(value){return allowed(value,['id','score','cleared','completed'])&&id(value.id)&&integer(value.score)&&integer(value.cleared,0,6)&&bool(value.completed)&&(!value.completed||value.cleared===6);}
+function resultOK(value){return allowed(value,['id','mode','score','cleared','completed'])&&id(value.id)&&integer(value.score)&&integer(value.cleared,0,1000000)&&bool(value.completed)&&(!value.completed||value.cleared===6);}
 
 export function normalizeTourProfile(raw){
  const profile=createTourProfile();
@@ -85,10 +94,14 @@ export function normalizeTourProfile(raw){
  profile.progress.xp=count(source.xp);profile.progress.legacyWardrobe=source.legacyWardrobe===true;
  for(const key of Object.keys(profile.progress.totals))profile.progress.totals[key]=count(source.totals?.[key]);
  // SMF does not inherit the generic edition's layout achievements.
- profile.progress.endless.bestCleared=count(source.endless?.bestCleared);profile.progress.endless.remixed=source.endless?.remixed===true;
+ profile.progress.endless.smfVenues=unique(source.endless?.smfVenues,ROUTE);profile.progress.endless.bestCleared=count(source.endless?.bestCleared);profile.progress.endless.remixed=source.endless?.remixed===true;
  profile.progress.receipts=Array.isArray(source.receipts)?[...new Set(source.receipts.filter(value=>typeof value==='string'&&value.length>0&&value.length<150))].slice(-256):[];
  for(const key of Object.keys(profile.outfit)){if(WARDROBE[key]?.some(item=>item.id===raw.outfit?.[key]))profile.outfit[key]=raw.outfit[key];}
- try{if(raw.active!==null&&activeOK(raw.active,profile.discoveries))profile.active=structuredClone(raw.active);}catch{}
+ profile.themePreference=normalizeThemePreference(raw.themePreference);
+ if(object(raw.audio)){profile.audio.enabled=raw.audio.enabled!==false;for(const key of ['music','effects'])if(number(raw.audio[key],0,1))profile.audio[key]=raw.audio[key];}
+ profile.initials=typeof raw.initials==='string'&&/^[A-Z0-9]{0,3}$/.test(raw.initials)?raw.initials:'';profile.playtestConsent=raw.playtestConsent===true||raw.playtestConsent==='accepted'?'accepted':raw.playtestConsent==='declined'?'declined':'unknown';
+ for(const mode of ['rush','festival','endless'])if(Array.isArray(raw.boards?.[mode]))profile.boards[mode]=raw.boards[mode].filter(row=>object(row)&&id(row.id)&&/^[A-Z0-9]{3}$/.test(row.initials)&&integer(row.score)&&integer(row.cleared??row.stagesCleared,0,1000000)&&boundedJSON(row)).slice(0,20).map(row=>structuredClone(row));
+ try{if(raw.active!==null&&object(raw.active)){const defaults={mode:'festival',themeId:'forest-freakout',scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:false,remixPending:false};const active={...defaults,...raw.active};if(activeOK(active,profile.discoveries))profile.active=structuredClone(active);}}catch{}
  if(resultOK(raw.lastResult))profile.lastResult=structuredClone(raw.lastResult);
  return profile;
 }

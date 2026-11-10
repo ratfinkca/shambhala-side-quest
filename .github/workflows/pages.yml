@@ -37,11 +37,16 @@ jobs:
         env:
           VITE_ARCADE_ENABLED: ${{ vars.ARCADE_ENABLED || 'false' }}
           VITE_ARCADE_URL: ${{ vars.ARCADE_URL }}
+          VITE_SMF_ARCADE_ENABLED: ${{ vars.SMF_ARCADE_ENABLED || 'false' }}
+          VITE_SMF_ARCADE_URL: ${{ vars.SMF_ARCADE_URL }}
+          VITE_SMF_PLAYTEST_ENABLED: ${{ vars.SMF_PLAYTEST_ENABLED || 'false' }}
+          VITE_SMF_PLAYTEST_URL: ${{ vars.SMF_PLAYTEST_URL }}
+          VITE_SMF_PLAYTEST_NOTICE_URL: ${{ vars.SMF_PLAYTEST_NOTICE_URL }}
           VITE_BUILD_ID: ${{ github.sha }}
           VITE_PLAYTEST_ENABLED: ${{ vars.PLAYTEST_ENABLED || 'false' }}
           VITE_PLAYTEST_URL: ${{ vars.PLAYTEST_URL }}
           VITE_PLAYTEST_NOTICE_URL: ${{ vars.PLAYTEST_NOTICE_URL }}
-        run: npm run build
+        run: npm run build:pages
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5

@@ -1,12 +1,12 @@
 # Two-edition delivery roadmap
 
-Updated 2026-11-10. Approved program with a locally implemented six-stage Festival, five optional discoveries, permanent souvenirs and paused recovery. Automated verification passes; integrated desktop/phone-size preview checks are complete; physical-phone and owner acceptance remain open. SMF remains unpublished. Authority: [edition split design](superpowers/specs/2026-11-06-edition-split-design.md), updated by the [secret/backstage direction](superpowers/specs/2026-11-10-secret-backstage-expansion-design.md). User target: nearly fully polished SMF edition before pitching; no fixed pitch date. Published recovery baseline remains PR #19 /67c44e0.
+Updated 2026-11-10. Approved program with a local parity candidate for Festival, Quick Rush and Endless, five optional discoveries, permanent souvenirs and paused recovery. Automated and local browser verification has progressed; native fullscreen, physical-phone and owner acceptance remain open. SMF remains unpublished. Authority: [edition split design](superpowers/specs/2026-11-06-edition-split-design.md), updated by the [secret/backstage direction](superpowers/specs/2026-11-10-secret-backstage-expansion-design.md). User target: nearly fully polished SMF edition before pitching; no fixed pitch date. Published recovery baseline remains PR #19 /67c44e0.
 
 ## Product target
 
 One shared engine; separately built generic and SMF editions. The local SMF Festival now connects six mains plus Rabbit Hole/Living Room, Secret Garden/Grove, Ikigai Mori/Pagoda, Villagio/Village and AMP backstage: eleven venues. Villagio has two playable putting holes and an earned Golden Chicken Totem; AMP has targeted sandwich deliveries and an earned Cheese Totem. The map conceals each bonus identity until discovered. Original arrangements and venue-specific art/light shows are included, with final polish and physical-phone acceptance still open.
 
-Normal local play: [http://127.0.0.1:5191/](http://127.0.0.1:5191/). [Tour implementation and validation](superpowers/smf-tour-validation.md) records the distinction between implemented behavior, automated evidence and browser observations. Generic preserves its public gameplay/progression and online services. SMF has independent device-local progress/recovery and no online posting or playtest connection. Ownership-driven repository separation and a separate release destination remain explicit later decisions; nothing here creates a remote fork or deployment.
+Normal local play: [http://127.0.0.1:5191/](http://127.0.0.1:5191/). [Tour implementation and validation](superpowers/smf-tour-validation.md) records the distinction between implemented behavior, automated evidence and browser observations. Generic preserves its public gameplay/progression and online services. SMF has independent device-local progress/recovery and implemented separate online score and opt-in playtest services, with backend deployment and harmless live verification completed. The approved public test destination is `/smf/` on the existing Pages site. Any separate repository or ownership transfer remains a later decision.
 
 ## M0 — Edition foundation (local preview complete)
 
@@ -16,7 +16,7 @@ Normal local play: [http://127.0.0.1:5191/](http://127.0.0.1:5191/). [Tour imple
 
 - Explicit generic/SMF manifest/build selection and asset boundary.
 - Extract three-stage assumptions into trusted generic rules data, while preserving every existing generic result, variant, award and score payload.
-- The original nine-entry scaffold established main/secret parent relationships. The current integrated tour supersedes it with eleven entries and playable SMF content, still without online posting.
+- The original nine-entry scaffold established main/secret parent relationships. The current parity candidate supersedes it with eleven entries, playable SMF content and separate online service code; backend deployment and harmless live verification are complete.
 - Generic keeps legacy profile/lock and v1 recovery/tickets. SMF gets independent profile/lock/consent/lab namespaces; unknown editions fail clearly.
 - Dual-build/asset-isolation checks and generic regression/recovery/score acceptance. No backend deployment or public rebrand in this slice.
 
@@ -40,14 +40,13 @@ Normal local play: [http://127.0.0.1:5191/](http://127.0.0.1:5191/). [Tour imple
 
 **Outcome:** a complete six-stage SMF tour and Endless main loop with all parent stages recognizable.
 
-**Local status:** the six-stage Festival, four-perk choices, main results and paused device-local recovery are implemented in the [tour integration](superpowers/plans/2026-11-10-smf-tour-integration.md). The accepted route is Living Room → Fractal Forest → Grove → AMP → Pagoda → Village, using each venue's existing phrase clock and spark target. All six reuse reference-guided illustrations, fuller original arrangements and animated venue-specific lights/lasers. The separate main-venue rehearsal remains available. [Current validation](superpowers/smf-tour-validation.md): **516 tests and both edition checks pass; integrated desktop/phone-size preview checks are complete; physical-phone and owner acceptance remain open**.
+**Local status:** the parity candidate implements the six-stage Festival, 60-second Pagoda Quick Rush and repeating Endless, four-perk choices, results, device-local recovery and edition-specific score, board and playtest service code. The route is Living Room → Fractal Forest → Grove → AMP → Pagoda → Village; Endless applies duration-normalized target growth and capped crowd/speed scaling. The generic profile and service contracts remain separate.
 
-SMF Endless, ranked scoring rules, server validation and online boards remain outstanding. Local recovery has its own bounded SMF contract and does not depend on creating that future online protocol. Generic recovery/posting remain unchanged. The production SMF build now contains playable local tour code; no hosted rollout is claimed. Earlier [clock](superpowers/smf-clock-preview-validation.md), [venue](superpowers/smf-venue-preview-validation.md) and [laser/dancefloor](superpowers/smf-lasers-dancefloor-validation.md) validations are historical slice evidence, not proof of the complete journey.
+[Parity validation](superpowers/smf-feature-parity-validation.md) records **549 passing tests**, both edition builds, the combined Pages build and the browser observations so far. Local browser checks cover the principal mode, recovery, bonus and retry paths; native fullscreen, physical-phone and owner acceptance remain open. The SMF migration and four functions are deployed; harmless live validation passed before frontend publication. Earlier [clock](superpowers/smf-clock-preview-validation.md), [venue](superpowers/smf-venue-preview-validation.md) and [laser/dancefloor](superpowers/smf-lasers-dancefloor-validation.md) records are historical slice evidence.
 
-- Author all six layouts with safe spawns, reachable pickups and touch-friendly routes. Develop in contrasting internal slices, then complete the full collection.
-- The canonical Festival route, finite four-perk builds, local finish/results and discovery slots are implemented. Extend those rules deliberately to the remaining SMF Endless mode; do not reuse generic three-stage score assumptions.
-- Introduce a strict edition/ruleset protocol and server validation; isolate tickets, ranks, cache and opt-in reports while keeping arcade-v1 fully compatible.
-- Apply additive backend changes and deploy functions before enabling SMF posting. Browser/staging tests cover cross-edition rejection and unknown/mismatched IDs; no production test scores.
+- Complete mode, perk, score, recovery and bonus-return acceptance against the final candidate.
+- Backend migration, functions and harmless live verification are complete; do not create production test scores or events.
+- Verify the reviewed PR, CI, merge, Pages deployment and both public edition paths independently.
 
 **Exit:** every main stage playable, all scores reconcile with its ruleset, separate boards/configurations, saved/unfinished run handling verified. Visual/audio polish can still be in progress; this is an internal milestone.
 
@@ -63,7 +62,7 @@ SMF Endless, ranked scoring rules, server validation and online boards remain ou
 - Bonus scores, XP, temporary boosts, charge and activity items never alter the main run. Atomic checkpoints preserve discovery, ownership, the parked parent and at most one child. Held sandwiches and moving putts restore paused; owned rewards do not grant twice.
 - Wardrobe equips earned souvenirs, and names/art remain concealed until discovery. A separate DEV tour lab supports repeatable checks without writing to normal SMF progress; old isolated rehearsals remain disposable.
 
-**Acceptance status:** automated state, activity recovery, atomic storage, generic compatibility and both edition-build checks pass. Native integrated desktop/phone-size preview checks are complete; physical-phone and owner acceptance remain open; actual phone comfort/performance and owner balance feedback remain open. [Validation](superpowers/smf-tour-validation.md). Test the full journey, every skip/revisit/early-exit path and final Villagio return before considering this milestone accepted. SMF Endless return handling will be verified when that mode is built. No public release is claimed.
+**Acceptance status:** automated state, activity recovery, atomic storage, generic compatibility and both edition-build checks pass. Native integrated desktop/phone-size preview checks are complete; physical-phone and owner acceptance remain open; actual phone comfort/performance and owner balance feedback remain open. [Validation](superpowers/smf-tour-validation.md). Final Villagio return, bonus paused recovery and Endless continuation were observed in the parity browser check. Full skip/revisit/early-exit coverage and physical-device comfort remain follow-up. No public release is claimed.
 
 **Exit:** first discovery, revisit, skip, interrupted detour and return work for every secret on desktop/touch; main-only board claims remain identical with or without optional visits.
 
@@ -99,7 +98,7 @@ SMF Endless, ranked scoring rules, server validation and online boards remain ou
 
 - Freeze the candidate's edition/ruleset/content versions; record tests, performance devices, known limitations and rollback.
 - Prepare a concise experience guide plus screenshots/gameplay capture from that exact build, showing all eleven venues and bonus discoveries honestly. The two-hole putting game is implemented; do not depict a playable slide ride or other planned extras as finished.
-- Owner approves the external pitch/demo release and audience; then deploy backend first where needed, verify Pages/hosting separately and test the actual shared URL.
+- The authorized public test edition follows backend-first verification, reviewed PR, CI and public smoke checks; a separate owner decision governs any external pitch/demo and audience.
 - Any separate SMF repository/project ownership or access grants are explicit owner decisions. No automatic outreach or publishing.
 
 ## Pitch completion checklist

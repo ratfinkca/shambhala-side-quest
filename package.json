@@ -10,7 +10,8 @@
     "test": "node --test tests/*.test.mjs",
     "build:generic": "VITE_EDITION=generic vite build --outDir dist/generic",
     "build:smf": "VITE_EDITION=smf vite build --outDir dist/smf",
-    "check:editions": "node scripts/check-edition-builds.mjs"
+    "check:editions": "node scripts/check-edition-builds.mjs",
+    "build:pages": "node scripts/build-pages.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

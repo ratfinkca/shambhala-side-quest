@@ -8,7 +8,7 @@ const publicRoot=fileURLToPath(new URL('../public/',import.meta.url)).replaceAll
 const mime=path=>path.endsWith('.webp')?'image/webp':path.endsWith('.ttf')?'font/ttf':path.endsWith('.html')?'text/html; charset=utf-8':'text/plain; charset=utf-8';
 export function assetsForEdition(id){
  const edition=getEdition(id);
- return [...shared,...Object.values(edition.brand.titleArtByTheme)];
+ return [...shared,...(id==='smf'?['smf-playtest-data.html']:[]),...Object.values(edition.brand.titleArtByTheme)];
 }
 export function editionAssetsPlugin(id){
  const assets=assetsForEdition(id),allowed=new Set(assets);
@@ -23,7 +23,7 @@ export function editionAssetsPlugin(id){
     let absolute='/'+urlPath.slice('/@fs/'.length).replace(/^\/+/, '');
     if(/^\/[A-Za-z]:\//.test(absolute))absolute=absolute.slice(1);
     if(absolute.startsWith(publicRoot))path=absolute.slice(publicRoot.length);
-   }else if(/^\/(themes|fonts)\//.test(urlPath)||urlPath==='/playtest-data.html')path=urlPath.slice(1);
+   }else if(/^\/(themes|fonts)\//.test(urlPath)||urlPath==='/playtest-data.html'||urlPath==='/smf-playtest-data.html')path=urlPath.slice(1);
    if(path===undefined){next();return;}
    if(!allowed.has(path)){res.statusCode=404;res.end('Asset not available in this edition');return;}
    try{res.setHeader('Content-Type',mime(path));res.end(await readFile(source(path)));}catch{res.statusCode=404;res.end();}
