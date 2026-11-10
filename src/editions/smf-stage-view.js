@@ -1,7 +1,15 @@
 import {LIVING_ROOM_ART_KEY,FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY,VILLAGE_ART_KEY} from './smf-venue-assets.js';
+import {createSMFStageLighting} from './smf-stage-lighting.js';
 // Scenery is decorative; stage data owns collision. Illustrated venues retain
 // their original canvas sketches as asset-load fallbacks.
 const W=960,H=640;
+const artPoint=([x,y])=>({x:x*W/1536,y:y*H/1024});
+// Architectural projections stay on measured surfaces. Their soft outer stroke
+// reads at phone size without washing out the underlying timber or carving.
+function surfaceLine(g,points,colour,alpha,closed=false,width=1.8){
+ g.lineStyle(width+4,colour,alpha*.18).strokePoints(points,closed);
+ g.lineStyle(width,colour,alpha).strokePoints(points,closed);
+}
 function cedar(g,x,lean){
  g.fillStyle(0x122d2c).fillPoints([{x:x-22,y:164},{x:x+9,y:164},{x:x+lean+12,y:42},{x:x+lean-6,y:15}],true);
  g.lineStyle(3,0x705b40,.7).lineBetween(x-5,165,x+lean,38);
@@ -63,24 +71,27 @@ function livingRoom(scene){
  return {lampPositions:[600,660,715,770,825,880].map(x=>[x*W/1536,302*H/1024]),update(elapsed,phase,reduced,timing){
   ambience.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=!reduced&&phase==='drop'?1:.8;
+  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
   panels.forEach((p,i)=>{
-   for(let band=0;band<3;band++){
+   const breathe=.5+.5*Math.sin(turn+i*.5);
+   ambience.fillStyle(0x9bd9c3,(.035+.04*breathe)*energy).fillRect(p.x,p.y,p.w,p.h);
+   for(let band=0;band<4;band++){
     const points=[];
     for(let step=0;step<=16;step++){
-     const u=step/16,v=.24+band*.23+Math.sin(u*Math.PI*2+turn+i*.7+band*.6)*.1;
+     const u=step/16,v=.18+band*.2+Math.sin(u*Math.PI*2+turn+i*.7+band*.6)*.1;
      points.push({x:p.x+u*p.w,y:p.y+v*p.h});
     }
-    ambience.lineStyle(.8,band%2?0xf0b590:0x9bd9c3,.22*energy).strokePoints(points,false);
+    surfaceLine(ambience,points,band%2?0xf0b590:0x9bd9c3,.36*energy,false,1.5);
    }
   });
   for(const [i,p]of shades.entries()){
-   const breathe=1+Math.sin(turn*.5+i)*.08;
-   for(let r=3;r>0;r--)ambience.fillStyle(0xffcf83,.012*breathe).fillEllipse(p.x,p.y,p.r*r,p.r*r*.55);
+   const breathe=.88+Math.sin(turn*.5+i)*.12;
+   for(let r=4;r>0;r--)ambience.fillStyle(0xffcf83,.025*breathe).fillEllipse(p.x,p.y,p.r*r,p.r*r*.55);
+   ambience.fillStyle(0xffe2a8,.12*breathe).fillEllipse(p.x,p.y,p.r*.9,p.r*.22);
   }
   for(let i=0;i<6;i++){
    const x=(6+Math.sin(turn*.4+i)*3)*W/1536,y=(439+i*10)*H/1024;
-   ambience.lineStyle(.8,0x92d8c7,.18).lineBetween(x,y,x+13*W/1536,y);
+   ambience.lineStyle(1.2,0x92d8c7,.28).lineBetween(x,y,x+13*W/1536,y);
   }
  }};
 }
@@ -159,22 +170,32 @@ function pagoda(scene){
   [[871,125],[937,143],[946,209],[874,197]],
   [[688,245],[848,245],[862,315],[674,315]],
  ].map(points=>points.map(([x,y])=>({x:x*W/1536,y:y*H/1024})));
+ const roof=[[538,53],[558,88],[653,90],[768,15],[883,90],[978,88],[998,53]].map(artPoint);
  const point=(p,u,v)=>({x:(p[0].x*(1-u)+p[1].x*u)*(1-v)+(p[3].x*(1-u)+p[2].x*u)*v,y:(p[0].y*(1-u)+p[1].y*u)*(1-v)+(p[3].y*(1-u)+p[2].y*u)*v});
  return {lampPositions:[[440,369],[585,361],[700,353],[834,353],[950,361],[1095,369]].map(([x,y])=>[x*W/1536,y*H/1024]),update(elapsed,phase,reduced,timing){
   mapping.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=!reduced&&phase==='drop'?1:.8;
+  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
   panels.forEach((panel,i)=>{
    const breathe=.5+.5*Math.sin(turn+i*.9);
    // Overlapping soft tints fade continuously; no phrase-boundary colour cut.
-   mapping.fillStyle(0x8ce5d7,(.025+.065*breathe)*energy).fillPoints(panel,true);
-   mapping.fillStyle(0xc2a1ee,(.025+.065*(1-breathe))*energy).fillPoints(panel,true);
-   for(let ring=0;ring<3;ring++){
-    const radius=.17+ring*.105+Math.sin(turn-ring*.6+i*.5)*.025;
+   mapping.fillStyle(0x8ce5d7,(.035+.075*breathe)*energy).fillPoints(panel,true);
+   mapping.fillStyle(0xc2a1ee,(.035+.075*(1-breathe))*energy).fillPoints(panel,true);
+   for(let ring=0;ring<4;ring++){
+    const radius=.12+ring*.095+Math.sin(turn-ring*.6+i*.5)*.025;
     const diamond=[[.5,.5-radius],[.5+radius,.5],[.5,.5+radius],[.5-radius,.5]].map(([u,v])=>point(panel,u,v));
-    mapping.lineStyle(1.2,ring%2?0xa9f6e9:0xf6e2bc,(.13+.13*breathe)*energy).strokePoints(diamond,true);
+    surfaceLine(mapping,diamond,ring%2?0xa9f6e9:0xf6e2bc,(.25+.13*breathe)*energy,true,1.6);
    }
+   // A slowly breathing rosette is mapped through each actual wall quadrilateral.
+   // Arches and balcony rails remain free of projection, preserving the facade.
+   const flower=[];
+   for(let step=0;step<=32;step++){
+    const angle=step/32*Math.PI*2,radius=.21+Math.sin(angle*4+turn*.5)*.055;
+    flower.push(point(panel,.5+Math.cos(angle)*radius,.5+Math.sin(angle)*radius));
+   }
+   surfaceLine(mapping,flower,0xe7c8ff,.33*energy,true,1.4);
   });
+  surfaceLine(mapping,roof,0xc8e7ff,(.22+.13*(.5+.5*Math.sin(turn)))*energy,false,1.7);
  }};
 }
 
@@ -254,18 +275,25 @@ function fractalForest(scene){
  if(!scene.textures?.exists(FRACTAL_ART_KEY))return fractalForestSketch(scene);
  scene.add.image(0,0,FRACTAL_ART_KEY).setOrigin(0).setDisplaySize(W,H);
  const neon=scene.add.graphics().setDepth(.12);
+ const boothBars=[[[603,346],[735,346]],[[620,361],[735,361]],[[649,377],[735,377]],[[800,346],[934,346]],[[800,361],[917,361]],[[800,377],[888,377]]].map(points=>points.map(artPoint));
  return {lampPositions:[420,444,468,492,516,540].map(x=>[x,137]),update(elapsed,phase,reduced,timing){
   neon.clear();
   const turns=reduced?0:elapsed*timing.bpm/60000/8;
-  const energy=!reduced&&phase==='drop'?1:.78;
+  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turns*Math.PI*.5));
   FRACTAL_TRACES.forEach((path,i)=>{
    const colour=[0x91fff0,0xe796ff,0xb9ff76,0xb9ff76,0x86efff][i];
-   const head=((turns+i*.19)%1)*path.length,span=path.length*.19;
+   const head=((turns+i*.19)%1)*path.length,span=path.length*.32;
+   traceSection(neon,path,0,path.length,1.8,colour,.13*energy);
    // Wrap short trails smoothly; no flashes or full-screen brightness jumps.
    for(const start of [head-span,head-span+path.length]){
-    traceSection(neon,path,start,span,6,colour,.10*energy);
-    traceSection(neon,path,start,span,1.6,colour,.8*energy);
+    traceSection(neon,path,start,span,9,colour,.08*energy);
+    traceSection(neon,path,start,span,4,colour,.18*energy);
+    traceSection(neon,path,start,span,2,colour,.4*energy);
    }
+  });
+  boothBars.forEach((points,i)=>{
+   const glow=.22+.16*(.5+.5*Math.sin(turns*Math.PI*2-i%3*.8));
+   surfaceLine(neon,points,i%3===1?0xb9ff76:0x91fff0,glow*energy,false,2);
   });
  }};
 }
@@ -339,19 +367,32 @@ function grove(scene){
  const diamond=(x,y,rx,ry)=>[{x,y:y-ry},{x:x+rx,y},{x,y:y+ry},{x:x-rx,y}].map(p=>({x:p.x*W/1536,y:p.y*H/1024}));
  const panels=[[261,327,20,30],[464,294,20,28],[1075,294,20,28],[1276,327,20,30]].map(p=>diamond(...p));
  const booth=[20,38,57].map(rx=>diamond(768,377,rx,rx*.66));
+ // The suspended mandala stays physically still. Light walks across its radial
+ // segments, measured within the shallow canopy band of the illustration.
+ const canopyPetals=Array.from({length:12},(_,i)=>{
+  const angle=i/12*Math.PI*2;
+  return [[768,42],[768+Math.cos(angle-.16)*108,42+Math.sin(angle-.16)*18],
+   [768+Math.cos(angle)*205,42+Math.sin(angle)*33],
+   [768+Math.cos(angle+.16)*108,42+Math.sin(angle+.16)*18]].map(artPoint);
+ });
+ const canopyDiamonds=[430,1106].flatMap(x=>[48,82].map(rx=>diamond(x,24,rx,rx*.28)));
  return {lampPositions:[570,620,666,872,921,970].map(x=>[x*W/1536,228*H/1024]),update(elapsed,phase,reduced,timing){
   projection.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/8*Math.PI*2;
-  const energy=!reduced&&phase==='drop'?1:.8;
+  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
+  canopyPetals.forEach((points,i)=>{
+   const glow=.5+.5*Math.sin(turn*.5-i*Math.PI/6),colour=i%2?0x9be2d7:0xdfb2ff;
+   projection.fillStyle(colour,(.025+.055*glow)*energy).fillPoints(points,true);
+   surfaceLine(projection,points,colour,(.2+.18*glow)*energy,true,1.5);
+  });
+  canopyDiamonds.forEach((points,i)=>surfaceLine(projection,points,0xe9b9ff,(.24+.12*Math.sin(turn*.5+i))*energy,true,1.5));
   panels.forEach((points,i)=>{
-   const glow=(.24+.12*Math.sin(turn+i*.5))*energy;
-   projection.lineStyle(5,0xe5abff,glow*.14).strokePoints(points,true);
-   projection.lineStyle(1,0xe5abff,glow).strokePoints(points,true);
+   const glow=(.29+.10*Math.sin(turn+i*.5))*energy;
+   surfaceLine(projection,points,0xe5abff,glow,true,2);
   });
   booth.forEach((points,i)=>{
-   const glow=(.25+.15*Math.sin(turn-i*.55))*energy;
-   projection.lineStyle(4,0xffd997,glow*.15).strokePoints(points,true);
-   projection.lineStyle(1.2,0xffdfaa,glow).strokePoints(points,true);
+   const glow=(.29+.10*Math.sin(turn-i*.55))*energy;
+   surfaceLine(projection,points,0xffdfaa,glow,true,2);
   });
  }};
 }
@@ -408,17 +449,26 @@ function amp(scene){
  return {lampPositions:[595,653,707,827,881,940].map(x=>[x*W/1536,205*H/1024]),update(elapsed,phase,reduced,timing){
   leds.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=!reduced&&phase==='drop'?1:.8;
+  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
   screens.forEach((screen,index)=>{
+   const mirror=index===1?-1:1,breathe=.5+.5*Math.sin(turn*mirror);
+   leds.fillStyle(index%2?0xba72de:0x63cfe0,(.04+.04*breathe)*energy).fillRect(screen.x,screen.y,screen.width,screen.height);
    for(let band=0;band<5;band++){
     const points=[];
     for(let step=0;step<=16;step++){
      const u=step/16;
      // Smooth bounded ribbons; no bright full-panel fills or flashing cuts.
-     const v=.2+band*.15+Math.sin(u*Math.PI*2+turn+band*.4+index*.8)*.10;
+     const v=.2+band*.15+Math.sin(u*Math.PI*2+turn*mirror+band*.4)*.10;
      points.push({x:screen.x+u*screen.width,y:screen.y+v*screen.height});
     }
-    leds.lineStyle(1,band%2?0xc792f2:0x6bcbdc,.22*energy).strokePoints(points,false);
+    surfaceLine(leds,points,band%2?0xd99cff:0x85e8f0,.34*energy,false,1.7);
+   }
+   // Mirrored large forms give the two walls a coordinated show at phone size.
+   if(index<2)for(let ring=0;ring<3;ring++){
+    const rx=.17+ring*.10,ry=.14+ring*.09,cx=.5+Math.sin(turn*mirror)*.07;
+    const points=[[cx,.5-ry],[cx+rx,.5],[cx,.5+ry],[cx-rx,.5]]
+     .map(([u,v])=>({x:screen.x+u*screen.width,y:screen.y+v*screen.height}));
+    surfaceLine(leds,points,ring%2?0xd9ffa0:0xddafff,(.26+.11*breathe)*energy,true,1.8);
    }
   });
  }};
@@ -480,32 +530,54 @@ function village(scene){
   [932,148,45,43],[932,264,45,54],[1080,242,43,56],[1213,273,40,54],
   [671,342,59,26],[739,342,58,26],[806,342,59,26],
  ].map(([x,y,w,h])=>({x:x*W/1536,y:y*H/1024,w:w*W/1536,h:h*H/1024}));
+ const towers=[[307,184,158],[435,136,103],[580,80,48],[958,80,48],[1105,136,103],[1234,184,158]]
+  .map(([x,top,crown])=>({x:x*W/1536,top:top*H/1024,crown:crown*H/1024,bottom:390*H/1024}));
  return {lampPositions:[645,686,727,768,809,850].map(x=>[x*W/1536,202*H/1024]),update(elapsed,phase,reduced,timing){
   screens.clear();
   const turn=reduced?0:elapsed*timing.bpm/60000/16*Math.PI*2;
-  const energy=!reduced&&phase==='drop'?1:.8;
+  const energy=reduced?.8:.82+.18*(.5+.5*Math.sin(turn*.5));
+  towers.forEach((tower,i)=>{
+   // Light climbs the six real tower faces in a staggered, continuous wave.
+   // Narrow strips reveal the CNC edges rather than bleaching whole columns.
+   for(let section=0;section<6;section++){
+    const y=tower.bottom-(tower.bottom-tower.top)*(section+1)/6,height=(tower.bottom-tower.top)/6;
+    const glow=.5+.5*Math.sin(turn-section*.55-i*.65);
+    screens.fillStyle(0xffcc83,(.02+.045*glow)*energy).fillRect(tower.x-17,y,34,height);
+    for(const side of [-1,1]){
+     screens.lineStyle(5,0xffc77f,(.02+.035*glow)*energy).lineBetween(tower.x+side*18,y,tower.x+side*18,y+height);
+     screens.lineStyle(1.5,0xffdc9e,(.12+.23*glow)*energy).lineBetween(tower.x+side*18,y,tower.x+side*18,y+height);
+    }
+   }
+   const crownGlow=.5+.5*Math.sin(turn-3.3-i*.65);
+   screens.fillStyle(0xffc87e,(.035+.045*crownGlow)*energy).fillEllipse(tower.x,tower.crown+4,55,23);
+   screens.fillStyle(0xffe0a1,(.025+.035*crownGlow)*energy).fillEllipse(tower.x,tower.crown+3,25,12);
+  });
   panels.forEach((p,i)=>{
    const breathe=.5+.5*Math.sin(turn+i*.55);
-   screens.fillStyle(0x66ccda,(.025+.045*breathe)*energy).fillRect(p.x,p.y,p.w,p.h);
-   screens.fillStyle(0xc78ac9,(.025+.045*(1-breathe))*energy).fillRect(p.x,p.y,p.w,p.h);
+   screens.fillStyle(0x66ccda,(.035+.06*breathe)*energy).fillRect(p.x,p.y,p.w,p.h);
+   screens.fillStyle(0xc78ac9,(.035+.06*(1-breathe))*energy).fillRect(p.x,p.y,p.w,p.h);
    for(let band=0;band<3;band++){
     const points=[];
     for(let step=0;step<=12;step++){
      const u=step/12,v=.24+band*.23+Math.sin(u*Math.PI*2+turn+i*.5+band*.6)*.09;
      points.push({x:p.x+u*p.w,y:p.y+v*p.h});
     }
-    screens.lineStyle(.8,band%2?0xe0a2d0:0x8ce4df,.2*energy).strokePoints(points,false);
+    surfaceLine(screens,points,band%2?0xe0a2d0:0x8ce4df,.34*energy,false,1.5);
    }
   });
  }};
 }
 
 export function createSMFStageView(scene,stage){
- if(stage.id==='smf-living-room')return livingRoom(scene);
- if(stage.id==='smf-fractal')return fractalForest(scene);
- if(stage.id==='smf-grove')return grove(scene);
- if(stage.id==='smf-amp')return amp(scene);
- if(stage.id==='smf-pagoda')return pagoda(scene);
- if(stage.id==='smf-village')return village(scene);
- return null;
+ const draw={'smf-living-room':livingRoom,'smf-fractal':fractalForest,'smf-grove':grove,'smf-amp':amp,'smf-pagoda':pagoda,'smf-village':village}[stage.id];
+ if(!draw)return null;
+ const view=draw(scene);
+ // Illustrated stages supply exact fixture positions. Their own venue light
+ // rig replaces the generic one; missing-texture sketches retain the fallback.
+ if(!view.lampPositions)return view;
+ const rig=createSMFStageLighting(scene,stage,view.lampPositions);
+ return {...view,ownsLighting:true,destroy:()=>rig.destroy(),update(elapsed,phase,reduced,timing){
+  view.update(elapsed,phase,reduced,timing);
+  rig.update(elapsed,reduced,timing);
+ }};
 }

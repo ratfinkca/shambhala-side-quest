@@ -10,9 +10,9 @@ export class StageRenderer {
  show(stage){
   this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);this.venueView=this.venueViewFactory?.(this.scene,stage);if(this.venueView)this.fireflies=[];else if(stage.id==='clock-lab')this.drawPractice();else this.drawForest();
   this.lightShow=stage.lighting||LIGHT_SHOWS[stage.id]||LIGHT_SHOWS.forest;
-  if(stage.id!=='forest')this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
+  if(stage.id!=='forest'&&!this.venueView?.ownsLighting)this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
   this.concertBeams=[];this.lamps=[];this.canopyLights=[];
-  {
+  if(!this.venueView?.ownsLighting){
     const show=this.lightShow;
     const lampPositions=this.venueView?.lampPositions??[330,390,450,510,570,630].map(x=>[x,92]);
     for(const [i,[x,y]] of lampPositions.entries()){
@@ -67,7 +67,7 @@ export class StageRenderer {
  }
  update(elapsed,phase,reduced,timing=getTiming()){
   this.venueView?.update(elapsed,phase,reduced,timing);
-  {
+  if(!this.venueView?.ownsLighting){
     const light=concertLighting(elapsed,reduced,this.stageId,timing,this.lightShow);
     this.concertBeams.forEach((b,i)=>{b.rotation=(i-2.5)*.17*light.spread+light.sweep*(i%2?1:-1);b.setAlpha(light.alpha);b.setScale(1+light.fan*.25,1);});
     this.lamps.forEach(l=>l.setAlpha(light.glow));
@@ -77,7 +77,7 @@ export class StageRenderer {
   this.bassPulses?.forEach(p=>{p.clear();drawSpeakerBass(p,elapsed,phase,reduced,timing);});
   this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
  }
- destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];this.venueView=null;}
+ destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];this.venueView?.destroy?.();this.venueView=null;}
   drawPractice(){
     const g=this.scene.add.graphics();g.fillStyle(0x14252c).fillRect(0,0,W,H);
     g.lineStyle(1,0x91b8c1,.09);

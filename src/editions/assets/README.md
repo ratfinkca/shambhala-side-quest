@@ -1,5 +1,13 @@
 # SMF illustrated venue assets
 
+## Current all-stage lighting pass — 2026-11-09
+
+The six JPEG plates and their reference provenance below are unchanged. The original implementation notes describe each first art pass; their common six-light animation is now superseded in illustrated rehearsal views by `smf-stage-lighting.js` and the pure `smf-light-cues.js` phrase choreography.
+
+Living Room uses warm swaying light and stronger lamp/screen reflections; Fractal uses layered pyramid/support chases and crossing fans; Grove lights the fixed mandala canopy and wooden inlays; AMP pairs mirrored LED forms with crossing beams; Pagoda maps geometric rosettes to the pale facade and lights its measured roofline; Village illuminates the six tower faces/crowns in sequence. Broad feathered beams, cedar light and quiet haze connect architecture to the clearing. This is original stage-inspired choreography, not an exact reproduction of a photographed show.
+
+All animated layers use active round time and freeze with reduced motion. The illustrated rigs replace the common wash; canvas loading fallbacks retain it. Everything remains DEV-only, decorative and separate from gameplay geometry, timing and scoring. [Pass plan](../../../docs/superpowers/plans/2026-11-09-smf-venue-lighting.md).
+
 ## Fractal Forest art pilot
 
 `fractal-forest-v1.jpg` is an original ImageGen illustration used only in the SMF development venue preview. It is not included in either production edition. The plate is decorative: collision, pickup positions, timing and scoring are unchanged. Animated roof/support chases are drawn separately in `smf-stage-view.js`; they freeze with reduced motion and pause with the round.
