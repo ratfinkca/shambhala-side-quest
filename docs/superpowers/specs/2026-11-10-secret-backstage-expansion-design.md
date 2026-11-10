@@ -1,6 +1,6 @@
 # SMF secret and backstage direction
 
-Date: 2026-11-10. Status: owner-selected content direction, now including an implemented isolated AMP delivery preview; remaining details are identified below as proposals. This updates the venue/reward scope of the [edition split](2026-11-06-edition-split-design.md) and [route rules](2026-11-06-smf-route-rules-design.md). Production assets and scored rules remain unchanged. The catalogue still has nine entries and the six main rehearsals remain available; AMP backstage is a separate DEV-only rehearsal, not a discovered or persistent venue.
+Date: 2026-11-10. Status: owner-selected content direction with isolated DEV-only previews for all five bonus spaces; remaining rules are identified below as proposals. This updates the venue/reward scope of the [edition split](2026-11-06-edition-split-design.md) and [route rules](2026-11-06-smf-route-rules-design.md). Production assets and scored rules remain unchanged. The normal catalogue still has nine entries with secrets concealed, and the six main rehearsals remain available. No preview implements persistent discovery or a full-tour visit.
 
 ## Owner decisions
 
@@ -24,13 +24,21 @@ The owner also selected main soundtrack artist targets: KR3TURE / Living Room, T
 - **Villagio:** a full golf game immediately versus a small themed dance space first. The owner's clarification selects the small space first, with a couple of holes; preserve room to add a simple cosmetic-winning putting activity later. Do not make golf physics, three holes, stroke limits or a particular aiming control an already-approved requirement. The earlier three-hole proposal is superseded.
 - **AMP backstage, latest owner refinement:** combine delivery with precision smooth passes. This supersedes both the generic sandwich-delivery suggestion and the subsequent untargeted pass-count challenge. The vendor supplies one sandwich for a specific, visibly recognizable recipient. Correct smooth pass delivers it; a wrong smooth pass gives it to the wrong dancer, who is happy but contributes no challenge progress; any bump drops the held sandwich. Neither mistake resets completed deliveries. Reuse familiar movement; cooking, multiple simultaneous orders and service-pressure queues are not part of this direction.
 
-## Proposed first-preview behavior
+## Preview behavior and remaining rules
+
+### Rabbit Hole, Secret Garden and Ikigai Mori
+
+**Implemented isolated previews (2026-11-10):** `?rehearsal&bonus=rabbit-hole`, `secret-garden` or `ikigai-mori` in the DEV SMF build, with a shared selector that also includes Villagio. Rabbit Hole follows six sequential party trinkets and shows temporary rabbit ears. Secret Garden carries three individual seeds back to a planting bed and shows a glowing blossom. Ikigai Mori counts clean passes around five distinct dancers, lighting lanterns and showing a temporary lantern totem. Pausing freezes the visit; switching, restarting or reloading clears it. Music/effects controls use disposable rehearsal settings.
+
+Replaceable generated illustrations and animated lamp, flower and lantern accents distinguish the rooms. They are creative interpretations, not confirmed 2026 structures. Each has an original synthesized phrase arrangement; the named DJ's recording is not included. All 448 tests, the production build and both edition checks passed. Native Chrome play completed Rabbit Hole and Secret Garden at 390×844 and Ikigai Mori on desktop. Physical-phone play, listening and the owner's venue-reference review remain open. [Implementation plan](../plans/2026-11-10-bonus-venue-previews.md).
+
+The 6/3/5 activity targets and cosmetic sketches are first-preview choices. The rehearsal only displays its souvenir after completing its activity, with no permanent grant. This must **not** silently replace the original three's first-completed-visit souvenir release plan; final base souvenirs and optional challenge variants remain a separate integration decision.
 
 ### Villagio
 
-Build a compact dance clearing with two visible putting holes, playful miniature lounge details and the chicken tube slide. The owner's slide and golf theme are defining features; extra fountains, gold signage, reward names and exact motifs are creative proposals. Check readability at phone size and preserve clear dance routes around the greens.
+**Implemented space preview:** select Villagio or use `?rehearsal&bonus=villagio`. A procedural miniature club surrounds two walkable putting greens and a twisty tube with animated chickens. Visiting the two greens and slide exit completes an exploration checklist, with no cosmetic or putting-win claim. Original Subvert-labelled rehearsal synthesis is included; no Subvert recording is bundled. The owner's slide and golf theme are defining features; club facade, lights and exact motifs are creative proposals.
 
-For the first art/space preview, no putting challenge or reward can be represented as implemented. The later mini-game should remain short, approachable with mouse or touch and optional; controls, success criteria and cosmetic are still to be settled. A celebratory slide ride may supply the finale. Chicken sounds must respect Effects volume and use brief cues; reduced motion needs a restrained slide/arrival alternative.
+Putting, a player slide ride and squawk sounds are not implemented. The next mini-game should remain short, approachable with mouse or touch and optional; controls, success criteria and cosmetic are still to be settled. A celebratory slide ride may supply the finale. Future chicken sounds must respect Effects volume and use brief cues; reduced motion needs a restrained slide/arrival alternative.
 
 ### AMP backstage
 
@@ -70,10 +78,9 @@ The existing parent-clear invitation/revisit flow remains the default for all fi
 
 ## Delivery sequence and open details
 
-1. Complete acceptance of the implemented AMP delivery preview, which the latest owner approval moved ahead of the earlier Rabbit Hole-first proposal. Check phone readability and pacing before freezing its target count or duration.
-2. Continue reference-led concepts and disposable previews for Rabbit Hole, Secret Garden and Ikigai Mori, then Villagio's small themed area with its owner-selected DJ identity. Names remain concealed in normal player-facing catalogues until actual discovery is wired.
-3. Settle and build Villagio's putting mini-game as its own small follow-up. Its control scheme and reward condition remain open, not prerequisites to the first art preview.
-4. Integrate all five with the six-main run, discovery, rewards, return/recovery and final-stage results. An isolated rehearsal is not evidence that this full journey works.
+1. Review all five local previews with the owner, including phone readability, activity pacing, venue details and listening. AMP's costume-led delivery was accepted; the four subsequent previews are now available for review. Keep thresholds provisional and normal catalogue identities concealed.
+2. Settle and build Villagio's putting mini-game as the next small feature. Its control scheme, reward condition and timing remain open; add the slide/sound gag without making it obscure play.
+3. Connect the six-main run and all five optional detours with discovery, rewards, return/recovery and final-stage results. Preserve the original-three souvenir baseline and separate AMP/Villagio activity prizes. An isolated rehearsal is not evidence that this full journey works.
 
 Open content details: final AMP backstage name; actual visual references for each small space; exact soundtrack selection/cues and permissions; final reward/recipient sprites; delivery target count and pacing; Villagio putting controls/qualification/timing. None require inventing a DJ identity: all five have now been supplied by the owner.
 

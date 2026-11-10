@@ -7,6 +7,11 @@ for(const [stage,bpm,bars] of [['living-room',112,32],['fractal',120,32],['grove
  id:`smf-${stage}-clock-preview-1`,editionId:'smf',durationMs:Math.round(bars*240000/bpm),bpm,beatsPerBar:4,stepsPerBeat:4,
  dropStartsMs:(bars===48?[17,33,41]:[9,17,25]).map(bar=>Math.round((bar-1)*240000/bpm)),dropDurationMs:4000,buildMs:Math.round(240000/bpm),
 });
+// These isolated activity clocks are never accepted as ranked run rulesets.
+for(const [stage,bpm,bars] of [['rabbit-hole',120,32],['secret-garden',100,24],['ikigai-mori',124,32],['villagio',110,24]])register({
+ id:`smf-${stage}-bonus-preview-1`,editionId:'smf',durationMs:Math.round(bars*240000/bpm),bpm,beatsPerBar:4,stepsPerBeat:4,
+ dropStartsMs:(bars===24?[9,17]:[9,17,25]).map(bar=>Math.round((bar-1)*240000/bpm)),dropDurationMs:4000,buildMs:Math.round(240000/bpm),
+});
 export function getTiming(id='generic-60-v1'){
  if(!profiles.has(id))throw new Error(`Unknown stage clock: ${String(id)}`);
  return profiles.get(id);

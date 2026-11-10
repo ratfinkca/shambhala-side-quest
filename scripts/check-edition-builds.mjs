@@ -18,10 +18,11 @@ for(const id of ['generic','smf']){
  for(const path of allowed)await access(resolve(out,path));
  for(const path of paths){
   const relative=path.slice(out.length+1);
+  assert.doesNotMatch(relative,/rabbit-hole-v1|secret-garden-v1|ikigai-mori-v1/,'Production includes bonus rehearsal artwork');
   if(!relative.startsWith('assets/')&&relative!=='index.html')assert.ok(allowed.includes(relative),`Unowned ${id} asset: ${relative}`);
   if(!/\.(css|html|js)$/.test(path))continue;
   const text=await readFile(path,'utf8');
-  assert.doesNotMatch(text,/amp-delivery-entry|Delivered 0 \/ 3|Cheese courier|clock-practice-entry|Timing and instrument practice|clock-lab-select|Sister cedars · river reflections|twin lanes · follow the returning pulse/,'Production includes development practice');
+  assert.doesNotMatch(text,/bonus-practice|bonus-select|Souvenir unlocked:|Club tour complete!|amp-delivery-entry|Delivered 0 \/ 3|Cheese courier|clock-practice-entry|Timing and instrument practice|clock-lab-select|Sister cedars · river reflections|twin lanes · follow the returning pulse/,'Production includes development practice');
   if(id==='generic')assert.doesNotMatch(text,/themes\/(?:forest-freakout|moonlit-mycelium|neon-field-trip)\/title\.webp/,'Generic references SMF title art');
   if(/\.(css|html)$/.test(path)){
    for(const match of text.matchAll(/(?:src|href)=["']([^"']+)["']|url\(["']?([^\s)'";]+)["']?\)/g)){

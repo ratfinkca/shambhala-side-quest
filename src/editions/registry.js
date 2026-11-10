@@ -28,8 +28,13 @@ export function backstagePracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.get('backstage')==='amp';
 }
-export async function startEdition(env,actions,{clockPractice=false,venuePractice=false,backstagePractice=false}={}){
+export function bonusPracticeRequested(env,search){
+ const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
+ return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&['rabbit-hole','secret-garden','ikigai-mori','villagio'].includes(params.get('bonus'));
+}
+export async function startEdition(env,actions,{clockPractice=false,venuePractice=false,backstagePractice=false,bonusPractice=false}={}){
  const edition=getEdition(editionIdFromEnv(env));
+ if(env.DEV===true&&edition.id==='smf'&&bonusPractice&&actions.bonus)return actions.bonus(edition);
  if(env.DEV===true&&edition.id==='smf'&&backstagePractice&&actions.backstage)return actions.backstage(edition);
  if(env.DEV===true&&edition.id==='smf'&&venuePractice&&actions.venues)return actions.venues(edition);
  if(env.DEV===true&&edition.id==='smf'&&clockPractice&&actions.clock)return actions.clock(edition);
