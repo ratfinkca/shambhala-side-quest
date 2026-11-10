@@ -18,7 +18,7 @@ for(const id of ['generic','smf']){
  for(const path of allowed)await access(resolve(out,path));
  for(const path of paths){
   const relative=path.slice(out.length+1);
-  assert.doesNotMatch(relative,/rabbit-hole-v1|secret-garden-v1|ikigai-mori-v1/,'Production includes bonus rehearsal artwork');
+  assert.doesNotMatch(relative,/rabbit-hole-v1|secret-garden-v1|ikigai-mori-v1|villagio-v1/,'Production includes bonus rehearsal artwork');
   if(!relative.startsWith('assets/')&&relative!=='index.html')assert.ok(allowed.includes(relative),`Unowned ${id} asset: ${relative}`);
   if(!/\.(css|html|js)$/.test(path))continue;
   const text=await readFile(path,'utf8');

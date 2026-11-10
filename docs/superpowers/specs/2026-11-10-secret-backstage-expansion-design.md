@@ -36,7 +36,7 @@ The 6/3/5 activity targets and cosmetic sketches are first-preview choices. The 
 
 ### Villagio
 
-**Implemented space preview:** select Villagio or use `?rehearsal&bonus=villagio`. A procedural miniature club surrounds two walkable putting greens and a twisty tube with animated chickens. Visiting the two greens and slide exit completes an exploration checklist, with no cosmetic or putting-win claim. Original Subvert-labelled rehearsal synthesis is included; no Subvert recording is bundled. The owner's slide and golf theme are defining features; club facade, lights and exact motifs are creative proposals.
+**Implemented space preview:** select Villagio or use `?rehearsal&bonus=villagio`. A replaceable illustrated miniature club surrounds two walkable putting greens and a glossy twisty tube, with native animated chickens, fountain glints and warm light chasers. This replaces the initial flat procedural art and matches the other illustrated bonus rooms. Visiting the two greens and slide exit completes an exploration checklist, with no cosmetic or putting-win claim. Original Subvert-labelled rehearsal synthesis is included; no Subvert recording is bundled. The owner's slide and golf theme are defining features; club facade, lights and exact motifs are creative proposals.
 
 Putting, a player slide ride and squawk sounds are not implemented. The next mini-game should remain short, approachable with mouse or touch and optional; controls, success criteria and cosmetic are still to be settled. A celebratory slide ride may supply the finale. Future chicken sounds must respect Effects volume and use brief cues; reduced motion needs a restrained slide/arrival alternative.
 

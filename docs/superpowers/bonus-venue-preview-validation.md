@@ -13,7 +13,7 @@ Open `http://127.0.0.1:5191/?rehearsal&bonus=rabbit-hole` and use the selector f
 | Ikigai Mori / Soup | Clean-pass five distinct dancers | 124 BPM, 32 bars, 61.935s | Lantern totem; five lanterns lit |
 | Villagio / Subvert | Visit both greens and the chicken slide | 110 BPM, 24 bars, 52.364s | Exploration completion only |
 
-Three replaceable ImageGen plates use existing venue illustrations as style references. They are original interpretations, not confirmed 2026 architecture. Villagio is a procedural miniature club with walkable greens, a curved tube and animated chickens. There is no putting, player ride or squawk audio yet.
+Four replaceable ImageGen plates use existing venue illustrations as style references. They are original interpretations, not confirmed 2026 architecture. Villagio now uses an illustrated miniature club with walkable greens, a glossy curved tube, animated chickens and fountain/light accents; its initial procedural scenery was replaced after owner feedback. There is no putting, player ride or squawk audio yet.
 
 Each room has its own original synthesized arrangement: garage breaks, soft dub/downtempo, percussive house and funky breaks respectively. Eight-bar chapters, four-bar call/response, pre-drop space and phrase-end tail bounds use the existing instrument rack. The DJ labels do not imply any artist recording is bundled.
 
@@ -52,3 +52,17 @@ Phone-size screenshots are stored under `/Users/mother/.codex/visualizations/202
 Physical-phone thumb comfort/performance, device listening and the owner's exact venue identity review remain open. Reduced-motion branches were inspected; OS-level reduced-motion acceptance was not exercised in this pass. Preview goals and cosmetic sketches are playtest choices, not permanent award rules. Preserve the original-three first-completed-visit souvenir baseline when integrating.
 
 No profile/recovery writes, persistent cosmetic grants, XP, telemetry, online posting, backend deployment or public publishing. Future work: settle Villagio putting controls/success/reward; then implement the six-stage tour and optional discovery, parked-run return/recovery and atomic cosmetic receipts.
+
+## Villagio art correction — 2026-11-10
+
+Owner feedback identified Villagio as still using the old flat art direction. Replaced that procedural backdrop with a 1536×1024 illustrated club plate, using the Rabbit Hole and main Village illustrations as style references. Repositioned native chickens along the painted tube and added restrained fountain glints, arch chasers and tower lights. Activity geometry, music, timing and reward behavior are unchanged.
+
+Fresh checks after this correction:
+
+- `npm test`: 448/448 pass.
+- `npm run check:editions`: generic and SMF builds, asset allowlists, static references and invalid-edition rejection pass. The production exclusion now includes `villagio-v1`.
+- Chrome desktop and 390×844 viewport: new illustration loads, labels fit, existing circles remain readable on their greens/at the slide exit. Clicked through all three visits to completion at phone size.
+- Restart, pause/resume, and switch to Rabbit Hole and back: correct fresh scene and artwork; captured console errors/warnings empty.
+- Actual phone-size screenshot: `/Users/mother/.codex/visualizations/2026/10/13/01a1368f-7ce7-7722-a6bd-8509627b4e12/villagio-illustrated-phone.png`.
+
+This is browser viewport validation, not a physical-phone performance test. The earlier `villagio-complete-phone.png` records the superseded procedural art. This correction remains a local preview and was not published.
