@@ -3,15 +3,15 @@
 export const VENDOR_POINT = {x:205,y:250,radius:42};
 
 export const DELIVERY_RECIPIENTS = [
-  {id:'dancer-0',index:0,name:'Sunny',symbol:'☀',color:0xffca67},
-  {id:'dancer-1',index:1,name:'Orbit',symbol:'◆',color:0x75e0d2},
-  {id:'dancer-2',index:2,name:'Violet',symbol:'★',color:0xc4a1ff},
+  {id:'dancer-0',index:0,name:'Sunny',costume:'Golden crown',color:0xffca67},
+  {id:'dancer-1',index:1,name:'Orbit',costume:'Mint headphones',color:0x75e0d2},
+  {id:'dancer-2',index:2,name:'Violet',costume:'Purple wizard hat',color:0xc4a1ff},
 ];
 
 export const AMP_DELIVERY_STAGE = {
   id:'smf-amp-backstage',name:'AMP backstage',timingId:'smf-amp-clock-preview-1',
   target:3,spawn:{x:205,y:355},playBounds:{minX:60,maxX:900,minY:208,maxY:602},
-  crowdAnchors:[[410,330],[675,315],[575,500],[300,490],[805,485],[830,250]],
+  crowdAnchors:[[410,330],[675,315],[575,500],[300,490],[805,485],[830,250],[470,420],[700,430],[415,550],[560,265]],
   crowdSpeed:.45,obstacles:[],mud:[],flowSpawns:[],
   palette:{wash:0xbb7056,accent:0xffd78a},
 };
@@ -25,20 +25,6 @@ function starPoints(x,y,outer,inner,points=5) {
     const angle=i*Math.PI/points-Math.PI/2,r=i%2?inner:outer;
     return {x:x+Math.cos(angle)*r,y:y+Math.sin(angle)*r};
   });
-}
-
-function symbol(g,recipient,x,y,size=9,color=recipient?.color??C.cream) {
-  g.fillStyle(color,1);
-  if(recipient?.index===0) {
-    g.fillCircle(x,y,size*.48);
-    g.lineStyle(2.1,color,1);
-    for(let i=0;i<8;i++) {
-      const angle=i*Math.PI/4;
-      g.lineBetween(x+Math.cos(angle)*size*.7,y+Math.sin(angle)*size*.7,x+Math.cos(angle)*size,y+Math.sin(angle)*size);
-    }
-  } else if(recipient?.index===1) {
-    g.fillPoints([{x,y:y-size},{x:x+size*.82,y},{x,y:y+size},{x:x-size*.82,y}],true);
-  } else g.fillPoints(starPoints(x,y,size,size*.45),true);
 }
 
 function sandwich(g,x,y,size=1,alpha=1) {
@@ -90,7 +76,7 @@ function drawRecipient(g,recipient) {
   portraitAccessory(g,recipient);
 }
 
-// The HTML order card uses this same silhouette, palette and shape as the arena.
+// The order card matches the costume itself; there are no target badges.
 export function recipientPortrait(id) {
   const person=byId(id)??DELIVERY_RECIPIENTS[0],color=hex(person.color);
   const accessory=person.index===0
@@ -98,10 +84,7 @@ export function recipientPortrait(id) {
     : person.index===1
       ? `<path d="M31 36a17 17 0 0 1 34 0" fill="none" stroke="${color}" stroke-width="6"/><rect x="26" y="30" width="8" height="20" rx="4" fill="${color}"/><rect x="62" y="30" width="8" height="20" rx="4" fill="${color}"/>`
       : `<ellipse cx="48" cy="29" rx="29" ry="6" fill="${color}"/><path d="M29 29 50 0l17 29z" fill="${color}"/><path d="m48 12 2 4 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z" fill="#ffedba"/>`;
-  const badge=person.index===0
-    ? '<circle cx="77" cy="74" r="4.5"/><path d="M77 64v3m0 14v3m-10-10h3m14 0h3m-17-7 2 2m10 10 2 2m0-14-2 2m-10 10-2 2" fill="none" stroke-width="2"/>'
-    : person.index===1?'<path d="m77 63 8 11-8 11-8-11z"/>':'<path d="m77 63 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z"/>';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="${person.name}: ${person.index===0?'sun crown':person.index===1?'diamond headphones':'star hat'}"><rect x="1" y="1" width="94" height="94" rx="21" fill="#1c2633" stroke="${color}" stroke-opacity=".5"/><ellipse cx="48" cy="96" rx="29" ry="38" fill="${color}"/><rect x="39" y="63" width="18" height="30" rx="7" fill="#142434" opacity=".3"/><circle cx="48" cy="42" r="18" fill="${person.index===1?'#a87051':'#e7b28e'}"/><circle cx="42" cy="42" r="2" fill="#141c28"/><circle cx="54" cy="42" r="2" fill="#141c28"/><path d="M43 51q5 4 10 0" fill="none" stroke="#855440" stroke-width="2"/>${accessory}<circle cx="77" cy="74" r="15" fill="#141c28" stroke="${color}" stroke-width="2"/><g fill="${color}" stroke="${color}">${badge}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="${person.name}: ${person.costume}"><rect x="1" y="1" width="94" height="94" rx="21" fill="#1c2633" stroke="${color}" stroke-opacity=".5"/><ellipse cx="48" cy="96" rx="29" ry="38" fill="${color}"/><rect x="39" y="63" width="18" height="30" rx="7" fill="#142434" opacity=".3"/><circle cx="48" cy="42" r="18" fill="${person.index===1?'#a87051':'#e7b28e'}"/><circle cx="42" cy="42" r="2" fill="#141c28"/><circle cx="54" cy="42" r="2" fill="#141c28"/><path d="M43 51q5 4 10 0" fill="none" stroke="#855440" stroke-width="2"/>${accessory}</svg>`;
 }
 
 export function createAMPBackstageView(scene,stage) {
@@ -218,22 +201,20 @@ export function createAMPBackstageView(scene,stage) {
 }
 
 export function createDeliveryView(scene) {
-  const owned=[],track=node=>(owned.push(node),node),markers=new Map();
+  const owned=[],track=node=>(owned.push(node),node);
   for(const recipient of DELIVERY_RECIPIENTS) {
     const person=scene.crowd.people[recipient.index];
     if(!person)continue;
     drawRecipient(person.body,recipient);
-    const marker=track(scene.add.graphics());
-    marker.setPosition(0,recipient.index===2?-65:-53);
-    person.node.add(marker);markers.set(recipient.id,marker);
   }
   const vendor=track(scene.add.graphics().setDepth(6));
+  const ticket=track(scene.add.graphics().setPosition(302,180).setScale(.46).setDepth(6.1));
   const pickupText=track(scene.add.text(VENDOR_POINT.x,VENDOR_POINT.y+34,'PICK UP',{fontFamily:'Arial',fontSize:'12px',fontStyle:'bold',color:'#ffe4a5',letterSpacing:2}).setOrigin(.5).setDepth(7));
   const hand=track(scene.add.graphics());sandwich(hand,22,-2,.83);scene.dancer.add(hand);
   const prize=track(scene.add.graphics());scene.dancer.add(prize);prize.setVisible(false);
   prize.lineStyle(3,0xb59365).lineBetween(-21,8,-21,-57);cheese(prize,-21,-61,.65);
   const transient=track(scene.add.graphics().setDepth(26));
-  let elapsed=0,reduced=false,lastState=null,feedbacks=[],destroyed=false;
+  let elapsed=0,reduced=false,lastState=null,feedbacks=[],destroyed=false,lastTicket=null;
 
   function update(state,now=0,reducedMotion=false) {
     if(destroyed)return;
@@ -250,21 +231,9 @@ export function createDeliveryView(scene) {
     // The order ticket is mounted on the cart beside the serving counter.
     vendor.fillStyle(C.ink).fillRoundedRect(282,153,40,41,5);
     vendor.lineStyle(2,recipient?.color??C.gold,.8).strokeRoundedRect(282,153,40,41,5);
-    if(state.complete)cheese(vendor,302,176,.45);else if(recipient)symbol(vendor,recipient,302,174,11);
-    for(const person of DELIVERY_RECIPIENTS) {
-      const marker=markers.get(person.id);if(!marker)continue;
-      const active=state.recipientId===person.id&&!state.complete;
-      marker.clear();
-      if(active) {
-        marker.fillStyle(person.color,.1).fillCircle(0,0,23);
-        marker.lineStyle(2,C.cream,.9).strokeCircle(0,0,19);
-        marker.fillStyle(C.cream).fillTriangle(-4,20,4,20,0,26);
-      }
-      marker.fillStyle(C.ink,.95).fillCircle(0,0,14);
-      marker.lineStyle(2,person.color,active?1:.7).strokeCircle(0,0,14);
-      symbol(marker,person,0,0,8.5);
-      marker.setAlpha(state.complete?.65:active?1:.8);
-    }
+    if(state.complete)cheese(vendor,302,176,.45);
+    ticket.setVisible(Boolean(recipient)&&!state.complete);
+    if(recipient&&lastTicket!==recipient.id){drawRecipient(ticket,recipient);lastTicket=recipient.id;}
     transient.clear();
     feedbacks=feedbacks.filter(item=>elapsed-item.at<item.duration);
     for(const item of feedbacks) {

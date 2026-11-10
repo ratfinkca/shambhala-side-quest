@@ -17,12 +17,12 @@ root.innerHTML=`<header><div><span class="clock-eyebrow">AMP backstage · rehear
 <p class="delivery-intro">A little side quest between sets. Three hungry dancers. One very precious sandwich.</p>
 <div class="clock-controls"><button id="delivery-start" class="primary-button" disabled>Start deliveries</button><button id="delivery-pause" class="quiet-button" disabled>Pause</button><button id="delivery-sound" class="quiet-button" aria-pressed="true">Sound on</button></div>
 <section class="delivery-panel" aria-label="AMP backstage delivery challenge">
- <div class="delivery-order"><div id="delivery-portrait" aria-hidden="true"></div><div class="delivery-order-copy"><span id="delivery-order-label">FIRST ORDER</span><strong id="delivery-recipient"></strong><span id="delivery-carry">Pick up at the cart</span></div><div class="delivery-count"><span>DELIVERED</span><strong id="delivery-count">0 / 3</strong><span id="delivery-time">55s left</span></div></div>
- <div class="clock-arena"><div id="game" tabindex="0" role="application" aria-label="Sandwich delivery. Click or tap a destination or use arrow keys. Collect at the cart, then pass close beside the marked dancer without touching. Escape pauses."></div><div id="delivery-overlay" class="delivery-overlay"><strong>Collect. Weave. Deliver.</strong><span>Start deliveries, then visit the glowing circle at the cart.</span></div></div>
- <div class="delivery-message" id="delivery-message" role="status">Match the portrait and symbol. Pass close beside the recipient, then move clear to hand it over.</div>
+ <div class="delivery-order"><div id="delivery-portrait" aria-hidden="true"></div><div class="delivery-order-copy"><span id="delivery-order-label">FIRST ORDER</span><strong id="delivery-recipient"></strong><span id="delivery-costume"></span><span id="delivery-carry">Pick up at the cart</span></div><div class="delivery-count"><span>DELIVERED</span><strong id="delivery-count">0 / 3</strong><span id="delivery-time">55s left</span></div></div>
+ <div class="clock-arena"><div id="game" tabindex="0" role="application" aria-label="Sandwich delivery. Click or tap a destination or use arrow keys. Collect at the cart, then pass close beside the dancer matching the order portrait without touching. Escape pauses."></div><div id="delivery-overlay" class="delivery-overlay"><strong>Collect. Weave. Deliver.</strong><span>Start deliveries, then visit the glowing circle at the cart.</span></div></div>
+ <div class="delivery-message" id="delivery-message" role="status">Find the costume in the portrait. Pass close beside the recipient, then move clear to hand it over.</div>
 </section>
-<div class="delivery-guide"><span><b>1</b> Cart → one sandwich</span><span><b>2</b> Match the marked dancer</span><span><b>3</b> Smooth pass → delivery</span></div>
-<details class="delivery-help"><summary>How to make a clean delivery</summary><p>Click/tap a destination or use WASD/arrows. Skim beside the marked dancer, then keep moving past them. Touching drops your sandwich. Passing the wrong dancer gives it away — they're happy, but the order is still waiting. Go back to the cart for a replacement; completed deliveries stay banked.</p><p>Three deliveries earn your own grilled cheese and a cheese totem to try here. This rehearsal lasts one AMP phrase sequence, about 55 seconds. No scores, XP, prizes or playtest data are saved. Pausing or hiding the tab freezes the visit; reloading starts fresh. Escape pauses. Motion follows your device setting.</p><p>Original AMP synthesis is temporary rehearsal music. S2 is the planned backstage DJ identity; no S2 recording is included.</p></details>`;
+<div class="delivery-guide"><span><b>1</b> Cart → one sandwich</span><span><b>2</b> Match their costume</span><span><b>3</b> Smooth pass → delivery</span></div>
+<details class="delivery-help"><summary>How to make a clean delivery</summary><p>Click/tap a destination or use WASD/arrows. Skim beside the dancer matching the order portrait, then keep moving past them. Touching drops your sandwich. Passing the wrong dancer gives it away — they're happy, but the order is still waiting. Go back to the cart for a replacement; completed deliveries stay banked.</p><p>Three deliveries earn your own grilled cheese and a cheese totem to try here. This rehearsal lasts one AMP phrase sequence, about 55 seconds. No scores, XP, prizes or playtest data are saved. Pausing or hiding the tab freezes the visit; reloading starts fresh. Escape pauses. Motion follows your device setting.</p><p>Original AMP synthesis is temporary rehearsal music. S2 is the planned backstage DJ identity; no S2 recording is included.</p></details>`;
 const $=selector=>root.querySelector(selector),setText=(selector,text)=>{const node=$(selector);if(node.textContent!==text)node.textContent=text;};
 const practice=createDeliveryPractice({recipientIds:DELIVERY_RECIPIENTS.map(r=>r.id)});
 const audio=createAudio(undefined,{timedVoices:smfPreviewVoices,useTransport:true,createMusicRenderer:createSMFInstrumentRack});
@@ -33,7 +33,8 @@ function renderOrder(){
  const portraitKey=recipient?.id??'complete';
  if(lastRecipient!==portraitKey){lastRecipient=portraitKey;$('#delivery-portrait').innerHTML=recipient?recipientPortrait(recipient.id):'<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M21 36 60 20 77 38V68H21z" fill="#d27a2b"/><path d="M21 36 60 20 77 38z" fill="#ffe691"/><path d="M21 38H77V68H21z" fill="#ffcd42"/><g fill="#c18429"><circle cx="34" cy="49" r="5"/><circle cx="63" cy="57" r="7"/><circle cx="49" cy="43" r="3"/></g></svg>';}
  setText('#delivery-order-label',state.complete?'YOUR REWARD':state.carrying?'DELIVER TO':'NEXT ORDER');
- setText('#delivery-recipient',recipient?`${recipient.symbol} ${recipient.name}`:'Cheese totem!');
+ setText('#delivery-recipient',recipient?recipient.name:'Cheese totem!');
+ setText('#delivery-costume',recipient?.costume??'On the house');
  setText('#delivery-carry',state.complete?'Preview reward · not saved':state.carrying?'Sandwich in hand':'Empty-handed · visit the cart');
  setText('#delivery-count',`${state.delivered} / ${state.goal}`);
  root.classList.toggle('delivery-carrying',state.carrying);root.classList.toggle('delivery-complete',state.complete);
@@ -58,7 +59,7 @@ function feedback(event){
  currentScene.deliveryView.feedback(event);
  const recipient=DELIVERY_RECIPIENTS.find(r=>r.id===practice.state.recipientId);
  const message={
-  pickup:`Hot off the grill! Find ${recipient?.name} and pass close beside them.`,
+  pickup:`Hot off the grill! Find ${recipient?.name} (${recipient?.costume.toLowerCase()}) and pass close beside them.`,
   delivered:`Delivered! ${practice.state.delivered} / 3 banked. Back to the cart for ${recipient?.name}’s order.`,
   wrong:'A happy dancer — but the wrong order! Return to the cart; your progress is safe.',
   dropped:'Oops, sandwich down! Return to the cart for a replacement. Your progress is safe.',

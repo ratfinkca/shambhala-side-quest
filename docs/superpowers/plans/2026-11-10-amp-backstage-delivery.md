@@ -16,7 +16,7 @@
 - Wrong passes consume the sandwich and make that dancer happy; physical bumps drop it even with a shield.
 - Completed deliveries remain banked; retain the current recipient after a loss.
 - First preview: three deliveries, three distinct recipients, the existing 32-bar AMP round (54.857 seconds), restart available. Timing and density remain playtest values.
-- Matching recipient portrait and shape marker; no colour-only targets or persistent dancer labels.
+- Matching costume portrait and description; no overhead target icons, colour-only targets or persistent dancer labels.
 - Preview reward only: no real unlocks, storage, telemetry, leaderboard, main-run bonuses or public secret disclosure.
 - User approved implementation; use the current feature checkout. No publishing in this task.
 
@@ -42,10 +42,10 @@ Interface: `createDelivery({recipientIds,goal=3})` returns serializable mutable 
 
 Files: `src/amp-delivery-view.js`.
 
-Interface: exports `AMP_DELIVERY_STAGE`, `DELIVERY_RECIPIENTS` (`id,index,name,symbol,color`), `VENDOR_POINT`, `createAMPBackstageView(scene,stage)` for the existing StageRenderer, and `createDeliveryView(scene)` returning `update(state,elapsed,reducedMotion)`, `feedback(event)`, `destroy()`. Crowd IDs are `dancer-0` etc. Vendor pickup point is inside the playable floor. Root handles HTML order/progress UI; this module handles canvas art only.
+Interface: exports `AMP_DELIVERY_STAGE`, `DELIVERY_RECIPIENTS` (`id,index,name,costume,color`), `VENDOR_POINT`, `createAMPBackstageView(scene,stage)` for the existing StageRenderer, and `createDeliveryView(scene)` returning `update(state,elapsed,reducedMotion)`, `feedback(event)`, `destroy()`. Crowd IDs are `dancer-0` etc. Vendor pickup point is inside the playable floor. Root handles HTML order/progress UI; this module handles canvas art only.
 
 - [x] Build a compact afterparty with a warm grilled-cheese cart, S2 booth, string lights and animated LED accents; retain clear pass lanes.
-- [x] Add recognizable recipient accessories and matching symbol badges, carried sandwich, happy wrong recipient, dropped sandwich and cheese-totem celebration.
+- [x] Add recognizable recipient accessories and matching costume portraits, carried sandwich, happy wrong recipient, dropped sandwich and cheese-totem celebration.
 - [x] Verify phone-size readability and reduced-motion treatment in the integrated preview.
 
 ## Task 3: Scene and entry integration
@@ -75,3 +75,11 @@ Verification: 430 tests pass; production build and both edition isolation checks
 Review corrections: stop the arrangement before scheduling the final chime; reuse the established arrow-key scroll guard and restore arena focus on resume. Pause notice moved above the floor so the player can inspect their route. Stage name remains AMP backstage; Cheese courier labels the activity only.
 
 Physical-phone touch comfort, actual listening and three-delivery pacing remain owner playtest items. This is a local rehearsal, not a shipped bonus-route integration or persistent reward implementation. No backend updates, production grants or publishing occurred.
+
+### Owner playtest refinement — 2026-11-10
+
+The owner requested a busier floor and identifying recipients by costume instead of floating icons. Added four ordinary dancers (ten total), removed overhead target badges and matching abstract symbols, and kept costume portraits/descriptions on the order card and cart ticket. Golden crown, mint headphones and purple wizard hat provide distinct silhouettes. Delivery mechanics, three-delivery goal, crowd speed and phrase duration remain as before.
+
+Geometry sampled across the full round keeps all dancers within the floor, at least168px from the cart center and117px from the spawn; an independent sampled approach audit retained clean routes to all three recipients. This is still a playtest balance choice rather than a frozen difficulty setting.
+
+Refinement validation: all 430 tests and production build pass. Live desktop play confirmed vendor pickup and a correct handoff with the larger crowd; 390×844 layout/pickup checks passed with no horizontal overflow or browser errors. Floating target markers are absent; familiar brief smooth-pass feedback remains. Real touch difficulty remains a playtest judgment.
