@@ -30,3 +30,9 @@ The M3 Endless souvenirs (Spore Sprout, Mixtape Totem, Mycelium Threads and Auro
 M4 Wavy Colours uses bounded procedural liquid-light strokes in `src/candy-colours.js`, behind field objects. It uses no external imagery, shaders or music assets.
 
 Bass interface preview: cone-origin wavefronts and player pressure/protection marks are bounded procedural graphics in `src/bass-feedback.js`. The on-field meter uses CSS, text and a Unicode icon; no external artwork was added.
+
+## Edition ownership (M0)
+
+The three `themes/*/title.webp` posters contain embedded Shambhala lettering and belong only to the SMF edition. Generic uses a neutral text title over a shared backdrop; final generic title art is deferred. The unused `themes/previews/*.webp` concept boards are excluded from both runtime artifacts. Backdrops and the four perk illustrations per theme are shared neutral artwork, as are local fonts and their licenses. `playtest-data.html` is shared development notice copy; its GitHub contact remains the project contact. `ASSETS.md` is source provenance, not a runtime download.
+
+`build/edition-assets.js` explicitly allowlists runtime public files for DEV and production; adding an asset requires assigning it to an edition there. CSS-imported neutral fonts are also emitted by Vite.

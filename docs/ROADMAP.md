@@ -1,6 +1,6 @@
 # Development roadmap
 
-Updated 2026-11-06. Milestone labels below define the next development sequence; they are not retroactive release numbers. User approved features/atmosphere/rewards ahead of candy/bass fine-tuning. Build and preview one milestone at a time, then ship through PR/backend-first release checks when authorized.
+Updated 2026-11-10. The current forward plan is the [two-edition roadmap](EDITION-ROADMAP.md): shared engine, generic game and a polished SMF edition with six main venues and five optional bonus spaces. Its M0–M6 labels are a new program; the M1–M4 sections below retain the completed Endless program history. Build/preview one milestone at a time, then release only when authorized.
 
 ## Completed foundation
 
@@ -56,14 +56,39 @@ Credit saves at qualifying stage end independently of score saving/posting. Ward
 
 Use evidence and audience feedback to tune candy timing/effects (especially waves), bass escapes, pacing, input differences and reward reachability. Test physical phones, speakers/headphones and sustained performance. Evaluate active-run recovery as a separate scoped feature: protect against refresh/OS suspension without double XP or duplicate online submissions. Cross-device sync is a larger later project.
 
-Next: validate the Bass Head button and feedback on physical phones, including thumb reach, pause/resume and sustained performance; review opt-in samples for remaining escape/pacing issues before tuning. The user requested active-run recovery and selected mid-stage restoration: [approved design](superpowers/specs/2026-11-05-run-recovery-design.md). First scope is same-device Endless resume/discard, paused restoration and duplicate XP/score protection; the user approved release as [PR #19](https://github.com/ratfinkca/shambhala-side-quest/pull/19), with hosted acceptance in [release evidence](superpowers/run-recovery-release-validation.md) and local acceptance in [preview validation](superpowers/run-recovery-preview-validation.md). Audience playtests are expected over the weekend; do not wait for balance data to design reliability work.
+Next: validate the Bass Head button and feedback on physical phones, including thumb reach, pause/resume and sustained performance; review opt-in samples for remaining escape/pacing issues before tuning. The user requested active-run recovery and selected mid-stage restoration: [approved design](superpowers/specs/2026-11-05-run-recovery-design.md). First scope is same-device Endless resume/discard, paused restoration and duplicate XP/score protection; recovery shipped as [PR #19](https://github.com/ratfinkca/shambhala-side-quest/pull/19), with hosted acceptance in [release evidence](superpowers/run-recovery-release-validation.md) and local acceptance in [preview validation](superpowers/run-recovery-preview-validation.md). Audience playtests are expected over the weekend; do not wait for balance data to design reliability work.
 
 Acceptance: before/after measurements and actual playtests, specific improvements with denominators, no speculative difficulty changes. Keep scoring-version boundaries explicit.
 
-## Next direction — stage atmosphere and music
+## Current direction — SMF parity and public test candidate
 
-Selected by the user on 2026-11-06 while weekend playtests gather gameplay feedback. Investigate deeper arrangements and coordinated lighting for the existing Living Forest, Neon Grove and Sunrise Clearing. Keep the current stage rotation, timers, scoring, hazards, targets and reward thresholds. Establish an audible/visual preview before settling the scope; a fourth stage or externally authored music assets needs a separate design and asset/licensing decision.
+The user requested a nearly fully polished SMF edition before pitching, with no fixed date. The [edition roadmap](EDITION-ROADMAP.md) owns that M0–M6 program. Its foundation, researched main venues, richer original music, lighting and bonus activities now feed a **playable local tour with Festival, Quick Rush and Endless** at [http://127.0.0.1:5191/](http://127.0.0.1:5191/). The generic public game remains separate and compatible. The SMF backend is deployed and harmless live checks passed; no SMF frontend publication or separate repository is claimed.
+
+The route is Living Room → Fractal Forest → Grove → AMP → Pagoda → Village. Four distinct earned perks support adding, keeping and swapping. Anonymous invitations appear after 18 active seconds; collecting one and qualifying its parent discovers an optional bonus party. Discovery stays available when skipped, and Explore revisits are available outside a Festival. The eleven-entry map conceals secret names/art until discovery.
+
+| Parent | Bonus / DJ identity | Permanent local reward |
+|---|---|---|
+| Living Room | Rabbit Hole / Hoola b2b Lioness | Rabbit Ears: complete the phrase-long visit or its trinket activity early |
+| Grove | Secret Garden / Footprints | Glow Blossom: complete the visit or its planting activity early |
+| AMP | AMP backstage / S2 | Cheese Totem: three correct costume-led sandwich deliveries |
+| Pagoda | Ikigai Mori / Soup | Lantern Totem: complete the visit or its clean-pass activity early |
+| Village | Villagio / Subvert | Golden Chicken Totem: both putting cups within eight shots |
+
+Early exits earn no visit souvenir; waiting alone cannot win either challenge prize. Detours preserve main score, XP, charge and the pending perk decision. Final Villagio returns to already-earned Festival results. Atomic device-local saves preserve discoveries, ownership, the parked main run and the active child; reloading resumes paused, including held sandwiches and rolling putts. The candidate implements separate SMF online score and opt-in playtest services; the backend is deployed and harmless live checks passed; the frontend is not yet published.
+
+**Current verification:** 549 automated tests, both edition builds and the combined Pages build passed locally. Browser acceptance has covered key paths; [parity validation](superpowers/smf-feature-parity-validation.md) records observed Quick Rush, controls, settings, recovery and local-score checks and the remaining work. Earlier [tour](superpowers/smf-tour-validation.md), [four-room](superpowers/bonus-venue-preview-validation.md) and [putting](superpowers/villagio-putting-validation.md) records apply to their respective previews.
+
+**Next development sequence:**
+
+1. Continue owner playtesting on real phones for pacing, activities and interruptions; this is follow-up for pitch quality, not a blocker for the public test.
+2. Backend deployment and harmless live verification passed before frontend publication; leave production test scores/events untouched.
+3. Recheck the final candidate, open the reviewed PR, confirm CI, merge, wait for Pages and smoke-check generic root and the approved `/smf/` test edition. Each is a separate status.
+4. Continue visual, audio and balance polish against the pitch checklist. A public test build is not pitch acceptance.
+
+The normal tour owns real local SMF progress. The DEV-only [tour lab](http://127.0.0.1:5191/?rehearsal&tour) has a separate profile for repeatable transition/recovery checks. Earlier main-venue, AMP and four-bonus rehearsals remain disposable. Villagio's illustrated two-hole putting game is implemented; a slide ride and chicken squawk finale remain later polish.
 
 ## Later backlog
 
-More stages/authored music assets, additional cosmetics, optional currency/shop, cloud profiles/saves, stronger score verification and a public itch.io launch package. Itch launch remains on hold at the user's request. No dates or automatic publishing commitments are assigned.
+Additional cosmetics beyond the edition scope, optional currency/shop, cloud profiles/saves, stronger score verification and a public itch.io launch package. Itch launch remains on hold at the user's request. No dates or automatic publishing commitments are assigned.
+
+The putting follow-up has separate [design](superpowers/specs/2026-11-10-villagio-putting-design.md), [plan](superpowers/plans/2026-11-10-villagio-putting.md) and [validation](superpowers/villagio-putting-validation.md). The disposable rehearsal still offers a temporary try-on; the integrated Festival and discovered Explore visit now award the permanent local Golden Chicken Totem on a valid win.

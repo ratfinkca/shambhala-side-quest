@@ -1,7 +1,8 @@
+import {GENERIC_RULES,GENERIC_VARIATION_IDS,routePosition} from './edition-rules.js';
 // Shared identity contract; geometry stays in the frontend stage registry.
-export const VARIATION_IDS=['forest-creekside','forest-weave','neon-stereo','neon-crossfade','sunrise-islands','sunrise-lane'];
+export const VARIATION_IDS=GENERIC_VARIATION_IDS;
 export function variationIdForStage(index){
  if(!Number.isSafeInteger(index)||index<0)return null;
- const loop=Math.floor(index/3);
- return loop<1?'original':VARIATION_IDS[(index%3)*2+(loop-1)%2];
+ const {offset,loop}=routePosition(index,GENERIC_RULES.mainStageIds.length);
+ return loop<1?'original':VARIATION_IDS[offset*2+(loop-1)%2];
 }

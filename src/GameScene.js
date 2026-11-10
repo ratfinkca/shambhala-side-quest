@@ -1,3 +1,4 @@
+import {getTiming,roundTiming,elapsedMs} from './stage-clock.js';
 import {createBass,advanceBass,activateBass,bassMovementFactor} from './bass-head.js';
 import Phaser from 'phaser';
 import { createRound, advanceRound, collect } from './game.js';
@@ -22,7 +23,7 @@ export class GameScene extends Phaser.Scene {
     this.motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
     this.reducedMotion=this.motionQuery.matches;
     this.stage = STAGES[0];
-    this.background = new StageRenderer(this);
+    this.background = new StageRenderer(this,this.stageRendererOptions);
     this.background.show(this.stage);
     this.fireflies = this.background.fireflies;
     this.dropWash = this.add.rectangle(W / 2, H / 2, W, H, 0xb2efbd, 1).setDepth(1).setAlpha(0);
@@ -48,7 +49,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.removeCapture(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT']);
     const point = pointer => {
       if (!this.running || pointer.event?.target !== this.game.canvas || pointer.x < 0 || pointer.y < 0 || pointer.x > W || pointer.y > H) return;
-      this.target = mysteryTarget(this.round.mystery,this.dancer,{x:pointer.x,y:pointer.y});
+      this.target = mysteryTarget(this.round.mystery,this.dancer,{x:pointer.x,y:pointer.y},{playBounds:this.stage.playBounds});
       this.game.events.emit('round:input',{kind:pointer.wasTouch?'touch':'mouse',runId:this.round.runId});
       document.querySelector('#game').focus({ preventScroll: true });
     };
@@ -73,11 +74,12 @@ export class GameScene extends Phaser.Scene {
     const pos=findSpawn(this.stage,Math.random,avoid,spark.preferBass);spark.setPosition(pos.x,pos.y);spark.art.setPosition(0,0);
   }
   clearInput() { this.target = null; this.input.keyboard.resetKeys(); }
-  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null} = {}) {
+  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null,timingId='generic-60-v1'} = {}) {
+    getTiming(timingId);
     this.stage = stage;
     this.background.show(stage); this.fireflies = this.background.fireflies;
     this.crowd.configure(stage); setOutfit(this.avatar, outfit);
-    this.round = createRound(rules); this.round.runId=runId; this.round.bass=createBass(bassChargeMs); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
+    this.round = createRound(rules,timingId); this.round.runId=runId; this.round.bass=createBass(bassChargeMs); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
     this.mysteryView.reset(this.round.mystery.wrapper);
     this.avatar.setPosition(0,0);this.bassFeedback.clear();
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
@@ -95,16 +97,17 @@ export class GameScene extends Phaser.Scene {
     return {round:copy,player:{x:this.dancer.x,y:this.dancer.y},sparks:this.sparks.map(s=>({x:s.x,y:s.y})),candy:{placed:this.mysteryView.placed,x:this.mysteryView.pickup.x,y:this.mysteryView.pickup.y},crowd:this.crowd.people.map(p=>structuredClone(p.encounter))};
   }
   restoreRecovery(value,{stage,rules,outfit}) {
+    const timing=roundTiming(value.round);
     this.running=false;this.stage=stage;this.background.show(stage);this.fireflies=this.background.fireflies;
     this.crowd.configure(stage);setOutfit(this.avatar,outfit);this.clearInput();this.effects.clear(true,true);this.tweens.killAll();this.tweens.pauseAll();
     this.round={...structuredClone(value.round),rules};if(this.round.sincePickupMs===null)this.round.sincePickupMs=Infinity;
-    const elapsed=60000-this.round.remainingMs,cycle=cycleAt(elapsed);this.phase=cycle.phase;
+    const elapsed=elapsedMs(this.round),cycle=cycleAt(elapsed,timing);this.phase=cycle.phase;
     this.dancer.setPosition(value.player.x,value.player.y);this.dancer.setRotation(0);this.avatar.setPosition(0,0);
     this.sparks.forEach((s,i)=>{s.setPosition(value.sparks[i].x,value.sparks[i].y);s.art?.setPosition(0,0);});
     this.mysteryView.reset(this.round.mystery.wrapper);this.mysteryView.placed=value.candy.placed;this.mysteryView.pickup.setPosition(value.candy.x,value.candy.y);this.mysteryView.update(this.round.mystery,this.reducedMotion);
-    this.crowd.restoreRecovery(value.crowd,elapsed);
+    this.crowd.restoreRecovery(value.crowd,elapsed,timing);
     this.flowSlot=availableFlow(this.round);this.flowPickup.setVisible(this.flowSlot>=0);if(this.flowSlot>=0){const p=stage.flowSpawns[this.flowSlot];this.flowPickup.setPosition(p.x,p.y);}
-    this.background.update(elapsed,cycle.phase,this.reducedMotion);this.dropWash.setAlpha(0);
+    this.background.update(elapsed,cycle.phase,this.reducedMotion,timing);this.dropWash.setAlpha(0);
     this.halo.setRadius(this.round.flowMs>0?42:26);this.bassFeedback.clear();drawPlayerBass(this.bassFeedback,this.round.bass,bassFactor(this.dancer,stage.obstacles),elapsed,this.reducedMotion);
     this.lastTrail=0;this.game.events.emit('round:update',this.round);
   }
@@ -113,7 +116,7 @@ export class GameScene extends Phaser.Scene {
     if(!this.running)return null;
     const effect=collectMystery(this.round,rng);
     if(effect){
-      if(effect==='dizzy'&&this.target)this.target=mysteryTarget(this.round.mystery,this.dancer,this.target);
+      if(effect==='dizzy'&&this.target)this.target=mysteryTarget(this.round.mystery,this.dancer,this.target,{playBounds:this.stage?.playBounds});
       this.game.events.emit('round:mystery',effect);this.game.events.emit('playtest:candy',{effect,runId:this.round.runId});
     }
     return effect;
@@ -144,12 +147,12 @@ export class GameScene extends Phaser.Scene {
     this.game.events.emit('round:measure',{runId:this.round.runId,activeMs,bassMs:inBass?activeMs:0,chargeMs});
     advanceRound(this.round, delta);
     if (this.round.ended) { this.running=false; this.clearInput(); this.mysteryView.update(this.round.mystery,this.reducedMotion); this.game.events.emit('round:update',this.round); this.game.events.emit('round:end',this.round); return; }
-    const cycle = cycleAt(60000 - this.round.remainingMs);
+    const cycle = cycleAt(elapsedMs(this.round),roundTiming(this.round));
     if (cycle.phase !== this.phase) {
       this.phase = cycle.phase;
       this.game.events.emit('round:phase', cycle.phase);
     }
-    this.background.update(60000-this.round.remainingMs,cycle.phase,this.reducedMotion);
+    this.background.update(elapsedMs(this.round),cycle.phase,this.reducedMotion,roundTiming(this.round));
     this.dropWash.setAlpha(this.reducedMotion ? 0 : cycle.phase === 'drop' ? .045 : 0);
     const movementDelta = Math.min(delta, 50) * movementFactor(this.dancer,this.stage.mud,this.round.slowedMs,this.stage.obstacles,bassMovementFactor(this.round.bass,bassFactor(this.dancer,this.stage.obstacles)));
     const speed=mysterySpeed(this.round.mystery)*(this.round.surferMs>0?1.25:1);
@@ -159,17 +162,18 @@ export class GameScene extends Phaser.Scene {
       this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});
       this.target=null;
       direction=mysteryDirection(this.round.mystery,direction);
-      moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,obstacles:this.stage.obstacles,speed});
+      moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
     } else if(this.target) {
       direction={x:this.target.x-this.dancer.x,y:this.target.y-this.dancer.y};
       const distance=Math.hypot(direction.x,direction.y),step=Math.min(movementDelta,distance/speed*1000);
-      moveInArena(this.dancer,direction,step,{width:W,height:H,obstacles:this.stage.obstacles,speed});
+      moveInArena(this.dancer,direction,step,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
       if(Math.hypot(this.target.x-this.dancer.x,this.target.y-this.dancer.y)<1)this.target=null;
     }
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
     if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
-    animateAvatar(this.avatar,60000-this.round.remainingMs,this.reducedMotion,cycle.phase==='drop');
-    this.crowd.update(this.dancer, this.round, this.reducedMotion);
+    animateAvatar(this.avatar,elapsedMs(this.round),this.reducedMotion,cycle.phase==='drop');
+    const encounters=this.crowd.update(this.dancer, this.round, this.reducedMotion);
+    this.onCrowdEncounters?.(encounters);
     const mystery=this.round.mystery;
     if(mystery.phase==='available'&&!this.mysteryView.placed){
       const avoid=[{x:this.dancer.x,y:this.dancer.y,radius:100},...this.sparks.map(s=>({x:s.x,y:s.y,radius:45})),...this.stage.flowSpawns.map(p=>({...p,radius:50})),...this.crowd.people.map(p=>({x:p.node.x,y:p.node.y,radius:38}))];
@@ -194,15 +198,15 @@ export class GameScene extends Phaser.Scene {
     }
     this.halo.setRadius(this.round.flowMs > 0 ? 42 : 26);
     this.halo.setFillStyle(this.round.flowMs > 0 ? 0xffd886 : this.round.slowedMs > 0 ? 0xf2b59b : cycle.phase === 'drop' ? 0xe5ff8c : 0xcfffad, this.round.flowMs > 0 ? .2 : this.round.slowedMs > 0 ? .2 : .09);
-    this.bassFeedback.clear();drawPlayerBass(this.bassFeedback,this.round.bass,bassFactor(this.dancer,this.stage.obstacles),60000-this.round.remainingMs,this.reducedMotion);
+    this.bassFeedback.clear();drawPlayerBass(this.bassFeedback,this.round.bass,bassFactor(this.dancer,this.stage.obstacles),elapsedMs(this.round),this.reducedMotion);
     this.sparks.forEach(spark => {
       if (this.round.flowMs > 0) { const old={x:spark.x,y:spark.y};attractSpark(spark,this.dancer,delta);if(!isOpen(spark,8,this.stage.obstacles))spark.setPosition(old.x,old.y); }
       spark.setAlpha(cycle.phase === 'drop' ? 1 : .85);
       if (this.reducedMotion) spark.setScale(cycle.phase === 'drop' ? 1.15 : 1);
     });
     for(const spark of this.sparks){if(Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,spark.x,spark.y)<25){const result=collect(this.round,{playerInBass:bassFactor(this.dancer,this.stage.obstacles)<1,sparkInBass:bassFactor(spark,this.stage.obstacles)<1});this.effect(spark.x,spark.y,spark.color,result.points,result.celebrate);this.game.events.emit('round:pickup',{...result,runId:this.round.runId,chain:this.round.chain,multiplier:this.round.multiplier,pickups:this.round.pickups});this.placeSpark(spark);}}
-    const elapsed=60000-this.round.remainingMs;
-    const shakeArt=(position,art)=>{const offset=bassOffset(position,this.stage.obstacles,elapsed,cycle.phase,this.reducedMotion);art.setPosition(offset.x,offset.y)};
+    const elapsed=elapsedMs(this.round);
+    const shakeArt=(position,art)=>{const offset=bassOffset(position,this.stage.obstacles,elapsed,cycle.phase,this.reducedMotion,roundTiming(this.round));art.setPosition(offset.x,offset.y)};
     if(this.round.bass.activeMs>0)this.avatar.setPosition(0,0);else shakeArt(this.dancer,this.avatar);
     for(const spark of this.sparks)shakeArt(spark,spark.art);
     shakeArt(this.mysteryView.pickup,this.mysteryView.art);

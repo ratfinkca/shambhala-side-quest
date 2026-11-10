@@ -4,6 +4,7 @@ import {moveInArena,isOpen,findSpawn,movementFactor} from '../src/geometry.js';
 import {STAGES} from '../src/stages.js';
 import {crowdPosition,createEncounter,updateEncounter,applyBump} from '../src/festival.js';
 import {createRound} from '../src/game.js';
+import {attractSpark} from '../src/flow.js';
 test('bass slows progressively, never stacks with mud or bumps, and allows escape',()=>{
  const speakers=[{x:100,y:100,width:60,height:60}],mud=[{x:0,y:0,width:300,height:300}];
  assert.equal(movementFactor({x:181,y:134},[],0,speakers),.2);
@@ -69,4 +70,23 @@ test('bass override preserves mud and bump penalties',()=>{
  assert.equal(movementFactor(p,[],100,speakers,1),.5);
  assert.equal(movementFactor(p,[{x:100,y:100,width:60,height:60}],0,speakers,1),.5);
  assert.equal(movementFactor({x:500,y:500},[],0,speakers,1),1);
+});
+
+test('optional dancefloor bounds contain fast movement and every pickup fallback',()=>{
+ const playBounds={minX:0,minY:285,maxX:960,maxY:640},pickupBounds={minX:130,minY:315,maxX:830,maxY:590};
+ const stage={playBounds,pickupBounds,obstacles:[{x:270,y:320,width:66,height:70}],spawn:{x:480,y:425}};
+ const player={x:480,y:425};
+ for(let i=0;i<100;i++)moveInArena(player,{x:0,y:-1},1000,{playBounds,speed:750});
+ assert.equal(player.y,299);
+ for(let i=0;i<100;i++)moveInArena(player,{x:1,y:1},1000,{playBounds,speed:750});
+ assert.equal(player.x,946);assert.equal(player.y,626);
+ for(const rng of [()=>0,()=>.5,()=>1])for(const bass of [false,true]){
+  const p=findSpawn(stage,rng,[],bass);
+  assert.ok(p.x>=130&&p.x<=830&&p.y>=315&&p.y<=590,JSON.stringify(p));
+  assert.ok(isOpen(p,24,stage.obstacles));
+ }
+ const exhausted=findSpawn(stage,()=>0,[{x:480,y:450,radius:10000}],true);
+ assert.deepEqual(exhausted,stage.spawn);
+ const edgePlayer={x:480,y:299},spark={x:480,y:315};
+ for(let i=0;i<10;i++){attractSpark(spark,edgePlayer,1000);assert.ok(spark.y>=299,'Flow cannot pull a spark behind the reserved apron');}
 });

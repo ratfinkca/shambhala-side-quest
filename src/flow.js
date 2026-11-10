@@ -1,8 +1,9 @@
+import {elapsedMs} from './stage-clock.js';
 const windows = [[8000, 20000], [33000, 48000]];
 
 export function availableFlow(round) {
   if (round.ended) return -1;
-  const elapsed = 60000 - round.remainingMs;
+  const elapsed = elapsedMs(round);
   return windows.findIndex(([start, end], i) => elapsed >= start && elapsed < end && !round.flowTaken.includes(i));
 }
 

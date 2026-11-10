@@ -27,26 +27,38 @@ export function movementFactor(p,mud,slowedMs,speakers=[],bassOverride=null){
  const terrain=slowedMs>0||mud.some(o=>o.points?pointInPolygon(p,o.points):!isOpen(p,0,[o]))?.5:1;
  return Math.min(terrain,bassOverride??bassFactor(p,speakers));
 }
-export function moveInArena(p,d,dt,{width=960,height=640,obstacles=[],speed=300}={}){
+// Venue scenery can reserve an apron without pretending it is a bass speaker.
+// Stages without explicit edges keep the original whole-canvas movement.
+export function arenaBounds({width=960,height=640,playBounds}={},radius=14){
+ return {minX:(playBounds?.minX??0)+radius,minY:(playBounds?.minY??0)+radius,maxX:(playBounds?.maxX??width)-radius,maxY:(playBounds?.maxY??height)-radius};
+}
+export function clampToArena(p,options){
+ const b=arenaBounds(options);
+ return {x:Math.max(b.minX,Math.min(b.maxX,p.x)),y:Math.max(b.minY,Math.min(b.maxY,p.y))};
+}
+export function moveInArena(p,d,dt,{width=960,height=640,playBounds,obstacles=[],speed=300}={}){
  const length=Math.hypot(d.x,d.y);if(!length)return;
+ const bounds=arenaBounds({width,height,playBounds});
  const travel=speed*Math.min(50,Math.max(0,dt))/1000,steps=Math.max(1,Math.ceil(travel/7));
  const dx=d.x/length*travel/steps,dy=d.y/length*travel/steps;
  for(let i=0;i<steps;i++){
-  const x=Math.max(14,Math.min(width-14,p.x+dx));if(isOpen({x,y:p.y},14,obstacles))p.x=x;
-  const y=Math.max(14,Math.min(height-14,p.y+dy));if(isOpen({x:p.x,y},14,obstacles))p.y=y;
+  const x=Math.max(bounds.minX,Math.min(bounds.maxX,p.x+dx));if(isOpen({x,y:p.y},14,obstacles))p.x=x;
+  const y=Math.max(bounds.minY,Math.min(bounds.maxY,p.y+dy));if(isOpen({x:p.x,y},14,obstacles))p.y=y;
  }
 }
 export function findSpawn(stage,rng=Math.random,avoid=[],preferBass=false){
- const safe=p=>isOpen(p,24,stage.obstacles)&&avoid.every(a=>Math.hypot(p.x-a.x,p.y-a.y)>(a.radius??45));
+ const bounds=stage.pickupBounds??{minX:160,minY:180,maxX:810,maxY:565},floor=arenaBounds(stage,24);
+ const inBounds=p=>p.x>=bounds.minX&&p.x<=bounds.maxX&&p.y>=bounds.minY&&p.y<=bounds.maxY;
+ const safe=p=>p.x>=floor.minX&&p.x<=floor.maxX&&p.y>=floor.minY&&p.y<=floor.maxY&&isOpen(p,24,stage.obstacles)&&avoid.every(a=>Math.hypot(p.x-a.x,p.y-a.y)>(a.radius??45));
  if(preferBass&&stage.obstacles.length){
   for(let i=0;i<40;i++){
    const o=stage.obstacles[Math.min(stage.obstacles.length-1,Math.floor(rng()*stage.obstacles.length))];
    const side=Math.min(3,Math.floor(rng()*4)),offset=28+rng()*32,t=rng();
    const p=side<2?{x:side===0?o.x-offset:o.x+o.width+offset,y:o.y+t*o.height}:{x:o.x+t*o.width,y:side===2?o.y-offset:o.y+o.height+offset};
-   if(p.x>=160&&p.x<=810&&p.y>=180&&p.y<=565&&safe(p)&&bassFactor(p,stage.obstacles)<1)return p;
+   if(inBounds(p)&&safe(p)&&bassFactor(p,stage.obstacles)<1)return p;
   }
  }
- for(let i=0;i<50;i++){const p={x:160+rng()*650,y:180+rng()*385};if(safe(p))return p;}
- for(let y=180;y<=565;y+=24)for(let x=160;x<=810;x+=24){const p={x,y};if(safe(p))return p;}
+ for(let i=0;i<50;i++){const p={x:bounds.minX+rng()*(bounds.maxX-bounds.minX),y:bounds.minY+rng()*(bounds.maxY-bounds.minY)};if(safe(p))return p;}
+ for(let y=bounds.minY;y<=bounds.maxY;y+=24)for(let x=bounds.minX;x<=bounds.maxX;x+=24){const p={x,y};if(safe(p))return p;}
  return {...stage.spawn};
 }

@@ -1,3 +1,4 @@
+import {GENERIC_RULES,genericTarget} from '../supabase/functions/_shared/edition-rules.js';
 import {PERKS,rulesFor,stageFor} from './run.js';
 import {WARDROBE} from './wardrobe.js';
 import {THEMES} from './themes.js';
@@ -23,6 +24,7 @@ export function recoveryScreen(s,run){
  return (s.name==='confirmExit'?s.returnTo:s.name)==='upgrade'?'upgrade':'summary';
 }
 export function makeRecovery({run,screen,scene,summary=null,resultSnapshot=null,progressReward=null,submission=null,inputType='unknown',buildId='dev',now=Date.now()}){
+ if(scene?.round&&Object.hasOwn(scene.round,'timingId'))return null;
  if(run?.mode!=='endless'||run.status==='ready'&&run.stageIndex===0)return null;
  const logical=scene?{round:pick(scene.round,roundKeys),player:scene.player,sparks:scene.sparks,candy:scene.candy,crowd:scene.crowd.map(e=>pick(e,encounterKeys))}:null;
  if(logical&&logical.round.sincePickupMs===Infinity)logical.round.sincePickupMs=null;
@@ -32,7 +34,7 @@ function historyOK(r){
  if(!Array.isArray(r.scoreStages))return false;
  const len=r.scoreStages.length;if(!integer(len,0,MAX_ONLINE_STAGES))return false;
  if(!len)return r.perks.length===0&&r.totalScore===0&&r.stagesCleared===0&&r.stageIndex===0&&['playing','ready'].includes(r.status);
- const cleared=r.scoreStages.filter((s,i)=>s.pickups>=Math.min(45,[20,25,30][i%3]+Math.floor(i/3)*3)).length;
+ const cleared=r.scoreStages.filter((s,i)=>s.pickups>=genericTarget(i,true)).length;
  const total=r.scoreStages.reduce((a,s)=>a+s.score,0);
  if(!validateScore({runId:r.id,ticket:'a'.repeat(64),initials:'AAA',mode:'endless',scoringVersion:'arcade-v1',buildId:r.buildId,inputType:'unknown',totalScore:total,stagesCleared:cleared,stages:r.scoreStages}).ok)return false;
  if(r.scoreOverflow){if(len!==MAX_ONLINE_STAGES||r.stageIndex<len||r.totalScore<total||r.stagesCleared<cleared)return false;}
@@ -64,8 +66,9 @@ function roundOK(s,r){
  const stage=stageFor(r);
  return Array.isArray(s.crowd)&&s.crowd.length===stage.crowdAnchors.length&&s.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&finite(e.travel)&&finite(e.cooldownUntil,0,63000)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&(e.previousPlayer===null)===(e.previousDancer===null)&&(!e.active||finite(e.nearest))&&['touching','protected'].every(k=>e[k]===undefined||bool(e[k]))&&(e.nearest===undefined||finite(e.nearest)));
 }
-export function readRecovery(raw){
+export function readRecovery(raw,{editionId='generic'}={}){
  const fail=code=>({ok:false,code});
+ if(editionId!=='generic')return fail('incompatible');
  try{
   if(!object(raw))return fail('invalid');
   if(raw.version!==RECOVERY_VERSION||raw.rules!==RECOVERY_RULES||raw.scoringVersion!=='arcade-v1')return fail('incompatible');

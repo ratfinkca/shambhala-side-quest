@@ -1,11 +1,11 @@
+import {genericContext} from './editions/storage-context.js';
 // DEV-only, imported conditionally by main. Never accesses the real profile keys.
 import {createRun,startStage,finishStage,chooseUpgrade,keepPerks,stageFor,PERKS,finishRun} from './run.js';
 import {createRound,collect} from './game.js';
 import {createEncounter} from './festival.js';
 import {makeRecovery} from './recovery.js';
-const PREFIX='sidequest.recovery-practice.';
-export function practiceStorage(local){return {getItem:k=>local?.getItem(PREFIX+k),setItem(k,v){if(!local)throw Error('storage unavailable');local.setItem(PREFIX+k,v)}};}
-export function resetPractice(local){for(const k of ['sidequest.profile.v1','sidequest.best','sidequest.sound'])local?.removeItem(PREFIX+k);}
+export function practiceStorage(local,context=genericContext){return {getItem:k=>local?.getItem(context.labPrefix+k),setItem(k,v){if(!local)throw Error('storage unavailable');local.setItem(context.labPrefix+k,v)}};}
+export function resetPractice(local,context=genericContext){for(const k of [context.profileKey,'sidequest.best','sidequest.sound'])local?.removeItem(context.labPrefix+k);}
 export function recoveryPreview(preset,themeId){
  if(!['live','bass','swap','results'].includes(preset))return null;
  const run=createRun('endless',crypto.randomUUID(),themeId);run.buildId='recovery-practice';run.availablePerks=Object.keys(PERKS);

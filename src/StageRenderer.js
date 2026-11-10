@@ -1,3 +1,4 @@
+import {getTiming} from './stage-clock.js';
 import Phaser from 'phaser';
 import {concertLighting,LIGHT_SHOWS} from './concert-lighting.js';
 import {BASS_RADIUS,BASS_CORE,speakerCones} from './geometry.js';
@@ -5,20 +6,22 @@ import {bassBeat} from './bass-motion.js';
 import {drawSpeakerBass} from './bass-feedback.js';
 const W=960,H=640;
 export class StageRenderer {
- constructor(scene){this.scene=scene;this.objects=[];}
+ constructor(scene,{venueView}={}){this.scene=scene;this.venueViewFactory=venueView;this.objects=[];}
  show(stage){
-  this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);this.drawForest();
-  if(stage.id!=='forest')this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
+  this.destroy();this.stageId=stage.id;this.stageName=stage.name;const before=new Set(this.scene.children.list);this.venueView=this.venueViewFactory?.(this.scene,stage);if(this.venueView)this.fireflies=[];else if(stage.id==='clock-lab')this.drawPractice();else this.drawForest();
+  this.lightShow=stage.lighting||LIGHT_SHOWS[stage.id]||LIGHT_SHOWS.forest;
+  if(stage.id!=='forest'&&!this.venueView?.ownsLighting)this.scene.add.rectangle(480,320,960,640,stage.palette.wash,.12).setDepth(.1);
   this.concertBeams=[];this.lamps=[];this.canopyLights=[];
-  {
-    const show=LIGHT_SHOWS[stage.id]||LIGHT_SHOWS.forest;
-    for(const [i,x] of [330,390,450,510,570,630].entries()){
+  if(!this.venueView?.ownsLighting){
+    const show=this.lightShow;
+    const lampPositions=this.venueView?.lampPositions??[330,390,450,510,570,630].map(x=>[x,92]);
+    for(const [i,[x,y]] of lampPositions.entries()){
       const color=show.colours[i];
-      const beam=this.scene.add.graphics().setPosition(x,92).setDepth(.2);
+      const beam=this.scene.add.graphics().setPosition(x,y).setDepth(.2);
       beam.fillStyle(color,.55).fillTriangle(0,0,-show.width,760,show.width,760);
       beam.fillStyle(color,.45).fillTriangle(0,0,-show.core,760,show.core,760).setAlpha(.045);
       this.concertBeams.push(beam);
-      this.lamps.push(this.scene.add.circle(x,92,5,color,.3).setDepth(.3));
+      this.lamps.push(this.scene.add.circle(x,y,5,color,.3).setDepth(.3));
     }
     for(const [i,x,y] of [[0,95,240],[1,865,240],[2,135,510],[3,825,510]]){
       const pool=this.scene.add.graphics().setPosition(x,y).setDepth(.15);
@@ -62,18 +65,27 @@ export class StageRenderer {
   }
   this.objects=this.scene.children.list.filter(o=>!before.has(o));
  }
- update(elapsed,phase,reduced){
-  {
-    const light=concertLighting(elapsed,reduced,this.stageId);
+ update(elapsed,phase,reduced,timing=getTiming()){
+  this.venueView?.update(elapsed,phase,reduced,timing);
+  if(!this.venueView?.ownsLighting){
+    const light=concertLighting(elapsed,reduced,this.stageId,timing,this.lightShow);
     this.concertBeams.forEach((b,i)=>{b.rotation=(i-2.5)*.17*light.spread+light.sweep*(i%2?1:-1);b.setAlpha(light.alpha);b.setScale(1+light.fan*.25,1);});
     this.lamps.forEach(l=>l.setAlpha(light.glow));
     this.canopyLights.forEach((l,i)=>{l.setAlpha(reduced?.65:.65+.25*Math.sin(elapsed*.0007+i*1.5));l.setScale(reduced?1:1+.09*Math.sin(elapsed*.0004+i));});
   }
-  const pulse=bassBeat(elapsed),strength=phase==='drop'?1.5:1;
-  this.bassPulses?.forEach(p=>{p.clear();drawSpeakerBass(p,elapsed,phase,reduced);});
+  const pulse=bassBeat(elapsed,timing),strength=phase==='drop'?1.5:1;
+  this.bassPulses?.forEach(p=>{p.clear();drawSpeakerBass(p,elapsed,phase,reduced,timing);});
   this.speakerCones?.forEach(c=>c.setScale(reduced?1:1+pulse*.1*strength));
  }
- destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];}
+ destroy(){this.objects.forEach(o=>o.destroy());this.objects=[];this.venueView?.destroy?.();this.venueView=null;}
+  drawPractice(){
+    const g=this.scene.add.graphics();g.fillStyle(0x14252c).fillRect(0,0,W,H);
+    g.lineStyle(1,0x91b8c1,.09);
+    for(let x=0;x<W;x+=80)g.lineBetween(x,0,x,H);
+    for(let y=0;y<H;y+=80)g.lineBetween(0,y,W,y);
+    g.lineStyle(2,0xa9cfd2,.25).strokeRoundedRect(40,40,W-80,H-80,24);
+    this.fireflies=[];
+  }
   drawForest() {
     const g = this.scene.add.graphics();
     g.fillGradientStyle(0x102430, 0x162036, 0x183c37, 0x153133).fillRect(0, 0, W, H);

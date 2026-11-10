@@ -29,6 +29,12 @@ test('collecting Dizzy reverses an existing destination once and cannot retrigge
  scene.running=false;scene.round.mystery.phase='available';scene.round.mystery.effectMs=0;
  assert.equal(scene.takeCandy(()=>.9),null);
 });
+test('collecting Dizzy cannot send the current destination behind the venue stage',()=>{
+ const scene=new GameScene();
+ Object.assign(scene,{running:true,stage:{playBounds:{minX:0,minY:285,maxX:960,maxY:640}},dancer:{x:480,y:425},target:{x:480,y:630},game:{events:{emit(){}}}});
+ scene.round.mystery.phase='available';
+ assert.equal(scene.takeCandy(()=>.5),'dizzy');assert.deepEqual(scene.target,{x:480,y:299});
+});
 test('Bass Head scene activation reports actual partial duration and blocks paused or repeated use',()=>{
  const scene=new GameScene(),events=[];scene.game={events:{emit:(...args)=>events.push(args)}};
  scene.round.bass.chargeMs=5000;assert.equal(scene.activateBassHead(),false);assert.equal(scene.round.bass.chargeMs,5000);

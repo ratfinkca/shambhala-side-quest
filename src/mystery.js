@@ -1,4 +1,4 @@
-import {findSpawn,isOpen,movementFactor} from './geometry.js';
+import {findSpawn,isOpen,movementFactor,clampToArena} from './geometry.js';
 
 export const MYSTERY_EFFECTS={
  speed:{name:'SUGAR RUSH',hint:'Super speed · 2.5×'},
@@ -36,8 +36,8 @@ export function findCandySpawn(stage,avoid,rng=Math.random){
  return null;
 }
 
-export function mysteryTarget(m,player,target,{width=960,height=640}={}){
- if(m.effect!=='dizzy'||m.effectMs<=0)return {...target};
+export function mysteryTarget(m,player,target,options={}){
+ if(m.effect!=='dizzy'||m.effectMs<=0)return options.playBounds?clampToArena(target,options):{...target};
  // Mirror input once so destination movement still has an achievable endpoint.
- return {x:Math.max(14,Math.min(width-14,2*player.x-target.x)),y:Math.max(14,Math.min(height-14,2*player.y-target.y))};
+ return clampToArena({x:2*player.x-target.x,y:2*player.y-target.y},options);
 }

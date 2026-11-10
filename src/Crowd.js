@@ -1,3 +1,4 @@
+import {getTiming,roundTiming,elapsedMs} from './stage-clock.js';
 import { STAGES } from './stages.js';
 import {bassOffset} from './bass-motion.js';
 import {cycleAt} from './festival.js';
@@ -41,7 +42,7 @@ export class Crowd {
         body.lineStyle(1, color).lineBetween(13, -53, 13, -41).lineBetween(13, -46, 8, -42).lineBetween(13, -46, 18, -42);
       }
       node.add(body);
-      return { node, body, ring, smooth, smoothAt: -Infinity, smoothStrength: 0, encounter: createEncounter() };
+      return { id: `dancer-${index}`, node, body, ring, smooth, smoothAt: -Infinity, smoothStrength: 0, encounter: createEncounter() };
     });
     this.reset();
   }
@@ -60,17 +61,17 @@ export class Crowd {
     this.lastBumpAt = -Infinity;
   }
 
-  restoreRecovery(encounters,elapsed) {
-    this.people.forEach((person,index)=>{const p=crowdPosition(index,elapsed,this.stage.crowdAnchors,this.stage.crowdSpeed??1);person.node.setPosition(p.x,p.y);person.encounter=structuredClone(encounters[index]);});
+  restoreRecovery(encounters,elapsed,timing=getTiming()) {
+    this.people.forEach((person,index)=>{const p=crowdPosition(index,elapsed,this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);person.node.setPosition(p.x,p.y);person.encounter=structuredClone(encounters[index]);});
   }
 
   update(player, round, reducedMotion) {
-    const elapsed = 60000 - round.remainingMs;
-    this.people.forEach((person, index) => {
-      const position = crowdPosition(index, elapsed, this.stage.crowdAnchors,this.stage.crowdSpeed??1);
+    const elapsed = elapsedMs(round),timing=roundTiming(round);
+    return this.people.map((person, index) => {
+      const position = crowdPosition(index, elapsed, this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);
       person.node.setPosition(position.x, position.y);
       person.body.rotation = reducedMotion ? 0 : Math.sin(elapsed * .005 + index) * .14;
-      const shake=bassOffset(position,this.stage.obstacles,elapsed,cycleAt(elapsed).phase,reducedMotion);
+      const shake=bassOffset(position,this.stage.obstacles,elapsed,cycleAt(elapsed,timing).phase,reducedMotion,timing);
       person.body.setPosition(shake.x,shake.y);
       const distance = Math.hypot(player.x - position.x, player.y - position.y);
       person.ring.setAlpha(distance < 100 ? .7 : 0);
@@ -94,6 +95,8 @@ export class Crowd {
       const progress = Math.min(1, Math.max(0, (elapsed - person.smoothAt) / 650));
       person.smooth.setAlpha((.3 + person.smoothStrength * .5) * (1 - progress));
       person.smooth.setScale(reducedMotion ? 1 : 1 + progress * .14);
+      // Report physical contact even when a shield or sound cooldown suppresses feedback.
+      return { id: person.id, ...encounter, active: person.encounter.active };
     });
   }
 }

@@ -1,9 +1,10 @@
 import {BASS_RADIUS,BASS_CORE} from './geometry.js';
 import {BASS_EXPOSURE_MS} from './bass-head.js';
-import {BEAT_MS} from './music.js';
+import {getTiming} from './stage-clock.js';
 const PRESSURE=0xf2bd7b,PROTECTION=0x95ffe0;
 // Two thin wavefronts from the cone, without a stronger field-wide fill.
-export function drawSpeakerBass(g,elapsed,phase,reduced){
+export function drawSpeakerBass(g,elapsed,phase,reduced,timing=getTiming()){
+ const BEAT_MS=60000/timing.bpm;
  if(reduced){g.lineStyle(1.5,PRESSURE,.2).strokeCircle(0,0,BASS_CORE).strokeCircle(0,0,86);return;}
  for(let i=0;i<2;i++){
   const travel=(elapsed/(BEAT_MS*2)+i*.5)%1,radius=14+(BASS_RADIUS-14)*travel;

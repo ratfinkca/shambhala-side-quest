@@ -1,0 +1,137 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createTourStore,normalizeTourProfile} from '../src/smf-tour/store.js';
+import {BONUSES,ROUTE,createTourProfile,createFestival,collectInvitation,finishMain,choosePerk,beginBonus,finishBonus,returnBonus,closeResults} from '../src/smf-tour/model.js';
+import {smfPreviewStage} from '../src/editions/smf-stages.js';
+import {bonusConfig,bonusController} from '../src/smf-tour/content.js';
+import {createRound,collect,advanceRound} from '../src/game.js';
+import {createEncounter} from '../src/festival.js';
+import {rulesFor} from '../src/run.js';
+import {activateFlow} from '../src/flow.js';
+import {collectMystery} from '../src/mystery.js';
+import {createBass,activateBass} from '../src/bass-head.js';
+import {registerHooks} from 'node:module';
+
+registerHooks({resolve(s,c,next){return s==='phaser'?{url:'test:smf-store-phaser',shortCircuit:true}:next(s,c);},load(url,c,next){return url==='test:smf-store-phaser'?{format:'module',source:'export default {Scene: class {}}',shortCircuit:true}:next(url,c);}});
+const {GameScene}=await import('../src/GameScene.js');
+
+function graphic(x=0,y=0){let p;return p=new Proxy({x,y,setPosition(a,b){this.x=a;this.y=b;return p;}},{get(o,k){return k in o?o[k]:()=>p;}});}
+function gameScene(){
+ const scene=new GameScene(),art=graphic(),crowd={configure(stage){this.people=stage.crowdAnchors.map(()=>({encounter:createEncounter()}));},reset(){},restoreRecovery(value){this.people=value.map(encounter=>({encounter:structuredClone(encounter)}));}};
+ Object.assign(scene,{background:{show(){},update(){},fireflies:[]},crowd,avatar:{art,setPosition:art.setPosition},bassFeedback:art,halo:art,dropWash:art,dancer:graphic(),sparks:Array.from({length:12},()=>Object.assign(graphic(450,400),{art})),flowPickup:graphic(),effects:{clear(){}},tweens:{killAll(){},pauseAll(){},resumeAll(){}},input:{keyboard:{resetKeys(){}}},mysteryView:{reset(){},update(){},pickup:graphic(),placed:false},game:{events:{emit(){}}},reducedMotion:true});
+ scene.placeSpark=()=>{};return scene;
+}
+
+const KEY='sidequest.smf.profile.v1';
+function memory(){const data=new Map();return {data,getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value)};}
+function snapshot(stage,id){
+ const {rules,...round}=createRound({},stage.timingId);
+ round.runId=id;round.sincePickupMs=null;
+ return {round,player:{...stage.spawn},sparks:Array.from({length:12},()=>({x:450,y:400})),candy:{placed:false,x:0,y:0},crowd:stage.crowdAnchors.map(()=>createEncounter())};
+}
+function playing(){
+ const profile=createFestival(createTourProfile(),'tour-123');
+ profile.active.scene=snapshot(smfPreviewStage('smf-living-room'),profile.active.id);
+ return profile;
+}
+
+test('SMF storage commits ownership and checkpoint together without reading or changing generic data',()=>{
+ const mem=memory();mem.setItem('sidequest.profile.v1','generic profile bytes');mem.setItem('sidequest.best','999');
+ const store=createTourStore(mem);assert.equal(store.read().progress.xp,0);
+ const profile=playing();profile.discoveries=['rabbit-hole'];profile.rewards=['rabbit-ears'];profile.souvenir='rabbit-ears';
+ assert.equal(store.write(profile),true);
+ const loaded=createTourStore(mem).read();
+ assert.deepEqual(loaded.active.scene,profile.active.scene);assert.deepEqual(loaded.rewards,['rabbit-ears']);assert.equal(loaded.souvenir,'rabbit-ears');
+ assert.equal(mem.getItem('sidequest.profile.v1'),'generic profile bytes');assert.equal(mem.getItem('sidequest.best'),'999');
+ loaded.active.scene.player.x=1;assert.notEqual(store.read().active.scene.player.x,1);
+});
+
+test('unknown ownership and unowned selections never become equipped permanent rewards',()=>{
+ const profile=createTourProfile();profile.discoveries=['rabbit-hole','fake','rabbit-hole'];profile.rewards=['rabbit-ears','root-access','rabbit-ears'];profile.souvenir='cheese-totem';
+ const result=normalizeTourProfile(profile);
+ assert.deepEqual(result.discoveries,['rabbit-hole']);assert.deepEqual(result.rewards,['rabbit-ears']);assert.equal(result.souvenir,null);
+ assert.equal(normalizeTourProfile({version:999,rewards:['rabbit-ears']}).rewards.length,0);
+});
+
+test('a reward without its matching discovery cannot survive as owned or equipped',()=>{
+ const profile=createTourProfile();profile.rewards=['cheese-totem','rabbit-ears'];profile.discoveries=['rabbit-hole'];profile.souvenir='cheese-totem';
+ const result=normalizeTourProfile(profile);assert.deepEqual(result.rewards,['rabbit-ears']);assert.equal(result.souvenir,null);
+});
+
+test('corrupt active scenes are discarded while safe ownership and progress survive',()=>{
+ const changes=[p=>p.active.scene.player.x=NaN,p=>p.active.scene.round.timingId='generic-60-v1',p=>p.active.scene.round.remainingMs=1e9,p=>p.active.scene.crowd.pop(),p=>p.active.scene.round.bass.activeMs=-1,p=>p.active.stageIndex=6,p=>p.active.scene.extra={anything:true}];
+ for(const change of changes){const profile=playing();profile.rewards=['rabbit-ears'];profile.discoveries=['rabbit-hole'];profile.progress.xp=321;change(profile);const result=normalizeTourProfile(profile);assert.equal(result.active,null);assert.deepEqual(result.rewards,['rabbit-ears']);assert.equal(result.progress.xp,321);}
+});
+
+test('failed writes and invalid snapshots keep the previous complete record',()=>{
+ const mem=memory(),store=createTourStore(mem),profile=playing();assert.equal(store.write(profile),true);const before=mem.getItem(KEY);
+ const bad=structuredClone(profile);bad.active.scene.round.remainingMs=-1;assert.equal(store.write(bad),false);assert.equal(mem.getItem(KEY),before);
+ mem.setItem=()=>{throw Error('quota')};profile.rewards=['rabbit-ears'];assert.equal(store.write(profile),false);assert.equal(mem.getItem(KEY),before);assert.deepEqual(store.read().rewards,[]);
+ const unavailable=createTourStore({getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}});assert.equal(unavailable.read().active,null);assert.equal(unavailable.write(createTourProfile()),false);
+});
+
+test('oversized or cyclic records cannot replace an existing save',()=>{
+ const mem=memory(),store=createTourStore(mem),profile=playing();assert.equal(store.write(profile),true);const before=mem.getItem(KEY);
+ profile.active.scene.round.runId='x'.repeat(3*1024*1024);assert.equal(store.write(profile),false);assert.equal(mem.getItem(KEY),before);
+ profile.active.scene.round.runId=profile;assert.equal(store.write(profile),false);assert.equal(mem.getItem(KEY),before);
+ mem.data.set(KEY,'{broken');assert.equal(store.read().active,null);
+});
+
+test('all five bonus activities preserve their scene and activity from Explore',()=>{
+ for(const bonus of BONUSES){
+  let profile=createTourProfile();profile.discoveries=[bonus.id];profile=beginBonus(profile,bonus.id,`visit-${bonus.id}`,{explore:true});
+  const config=bonusConfig(bonus.id),controller=bonusController(config);controller.start();
+  profile.active.bonus.activity=controller.capture();profile.active.bonus.scene=snapshot(config.stage,profile.active.bonus.visitId);
+  const store=createTourStore(memory());assert.equal(store.write(profile),true,bonus.id);const restored=store.read();
+  assert.equal(restored.active.bonus.returnTo,'title');assert.deepEqual(restored.active.bonus.activity,profile.active.bonus.activity);
+  assert.equal(bonusController(config).restore(restored.active.bonus.activity),true);
+  profile.active.bonus.activity.state.untrusted=true;assert.equal(normalizeTourProfile(profile).active,null,'controller rejects malformed state');
+ }
+});
+
+test('partial bonus checkpoints cannot reset an activity or its remaining time on reload',()=>{
+ let profile=createTourProfile();profile.discoveries=['secret-garden'];profile=beginBonus(profile,'secret-garden','garden-visit',{explore:true});
+ const config=bonusConfig('secret-garden'),controller=bonusController(config);controller.start();controller.step({player:config.points[0]});controller.pause();
+ const scene=snapshot(config.stage,'garden-visit');scene.round.remainingMs-=12000;scene.round.mystery.elapsedMs=12000;
+ profile.active.bonus.scene=scene;profile.active.bonus.activity=controller.capture();
+ const restored=normalizeTourProfile(profile);assert.equal(restored.active.bonus.scene.round.remainingMs,45600);assert.equal(restored.active.bonus.activity.state.carrying,'seed-1');
+ for(const field of ['scene','activity']){const corrupt=structuredClone(profile);corrupt.active.bonus[field]=null;assert.equal(normalizeTourProfile(corrupt).active,null,field);}
+});
+
+test('a summary cannot offer a missing or undiscovered bonus, or bypass a consumed invitation',()=>{
+ let profile=collectInvitation(createFestival(createTourProfile(),'invitation-run'));
+ const round=createRound({},smfPreviewStage('smf-living-room').timingId);while(round.pickups<23)collect(round);advanceRound(round,round.remainingMs);profile=finishMain(profile,round);
+ for(const mutate of [p=>p.active.summary.bonusId=null,p=>p.discoveries=[],p=>p.active.summary.qualified=false]){const corrupt=structuredClone(profile);mutate(corrupt);assert.equal(normalizeTourProfile(corrupt).active,null);}
+ profile=beginBonus(profile,'rabbit-hole','rabbit-visit');profile.active.summary.bonusOffered=false;assert.equal(normalizeTourProfile(profile).active,null);
+});
+
+test('the final Village detour restores earned Festival completion and returns to final results',()=>{
+ const store=createTourStore(memory());let profile=createFestival(createTourProfile(),'whole-festival');
+ for(const stageId of ROUTE){
+  const stage=smfPreviewStage(stageId);profile.active.scene=snapshot(stage,profile.active.id);assert.equal(store.write(profile),true,stageId);
+  profile=collectInvitation(profile);const round=createRound({},stage.timingId);round.runId=profile.active.id;
+  while(round.pickups<stage.target)collect(round);advanceRound(round,round.remainingMs);
+  profile=finishMain(profile,round);assert.equal(store.write(profile),true,stageId+' summary');
+  if(stageId!=='smf-village')profile=choosePerk(profile,null);
+ }
+ const mainScore=profile.active.score;
+ profile=beginBonus(profile,'villagio','final-village-visit');assert.equal(store.write(profile),true);
+ profile=store.read();assert.equal(profile.active.bonus.returnTo,'results');assert.equal(profile.active.cleared,6);assert.equal(profile.active.stageIndex,5);
+ profile=finishBonus(profile,{completed:false,won:false});assert.equal(store.write(profile),true);
+ profile=returnBonus(store.read());assert.equal(profile.active.status,'results');assert.equal(profile.active.score,mainScore);assert.equal(profile.active.cleared,6);
+ profile=closeResults(profile);assert.equal(store.write(profile),true);assert.equal(store.read().lastResult.completed,true);assert.equal(store.read().active,null);
+});
+
+test('real GameScene recovery preserves fractional time, long Flow, Wavy Colours and partial Bass Head while paused',()=>{
+ const stage=smfPreviewStage('smf-living-room'),profile=createFestival(createTourProfile(),'live-snapshot');profile.active.perks=['moth','encore','sweet','battery'];
+ const rules=rulesFor(profile.active.perks),scene=gameScene();scene.startRound({stage,rules,runId:profile.active.id,timingId:stage.timingId});
+ scene.round.mystery.phase='waiting';scene.round.mystery.spawnAtMs=12000;advanceRound(scene.round,12000.25);
+ assert.equal(activateFlow(scene.round),true);assert.equal(scene.round.flowMs,10000);assert.equal(collectMystery(scene.round,()=>.99),'waves');assert.equal(scene.round.mystery.effectMs,7000);
+ scene.round.bass=createBass(5000);assert.equal(activateBass(scene.round),true);collect(scene.round);
+ profile.active.scene=scene.captureRecovery();const before=structuredClone(profile.active.scene),store=createTourStore(memory());
+ assert.equal(store.write(profile),true);assert.equal(store.read().active.scene.round.remainingMs,56570.75);
+ const restored=gameScene();restored.restoreRecovery(store.read().active.scene,{stage,rules,outfit:profile.outfit});
+ assert.equal(restored.running,false);restored.update(60000,5000);assert.deepEqual(restored.captureRecovery(),before);
+ restored.resumeRound();assert.equal(restored.running,true);advanceRound(restored.round,250);
+ assert.equal(restored.round.remainingMs,56320.75);assert.equal(restored.round.flowMs,9750);assert.equal(restored.round.mystery.effectMs,6750);
+});

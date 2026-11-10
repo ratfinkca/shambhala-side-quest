@@ -1,0 +1,12 @@
+import {renderBrand} from './brand-view.js';
+const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function renderScaffold(root,edition,{discoveredStageIds=[]}={}){
+ root.classList.add('edition-scaffold');
+ const discovered=new Set(Array.isArray(discoveredStageIds)?discoveredStageIds:[]);
+ const card=stage=>{
+  if(stage.kind==='secret'&&!discovered.has(stage.id))return `<article class="stage-preview secret is-locked" aria-label="Undiscovered stage"><p class="menu-eyebrow">SECRET DISCOVERY</p><span class="secret-seal" aria-hidden="true">?</span><h3>Somewhere secret</h3><p>A hidden path is waiting to be found.</p><small>Undiscovered</small></article>`;
+  return `<article class="stage-preview ${stage.kind}" data-stage-id="${stage.id}"><p class="menu-eyebrow">${stage.kind==='secret'?'SECRET DISCOVERY':'MAIN STAGE'}</p><h3>${escape(stage.name)}</h3><p>${stage.parentId?'Discovered from '+escape(edition.catalogue.find(c=>c.id===stage.parentId).name):'A new festival setting, sound and atmosphere.'}</p><small>${stage.kind==='secret'?'Discovered':'Planned venue'}</small></article>`;
+ };
+ root.innerHTML=`<header class="scaffold-header"><p class="menu-eyebrow">THE NEXT CHAPTER</p><span>SMF edition · Early content preview</span></header><section class="scaffold-hero">${renderBrand(edition,'forest-freakout')}<div><p class="menu-eyebrow">SIX MAIN STAGES. THREE HIDDEN WORLDS.</p><h2>The whole festival.<br>One side quest.</h2><p>Content preview — gameplay coming next</p><p class="menu-copy">A home for every stage, with secret discoveries tucked along the way. These venues are planned; their playable worlds and music are still to come.</p><a class="primary-button" href="#stage-list">Meet the stages ↓</a></div></section><section id="stage-list" class="stage-catalogue" aria-labelledby="catalogue-heading"><h2 id="catalogue-heading">Your future festival route</h2><p class="menu-copy">A first route proposal, ready to shape together.</p><div class="stage-preview-grid">${edition.mainStageIds.map(id=>{const main=edition.catalogue.find(c=>c.id===id);return `<section class="stage-family" aria-label="${escape(main.name)}">${card(main)}${edition.catalogue.filter(c=>c.parentId===id).map(card).join('')}</section>`}).join('')}</div></section><footer class="scaffold-footer">Preview only · Your current game and progress stay in the generic edition.</footer>`;
+ return ()=>{root.innerHTML='';root.classList.remove('edition-scaffold');};
+}

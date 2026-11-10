@@ -2,6 +2,16 @@
 
 A tiny, unofficial festival-inspired game: wander a glowing forest, collect good vibes, and chase your personal best in 60-second rounds.
 
+Two editions share the same engine. The original generic game stays at the site root; the SMF public test build is published at `/smf/`. See the [two-edition roadmap](docs/EDITION-ROADMAP.md) and [release validation](docs/superpowers/smf-feature-parity-validation.md).
+
+## SMF public test edition
+
+[Play the SMF edition](https://ratfinkca.github.io/shambhala-side-quest/smf/): six main venues, five discoverable bonus parties, permanent souvenirs, venue-specific artwork, original synthesized music and animated lighting. Festival Run visits all six venues; Quick Rush is a 60-second Pagoda set; Endless repeats the six-venue route with rising difficulty and four active perk slots.
+
+Pause/resume, interrupted-run recovery, wardrobe progression, three visual themes, independent music/effects controls, local initials boards and optional online boards are included. SMF saves, scores and opt-in playtest sharing are separate from the generic edition. Bonus visits do not increase the main score. Recorded-track auditions and accelerated rehearsal tools remain local development features.
+
+The feature details below describe the **generic edition**. Build both published editions with `npm run build:pages`.
+
 ## Festival Run
 
 The game includes a title screen, wardrobe, independent music/effects volume controls, and local plus optional online arcade scores. Play any mode using the GitHub Pages link below.
@@ -121,3 +131,19 @@ Open `http://127.0.0.1:5181/?rehearsal&recovery`. Recovery lab uses a persistent
 Normal local Endless saves about once a second and at important transitions when browser storage and Web Locks are available. Reopening offers Resume or confirmed Discard; live stages return paused with time, points, perks, pickup positions and active effects retained. A second participating tab is blocked. Sudden termination can lose the unsaved interval; clearing/evicting browser storage cannot be recovered. Rush/Festival recovery and cross-device sync are not included.
 
 Stage awards and checkpoints persist together. Local score saving stays separate from explicit online posting. Recovery preserves the original run/ticket/build and any attempted posting payload; uncertain posting retries are duplicate-safe. Unused tickets expire after 24 hours, while local play/saving continue. After a full reload, recovered-run playtest reporting stops rather than inventing missing measurements; new runs track under existing consent. No recovery map/positions/ticket are sent to analytics. Recovery ships in [PR #19](https://github.com/ratfinkca/shambhala-side-quest/pull/19); hosted acceptance is recorded on that PR and in the release evidence.
+
+## Local edition previews
+
+The default build/development edition is now `generic` (working title Festival Side Quest). `VITE_EDITION=smf npm run dev -- --port 5191 --strictPort` opens the non-playable nine-stage SMF catalogue. Unknown configured editions fail. Use `npm run build:generic` / `npm run build:smf` for separate `dist/generic` / `dist/smf` artifacts, and `npm run check:editions` for build/asset checks. Neither command publishes. Edition verification uses temporary builds and preserves the default `dist/`; rebuild the default artifact before any later default Pages upload after using the explicit nested output commands. The existing Pages workflow is unchanged; a public rebrand/release remains a later explicit decision.
+
+Generic retains existing same-origin saves/consent/recovery; SMF uses a separate context; its normal catalogue initializes no game or online services. The isolated DEV clock lab described below is the only playable SMF entry in this slice. [M0 preview validation](docs/superpowers/edition-foundation-preview-validation.md) records tested flows and device/network observation limits.
+
+## SMF musical-clock practice (local development only)
+
+Start an SMF development server with `VITE_EDITION=smf npm run dev -- --port 5191 --strictPort`, then open [clock practice](http://127.0.0.1:5191/?rehearsal&clock). Choose the generic clock or any of the six proposed main-stage phrase clocks. Start fresh, pause/resume, mute, click/tap a destination or use arrows/WASD; B activates charged Bass Head. Hidden tabs pause. Changing clocks starts a fresh round.
+
+This is a neutral timing floor with diagnostic synthesized percussion, not finished venue art or music. No real progress, local scores, recovery, analytics or online clients are initialized. Reload starts fresh. Production builds omit this lab and keep SMF's normal catalogue static; generic gameplay remains available separately. [Clock preview evidence](docs/superpowers/smf-clock-preview-validation.md).
+
+## Living Room and Pagoda venue practice (local development only)
+
+On the SMF dev server open [venue practice](http://127.0.0.1:5191/?rehearsal&venues). Choose The Living Room or The Pagoda and Start fresh. Each has authored scenery, speaker/crowd routing, its own phrase-length clock and an original synthesized music sketch. Collect the shown spark target; practice never saves progress or sends online data. Pause, sound controls, hidden-tab pause and on-field Bass Head remain available. The normal SMF catalogue and anonymous secret tiles are unchanged. [Validation and limits](docs/superpowers/smf-venue-preview-validation.md).

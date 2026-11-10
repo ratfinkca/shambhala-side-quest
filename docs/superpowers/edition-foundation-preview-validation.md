@@ -1,0 +1,55 @@
+# M0 edition foundation — local validation
+
+Date: 2026-11-06. Local feature branch only; public release remains PR #19 /67c44e0. User approved the edition design and native execution. No remote fork, deployment, backend mutation or dependency was added.
+
+## Delivered preview
+
+- Generic remains the playable three-stage game, with existing targets, deterministic variants, awards, four-slot Endless, score requests and recovery-v1 format. Its working title is Festival Side Quest; final neutral artwork is a later milestone.
+- SMF is a separate static catalogue with six mains and all three requested secrets/parents. It has no playable placeholder, Phaser scene, audio initialization, consent prompt or online service initialization.
+- Generic keeps the legacy profile and lock. SMF storage contexts and recovery practice are separate; SMF rejects generic recovery. No profile copy/reset migration is performed.
+- Explicit asset lists serve/copy shared neutral artwork and reserve the three embedded Shambhala title posters for SMF. Unused concept boards are excluded from both builds.
+
+## Automated/build checks
+
+- Baseline: 207 tests passed before changes. Current suite: **224 tests pass**, including legacy geometry hashes for 15 Endless stages, unchanged score/recovery fixtures, storage/consent/lock names, exact pending-retry payload preservation, duplicate award/post protection, context rejection, asset lists and boot/service gating.
+- `npm run build` passes (default generic, `dist/`). `npm run check:editions` builds generic and SMF, verifies allowlisted files/static references, and confirms an invalid edition fails. Existing large Phaser chunk warning remains.
+- `git diff --check` and relative documentation links pass.
+- No backend deploy is required for this local preview. Shared validator imports changed structurally; a future authorized release must deploy the updated shared function bundles first, even though arcade-v1 payloads/rules remain identical. No SQL migration is introduced.
+
+## Browser acceptance
+
+Browser plugin absent; no local Playwright package was available. Used the existing CUA in-app browser with its documented locator/screenshot controls, without installing packages. Tested desktop 1280×720 and phone-width 390×844. Temporary viewport override reset afterward.
+
+| Check | Observed result |
+|---|---|
+| Page identity/content | Generic and SMF titles/content render; no blank page/framework overlay after initialization |
+| Assets/console | No missing images in inspected generic view; no relevant console errors/warnings in inspected generic/SMF screens |
+| Generic controls/recovery | Start Endless, click a destination, pause, reload → recovery displays 49s remaining; Resume run → paused screen, explicit resume required; discard confirmation works |
+| Generic Festival | Rehearsal completed 20/25/30 targets, two perk choices and stage 3/3 results; score/XP disabled |
+| Four-slot Endless | Disposable recovery lab restored four perks, replaced Moth with Crowd Surfer, continued to stage 6, banked five completed stages/4000 points |
+| Save/reload | In the disposable recovery lab, entered M0A, saved locally, reloaded/reopened → saved initials/button preserved and one board entry; no second score/award |
+| Sharing/themes | Normal local preview opt-in then opt-out reflected on title; consent persisted after reload; Moonlit selection persisted; local-only event receiver used, arcade disabled |
+| SMF catalogue | Nine entries and three parent relationships, working anchor navigation, no canvas/buttons/gameplay; desktop and phone layout/scroll checked |
+| Phone width | SMF and generic at 390 CSS pixels, no horizontal overflow in inspected views; no physical touch claim |
+| Same-origin isolation | Automated map-backed tests prove disjoint profile keys, legacy migration, recovery rejection, lab reset and exact lock names; UI previews use separate ports, so browser-origin collision was not independently exercised |
+| SMF service requests | Unit tests prove configured endpoints cannot enable either service and boot never invokes game loader; CUA has no network capture here, so there is no separate browser network-trace claim |
+
+A layout defect found during QA (the game shell flex-shrank the SMF hero to 2px) is fixed by a scaffold-specific flowing shell class, with setup/cleanup tests and rendered height/phone checks. Gameplay shell styles remain unchanged.
+
+Screenshots: `/tmp/edition-smf-desktop.jpg`, `/tmp/edition-smf-mobile.jpg`, `/tmp/edition-generic-mobile.jpg`, `/tmp/edition-generic-saved-score.jpg`. These are local QA artifacts, not published assets.
+
+## Limits and next gate
+
+Physical phones, native touch, sustained device performance, audible music acceptance and production online posting were not tested in this milestone. Static catalogue entries are not completed SMF levels. A fresh whole-branch review found two asset-boundary defects; both are fixed with failing-then-passing regression tests and a green 224-test suite; release/public acceptance would be separate and requires an explicit ship instruction. Next program milestone is M1: dated research briefs for all nine venues and agreed SMF gameplay/music rules.
+
+## Final review and decisions
+
+The independent reviewer found no generic compatibility defect. Two important findings were reproduced and fixed: `check:editions` now builds under its own temporary root and leaves the default generic `dist/` byte-for-byte unchanged; DEV policy now covers canonical, `/public/` and `/@fs/` artwork URLs. The new test makes actual local Vite requests, verifies title art returns 404 and shared backdrop/font requests return 200. No minor findings were deferred.
+
+Implementation calls and their limits: the loader imports the existing game bootstrap only for generic (bootstrap regression would affect startup, covered by browser/recovery checks); available CUA controls replaced missing Playwright (manual browser checks rather than a headless script); checker outputs are temporary (use the explicit build commands for retained artifacts). Shared unused code/catalogue metadata may remain in both artifacts, with service/game boot gated; this is an edition/content boundary, not code secrecy. Same-origin browser concurrency and a browser network trace remain unobserved despite automated isolation/service checks. Hosted CI/posting, physical-device performance and audible acceptance are separate later gates. SMF content/research/new protocol/final brands remain M1–M6, so the current SMF preview stays non-playable.
+
+## Follow-up — concealed secret tiles, 2026-11-06
+
+User requested mystery tiles until discovery. All three secret tiles remain in the SMF catalogue with a question-mark seal, hatched cover and “Somewhere secret” / “Undiscovered” copy. Their names and semantic stage IDs are absent from locked rendered markup/accessibility text. A discovered-ID rendering input reveals only the corresponding earned secret; M3 will connect that input to actual persistent discovery. No unlock/save functionality or click-to-reveal shortcut is added here.
+
+225 tests pass, including locked/default and selective-discovery cases; edition build checks pass. Browser checked the catalogue on desktop and 390×844 (three mystery tiles, no horizontal overflow, no relevant console warnings/errors); temporary viewport reset. Screenshots: `/tmp/smf-secret-tiles-desktop.jpg`, `/tmp/smf-secret-tiles-mobile.jpg`. This remains local, with no deployment.

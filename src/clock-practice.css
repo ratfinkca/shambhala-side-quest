@@ -1,0 +1,41 @@
+.shell.clock-lab{height:auto;min-height:100dvh;max-width:1120px;display:block;overflow:visible;padding:24px}
+.clock-lab header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px}
+.clock-lab h1{font:400 clamp(30px,4vw,48px)/1.1 var(--display);letter-spacing:0;margin:6px 0}
+.clock-lab .clock-eyebrow{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.clock-lab .clock-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:20px 0}
+.clock-lab label{font-size:12px;display:grid;gap:6px;color:var(--muted)}
+.clock-lab select{max-width:100%;background:#1e2930;border:1px solid #526b72;border-radius:7px;color:#f0f6ef;padding:10px;font:inherit}
+.clock-lab .clock-panel{border:1px solid #536970;border-radius:12px;overflow:hidden;background:#101e25}
+.clock-lab .clock-hud{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);gap:10px;padding:14px 18px;color:#e1f1f2;font-variant-numeric:tabular-nums}
+.clock-lab .clock-hud strong{font-size:22px;font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;white-space:nowrap}.clock-lab .clock-hud>span{display:grid;gap:5px;font-size:11px;min-width:0}.clock-lab .clock-hud>span:nth-child(2){text-align:center}.clock-lab .clock-hud>span:last-child{text-align:right}
+.clock-lab .clock-arena{position:relative;aspect-ratio:3/2;width:100%}
+.clock-lab #game{width:100%;height:100%;display:block}
+.clock-lab #game canvas{display:block;margin:auto;max-width:100%;max-height:100%}
+.clock-lab .clock-status{padding:12px 18px;background:#23343a;font-size:13px;display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+.clock-lab .clock-track{height:4px;background:#35484c}.clock-lab .clock-track>div{height:100%;width:0;background:#a3e2ce}
+.clock-lab .clock-note{font-size:12px;color:var(--muted);max-width:76ch}
+.clock-lab #clock-pause-note{position:absolute;inset:35% 10% auto;background:#101e25ed;border:1px solid #9ac8c5;border-radius:10px;padding:20px;text-align:center;pointer-events:none}
+.clock-lab .bass-control{z-index:3}
+@media(max-width:620px){.shell.clock-lab{padding:14px 10px}.clock-lab header{align-items:start;gap:8px}.clock-lab .clock-controls{gap:8px;margin:14px 0}.clock-lab .clock-controls label{flex-basis:100%}.clock-lab .clock-hud{padding:10px;font-size:11px}.clock-lab .clock-hud strong{font-size:16px}.clock-lab .clock-status{padding:10px;font-size:11px;flex-wrap:wrap}.clock-lab .clock-note{font-size:11px}.clock-lab #clock-pause-note{padding:12px}}
+.clock-lab{--display:'Lilita One','Trebuchet MS',sans-serif;--body:'DM Sans',Arial,sans-serif;--paper:#dcefe8;--ink:#14252c;--surface:#20373e;--accent:#91c6bd;--hover:#304d54;--muted:#b1c7c9;font-family:var(--body)}
+.clock-lab .primary-button{padding:9px 18px;font-size:20px}
+
+.clock-lab #clock-elapsed{font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;white-space:nowrap}
+
+.venue-lab #clock-goal{font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;white-space:nowrap;text-align:left}
+.venue-lab .clock-status{display:grid;grid-template-columns:minmax(0,1fr) 16ch 14ch;align-items:center;font-family:ui-monospace,'SFMono-Regular',Consolas,monospace}
+.venue-lab #clock-elapsed{text-align:right}
+@media(max-width:620px){.venue-lab .clock-status{grid-template-columns:minmax(0,1fr) 16ch}.venue-lab #clock-elapsed{grid-column:2}.venue-lab #clock-goal{grid-column:2;grid-row:1}.venue-lab #clock-phase{grid-column:1;grid-row:1/3}}
+
+/* Keep the complete arena visible on typical desktop windows. */
+.venue-lab .clock-panel{max-width:min(100%,calc(max(260px,100dvh - 390px)*1.5));margin-inline:auto;container-type:inline-size}
+.venue-lab .clock-hud strong{font-size:clamp(14px,3cqw,22px)}
+.sound-check{margin:20px auto;padding:14px;border:1px solid #536970;border-radius:10px;max-width:760px;background:#13262e;font-size:13px;line-height:1.5}
+.sound-check summary{cursor:pointer;font-weight:700;color:#dcefe8}.sound-check p{color:#b1c7c9}.sound-check-buttons{display:flex;flex-wrap:wrap;gap:10px}.sound-check audio{display:block;width:100%;margin:12px 0}.sound-check [hidden]{display:none}.sound-check a{display:inline-block}
+.track-audition-fields{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0}.track-audition-fields label:first-child{flex:1 1 230px;min-width:0}.track-audition input{max-width:100%;box-sizing:border-box;color:#e1f1f2;font:inherit}.track-audition input[type=file]{width:100%;padding:8px 0}.track-audition input[type=number]{width:10ch;padding:8px;border:1px solid #526b72;border-radius:7px;background:#1e2930}.track-audition [aria-pressed=true]{border-color:#a3e2ce;background:#304d54}.track-audition [data-track-status]{overflow-wrap:anywhere}.track-audition .track-audition-note{font-size:12px}
+.track-audition [data-track-position]{font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;font-variant-numeric:tabular-nums}
+.rehearsal-mix{max-width:760px;margin:20px auto;padding:16px;border:1px solid #668d89;border-radius:10px;background:#182e35;font-size:13px;line-height:1.5}
+.rehearsal-mix-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.rehearsal-mix h2{margin:0;font-size:18px;color:#dcefe8}.rehearsal-mix-heading>span{font-size:11px;color:#b1c7c9}
+.rehearsal-mix-sliders{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:14px 0}.clock-lab .rehearsal-mix label{display:grid;grid-template-columns:1fr auto;align-items:center;font-size:13px;color:#dcefe8}.rehearsal-mix output{font-variant-numeric:tabular-nums;font-weight:700;color:#b6f1d6}.rehearsal-mix input{grid-column:1/-1;width:100%;min-width:0;min-height:40px;margin:0;accent-color:#a3e2ce;cursor:pointer}.rehearsal-mix button{min-height:44px}
+.rehearsal-mix p{margin:12px 0 0;color:#b1c7c9}.rehearsal-mix .rehearsal-mix-note{font-size:11px}.rehearsal-mix [data-mix-status]{min-height:3em}
+@media(max-width:620px){.rehearsal-mix{padding:14px}.rehearsal-mix-sliders{gap:16px}.rehearsal-mix-heading>span{font-size:10px}.clock-lab .rehearsal-mix label{font-size:12px}}
