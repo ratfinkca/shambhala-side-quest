@@ -53,7 +53,7 @@ One shared engine; separately built generic and SMF editions. Target content is 
 
 - Build distinctive discoverable invitations, earned entry after parent clear, optional choice and persistent Explore access. Keep undiscovered names/art hidden behind mystery tiles until earned.
 - Secret scores/items/boosts never alter main competitive totals or parked main state. Souvenirs reward discovery; no extra main perk choice/XP advantage from detours.
-- Original three visits keep their first-completed-visit souvenir. AMP's grilled cheese / cheese totem requires the vendor's smooth-pass challenge; the earlier delivery idea is superseded. Villagio's putting prize belongs to a later agreed mini-game, not the first themed-area preview. Do not auto-award activity prizes on timeout.
+- Original three visits keep their first-completed-visit souvenir. AMP's grilled cheese / cheese totem requires targeted sandwich deliveries: collect one from the vendor and smooth-pass its recognizable recipient. Wrong passes give the sandwich away without progress; bumps drop it; both preserve completed deliveries. This replaces the untargeted pass-count idea. Villagio's putting prize belongs to a later agreed mini-game, not the first themed-area preview. Do not auto-award activity prizes on timeout.
 - Keep main/secret visit identities, return menus and parked/active recovery atomic and bounded. Handle invitation collection, death/timeout, replay, discard, reload and finish/save without duplicate rewards.
 - Test one bonus space at a time against its actual parent, then the full six-main/five-bonus journey. Build Rabbit Hole's complete preview first, then the other original secrets and two backstage spaces. Explicitly test Villagio returning to Festival final results or the Endless loop decision.
 
@@ -106,7 +106,7 @@ One shared engine; separately built generic and SMF editions. Target content is 
 - [ ] Secret Garden, discovered from Grove and revisit tested
 - [ ] Ikigai Mori, discovered from Pagoda and revisit tested
 - [ ] Villagio, discovered from Village; small dance/golf area and final-results return tested
-- [ ] AMP backstage, discovered from AMP; vendor smooth-pass challenge and cheese-totem receipt tested
+- [ ] AMP backstage, discovered from AMP; vendor pickup, target sprites, correct/wrong handoffs, dropped sandwiches, preserved progress and cheese-totem receipt tested
 - [ ] Eleven authored visual/music/lighting identities accepted
 - [ ] Generic/SMF brand, asset, save, recovery, consent and score isolation accepted
 - [ ] Complete tour, Endless, four-perk builds, discoveries and finish/save tested
