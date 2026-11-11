@@ -6,7 +6,7 @@ import {BONUS_VENUES,getBonusVenue} from './config.js';
 import {createBonusPractice} from './state.js';
 import {createActivityView} from './activity-view.js';
 import {createPuttingView} from './putting-view.js';
-import {MAX_STROKES} from './putting-state.js';
+import {MAX_STROKES,isPuttingCloseUp} from './putting-state.js';
 import {attemptPuttingShot} from './putting-input.js';
 import * as rabbit from './views/rabbit-hole.js';
 import * as garden from './views/secret-garden.js';
@@ -47,12 +47,15 @@ const isPutting=()=>config.activity==='putt';
 function renderHUD(){
  const s=practice.state;
  text('#bonus-count',`${s.progress} / ${s.goal}`);
- text('#bonus-carry',isPutting()?(s.complete?'Golden Chicken Totem · preview only':`Green ${s.holeIndex+1} · ${MAX_STROKES-s.strokes} shots left`):s.complete?`${config.reward} · preview only`:s.carrying?'Seed in hand → return to the garden bed':config.activity==='garden'?'One seed at a time':config.activity==='greet'?'Pass beside them, then move clear':'Follow the next glowing trinket');
+ text('#bonus-carry',isPutting()?(s.complete?'Golden Chicken Totem · preview only':`Green ${s.holeIndex+1} · ${MAX_STROKES-s.strokes} shots left`):s.complete?`${config.reward} · preview only`:s.carrying?'Seed in hand → smooth-pass into the garden bed':config.activity==='garden'?'One seed at a time':config.activity==='greet'?'Find a dancer carrying an unlit lantern':'Follow the next glowing trinket');
+ $('#putting-controls').hidden=!isPutting()||s.phase==='walking'||practice.status==='ready';
  if(isPutting()){
   text('#bonus-time',s.complete?'Won!':s.phase==='lost'?'Try again':`${s.strokes} / ${MAX_STROKES} shots`);
   $('#putting-next').hidden=s.phase!=='between';$('#putting-next').disabled=practice.status!=='playing';
   $('#putting-shot').disabled=practice.status!=='playing'||s.phase!=='aim';
-  text('#putting-hint',s.phase==='rolling'?'Ball rolling…':s.phase==='between'?'In the cup! Ready for the next green.':s.complete?'Your Golden Chicken Totem is on your character.':s.phase==='lost'?'So close. Start fresh for another round.':'Drag anywhere. Pull back, then release.');
+  text('#putting-hint',s.phase==='walking'?`Explore the party. Step onto green ${s.holeIndex+1} to putt.`:s.phase==='rolling'?'Ball rolling…':s.phase==='between'?'In the cup! Return to the party, then walk to green two.':s.complete?'Your Golden Chicken Totem is on your character.':s.phase==='lost'?'So close. Start fresh for another round.':'Drag anywhere. Pull back, then release.');
+  text('#bonus-movement-help',s.phase==='walking'?`Click / tap to walk · Step onto green ${s.holeIndex+1} to putt · No time limit`:isPuttingCloseUp(s)?'Pull back to putt · Esc to pause':'The whole party is yours to explore.');
+  $('#game').setAttribute('aria-label',s.phase==='walking'?'Villagio party. Click or tap a destination, or use WASD or arrows. Step onto the glowing green to putt. Escape pauses.':'Putting green. Drag anywhere opposite the shot and release. Arrow keys aim and set power, Space shoots, Escape pauses.');
  }
  currentScene?.background.venueView?.setProgress(s);
 }
@@ -80,15 +83,15 @@ function showVenue(){
  text('#bonus-time',`${Math.ceil(getTiming(config.timingId).durationMs/1000)}s left`);
  text('#bonus-help-copy',{
   trail:'Six lost party trinkets appear one after another. Reach each glow to collect it; the room warms up as you fill the trail. Find all six to try the rabbit ears.',
-  garden:'Carry a glowing seed to the circular bed in front of the booth. Plant three to bring the garden into bloom. Bumps may slow you, but your seed stays safe.',
-  greet:'Skim close beside five different dancers, then move beyond them without touching. Each successful greeting lights a lantern and gives that dancer a gold wristband and foot-ring. Repeating the same dancer does not count; bumps never erase your progress.',
-  putt:'Sink both holes in eight total shots. Drag anywhere opposite the direction you want the ball to travel; pull farther for more power. Short taps cancel. Let the ball settle before putting again. The rim rebounds the ball; a fast ball can roll past the cup. There is no time limit. The Golden Chicken Totem is yours to try here after a win, not saved.',
+  garden:'Carry a glowing seed through the busier crowd, then finish a clean smooth pass inside the circular garden bed. Walking into the bed alone does not plant it. Plant three to bring the garden into bloom; your seed stays safe after a bump.',
+  greet:'Find the dancers carrying unlit lanterns. Skim close beside a carrier, then move clear without touching to light it. Other dancers and already-lit lanterns do not count; bumps never erase your progress.',
+  putt:'Explore the whole party, then step onto the glowing first green to start putting. Sink a hole to return to the wide view, choose Next green, and walk across to green two. Sink both holes in eight total shots. Drag opposite the direction you want the ball to travel; pull farther for more power. Short taps cancel. There is no time limit. The Golden Chicken Totem is yours to try here after a win, not saved.',
  }[config.activity]);renderHUD();controls();
 }
 function updateHUD(round){if(isPutting()){renderHUD();return;}text('#bonus-time',practice.state.complete?'Complete!':`${Math.ceil(round.remainingMs/1000)}s left`);renderHUD();if(practice.status==='playing')audio.sync(round,config.id);}
 function puttingFeedback(event){
  if(!event)return;
- const messages={shot:'Nice and easy. Let it roll.',settled:'Ball settled. Line up your next putt.',holed:'In the cup! Head to the next green.',complete:'You won the Golden Chicken Totem! Equipped here for the rehearsal; not saved.',exhausted:'Eight shots played. Start fresh for another chance at the totem.'};
+ const messages={'green-entered':'On the green. Make a fresh drag to aim, then release to putt.',shot:'Nice and easy. Let it roll.',settled:'Ball settled. Line up your next putt.',holed:'In the cup! Return to the party, then walk to the next green.',complete:'You won the Golden Chicken Totem! Equipped here for the rehearsal; not saved.',exhausted:'Eight shots played. Start fresh for another chance at the totem.'};
  text('#bonus-message',messages[event.type]||config.instruction);
  if(event.type==='shot')audio.pickup(1);
  if(event.type==='holed')audio.closePass();
@@ -101,7 +104,7 @@ function buttonVector(){const a=Number($('#putting-angle').value)*Math.PI/180,p=
 function feedback(event){
  currentScene.activityView.feedback(event);
  const s=practice.state,point=config.points.find(p=>p.id===event.id);
- let message={collected:`${point?.label} found. Follow the next glow.`,pickup:'Seed in hand! Bring it to the circular bed in front of the booth.',planted:`A new bloom! ${s.progress} / ${s.goal} planted. Find the next seed.`,greeted:`Good company! ${s.progress} / ${s.goal} lanterns lit. Find someone new.`,visited:`${point?.label} found. Explore the other glowing circles.`}[event.type];
+ let message={collected:`${point?.label} found. Follow the next glow.`,pickup:'Seed in hand! Smooth-pass into the circular garden bed to plant it.',planted:`A new bloom! ${s.progress} / ${s.goal} planted. Find the next seed.`,greeted:`Lantern lit! ${s.progress} / ${s.goal} glowing. Find another unlit lantern.`,visited:`${point?.label} found. Explore the other glowing circles.`}[event.type];
  if(event.type==='complete'){
   message=config.reward?`Souvenir unlocked: ${config.reward}. Yours to try here, not saved.`:'Club tour complete! Putting and its prize are a future visit.';
   stopAudio();currentScene.pauseRound();audio.celebrate();controls();
@@ -123,17 +126,31 @@ class BonusScene extends GameScene{
    this.puttingView=createPuttingView(this,practice,{onShot:shoot,onAim:aim=>text('#putting-power-readout',aim?`${Math.round(Math.hypot(aim.x,aim.y)*100)}% power`:'No rush')});
    $('#putting-angle').value='0';$('#putting-power').value='50';
    this.puttingView.update(practice.state,0,this.reducedMotion);
+   if(practice.status==='playing'&&practice.state.phase==='walking')this.resumeRound();
   }else{this.activityView=createActivityView(this,config);this.activityView.update(practice.state,0,this.reducedMotion);}
   this.background.venueView?.setProgress(practice.state);this.background.update(0,'cruise',this.reducedMotion,getTiming(config.timingId));
   if(practice.status!=='playing')this.pauseRound();updateHUD(this.round);
  }
- onCrowdEncounters(encounters){const event=practice.step({player:this.dancer,encounters});if(event)feedback(event);}
+ onCrowdEncounters(encounters){
+  const event=practice.step({player:this.dancer,encounters});if(!event)return;
+  if(isPutting()){this.pauseRound();this.puttingView?.cancelAim();puttingFeedback(event);}
+  else feedback(event);
+ }
  effect(x,y,color,points,celebrate,label){if(label?.startsWith('SMOOTH'))return;super.effect(x,y,color,points,celebrate,label);}
  update(time,delta){
   if(isPutting()){
    this.reducedMotion=this.motionQuery?.matches??this.reducedMotion;
    puttingFeedback(practice.advance(delta));
    const elapsed=practice.state.elapsedMs,timing=getTiming(config.timingId),position=elapsed%timing.durationMs;
+   const walking=practice.status==='playing'&&practice.state.phase==='walking';
+   if(walking){
+    if(!this.running)this.resumeRound();
+    // The venue clock loops indefinitely. Give the ordinary movement update a
+    // non-expiring slice, then restore the music's independent phrase position.
+    const frameDelta=Math.min(50,Math.max(0,Number.isFinite(delta)?delta:0));
+    this.round.remainingMs=Math.max(timing.durationMs-position,frameDelta+1);
+    super.update(time,frameDelta);
+   }else if(this.running)this.pauseRound();
    this.round.remainingMs=timing.durationMs-position;
    if(this.frozenFrame!==elapsed){this.background.update(position,phaseAt(position,timing).phase,this.reducedMotion,timing);this.frozenFrame=elapsed;}
    if(practice.status==='playing')audio.sync(this.round,config.id);
@@ -153,12 +170,12 @@ class BonusScene extends GameScene{
 }
 const game=new Phaser.Game({type:Phaser.CANVAS,parent:'game',width:960,height:640,banner:false,audio:{noAudio:true},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:BonusScene});
 game.events.on('round:update',round=>{if(!disposed)updateHUD(round);});
-game.events.on('round:end',()=>{if(disposed)return;practice.finish();stopAudio();controls();});
+game.events.on('round:end',()=>{if(disposed||isPutting())return;practice.finish();stopAudio();controls();});
 function start(){if(!currentScene)return;stopAudio();audio.setEnabled(soundOn);practice.start();currentScene.prepareVisit();text('#bonus-message',config.instruction);controls();$('#game').focus({preventScroll:true});}
 function pause(){
  currentScene?.puttingView?.cancelAim();
  if(practice.status==='playing'){practice.pause();currentScene?.pauseRound();stopAudio();}
- else if(practice.status==='paused'){practice.resume();if(!isPutting())currentScene?.resumeRound();audio.setEnabled(soundOn);$('#game').focus({preventScroll:true});}
+ else if(practice.status==='paused'){practice.resume();if(!isPutting()||practice.state.phase==='walking')currentScene?.resumeRound();audio.setEnabled(soundOn);$('#game').focus({preventScroll:true});}
  controls();
 }
 function select(){
@@ -171,7 +188,7 @@ $('#bonus-sound').addEventListener('click',()=>{soundOn=!soundOn;audio.setEnable
 $('#putting-next').addEventListener('click',()=>{
  if(isPutting()&&practice.nextHole()){
   currentScene.puttingView.cancelAim();$('#putting-angle').value='180';$('#putting-power').value='50';
-  text('#bonus-message','Second green. Bring home that golden chicken.');renderHUD();controls();$('#game').focus({preventScroll:true});
+  currentScene.resumeRound();text('#bonus-message','Back to the party. Walk onto green two when you’re ready.');renderHUD();controls();$('#game').focus({preventScroll:true});
  }
 });
 for(const id of ['#putting-angle','#putting-power'])$(id).addEventListener('input',()=>currentScene?.puttingView?.setButtonAim(buttonVector()));
@@ -179,7 +196,7 @@ $('#putting-shot').addEventListener('click',()=>shoot(buttonVector()));
 function hidden(){if(document.hidden&&practice.status==='playing')pause();}
 function keydown(e){
  if(e.target.matches('select,input,textarea'))return;
- if(isPutting()&&document.activeElement===$('#game')&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','Enter'].includes(e.code)){
+ if(isPutting()&&isPuttingCloseUp(practice.state)&&document.activeElement===$('#game')&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','Enter'].includes(e.code)){
   e.preventDefault();
   if(practice.status==='playing'&&practice.state.phase==='aim'){
    if(e.code==='Space'||e.code==='Enter'){if(!e.repeat)shoot(buttonVector());}

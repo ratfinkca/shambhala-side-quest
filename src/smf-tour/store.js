@@ -5,6 +5,7 @@ import {PERKS} from '../run.js';
 import {MAX_ONLINE_STAGES} from '../../supabase/functions/_shared/score.js';
 import {normalizeThemePreference,THEMES} from '../themes.js';
 import {WARDROBE} from '../wardrobe.js';
+import {createEncounter} from '../festival.js';
 
 const LIMIT=2*1024*1024;
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -83,6 +84,13 @@ function activeOK(active,discoveries){
 }
 function resultOK(value){return allowed(value,['id','mode','score','cleared','completed'])&&id(value.id)&&integer(value.score)&&integer(value.cleared,0,1000000)&&bool(value.completed)&&(!value.completed||value.cleared===6);}
 
+function upgradeBonusCrowd(active){
+ const b=active.bonus;
+ if(!['secret-garden','ikigai-mori'].includes(b?.id)||b.activity?.version!==1||b.scene?.crowd?.length!==6)return active;
+ const count=bonusConfig(b.id).stage.crowdAnchors.length;
+ return {...active,bonus:{...b,scene:{...b.scene,crowd:[...b.scene.crowd,...Array.from({length:count-6},()=>createEncounter())]}}};
+}
+
 export function normalizeTourProfile(raw){
  const profile=createTourProfile();
  if(!object(raw)||raw.version!==1)return profile;
@@ -101,7 +109,7 @@ export function normalizeTourProfile(raw){
  if(object(raw.audio)){profile.audio.enabled=raw.audio.enabled!==false;for(const key of ['music','effects'])if(number(raw.audio[key],0,1))profile.audio[key]=raw.audio[key];}
  profile.initials=typeof raw.initials==='string'&&/^[A-Z0-9]{0,3}$/.test(raw.initials)?raw.initials:'';profile.playtestConsent=raw.playtestConsent===true||raw.playtestConsent==='accepted'?'accepted':raw.playtestConsent==='declined'?'declined':'unknown';
  for(const mode of ['rush','festival','endless'])if(Array.isArray(raw.boards?.[mode]))profile.boards[mode]=raw.boards[mode].filter(row=>object(row)&&id(row.id)&&/^[A-Z0-9]{3}$/.test(row.initials)&&integer(row.score)&&integer(row.cleared??row.stagesCleared,0,1000000)&&boundedJSON(row)).slice(0,20).map(row=>structuredClone(row));
- try{if(raw.active!==null&&object(raw.active)){const defaults={mode:'festival',themeId:'forest-freakout',scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:false,remixPending:false};const active={...defaults,...raw.active};if(activeOK(active,profile.discoveries))profile.active=structuredClone(active);}}catch{}
+ try{if(raw.active!==null&&object(raw.active)){const defaults={mode:'festival',themeId:'forest-freakout',scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:false,remixPending:false};const active=upgradeBonusCrowd({...defaults,...raw.active});if(activeOK(active,profile.discoveries))profile.active=structuredClone(active);}}catch{}
  if(resultOK(raw.lastResult))profile.lastResult=structuredClone(raw.lastResult);
  return profile;
 }

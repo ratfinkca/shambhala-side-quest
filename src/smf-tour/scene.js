@@ -14,6 +14,7 @@ import {rulesFor} from '../run.js';
 import {BONUSES,stageForRun} from './model.js';
 import {bonusConfig,bonusController,INVITATIONS} from './content.js';
 import {createSouvenirView} from './cosmetic-view.js';
+import {createFinishView} from './finish.js';
 
 const bonusViews=[rabbit,garden,ikigai,villagio];
 export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRoundEnd,onAim}){
@@ -21,7 +22,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
   preload(){preloadSMFVenueArt(this);bonusViews.forEach(v=>v.preload(this));}
   create(){
    this.stageRendererOptions={venueView:(s,stage)=>createSMFStageView(s,stage)||createAMPBackstageView(s,stage)||bonusViews.map(v=>v.createView(s,stage)).find(Boolean)};
-   super.create();this.allSparks=this.sparks;this.souvenirView=createSouvenirView(this);
+   super.create();this.allSparks=this.sparks;this.souvenirView=createSouvenirView(this);this.finishView=createFinishView(this);
    this.invitation=this.add.container(0,0).setDepth(19).setVisible(false);
    const seal=this.add.graphics();seal.fillStyle(0xffdea0,.12).fillCircle(0,0,34);
    seal.fillStyle(0x271e3c).fillRoundedRect(-18,-13,36,27,5);seal.lineStyle(2,0xffdea0).strokeRoundedRect(-18,-13,36,27,5).lineBetween(-17,-11,0,2).lineBetween(0,2,17,-11);
@@ -31,6 +32,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    this.pauseRound();onReady(this);
   }
   clearVisit(){
+   this.finishView?.stop();
    this.puttingView?.destroy();this.puttingView=null;this.activityView?.destroy();this.activityView=null;
    this.practice=null;this.config=null;this.endedRound=null;this.pendingActivity=null;this.sparks=this.allSparks;
    this.allSparks.forEach(s=>s.setVisible(true));this.dancer.setVisible(true);this.invitation.setVisible(false);
@@ -64,7 +66,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
   pauseTour(){this.puttingView?.cancelAim();this.practice?.pause();this.pauseRound();}
   resumeTour(){
    this.practice?.resume();
-   if(this.config?.activity!=='putt')this.resumeRound();
+   if(this.config?.activity!=='putt'||this.practice.state.phase==='walking')this.resumeRound();
   }
   shoot(vector){
    if(this.config?.activity!=='putt')return;
@@ -73,7 +75,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
   onCrowdEncounters(encounters){
    if(!this.practice)return;
    const event=this.config.activity==='delivery'?this.practice.step({atVendor:Math.hypot(this.dancer.x-VENDOR_POINT.x,this.dancer.y-VENDOR_POINT.y)<=VENDOR_POINT.radius,encounters}):this.practice.step({player:this.dancer,encounters});
-   if(event)this.pendingActivity=event;
+   if(event){if(event.type==='green-entered')this.pauseRound();this.pendingActivity=event;}
   }
   effect(x,y,color,points,celebrate,label){if(this.practice&&label?.startsWith('SMOOTH'))return;super.effect(x,y,color,points,celebrate,label);}
   paint(){
@@ -95,13 +97,18 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    if(this.config?.activity==='putt'){
     const event=this.practice.advance(delta);if(event)onActivity(event);
     const elapsed=this.practice.state.elapsedMs,timing=getTiming(this.config.timingId),position=elapsed%timing.durationMs;
+    if(this.practice.status==='playing'&&this.practice.state.phase==='walking'){
+     if(!this.running)this.resumeRound();
+     const step=Math.min(50,Math.max(0,delta));this.round.remainingMs=Math.max(timing.durationMs-position,step+1);this.round.ended=false;
+     super.update(time,step);
+    }
     this.round.remainingMs=timing.durationMs-position;
     this.background.update(position,phaseAt(position,timing).phase,this.reducedMotion,timing);
    }else super.update(time,delta);
    if(this.pendingActivity){const event=this.pendingActivity;this.pendingActivity=null;this.activityView?.feedback(event);onActivity(event);}
    if(this.endedRound){const r=this.endedRound;this.endedRound=null;onRoundEnd(r);}
    if(this.running&&!a.bonus&&this.invitation.visible&&Math.hypot(this.dancer.x-this.invitation.x,this.dancer.y-this.invitation.y)<32)onInvitation();
-   this.paint();onFrame(this.round);
+   this.paint();this.finishView?.update(delta,this.reducedMotion);onFrame(this.round);
   }
  };
 }
