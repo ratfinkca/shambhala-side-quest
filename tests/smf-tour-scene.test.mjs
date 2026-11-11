@@ -79,3 +79,14 @@ test('putting responds immediately when reduced-motion preference changes',()=>{
  scene.motionQuery.matches=true;scene.update(200,100);assert.equal(scene.reducedMotion,true);
  scene.pauseTour();const saved=scene.capture();scene.update(5000,4800);assert.deepEqual(scene.capture(),saved);
 });
+
+test('Villagio walking survives a music wrap and enters a green without spending a shot',()=>{
+ const {scene}=harness(visit('villagio'));scene.loadActive();
+ assert.equal(scene.practice.state.phase,'walking');assert.equal(scene.running,true);assert.equal(scene.dancer.visible,true);
+ const duration=getTiming(scene.config.timingId).durationMs;for(let remaining=duration-1;remaining>0;remaining-=1000)scene.practice.advance(Math.min(1000,remaining));scene.round.remainingMs=1;
+ scene.update(1000,50);assert.equal(scene.round.ended,false);assert.equal(scene.practice.state.phase,'walking');
+ scene.dancer.setPosition(218,366);scene.update(1050,50);
+ assert.equal(scene.practice.state.phase,'aim');assert.equal(scene.running,false);assert.equal(scene.practice.state.strokes,0);assert.equal(scene.cameras.main.zoom,2.35);
+ scene.pauseTour();const before=scene.capture();scene.update(2000,950);assert.deepEqual(scene.capture(),before);
+ scene.resumeTour();assert.equal(scene.running,false,'putting does not also move the player');
+});

@@ -1,4 +1,4 @@
-import {PUTTING_HOLES} from './putting-state.js';
+import {PUTTING_HOLES,isPuttingCloseUp} from './putting-state.js';
 import {createPuttingGesture} from './putting-input.js';
 import {createPuttingReward} from './putting-reward.js';
 
@@ -32,7 +32,7 @@ export function createPuttingView(scene,practice,{onShot,onAim=()=>{}}){
  function cancelled(e){if(captured===e.pointerId)cancelAim();}
  for(const [name,fn] of [['pointerdown',down],['pointermove',move],['pointerup',up],['pointercancel',cancelled],['lostpointercapture',cancelled]])canvas.addEventListener(name,fn);
  function update(state,elapsed,reduced){
-  const close=practice.status!=='ready'&&state.phase!=='won'&&state.phase!=='lost';
+  const close=practice.status!=='ready'&&isPuttingCloseUp(state);
   const hole=PUTTING_HOLES[state.holeIndex],key=close?state.holeIndex:'room';
   if(framing!==key){
    framing=key;cancelAim();
@@ -43,7 +43,15 @@ export function createPuttingView(scene,practice,{onShot,onAim=()=>{}}){
   scene.crowd.people.forEach(p=>p.node.setVisible(!close));
   reward.update(scene.dancer,elapsed,reduced,state.complete);
   ink.clear();
-  if(!close)return;
+  if(!close){
+   if(state.phase==='walking'){
+    const alpha=reduced?.7:.55+Math.sin(elapsed*.003)*.18;
+    ink.lineStyle(2.2,0xffe2a3,alpha).strokeEllipse(hole.center.x,hole.center.y,hole.radiusX*2,hole.radiusY*2);
+    ink.fillStyle(0xffe2a3,.12).fillCircle(hole.tee.x,hole.tee.y,13);
+    ink.fillStyle(0xffffff).fillCircle(hole.tee.x,hole.tee.y,4);
+   }
+   return;
+  }
   const {ball}=state;
   ink.lineStyle(1.2,0xffe5a6,.8).strokeEllipse(hole.cup.x,hole.cup.y,15,8);
   if(state.phase==='between'){

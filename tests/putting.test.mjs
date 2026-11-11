@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {PUTTING_HOLES,PUTTING_PHYSICS,MAX_STROKES,createPuttingPractice} from '../src/bonus-practice/putting-state.js';
+import {PUTTING_HOLES,PUTTING_PHYSICS,MAX_STROKES,createPuttingPractice,isOnPuttingGreen,isPuttingCloseUp} from '../src/bonus-practice/putting-state.js';
 
-const fresh=()=>{const p=createPuttingPractice();p.start();return p;};
+const enter=p=>p.step({player:PUTTING_HOLES[p.state.holeIndex].center});
+const fresh=()=>{const p=createPuttingPractice();p.start();enter(p);return p;};
 function roll(p,frame=1000/60){
  let event=null;
  for(let i=0;i<1500&&p.state.phase==='rolling';i++){const e=p.advance(frame);if(e)event=e;}
@@ -22,10 +23,47 @@ test('putting geometry stays on the two accepted painted greens',()=>{
  for(const h of PUTTING_HOLES)for(const p of [h.cup,h.tee])assert.ok(((p.x-h.center.x)/h.radiusX)**2+((p.y-h.center.y)/h.radiusY)**2<1);
 });
 
+test('a visit explores the whole venue until walking onto the current green',()=>{
+ const p=createPuttingPractice();p.start();
+ assert.equal(p.state.phase,'walking');assert.equal(isPuttingCloseUp(p.state),false);
+ assert.equal(p.shoot({x:.5,y:0}),null);
+ assert.equal(p.step({player:{x:480,y:590}}),null);
+ assert.equal(p.step({player:PUTTING_HOLES[1].center}),null,'second green cannot skip the first');
+ p.pause();assert.equal(enter(p),null);p.resume();
+ assert.equal(enter(p).type,'green-entered');assert.equal(isPuttingCloseUp(p.state),true);
+ assert.equal(enter(p),null,'one entry event per green');
+ p.shoot(towardCup(p));assert.equal(roll(p).type,'holed');
+ assert.equal(isPuttingCloseUp(p.state),false,'the whole party returns after the cup');
+ assert.equal(p.nextHole(),true);assert.equal(p.state.phase,'walking');
+ assert.equal(p.shoot(towardCup(p)),null);
+ assert.equal(p.step({player:PUTTING_HOLES[0].center}),null);
+ assert.equal(enter(p).id,'green-2');assert.equal(isPuttingCloseUp(p.state),true);
+});
+
+test('green entry uses the painted ellipse rather than its bounding rectangle',()=>{
+ const h=PUTTING_HOLES[0];
+ assert.equal(isOnPuttingGreen(h.center,0),true);
+ assert.equal(isOnPuttingGreen({x:h.center.x+h.radiusX*.95,y:h.center.y+h.radiusY*.95},0),false);
+ for(const player of [null,{}, {x:NaN,y:h.center.y},{x:Infinity,y:h.center.y}])assert.equal(isOnPuttingGreen(player,0),false);
+ assert.equal(isOnPuttingGreen(h.center,99),false);
+});
+
+test('walking checkpoints and legacy mid-green saves resume in their original view',()=>{
+ const p=createPuttingPractice();p.start();p.advance(150);
+ const q=createPuttingPractice();assert.equal(q.restore(p.capture()),true);assert.equal(q.status,'paused');assert.equal(q.state.phase,'walking');
+ q.resume();assert.equal(enter(q).type,'green-entered');q.shoot(towardCup(q));q.advance(125);
+ const legacy=q.capture(),restored=createPuttingPractice();assert.equal(legacy.version,1);
+ assert.equal(restored.restore(legacy),true);assert.equal(restored.state.phase,'rolling');assert.equal(isPuttingCloseUp(restored.state),true);
+ restored.resume();assert.equal(roll(restored).type,'holed');restored.nextHole();
+ const walkAgain=createPuttingPractice();assert.equal(walkAgain.restore(restored.capture()),true);assert.equal(walkAgain.state.phase,'walking');assert.equal(walkAgain.state.holeIndex,1);
+ const oldReady=createPuttingPractice().capture();oldReady.state.phase='aim';
+ assert.equal(createPuttingPractice().restore(oldReady),true);
+});
+
 test('real shots sink both cups and award one Golden Chicken Totem',()=>{
  const p=fresh();assert.equal(p.shoot(towardCup(p)).type,'shot');assert.equal(roll(p).type,'holed');
  assert.equal(p.state.progress,1);assert.equal(p.state.phase,'between');assert.equal(p.status,'playing');
- assert.equal(p.nextHole(),true);assert.equal(p.state.holeIndex,1);
+ assert.equal(p.nextHole(),true);assert.equal(p.state.holeIndex,1);enter(p);
  assert.equal(p.shoot(towardCup(p)).type,'shot');const win=roll(p);
  assert.equal(win.type,'complete');assert.equal(win.reward,'Golden Chicken Totem');assert.equal(p.state.progress,2);assert.equal(p.state.complete,true);assert.equal(p.status,'complete');
  assert.equal(p.advance(1000),null);assert.equal(p.shoot({x:1,y:0}),null);assert.equal(p.nextHole(),false);
@@ -54,13 +92,13 @@ test('the eighth shot finishes before failure, with no ninth shot',()=>{
 
 test('sinking the second hole on stroke eight wins instead of exhausting',()=>{
  const p=fresh();for(let i=0;i<6;i++)miss(p);
- p.shoot(towardCup(p));assert.equal(roll(p).type,'holed');assert.equal(p.nextHole(),true);
+ p.shoot(towardCup(p));assert.equal(roll(p).type,'holed');assert.equal(p.nextHole(),true);enter(p);
  p.shoot(towardCup(p));assert.equal(p.state.strokes,8);assert.equal(roll(p).type,'complete');assert.equal(p.state.complete,true);
 });
 
 test('ready, moving, between, paused and ended phases reject inappropriate actions',()=>{
  const p=createPuttingPractice();assert.equal(p.shoot({x:1,y:0}),null);assert.equal(p.nextHole(),false);assert.equal(p.advance(50),null);assert.equal(p.state.elapsedMs,0);
- p.start();assert.equal(p.nextHole(),false);p.shoot(towardCup(p));assert.equal(p.shoot({x:1,y:0}),null);assert.equal(p.nextHole(),false);
+ p.start();enter(p);assert.equal(p.nextHole(),false);p.shoot(towardCup(p));assert.equal(p.shoot({x:1,y:0}),null);assert.equal(p.nextHole(),false);
  assert.equal(roll(p).type,'holed');assert.equal(p.shoot({x:1,y:0}),null);
  p.pause();assert.equal(p.nextHole(),false);p.resume();assert.equal(p.nextHole(),true);
  p.finish();assert.equal(p.status,'ended');assert.equal(p.shoot({x:1,y:0}),null);p.resume();assert.equal(p.status,'ended');
@@ -69,8 +107,8 @@ test('ready, moving, between, paused and ended phases reject inappropriate actio
 test('pause freezes rolling and clock; restart clears shots, holes and prize',()=>{
  const p=fresh();p.shoot(towardCup(p));p.advance(125);p.pause();
  const before=structuredClone(p.state);assert.equal(p.advance(1000),null);assert.deepEqual(p.state,before);assert.equal(p.shoot({x:1,y:0}),null);
- p.resume();assert.equal(roll(p).type,'holed');p.nextHole();p.shoot(towardCup(p));roll(p);
- p.start();assert.equal(p.status,'playing');assert.equal(p.state.strokes,0);assert.equal(p.state.progress,0);assert.equal(p.state.complete,false);assert.equal(p.state.elapsedMs,0);assert.equal(p.state.phase,'aim');
+ p.resume();assert.equal(roll(p).type,'holed');p.nextHole();enter(p);p.shoot(towardCup(p));roll(p);
+ p.start();assert.equal(p.status,'playing');assert.equal(p.state.strokes,0);assert.equal(p.state.progress,0);assert.equal(p.state.complete,false);assert.equal(p.state.elapsedMs,0);assert.equal(p.state.phase,'walking');
  assert.deepEqual(p.state.ball,{...PUTTING_HOLES[0].tee,vx:0,vy:0});
 });
 

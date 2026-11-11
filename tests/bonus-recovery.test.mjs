@@ -30,15 +30,36 @@ test('trail checkpoint preserves the next trinket and never recollects a visited
  q.resume();assert.equal(q.step({player:c.points[1]}),null);assert.equal(q.step({player:c.points[2]}).type,'collected');assert.equal(q.state.progress,3);
 });
 
-test('garden held seed survives restoration, plants once, and cannot be picked up again',()=>{
- const c=getBonusVenue('secret-garden'),p=bonus(c.id);p.start();p.step({player:c.points[0]});p.step({player:c.bed});p.step({player:c.points[1]});
+test('garden held seed survives restoration, plants on a pass once, and cannot be picked up again',()=>{
+ const c=getBonusVenue('secret-garden'),p=bonus(c.id);p.start();p.step({player:c.points[0]});p.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true}]});p.step({player:c.points[1]});
  const q=bonus(c.id);assert.equal(q.restore(copy(p.capture())),true);assert.equal(q.state.carrying,c.points[1].id);assert.equal(q.state.progress,1);
- q.resume();assert.equal(q.step({player:c.bed}).type,'planted');assert.equal(q.step({player:c.bed}),null);assert.equal(q.step({player:c.points[1]}),null);assert.equal(q.state.progress,2);
+ q.resume();assert.equal(q.step({player:c.bed}),null);assert.equal(q.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true}]}).type,'planted');assert.equal(q.step({player:c.bed}),null);assert.equal(q.step({player:c.points[1]}),null);assert.equal(q.state.progress,2);
 });
 
 test('Ikigai checkpoint keeps greeted dancer identities and rejects repeat credit',()=>{
- const p=bonus('ikigai-mori');p.start();p.step({encounters:[{id:'dancer-1',closePass:true}]});
- const q=bonus('ikigai-mori');assert.equal(q.restore(copy(p.capture())),true);q.resume();assert.equal(q.step({encounters:[{id:'dancer-1',closePass:true}]}),null);assert.equal(q.step({encounters:[{id:'dancer-2',closePass:true}]}).type,'greeted');assert.equal(q.state.progress,2);
+ const p=bonus('ikigai-mori');p.start();p.step({encounters:[{id:'dancer-0',closePass:true}]});
+ const q=bonus('ikigai-mori');assert.equal(q.restore(copy(p.capture())),true);q.resume();assert.equal(q.step({encounters:[{id:'dancer-0',closePass:true}]}),null);assert.equal(q.step({encounters:[{id:'dancer-1',closePass:true}]}),null);assert.equal(q.step({encounters:[{id:'dancer-2',closePass:true}]}).type,'greeted');assert.equal(q.state.progress,2);
+});
+
+test('garden pickup approach and consumed pass guards survive reload',()=>{
+ const c=getBonusVenue('secret-garden'),p=bonus(c.id);p.start();p.step({player:c.points[0],encounters:[{id:'dancer-7',active:true}]});
+ const q=bonus(c.id);assert.equal(q.restore(copy(p.capture())),true);q.resume();
+ assert.equal(q.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true,active:false}]}),null);
+ const r=bonus(c.id);assert.equal(r.restore(copy(q.capture())),true);r.resume();
+ assert.equal(r.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true,active:false}]}),null);
+ r.step({player:c.bed});assert.equal(r.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true}]}).type,'planted');
+});
+
+test('legacy garden seed and Ikigai greeted credit migrate without replaying rewards',()=>{
+ const c=getBonusVenue('secret-garden'),p=bonus(c.id);p.start();p.step({player:c.points[0]});
+ const old=p.capture();old.version=1;delete old.state.blockedEncounterIds;delete old.state.passEventIds;
+ const q=bonus(c.id);assert.equal(q.restore(old),true);assert.equal(q.status,'paused');assert.equal(q.state.carrying,c.points[0].id);q.resume();
+ assert.equal(q.step({player:c.bed}),null);assert.equal(q.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true}]}).type,'planted');
+ const lantern=bonus('ikigai-mori');lantern.start();const legacy=lantern.capture();legacy.version=1;legacy.state.progress=2;legacy.state.greetedIds=['dancer-1','dancer-3'];
+ assert.equal(lantern.restore(legacy),true);lantern.resume();assert.equal(lantern.state.progress,2);
+ for(const id of ['dancer-1','dancer-3','dancer-4'])assert.equal(lantern.step({encounters:[{id,closePass:true}]}),null);
+ for(const id of ['dancer-0','dancer-2','dancer-5'])lantern.step({encounters:[{id,closePass:true}]});
+ assert.equal(lantern.state.complete,true);assert.equal(lantern.state.progress,5);
 });
 
 test('AMP held and dropped sandwiches restore without replenishing or replaying stale passes',()=>{
@@ -58,15 +79,15 @@ test('AMP restoration while at vendor cannot create a free replacement sandwich'
 });
 
 test('putting mid-roll preserves fractional time and matches uninterrupted trajectory',()=>{
- const p=createPuttingPractice();p.start();p.shoot({x:.8,y:.12});p.advance(137);
+ const p=createPuttingPractice();p.start();p.step({player:PUTTING_HOLES[0].center});p.shoot({x:.8,y:.12});p.advance(137);
  const q=createPuttingPractice();assert.equal(q.restore(copy(p.capture())),true);const frozen=copy(q.state);assert.equal(q.advance(100),null);assert.deepEqual(q.state,frozen);q.resume();
  for(const dt of [7,17,31,100,233]){assert.deepEqual(q.advance(dt),p.advance(dt));assert.deepEqual(q.state,p.state);}
  assert.deepEqual(q.capture(),p.capture());
 });
 
 test('the restored eighth rolling putt can still win and cannot award twice',()=>{
- const p=createPuttingPractice();p.start();for(let i=0;i<6;i++){p.shoot({x:-.04,y:0});roll(p);}
- p.shoot(towardCup(p));roll(p);p.nextHole();p.shoot(towardCup(p));p.advance(137);
+ const p=createPuttingPractice();p.start();p.step({player:PUTTING_HOLES[0].center});for(let i=0;i<6;i++){p.shoot({x:-.04,y:0});roll(p);}
+ p.shoot(towardCup(p));roll(p);p.nextHole();p.step({player:PUTTING_HOLES[1].center});p.shoot(towardCup(p));p.advance(137);
  const q=createPuttingPractice();assert.equal(q.restore(copy(p.capture())),true);assert.equal(q.state.strokes,8);q.resume();assert.equal(roll(q).type,'complete');assert.equal(q.state.complete,true);
  const won=createPuttingPractice();assert.equal(won.restore(copy(q.capture())),true);assert.equal(won.status,'complete');won.resume();assert.equal(won.advance(1000),null);assert.equal(won.shoot({x:1,y:0}),null);
 });

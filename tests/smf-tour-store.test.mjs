@@ -135,3 +135,18 @@ test('real GameScene recovery preserves fractional time, long Flow, Wavy Colours
  restored.resumeRound();assert.equal(restored.running,true);advanceRound(restored.round,250);
  assert.equal(restored.round.remainingMs,56320.75);assert.equal(restored.round.flowMs,9750);assert.equal(restored.round.mystery.effectMs,6750);
 });
+
+test('legacy six-dancer Garden and Ikigai visits keep checkpoint and ownership as crowds expand',()=>{
+ for(const id of ['secret-garden','ikigai-mori']){
+  let p=createTourProfile();p.discoveries=[id];p.rewards=[BONUSES.find(b=>b.id===id).reward.id];
+  p=beginBonus(p,id,'legacy-visit',{explore:true});const config=bonusConfig(id),practice=bonusController(config);practice.start();
+  p.active.bonus.activity=practice.capture();p.active.bonus.activity.version=1;
+  delete p.active.bonus.activity.state.blockedEncounterIds;delete p.active.bonus.activity.state.passEventIds;
+  p.active.bonus.scene=snapshot(config.stage,'legacy-visit');p.active.bonus.scene.crowd=p.active.bonus.scene.crowd.slice(0,6);
+  p.active.bonus.scene.round.remainingMs-=1234;const before=structuredClone(p),loaded=normalizeTourProfile(p);
+  assert.ok(loaded.active);assert.equal(loaded.active.bonus.scene.crowd.length,config.stage.crowdAnchors.length);
+  assert.equal(loaded.active.bonus.scene.round.remainingMs,before.active.bonus.scene.round.remainingMs);
+  assert.deepEqual(loaded.rewards,p.rewards);assert.deepEqual(p,before,'normalizing does not mutate source data');
+  const restored=bonusController(config);assert.equal(restored.restore(loaded.active.bonus.activity),true);assert.equal(restored.status,'paused');
+ }
+});

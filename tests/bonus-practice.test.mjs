@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {BONUS_VENUES,getBonusVenue} from '../src/bonus-practice/config.js';
 import {createBonusPractice} from '../src/bonus-practice/state.js';
 import {getTiming} from '../src/stage-clock.js';
-import {crowdPosition} from '../src/festival.js';
+import {crowdPosition,createEncounter,updateEncounter} from '../src/festival.js';
 
 const setup=id=>{const config=getBonusVenue(id),practice=createBonusPractice(config);practice.start();return {config,practice};};
 test('four disposable venues have reachable objectives and whole phrase clocks',()=>{
@@ -34,32 +34,65 @@ test('rabbit trail is sequential, each trinket once, completion includes tempora
  }
  assert.equal(p.status,'complete');
 });
-test('garden must carry one seed back to the bed and cannot plant twice or collect ahead',()=>{
+test('garden requires a held seed and a fresh smooth pass into the bed',()=>{
  const {config:c,practice:p}=setup('secret-garden');
  assert.equal(p.step({player:c.bed}),null);
  for(let i=0;i<3;i++){
   assert.equal(p.step({player:c.points[i]}).type,'pickup');
   assert.equal(p.state.progress,i);assert.equal(p.state.carrying,c.points[i].id);
   assert.equal(p.step({player:c.points[(i+1)%3]}),null);
-  assert.equal(p.step({player:c.bed}).type,i===2?'complete':'planted');
+  assert.equal(p.step({player:c.bed}),null,'walking into the bed cannot plant');
+  assert.equal(p.step({player:{x:c.bed.x+c.bed.radius+1,y:c.bed.y},encounters:[{id:'dancer-7',closePass:true}]}),null,'pass outside bed cannot plant');
+  assert.equal(p.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true}]}),null,'same event cannot be carried into the bed');
+  p.step({player:c.bed});
+  assert.equal(p.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true}]}).type,i===2?'complete':'planted');
   assert.equal(p.state.carrying,null);assert.equal(p.state.progress,i+1);
   assert.equal(p.step({player:c.bed}),null);
  }
 });
-test('Ikigai counts distinct real dancers and prioritizes any physical bump in a frame',()=>{
- const {practice:p}=setup('ikigai-mori'),pass=id=>({id,closePass:true});
+test('garden never plants on a bump or from an approach begun before collecting the seed',()=>{
+ const {config:c,practice:p}=setup('secret-garden');
+ p.step({player:c.points[0],encounters:[{id:'dancer-7',active:true}]});
+ assert.equal(p.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true,active:false}]}),null);
+ assert.equal(p.state.carrying,c.points[0].id);
+ p.step({player:c.bed});
+ assert.equal(p.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true},{id:'dancer-0',bumped:true}]}),null);
+ assert.equal(p.state.carrying,c.points[0].id,'bumps preserve the seed');
+ p.step({player:c.bed});
+ assert.equal(p.step({player:c.bed,encounters:[{id:'invented',closePass:true}]}),null);
+ assert.equal(p.step({player:c.bed,encounters:[{id:'dancer-7',closePass:true}]}).type,'planted');
+});
+test('garden entrance geometry admits a real clean pass into its dropoff throughout the set',()=>{
+ const c=getBonusVenue('secret-garden'),timing=getTiming(c.timingId);
+ assert.equal(c.stage.crowdAnchors.length,12);
+ for(let start=0;start<timing.durationMs-1000;start+=1000){
+  const p=createBonusPractice(c);p.start();p.step({player:c.points[0]});
+  const encounter=createEncounter();let planted=null;
+  for(const [index,dy] of [70,40,0,-30,-65].entries()){
+   const now=start+index*50,dancer=crowdPosition(7,now,c.stage.crowdAnchors,c.stage.crowdSpeed,timing),player={x:dancer.x+35,y:dancer.y+dy};
+   const hit={id:'dancer-7',...updateEncounter(encounter,player,dancer,now),active:encounter.active};
+   assert.equal(hit.bumped,false);planted=p.step({player,encounters:[hit]})||planted;
+  }
+  assert.equal(planted?.type,'planted',`reachable at ${start}ms`);
+ }
+});
+test('Ikigai counts only unlit lantern carriers and prioritizes physical bumps',()=>{
+ const {config:c,practice:p}=setup('ikigai-mori'),pass=id=>({id,closePass:true});
+ assert.equal(c.stage.crowdAnchors.length,14);assert.equal(c.lanternIds.length,5);
  assert.equal(p.step({encounters:[pass('invented')]}),null);
+ assert.equal(p.step({encounters:[pass('dancer-1')]}),null,'ordinary dancers do not count');
  assert.equal(p.step({encounters:[pass('dancer-0'),{id:'dancer-2',bumped:true}]}),null);
  assert.equal(p.step({encounters:[pass('dancer-0'),pass('dancer-1')]}).type,'greeted');
  assert.equal(p.state.progress,1);
  assert.equal(p.step({encounters:[pass('dancer-0')]}),null);
- for(let i=1;i<5;i++)p.step({encounters:[pass(`dancer-${i}`)]});
+ for(const id of c.lanternIds.slice(1))p.step({encounters:[pass(id)]});
  assert.equal(p.state.progress,5);assert.equal(p.status,'complete');
 });
 test('Villagio requires actual putting; visiting greens or waiting never earns its cosmetic',()=>{
  const {config:c,practice:p}=setup('villagio');
  assert.equal(c.activity,'putt');assert.equal(c.goal,2);assert.equal(c.reward,'Golden Chicken Totem');
- for(const player of [{x:220,y:355},{x:720,y:500},{x:800,y:285}])assert.equal(p.step({player}),null);
+ assert.equal(p.step({player:{x:220,y:355}}).type,'green-entered');
+ for(const player of [{x:720,y:500},{x:800,y:285}])assert.equal(p.step({player}),null);
  for(let i=0;i<100;i++)assert.equal(p.advance(1000),null);
  assert.equal(p.status,'playing');assert.equal(p.state.progress,0);assert.equal(p.state.complete,false);
 });
@@ -67,7 +100,7 @@ test('ready, pause, timeout and reset gate progress and clear temporary rewards'
  for(const c of BONUS_VENUES){
   const p=createBonusPractice(c),frame={player:c.points[0],encounters:[{id:'dancer-0',closePass:true}]};
   assert.equal(p.step(frame),null);p.start();p.pause();assert.equal(p.step(frame),null);
-  p.resume();if(c.activity==='putt')assert.ok(p.shoot({x:.1,y:0}));else assert.ok(p.step(frame));p.finish();assert.equal(p.status,'ended');assert.equal(p.step(frame),null);
+  p.resume();if(c.activity==='putt'){p.step({player:{x:220,y:355}});assert.ok(p.shoot({x:.1,y:0}));}else assert.ok(p.step(frame));p.finish();assert.equal(p.status,'ended');assert.equal(p.step(frame),null);
   p.start();assert.equal(p.state.progress,0);assert.equal(p.state.carrying,null);assert.equal(p.state.complete,false);
   assert.deepEqual(p.state.greetedIds,[]);assert.deepEqual(p.state.collectedIds,[]);
  }

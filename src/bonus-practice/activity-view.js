@@ -22,7 +22,7 @@ export function createActivityView(scene,config){
   return {point:p,ring};
  }):[];
  const greeted=config.activity==='greet'?scene.crowd.people.map(p=>{
-  const bracelet=scene.add.graphics();p.node.add(bracelet);return {person:p,bracelet};
+  const bracelet=scene.add.graphics(),lantern=scene.add.graphics();p.node.add([bracelet,lantern]);return {person:p,bracelet,lantern};
  }):[];
  function drawReward(state,elapsed,reduced){
   reward.clear();const {x,y}=scene.dancer;
@@ -54,21 +54,39 @@ export function createActivityView(scene,config){
     halo.setAlpha(reduced?.8:.75+Math.sin(elapsed*.003)*.2);
    }
    if(bed){
-    bed.clear();const {x,y}=config.bed;bed.fillStyle(0x273e34).fillEllipse(x,y,94,52);bed.lineStyle(3,state.carrying?0xffe9a6:0x8fcda3,.9).strokeEllipse(x,y,94,52);
+    bed.clear();const {x,y,radius}=config.bed;bed.fillStyle(0x273e34,.85).fillCircle(x,y,radius);bed.lineStyle(3,state.carrying?0xffe9a6:0x8fcda3,.9).strokeCircle(x,y,radius);
+    if(state.carrying){
+     // A clear entrance at the near edge encourages a pass past the dancer
+     // into the bed. The ring matches the actual planting radius.
+     bed.lineStyle(2,0xffe9a6,.75).lineBetween(x-10,y+radius+17,x,y+radius+7).lineBetween(x,y+radius+7,x+10,y+radius+17);
+    }
     for(let i=0;i<3;i++){const bx=x-26+i*26;bed.fillStyle(i<state.progress?0xffc8d6:0x73846c).fillCircle(bx,y,i<state.progress?9:4);}
    }
    exploration.forEach(({point,ring})=>ring.setVisible(!state.visitedIds.includes(point.id)).setAlpha(reduced?.8:.65+Math.sin(elapsed*.003)*.2));
-   greeted.forEach(({person,bracelet})=>{bracelet.clear();if(state.greetedIds.includes(person.id)){
-    bracelet.lineStyle(3,0xffd690,.95).strokeCircle(-12,-6,4);
-    bracelet.lineStyle(2.5,0xffd690,.85).strokeEllipse(0,16,45,17);
-   }});
+   greeted.forEach(({person,bracelet,lantern})=>{
+    const lit=state.greetedIds.includes(person.id),hasLantern=config.lanternIds.includes(person.id)||lit;
+    bracelet.clear();lantern.clear();
+    if(!hasLantern)return;
+    // A physical lantern hangs from the dancer's hand. Dark paper and a pale
+    // frame identify an unlit target; warm light stays on after the pass.
+    if(lit){
+     lantern.fillStyle(0xffd690,.12).fillCircle(23,7,25);
+     bracelet.lineStyle(2,0xffd690,.65).strokeEllipse(0,16,45,17);
+    }
+    lantern.lineStyle(2,0xc9d8c7,.95).lineBetween(13,-9,23,-5).strokeCircle(23,-3,5);
+    lantern.fillStyle(lit?0xffce80:0x233c49,1).fillRoundedRect(14,1,18,23,4);
+    lantern.lineStyle(2,lit?0xffedba:0xe0ded0,1).strokeRoundedRect(14,1,18,23,4);
+    lantern.lineStyle(1,lit?0xa96832:0x7b9198,.9).lineBetween(20,2,20,23).lineBetween(26,2,26,23);
+    lantern.fillStyle(lit?0xffedb3:0xb5bcb4).fillRect(13,-1,20,3).fillRect(13,23,20,3);
+    if(lit)lantern.fillStyle(0xfff4d4,.9).fillEllipse(23,12,4,9);
+   });
    drawReward(state,elapsed,reduced);
   },
   feedback(event){
    const p=(event.type==='planted'?config.bed:config.points.find(p=>p.id===event.id))||scene.crowd.people.find(person=>person.id===event.id)?.node||scene.dancer;
    // Completion stays posed so the cosmetic can be inspected at phone size.
-   if(event.type!=='complete')scene.effect(p.x,p.y,0xffdda0,0,false,event.type==='pickup'?'SEED FOUND':event.type==='planted'?'BLOOM!':event.type==='greeted'?'GOOD COMPANY':event.type==='visited'?'FOUND IT':'FOUND!');
+   if(event.type!=='complete')scene.effect(p.x,p.y,0xffdda0,0,false,event.type==='pickup'?'SEED FOUND':event.type==='planted'?'BLOOM!':event.type==='greeted'?'LANTERN LIT':event.type==='visited'?'FOUND IT':'FOUND!');
   },
-  destroy(){objects.forEach(o=>o.destroy());greeted.forEach(({bracelet})=>bracelet.destroy());},
+  destroy(){objects.forEach(o=>o.destroy());greeted.forEach(({bracelet,lantern})=>{bracelet.destroy();lantern.destroy();});},
  };
 }

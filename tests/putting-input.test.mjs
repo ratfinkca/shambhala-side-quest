@@ -34,10 +34,19 @@ test('power is bounded and malformed coordinates cannot create shots',()=>{
  g.start(point(1,.5,.3),true);assert.equal(g.end(point(1,Infinity,.3),true),null);
 });
 
+test('the walking pointer cannot become a putt when green entry changes the mode',()=>{
+ const g=createPuttingGesture();
+ assert.equal(g.start(point(1,.4,.4),false),false);
+ g.move(point(1,.2,.4));
+ assert.equal(g.end(point(1,.2,.4),true),null,'arrival release must not fire a shot');
+ assert.equal(g.start(point(2,.4,.4),true),true);
+ assert.ok(g.end(point(2,.3,.4),true),'a new deliberate drag may putt');
+});
+
 test('a keyboard shot cancels a held pointer so its later release cannot spend another stroke',async()=>{
- const {createPuttingPractice}=await import('../src/bonus-practice/putting-state.js');
+ const {createPuttingPractice,PUTTING_HOLES}=await import('../src/bonus-practice/putting-state.js');
  const {attemptPuttingShot}=await import('../src/bonus-practice/putting-input.js');
- const p=createPuttingPractice(),g=createPuttingGesture();p.start();
+ const p=createPuttingPractice(),g=createPuttingGesture();p.start();p.step({player:PUTTING_HOLES[0].center});
  g.start(point(1,.5,.3),true);g.move(point(1,.4,.3));
  assert.equal(attemptPuttingShot(p,{x:.1,y:0},()=>g.cancel()).type,'shot');
  p.advance(1000);assert.equal(p.state.phase,'aim');
