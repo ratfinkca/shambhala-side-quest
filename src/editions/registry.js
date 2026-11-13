@@ -28,6 +28,10 @@ export function controlPracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.has('controls');
 }
+export function collisionPracticeRequested(env,search){
+ const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
+ return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.has('collision');
+}
 export function backstagePracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&params.get('backstage')==='amp';
@@ -36,8 +40,9 @@ export function bonusPracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&['rabbit-hole','secret-garden','ikigai-mori','villagio'].includes(params.get('bonus'));
 }
-export async function startEdition(env,actions={}, {clockPractice=false,venuePractice=false,backstagePractice=false,bonusPractice=false,controlPractice=false}={}){
+export async function startEdition(env,actions={}, {collisionPractice=false,clockPractice=false,venuePractice=false,backstagePractice=false,bonusPractice=false,controlPractice=false}={}){
  const edition=getEdition(editionIdFromEnv(env));
+ if(env.DEV===true&&edition.id==='smf'&&collisionPractice&&typeof actions?.collision==='function')return actions.collision(edition);
  if(env.DEV===true&&edition.id==='smf'&&controlPractice&&typeof actions?.controls==='function')return actions.controls(edition);
  if(env.DEV===true&&edition.id==='smf'&&bonusPractice&&typeof actions?.bonus==='function')return actions.bonus(edition);
  if(env.DEV===true&&edition.id==='smf'&&backstagePractice&&typeof actions?.backstage==='function')return actions.backstage(edition);

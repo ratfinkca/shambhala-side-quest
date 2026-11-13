@@ -20,7 +20,7 @@ test('style and settings expose choices and truthful default consent',()=>{
 });
 test('boards escape player names and local and online results are distinct',()=>{
  const p=createTourProfile();p.boards={rush:[{initials:'<X>',score:5}],festival:[],endless:[]};
- const html=boardsHTML(p,{mode:'rush'});assert.doesNotMatch(html,/<X>/);assert.match(html,/&lt;X&gt;/);assert.match(html,/On this device/);assert.match(html,/Online/);
+ const html=boardsHTML(p,{boardVersion:'smf-v1',mode:'rush'});assert.doesNotMatch(html,/<X>/);assert.match(html,/&lt;X&gt;/);assert.match(html,/On this device/);assert.match(html,/Online/);
 });
 test('shell keeps finish confirmation outside steering and pause settings reachable',()=>{
  const html=shellHTML();for(const id of ['tour-pause','tour-proceed','tour-running','tour-stage','tour-points','tour-time','game','tour-paused','tour-pause-message','tour-menu','tour-order','tour-status','tour-putt'])assert.match(html,new RegExp(`id="${id}"`));
@@ -72,7 +72,7 @@ test('full mode help explains all three paths',async()=>{
 
 test('local and online board rows show readable control types',()=>{
  const p=createTourProfile();p.boards={rush:[{initials:'AAA',score:5,inputType:'mouse'}],festival:[],endless:[]};
- const html=boardsHTML(p,{boardMode:'rush',onlineEnabled:true,board:{status:'ready',rows:[{initials:'BBB',score:7,inputType:'touch'},{initials:'CCC',score:4,inputType:'keyboard'},{initials:'DDD',score:3,inputType:'mixed'},{initials:'EEE',score:2,inputType:'unknown'}]}});
+ const html=boardsHTML(p,{boardVersion:'smf-v1',boardMode:'rush',onlineEnabled:true,board:{status:'ready',rows:[{initials:'BBB',score:7,inputType:'touch'},{initials:'CCC',score:4,inputType:'keyboard'},{initials:'DDD',score:3,inputType:'mixed'},{initials:'EEE',score:2,inputType:'unknown'}]}});
  for(const type of ['Mouse','Touch','Keyboard','Mixed','Unknown'])assert.match(html,new RegExp(type));
 });
 
@@ -83,7 +83,7 @@ test('Rush boards show only the selected venue and its locally saved best',()=>{
   {initials:'<A>',score:480,rushStageId:'smf-amp'},
   {initials:'PAG',score:800,rushStageId:'smf-pagoda'},
  ];
- const html=boardsHTML(p,{boardMode:'rush',boardVenue:'smf-amp',onlineEnabled:true,board:{mode:'rush',rushStageId:'smf-amp',status:'ready',rows:[{initials:'WEB',score:600,rushStageId:'smf-amp'},{initials:'LEAK',score:850,rushStageId:'smf-grove'},{initials:'OLDWEB',score:700}]}});
+ const html=boardsHTML(p,{boardVersion:'smf-v1',boardMode:'rush',boardVenue:'smf-amp',onlineEnabled:true,board:{mode:'rush',rushStageId:'smf-amp',status:'ready',rows:[{initials:'WEB',score:600,rushStageId:'smf-amp'},{initials:'LEAK',score:850,rushStageId:'smf-grove'},{initials:'OLDWEB',score:700}]}});
  assert.match(html,/<label[^>]*for="tour-board-venue"/);
  assert.match(html,/<select[^>]*id="tour-board-venue"[^>]*data-board-venue/);
  assert.match(html,/<option value="smf-amp" selected>The AMP<\/option>/);
@@ -101,19 +101,19 @@ test('a stale online mode or venue is not displayed under the selected Rush venu
   {mode:'rush',rushStageId:'smf-grove',status:'ready',rows},
   {mode:'rush',status:'ready',rows},
  ]){
-  const html=boardsHTML(p,{boardMode:'rush',boardVenue:'smf-amp',onlineEnabled:true,board});
+  const html=boardsHTML(p,{boardVersion:'smf-v1',boardMode:'rush',boardVenue:'smf-amp',onlineEnabled:true,board});
   assert.doesNotMatch(html,/>LEAK<|800 points/);assert.match(html,/Loading online scores/);
  }
 });
 
 test('legacy Rush scores remain on Pagoda and an empty venue has no invented best',()=>{
  const p=createTourProfile();p.boards.rush=[{initials:'OLD',score:900},{initials:'ZERO',score:0,rushStageId:'smf-grove'}];
- const legacy=boardsHTML(p);assert.match(legacy,/On this device · Quick Rush · The Pagoda/);assert.match(legacy,/>OLD</);
+ const legacy=boardsHTML(p,{boardVersion:'smf-v1'});assert.match(legacy,/On this device · Quick Rush · The Pagoda/);assert.match(legacy,/>OLD</);
  assert.doesNotMatch(legacy,/>ZERO</);
- const empty=boardsHTML(p,{boardVenue:'smf-fractal'});assert.match(empty,/No score saved for this venue yet/);assert.doesNotMatch(empty,/>OLD<|900 points/);
- const zero=boardsHTML(p,{boardVenue:'smf-grove'});assert.match(zero,/Your saved best · The Grove[\s\S]*0 points/);assert.doesNotMatch(zero,/No score saved for this venue yet/);
- const invalid=boardsHTML(p,{boardVenue:'"><script>alert(1)</script>'});assert.doesNotMatch(invalid,/<script>|alert\(1\)/);assert.match(invalid,/On this device · Quick Rush · The Pagoda/);
- const festival=boardsHTML(p,{boardMode:'festival',boardVenue:'smf-amp'});assert.doesNotMatch(festival,/tour-board-venue|Your saved best/);
+ const empty=boardsHTML(p,{boardVersion:'smf-v1',boardVenue:'smf-fractal'});assert.match(empty,/No score saved for this venue yet/);assert.doesNotMatch(empty,/>OLD<|900 points/);
+ const zero=boardsHTML(p,{boardVersion:'smf-v1',boardVenue:'smf-grove'});assert.match(zero,/Your saved best · The Grove[\s\S]*0 points/);assert.doesNotMatch(zero,/No score saved for this venue yet/);
+ const invalid=boardsHTML(p,{boardVersion:'smf-v1',boardVenue:'"><script>alert(1)</script>'});assert.doesNotMatch(invalid,/<script>|alert\(1\)/);assert.match(invalid,/On this device · Quick Rush · The Pagoda/);
+ const festival=boardsHTML(p,{boardVersion:'smf-v1',boardMode:'festival',boardVenue:'smf-amp'});assert.doesNotMatch(festival,/tour-board-venue|Your saved best/);
 });
 
 test('Rush introduction names the selected venue with its own duration and saved best',()=>{

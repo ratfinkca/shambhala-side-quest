@@ -1,7 +1,8 @@
 import {createRunId} from '../run-id.js';
 import {validSmfEvents} from '../../supabase/functions/_shared/smf-playtest.js';
+import {resolveSmfScoringVersion} from './seasons.js';
 export function readSmfTelemetryConfig(env={}){try{const endpoint=new URL(env.VITE_SMF_PLAYTEST_URL),notice=new URL(env.VITE_SMF_PLAYTEST_NOTICE_URL);const secure=u=>u.protocol==='https:'||(env.DEV===true&&u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname));if(env.VITE_SMF_PLAYTEST_ENABLED!=='true'||!secure(endpoint)||!secure(notice)||endpoint.username||endpoint.password||notice.username||notice.password)return {enabled:false};return {enabled:true,endpoint:endpoint.href,notice:notice.href,buildId:env.VITE_BUILD_ID||'dev'};}catch{return {enabled:false};}}
-export function createSmfTelemetry({config,consent,send,getMovementMode,uuid=()=>createRunId()}){
+export function createSmfTelemetry({config,consent,send,getMovementMode,getScoringVersion,uuid=()=>createRunId()}){
  let queue=[],guest=null,controller=null,generation=0,pending=false;
  const enabled=()=>config.enabled&&consent();
  return {
@@ -14,7 +15,7 @@ export function createSmfTelemetry({config,consent,send,getMovementMode,uuid=()=
     if(movementMode!==undefined)fields.movementMode=movementMode;
    }
    guest??=uuid();
-   const event={editionId:'smf',scoringVersion:'smf-v1',eventId:uuid(),guestId:guest,buildId:config.buildId||'dev',mode,type,...fields};
+   const event={editionId:'smf',scoringVersion:resolveSmfScoringVersion(getScoringVersion?.()),eventId:uuid(),guestId:guest,buildId:config.buildId||'dev',mode,type,...fields};
    if(!validSmfEvents([event]))return false;
    queue.push(event);queue=queue.slice(-100);return true;
   },

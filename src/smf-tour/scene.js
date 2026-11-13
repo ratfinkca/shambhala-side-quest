@@ -42,7 +42,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    const b=a.bonus;
    this.config=b?bonusConfig(b.id):null;
    const stage=b?this.config.stage:stageForRun(a);
-   const options={stage,timingId:stage.timingId,rules:rulesFor(a.perks),outfit:p.outfit,bassChargeMs:b?0:a.bassChargeMs,runId:b?b.visitId:a.id};
+   const options={stage,timingId:stage.timingId,rules:rulesFor(a.perks),outfit:p.outfit,bassChargeMs:b?0:a.bassChargeMs,runId:b?b.visitId:a.id,crowdEnabled:a.scoringVersion==='smf-v2'};
    const snapshot=b?b.scene:a.scene;
    if(snapshot)this.restoreRecovery(snapshot,options);else super.startRound(options);
    if(b){
@@ -82,6 +82,10 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    const elapsed=this.config?.activity==='putt'?this.practice.state.elapsedMs:elapsedMs(this.round);
    if(this.practice){
     this.activityView?.update(this.practice.state,elapsed,this.reducedMotion);this.puttingView?.update(this.practice.state,elapsed,this.reducedMotion);
+    if(this.config.activity==='putt'){
+     if(this.practice.state.phase==='walking')this.crowdSocial?.paint();
+     else this.crowdSocial?.suspend(elapsedMs(this.round));
+    }
     this.background.venueView?.setProgress?.(this.practice.state);
    }
    this.souvenirView.update(profile().souvenir,elapsed,this.reducedMotion);
@@ -99,7 +103,9 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
     const elapsed=this.practice.state.elapsedMs,timing=getTiming(this.config.timingId),position=elapsed%timing.durationMs;
     if(this.practice.status==='playing'&&this.practice.state.phase==='walking'){
      if(!this.running)this.resumeRound();
-     const step=Math.min(50,Math.max(0,delta));this.round.remainingMs=Math.max(timing.durationMs-position,step+1);this.round.ended=false;
+     // GameScene advances this clock once more. Start one step before the
+     // desired position so collision, visible NPCs and recovery agree.
+     const step=Math.min(50,Math.max(0,delta));this.round.remainingMs=timing.durationMs-position+step;this.round.ended=false;
      super.update(time,step);
     }
     this.round.remainingMs=timing.durationMs-position;

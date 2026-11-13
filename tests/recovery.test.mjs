@@ -1,6 +1,9 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {makeRecovery,readRecovery,recoveryScreen} from '../src/recovery.js';
 import {recoveryFixture} from './helpers/recovery-fixtures.mjs';
+import {awardClosePass} from '../src/festival.js';
+import {rulesFor} from '../src/run.js';
+import {createCrowdFriendships} from '../src/crowd-friendship.js';
 test('live checkpoint roundtrips stage time, points and logical objects without object aliasing',()=>{
  const source=recoveryFixture(),r=makeRecovery(source),result=readRecovery(JSON.parse(JSON.stringify(r)));
  assert.equal(result.ok,true);assert.equal(result.value.screen,'paused');assert.equal(result.value.scene.round.remainingMs,44000);assert.equal(result.value.scene.round.score,20);assert.equal(result.value.inputType,'touch');assert.equal(result.value.run.themeId,'moonlit-mycelium');
@@ -55,4 +58,44 @@ test('stamina survives recovery while legacy checkpoints and invalid resource va
  const checkpoint=makeRecovery(f);assert.equal(readRecovery(checkpoint).value.scene.round.stamina,37.5);
  delete checkpoint.scene.round.stamina;assert.equal(readRecovery(checkpoint).ok,true);
  for(const value of [-1,101,NaN,'50']){checkpoint.scene.round.stamina=value;assert.equal(readRecovery(checkpoint).ok,false);}
+});
+
+function friendshipRecovery(){
+ const source=recoveryFixture(),round=source.scene.round;
+ round.rules=rulesFor(source.run.perks);for(let i=0;i<9;i++)awardClosePass(round);delete round.rules;
+ source.scene.crowd.forEach((encounter,index)=>{encounter.friendPasses=index===0?3:index===1?4:0;});
+ return source;
+}
+
+test('generic paused recovery preserves third-pass and complete friendships with encounter state',()=>{
+ const source=friendshipRecovery();
+ Object.assign(source.scene.crowd[0],{active:true,spoiled:true,travel:9,cooldownUntil:17000,nearest:22,previousPlayer:{x:480,y:400},previousDancer:{x:490,y:400},touching:true,protected:false});
+ const checkpoint=makeRecovery(source),read=readRecovery(JSON.parse(JSON.stringify(checkpoint)));
+ assert.equal(read.ok,true);assert.equal(read.value.screen,'paused');
+ assert.deepEqual(read.value.scene.crowd,source.scene.crowd);
+ const people=read.value.scene.crowd.map((_,index)=>({id:`dancer-${index}`}));
+ const friends=createCrowdFriendships(people,{passes:read.value.scene.crowd.map(e=>e.friendPasses??0)});
+ assert.equal(friends.get('dancer-0').radius,4.5);assert.equal(friends.get('dancer-1').isFriend,true);
+ assert.equal(friends.record([{id:'dancer-0',closePass:true}])[0].befriended,true);
+ assert.equal(read.value.scene.crowd[0].friendPasses,3,'resuming a model cannot mutate its checkpoint');
+ assert.equal(read.value.scene.round.closePasses,9,'capped friendship counts may be below scored passes');
+});
+
+test('generic recovery rejects malformed or unearned friendship counts',()=>{
+ for(const friendPasses of [-1,5,1.5,'3',null,undefined,NaN,Infinity]){
+  const source=friendshipRecovery();source.scene.crowd[0].friendPasses=friendPasses;
+  assert.equal(readRecovery(makeRecovery(source)).ok,false,String(friendPasses));
+ }
+ const source=friendshipRecovery();source.scene.crowd[2].friendPasses=4;
+ assert.equal(readRecovery(makeRecovery(source)).ok,false,'11 retained passes cannot come from 9 earned passes');
+});
+
+test('generic legacy and partially populated friendship snapshots remain recoverable',()=>{
+ const source=friendshipRecovery();
+ for(const encounter of source.scene.crowd)delete encounter.friendPasses;
+ assert.equal(readRecovery(makeRecovery(source)).ok,true);
+ source.scene.crowd[0].friendPasses=3;
+ const read=readRecovery(makeRecovery(source));assert.equal(read.ok,true);
+ assert.equal(read.value.scene.crowd[0].friendPasses,3);
+ assert.equal(Object.hasOwn(read.value.scene.crowd[1],'friendPasses'),false);
 });

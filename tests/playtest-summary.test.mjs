@@ -11,6 +11,12 @@ test('close pass distribution excludes invalid values and summarizes minimum',()
  const s=make();s.record('start',{runId:'r',stageIndex:0});for(const clearance of [0,7,14,21,-1,NaN])s.record('closepass',{runId:'r',clearance});
  assert.deepEqual(s.finishStage(0).clearanceBins,[1,1,2]);assert.equal(s.snapshot().stages[0].minClearance,0);
 });
+test('smaller friendship bodies retain legitimate clearances through the 48-unit pass boundary',()=>{
+ const s=make();s.record('start',{runId:'r',stageIndex:0});
+ for(const clearance of [30,48,48.001,-1,NaN,Infinity])s.record('closepass',{runId:'r',clearance});
+ const stage=s.finishStage(0);
+ assert.equal(stage.closePasses,2);assert.deepEqual(stage.clearanceBins,[0,0,2]);assert.equal(stage.minClearance,30);
+});
 test('pauses and hidden pages do not add active time or exits',()=>{
  const s=make();s.record('start',{runId:'r',stageIndex:0});s.record('hidden',{runId:'r',activeMs:5000});assert.equal(s.snapshot().outcome,'unknown');assert.equal(s.snapshot().stages[0].activeMs,0);
  s.record('exit',{runId:'r'});assert.equal(s.snapshot().outcome,'exit');

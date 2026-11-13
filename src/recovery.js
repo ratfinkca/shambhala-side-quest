@@ -1,12 +1,12 @@
-import {GENERIC_RULES,genericTarget} from '../supabase/functions/_shared/edition-rules.js';
+import {GENERIC_RULES,GENERIC_SCORING_VERSIONS,genericTarget} from '../supabase/functions/_shared/edition-rules.js';
 import {PERKS,rulesFor,stageFor} from './run.js';
 import {WARDROBE} from './wardrobe.js';
 import {THEMES} from './themes.js';
 import {UUID,INPUTS,MAX_ONLINE_STAGES,validateScore} from '../supabase/functions/_shared/score.js';
 export const RECOVERY_VERSION=1,RECOVERY_RULES='endless-recovery-1',RECOVERY_LIMIT=2*1024*1024;
-const runKeys='id themeId mode stageIndex totalScore stagesCleared perks scoreStages bassChargeMs status submitted availablePerks pendingPerk remixStageIndex scoreOverflow endedVoluntarily initials initialsDraft submissionMessage buildId'.split(' ');
+const runKeys='id scoringVersion themeId mode stageIndex totalScore stagesCleared perks scoreStages bassChargeMs status submitted availablePerks pendingPerk remixStageIndex scoreOverflow endedVoluntarily initials initialsDraft submissionMessage buildId'.split(' ');
 const roundKeys='surferMs scoreComponents bass mystery shieldsRemaining remainingMs score chain multiplier bestMultiplier pickups closePasses slowedMs flowMs flowTaken sincePickupMs ended runId bassUses stamina'.split(' ');
-const encounterKeys='active spoiled travel cooldownUntil previousPlayer previousDancer touching nearest protected'.split(' ');
+const encounterKeys='active spoiled travel cooldownUntil previousPlayer previousDancer touching nearest protected friendPasses'.split(' ');
 const pick=(v,keys)=>Object.fromEntries(keys.filter(k=>Object.hasOwn(v,k)).map(k=>[k,v[k]]));
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const allowed=(v,keys)=>object(v)&&Object.keys(v).every(k=>keys.includes(k));
@@ -28,7 +28,7 @@ export function makeRecovery({run,screen,scene,summary=null,resultSnapshot=null,
  if(run?.mode!=='endless'||run.status==='ready'&&run.stageIndex===0)return null;
  const logical=scene?{round:pick(scene.round,roundKeys),player:scene.player,sparks:scene.sparks,candy:scene.candy,crowd:scene.crowd.map(e=>pick(e,encounterKeys))}:null;
  if(logical&&logical.round.sincePickupMs===Infinity)logical.round.sincePickupMs=null;
- return structuredClone({version:RECOVERY_VERSION,rules:RECOVERY_RULES,scoringVersion:'arcade-v1',savedAt:now,run:{...pick(run,runKeys),buildId:run.buildId||buildId},screen:recoveryScreen(screen,run),scene:run.status==='playing'?logical:null,summary:summary?pick(summary,['qualified','pickups','target','score','totalScore']):null,resultSnapshot,progressReward,submission:submission?.snapshot?submission.snapshot():submission,inputType});
+ return structuredClone({version:RECOVERY_VERSION,rules:RECOVERY_RULES,scoringVersion:run.scoringVersion??GENERIC_RULES.id,savedAt:now,run:{...pick(run,runKeys),scoringVersion:run.scoringVersion??GENERIC_RULES.id,buildId:run.buildId||buildId},screen:recoveryScreen(screen,run),scene:run.status==='playing'?logical:null,summary:summary?pick(summary,['qualified','pickups','target','score','totalScore']):null,resultSnapshot,progressReward,submission:submission?.snapshot?submission.snapshot():submission,inputType});
 }
 function historyOK(r){
  if(!Array.isArray(r.scoreStages))return false;
@@ -36,7 +36,7 @@ function historyOK(r){
  if(!len)return r.perks.length===0&&r.totalScore===0&&r.stagesCleared===0&&r.stageIndex===0&&['playing','ready'].includes(r.status);
  const cleared=r.scoreStages.filter((s,i)=>s.pickups>=genericTarget(i,true)).length;
  const total=r.scoreStages.reduce((a,s)=>a+s.score,0);
- if(!validateScore({runId:r.id,ticket:'a'.repeat(64),initials:'AAA',mode:'endless',scoringVersion:'arcade-v1',buildId:r.buildId,inputType:'unknown',totalScore:total,stagesCleared:cleared,stages:r.scoreStages}).ok)return false;
+ if(!validateScore({runId:r.id,ticket:'a'.repeat(64),initials:'AAA',mode:'endless',scoringVersion:r.scoringVersion??GENERIC_RULES.id,buildId:r.buildId,inputType:'unknown',totalScore:total,stagesCleared:cleared,stages:r.scoreStages}).ok)return false;
  if(r.scoreOverflow){if(len!==MAX_ONLINE_STAGES||r.stageIndex<len||r.totalScore<total||r.stagesCleared<cleared)return false;}
  else {
   if(r.totalScore!==total||r.stagesCleared!==cleared)return false;
@@ -65,31 +65,33 @@ function roundOK(s,r){
  const b=q.bass;if(!allowed(b,['chargeMs','exposureMs','activeMs','activeDurationMs'])||!finite(b.chargeMs,0,10000)||!finite(b.exposureMs,0,6000)||!finite(b.activeMs,0,6000)||!finite(b.activeDurationMs,0,6000)||b.activeMs>b.activeDurationMs||b.activeMs>0&&b.chargeMs!==0)return false;
  const m=q.mystery;if(!allowed(m,['phase','spawnAtMs','elapsedMs','effect','effectMs','wrapper','effectStartedAtMs'])||!['waiting','absent','available','spent'].includes(m.phase)||!integer(m.spawnAtMs,12000,39999)||!finite(m.elapsedMs,0,60000)||Math.abs(m.elapsedMs-(60000-q.remainingMs))>1||!['speed','dizzy','waves',null].includes(m.effect)||!finite(m.effectMs,0,rules.candyDurationMs)||!!m.effect!==(m.effectMs>0)||!allowed(m.wrapper,['colour','pattern'])||!integer(m.wrapper.colour,0,3)||!integer(m.wrapper.pattern,0,2)||m.effectStartedAtMs!==undefined&&!finite(m.effectStartedAtMs,0,m.elapsedMs))return false;
  const stage=stageFor(r);
- return Array.isArray(s.crowd)&&s.crowd.length===stage.crowdAnchors.length&&s.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&finite(e.travel)&&finite(e.cooldownUntil,0,63000)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&(e.previousPlayer===null)===(e.previousDancer===null)&&(!e.active||finite(e.nearest))&&['touching','protected'].every(k=>e[k]===undefined||bool(e[k]))&&(e.nearest===undefined||finite(e.nearest)));
+ return Array.isArray(s.crowd)&&s.crowd.length===stage.crowdAnchors.length&&s.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&finite(e.travel)&&finite(e.cooldownUntil,0,63000)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&(e.previousPlayer===null)===(e.previousDancer===null)&&(!e.active||finite(e.nearest))&&['touching','protected'].every(k=>e[k]===undefined||bool(e[k]))&&(e.nearest===undefined||finite(e.nearest))&&(!Object.hasOwn(e,'friendPasses')||integer(e.friendPasses,0,4)))&&s.crowd.reduce((sum,e)=>sum+(Object.hasOwn(e,'friendPasses')?e.friendPasses:0),0)<=q.closePasses;
 }
 export function readRecovery(raw,{editionId='generic'}={}){
  const fail=code=>({ok:false,code});
  if(editionId!=='generic')return fail('incompatible');
  try{
   if(!object(raw))return fail('invalid');
-  if(raw.version!==RECOVERY_VERSION||raw.rules!==RECOVERY_RULES||raw.scoringVersion!=='arcade-v1')return fail('incompatible');
+  if(raw.version!==RECOVERY_VERSION||raw.rules!==RECOVERY_RULES||!GENERIC_SCORING_VERSIONS.includes(raw.scoringVersion??GENERIC_RULES.id))return fail('incompatible');
   if(new TextEncoder().encode(JSON.stringify(raw)).length>RECOVERY_LIMIT)return fail('oversized');
   if(!allowed(raw,['version','rules','scoringVersion','savedAt','run','screen','scene','summary','resultSnapshot','progressReward','submission','inputType'])||!finite(raw.savedAt)||!INPUTS.includes(raw.inputType))return fail('invalid');
   const r=raw.run;
-  if(!allowed(r,runKeys)||!UUID.test(r.id)||r.mode!=='endless'||!THEMES.some(t=>t.id===r.themeId)||!integer(r.stageIndex,0,1e6)||!integer(r.totalScore)||!integer(r.stagesCleared,0,r.stageIndex+1)||!perks(r.perks)||r.perks.length>4||r.availablePerks!==undefined&&!perks(r.availablePerks)||!finite(r.bassChargeMs,0,10000)||!['playing','upgrade','ready','ended'].includes(r.status)||!bool(r.submitted)||!(/^[\w.-]{1,100}$/).test(r.buildId)||r.pendingPerk!=null&&!Object.hasOwn(PERKS,r.pendingPerk)||r.remixStageIndex!==undefined&&!integer(r.remixStageIndex,0,r.stageIndex+1)||['scoreOverflow','endedVoluntarily'].some(k=>r[k]!==undefined&&!bool(r[k]))||r.initials!==undefined&&!/^[A-Z0-9]{3}$/.test(r.initials)||r.initialsDraft!==undefined&&!/^[A-Z0-9]{0,3}$/.test(r.initialsDraft)||r.submissionMessage!==undefined&&(typeof r.submissionMessage!=='string'||r.submissionMessage.length>250)||!historyOK(r))return fail('invalid');
+  if(!allowed(r,runKeys)||(r.scoringVersion??GENERIC_RULES.id)!==(raw.scoringVersion??GENERIC_RULES.id)||!UUID.test(r.id)||r.mode!=='endless'||!THEMES.some(t=>t.id===r.themeId)||!integer(r.stageIndex,0,1e6)||!integer(r.totalScore)||!integer(r.stagesCleared,0,r.stageIndex+1)||!perks(r.perks)||r.perks.length>4||r.availablePerks!==undefined&&!perks(r.availablePerks)||!finite(r.bassChargeMs,0,10000)||!['playing','upgrade','ready','ended'].includes(r.status)||!bool(r.submitted)||!(/^[\w.-]{1,100}$/).test(r.buildId)||r.pendingPerk!=null&&!Object.hasOwn(PERKS,r.pendingPerk)||r.remixStageIndex!==undefined&&!integer(r.remixStageIndex,0,r.stageIndex+1)||['scoreOverflow','endedVoluntarily'].some(k=>r[k]!==undefined&&!bool(r[k]))||r.initials!==undefined&&!/^[A-Z0-9]{3}$/.test(r.initials)||r.initialsDraft!==undefined&&!/^[A-Z0-9]{0,3}$/.test(r.initialsDraft)||r.submissionMessage!==undefined&&(typeof r.submissionMessage!=='string'||r.submissionMessage.length>250)||!historyOK(r))return fail('invalid');
   if(!['paused','rules','summary','upgrade','results'].includes(raw.screen)||raw.screen!==recoveryScreen({name:raw.screen},r))return fail('invalid');
   if(r.status==='playing'?!roundOK(raw.scene,r):raw.scene!==null)return fail('invalid');
   if(raw.summary!==null&&(!allowed(raw.summary,['qualified','pickups','target','score','totalScore','progressContext'])||!bool(raw.summary.qualified)||!['pickups','target','score','totalScore'].every(k=>integer(raw.summary[k]))))return fail('invalid');
   if(['summary','upgrade'].includes(raw.screen)&&!raw.summary)return fail('invalid');
-  if(raw.resultSnapshot!==null&&(!allowed(raw.resultSnapshot,['id','score','stagesCleared','inputType','outfit','completedAt'])||raw.resultSnapshot.id!==r.id||raw.resultSnapshot.score!==r.totalScore||raw.resultSnapshot.stagesCleared!==r.stagesCleared||!finite(raw.resultSnapshot.completedAt)))return fail('invalid');
+  if(raw.resultSnapshot!==null&&(!allowed(raw.resultSnapshot,['id','score','stagesCleared','inputType','outfit','completedAt','scoringVersion'])||raw.resultSnapshot.scoringVersion!==undefined&&raw.resultSnapshot.scoringVersion!==(r.scoringVersion??GENERIC_RULES.id)||raw.resultSnapshot.id!==r.id||raw.resultSnapshot.score!==r.totalScore||raw.resultSnapshot.stagesCleared!==r.stagesCleared||!finite(raw.resultSnapshot.completedAt)))return fail('invalid');
   if(r.status==='ended'&&(!raw.resultSnapshot||!r.endedVoluntarily&&!raw.summary))return fail('invalid');
   if(raw.progressReward!==null&&(!allowed(raw.progressReward,['xp','rewards','persisted','progress'])||!integer(raw.progressReward.xp)||!Array.isArray(raw.progressReward.rewards)||!raw.progressReward.rewards.every(rewardKey)))return fail('invalid');
   const sub=raw.submission;
   if(sub!==null){
    if(!allowed(sub,['runId','status','code','ticket','expiresAt','payload'])||sub.runId!==r.id||!['waiting','ready','pending','succeeded','ineligible','error'].includes(sub.status)||sub.ticket!==null&&!/^[a-f0-9]{64}$/.test(sub.ticket)||sub.expiresAt!==null&&!finite(sub.expiresAt)||sub.code!==null&&!['expired','conflict','limited','invalid','unfinished','invalid_ticket','unavailable'].includes(sub.code))return fail('invalid');
-   if(sub.payload!==null&&(!validateScore(sub.payload).ok||sub.payload.runId!==r.id||sub.payload.ticket!==sub.ticket||sub.payload.buildId!==r.buildId||sub.payload.totalScore!==r.totalScore||sub.payload.stagesCleared!==r.stagesCleared||JSON.stringify(sub.payload.stages)!==JSON.stringify(r.scoreStages)))return fail('invalid');
+   if(sub.payload!==null&&(!validateScore(sub.payload).ok||sub.payload.scoringVersion!==(r.scoringVersion??GENERIC_RULES.id)||sub.payload.runId!==r.id||sub.payload.ticket!==sub.ticket||sub.payload.buildId!==r.buildId||sub.payload.totalScore!==r.totalScore||sub.payload.stagesCleared!==r.stagesCleared||JSON.stringify(sub.payload.stages)!==JSON.stringify(r.scoreStages)))return fail('invalid');
    if(['pending','succeeded'].includes(sub.status)&&!sub.payload)return fail('invalid');
   }
-  return {ok:true,value:structuredClone(raw)};
+  const value=structuredClone(raw);value.scoringVersion??=GENERIC_RULES.id;value.run.scoringVersion??=GENERIC_RULES.id;
+  if(value.resultSnapshot)value.resultSnapshot.scoringVersion??=value.run.scoringVersion;
+  return {ok:true,value};
  }catch{return fail('invalid');}
 }

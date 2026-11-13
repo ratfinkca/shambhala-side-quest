@@ -53,6 +53,7 @@ function update(round){
 const enginePool=createPracticeEngine(()=>{
  let scene=null,config=null,destroyed=false,playing=true;
  class ControlScene extends GameScene{
+  crowdOptions(){return {enabled:false};}
   preload(){venues.preload(this);}
   create(){
    this.stageRendererOptions={venueView:venues.venueView};this.motion=createMotion();

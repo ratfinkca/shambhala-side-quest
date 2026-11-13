@@ -14,6 +14,7 @@ import {collectMystery,findCandySpawn,mysteryDirection,mysteryTarget,mysterySpee
 import {bassOffset} from './bass-motion.js';
 import {drawPlayerBass} from './bass-feedback.js';
 import {createGameControls,normalizeMovementPreferences} from './game-controls.js';
+import {createCrowdSocial} from './crowd-social.js';
 
 const W = 960, H = 640;
 const COLORS = [0xcff598, 0x93ffd6, 0xfaa5d6, 0xc6b0ff];
@@ -49,12 +50,15 @@ export class GameScene extends Phaser.Scene {
     this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
     this.input.keyboard.removeCapture(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT']);
     this.input.on('pointerdown', this.pointTo, this);
+    this.crowdSocial=createCrowdSocial(this,{getOptions:()=>this.crowdOptions()});
+    this.crowdSocial.reset();
     if(this.controlPreferences)this.setControlPreferences(this.controlPreferences);
-    const disposeControls=()=>{this.gameControls?.dispose();this.gameControls=null;this.playerCamera?.dispose();this.playerCamera=null;};
+    const disposeControls=()=>{this.gameControls?.dispose();this.gameControls=null;this.playerCamera?.dispose();this.playerCamera=null;this.crowdSocial?.destroy();this.crowdSocial=null;};
     this.events?.once('shutdown',disposeControls);
     this.events?.once('destroy',disposeControls);
     this.game.events.emit('forest:ready', this);
   }
+  crowdOptions(){return {enabled:this.crowdEnabled!==false};}
   setControlPreferences(value) {
     this.controlPreferences=normalizeMovementPreferences(value);
     if(!this.gameControls&&this.keys&&this.game.canvas?.ownerDocument)this.gameControls=createGameControls(this);
@@ -87,9 +91,9 @@ export class GameScene extends Phaser.Scene {
     const pos=findSpawn(this.stage,Math.random,avoid,spark.preferBass);spark.setPosition(pos.x,pos.y);spark.art.setPosition(0,0);
   }
   clearInput() { this.target = null; this.gameControls?.cancel(); this.input.keyboard.resetKeys(); }
-  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null,timingId='generic-60-v1',stamina=100} = {}) {
+  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null,timingId='generic-60-v1',stamina=100,crowdEnabled=true} = {}) {
     getTiming(timingId);
-    this.stage = stage;
+    this.stage = stage;this.crowdEnabled=crowdEnabled;
     this.background.show(stage); this.fireflies = this.background.fireflies;
     this.crowd.configure(stage); setOutfit(this.avatar, outfit);
     this.round = createRound(rules,timingId); this.round.runId=runId; this.round.bass=createBass(bassChargeMs); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
@@ -99,6 +103,7 @@ export class GameScene extends Phaser.Scene {
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
     this.playerCamera?.reset();
     this.crowd.reset();
+    this.crowdSocial?.reset([],0);
     this.flowSlot = -1; this.flowPickup.setVisible(false);
     this.phase = 'cruise';
     this.dropWash.setAlpha(0);
@@ -110,11 +115,12 @@ export class GameScene extends Phaser.Scene {
   captureRecovery() {
     const {rules,...round}=this.round;
     const copy=structuredClone(round);if(copy.sincePickupMs===Infinity)copy.sincePickupMs=null;
-    return {round:copy,player:{x:this.dancer.x,y:this.dancer.y},sparks:this.sparks.map(s=>({x:s.x,y:s.y})),candy:{placed:this.mysteryView.placed,x:this.mysteryView.pickup.x,y:this.mysteryView.pickup.y},crowd:this.crowd.people.map(p=>structuredClone(p.encounter))};
+    const friendship=this.crowdSocial?.captureCounts()??[];
+    return {round:copy,player:{x:this.dancer.x,y:this.dancer.y},sparks:this.sparks.map(s=>({x:s.x,y:s.y})),candy:{placed:this.mysteryView.placed,x:this.mysteryView.pickup.x,y:this.mysteryView.pickup.y},crowd:this.crowd.people.map((p,index)=>({...structuredClone(p.encounter),friendPasses:friendship[index]??0}))};
   }
-  restoreRecovery(value,{stage,rules,outfit}) {
+  restoreRecovery(value,{stage,rules,outfit,crowdEnabled=true}) {
     const timing=roundTiming(value.round);
-    this.running=false;this.stage=stage;this.background.show(stage);this.fireflies=this.background.fireflies;
+    this.running=false;this.stage=stage;this.crowdEnabled=crowdEnabled;this.background.show(stage);this.fireflies=this.background.fireflies;
     this.crowd.configure(stage);setOutfit(this.avatar,outfit);this.clearInput();this.effects.clear(true,true);this.tweens.killAll();this.tweens.pauseAll();
     this.round={...structuredClone(value.round),rules};if(this.round.sincePickupMs===null)this.round.sincePickupMs=Infinity;
     const elapsed=elapsedMs(this.round),cycle=cycleAt(elapsed,timing);this.phase=cycle.phase;
@@ -123,6 +129,7 @@ export class GameScene extends Phaser.Scene {
     this.sparks.forEach((s,i)=>{s.setPosition(value.sparks[i].x,value.sparks[i].y);s.art?.setPosition(0,0);});
     this.mysteryView.reset(this.round.mystery.wrapper);this.mysteryView.placed=value.candy.placed;this.mysteryView.pickup.setPosition(value.candy.x,value.candy.y);this.mysteryView.update(this.round.mystery,this.reducedMotion);
     this.crowd.restoreRecovery(value.crowd,elapsed,timing);
+    this.crowdSocial?.reset(value.crowd.map(person=>person.friendPasses??0),elapsed);
     this.flowSlot=availableFlow(this.round);this.flowPickup.setVisible(this.flowSlot>=0);if(this.flowSlot>=0){const p=stage.flowSpawns[this.flowSlot];this.flowPickup.setPosition(p.x,p.y);}
     this.background.update(elapsed,cycle.phase,this.reducedMotion,timing);this.dropWash.setAlpha(0);
     this.halo.setRadius(this.round.flowMs>0?42:26);this.bassFeedback.clear();drawPlayerBass(this.bassFeedback,this.round.bass,bassFactor(this.dancer,stage.obstacles),elapsed,this.reducedMotion);
@@ -162,6 +169,14 @@ export class GameScene extends Phaser.Scene {
       if(direction.x||direction.y)this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});
       return this.gameControls.move(delta,direction);
     }
+    if(this.resolveMovementStep){
+      if(direction.x||direction.y){this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});this.target=null;direction=mysteryDirection(this.round.mystery,direction);}
+      else if(this.target)direction={x:this.target.x-this.dancer.x,y:this.target.y-this.dancer.y};
+      const step=this.target?Math.min(movementDelta,Math.hypot(direction.x,direction.y)/speed*1000):movementDelta;
+      this.resolveMovementStep(this.dancer,direction,step,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
+      if(this.target&&Math.hypot(this.target.x-this.dancer.x,this.target.y-this.dancer.y)<1)this.target=null;
+      return direction;
+    }
     if(direction.x||direction.y) {
       this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});
       this.target=null;
@@ -188,7 +203,7 @@ export class GameScene extends Phaser.Scene {
     const chargeMs=advanceBass(this.round,activeMs,inBass);
     this.game.events.emit('round:measure',{runId:this.round.runId,activeMs,bassMs:inBass?activeMs:0,chargeMs});
     advanceRound(this.round, delta);
-    if (this.round.ended) { this.running=false; this.clearInput(); this.mysteryView.update(this.round.mystery,this.reducedMotion); this.game.events.emit('round:update',this.round); this.game.events.emit('round:end',this.round); return; }
+    if (this.round.ended) { this.running=false; this.clearInput(); this.crowdSocial?.paint(); this.mysteryView.update(this.round.mystery,this.reducedMotion); this.game.events.emit('round:update',this.round); this.game.events.emit('round:end',this.round); return; }
     const cycle = cycleAt(elapsedMs(this.round),roundTiming(this.round));
     if (cycle.phase !== this.phase) {
       this.phase = cycle.phase;
@@ -196,11 +211,13 @@ export class GameScene extends Phaser.Scene {
     }
     this.background.update(elapsedMs(this.round),cycle.phase,this.reducedMotion,roundTiming(this.round));
     this.dropWash.setAlpha(this.reducedMotion ? 0 : cycle.phase === 'drop' ? .045 : 0);
+    this.crowdSocial?.beforeMove(delta);
     const direction=this.movePlayer(delta);
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
     if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
     animateAvatar(this.avatar,elapsedMs(this.round),this.reducedMotion,cycle.phase==='drop');
     const encounters=this.crowd.update(this.dancer, this.round, this.reducedMotion);
+    this.crowdSocial?.afterEncounters(encounters);
     this.onCrowdEncounters?.(encounters);
     const mystery=this.round.mystery;
     if(mystery.phase==='available'&&!this.mysteryView.placed){

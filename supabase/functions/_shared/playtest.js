@@ -1,4 +1,5 @@
 import {variationIdForStage} from './variations.js';
+import {GENERIC_SCORING_VERSIONS} from './edition-rules.js';
 // Shared public schema: strict allowlists keep accidental personal data off the wire.
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -19,7 +20,7 @@ function payload(type,p,mode){
   p.action==='swap'&&p.stageIndex>=4&&p.activePerks.length===4&&perks.includes(p.perk)&&perks.includes(p.replaced)&&p.perk!==p.replaced&&p.activePerks.includes(p.perk)&&!p.activePerks.includes(p.replaced));
  if(type==='run_end')return exact(p,['outcome','stagesCleared','totalScore'])&&(endless?['banked','failed','exit']:['complete','exit']).includes(p.outcome)&&integer(p.stagesCleared,endless?1000000:3)&&integer(p.totalScore,endless?Number.MAX_SAFE_INTEGER:1000000);
  if(type!=='stage_end'||!stagePayload(p,stageKeys,endless))return false;
- return integer(p.stageIndex,stageMax)&&['activeMs','bassMs','chargeMs'].every(k=>duration(p[k]))&&p.bassMs<=p.activeMs&&p.chargeMs<=p.bassMs&&['pickups','bumps','closePasses','peakCombo','flowUses','bassUses','score'].every(k=>integer(p[k]))&&Array.isArray(p.clearanceBins)&&p.clearanceBins.length===3&&p.clearanceBins.every(n=>integer(n))&&p.clearanceBins.reduce((a,b)=>a+b,0)===p.closePasses&&(p.closePasses===0?p.minClearance===null:Number.isFinite(p.minClearance)&&p.minClearance>=0&&p.minClearance<=21)&&exact(p.candies,['speed','dizzy','waves'])&&Object.values(p.candies).every(n=>integer(n))&&typeof p.qualified==='boolean'&&p.finished===true;
+ return integer(p.stageIndex,stageMax)&&['activeMs','bassMs','chargeMs'].every(k=>duration(p[k]))&&p.bassMs<=p.activeMs&&p.chargeMs<=p.bassMs&&['pickups','bumps','closePasses','peakCombo','flowUses','bassUses','score'].every(k=>integer(p[k]))&&Array.isArray(p.clearanceBins)&&p.clearanceBins.length===3&&p.clearanceBins.every(n=>integer(n))&&p.clearanceBins.reduce((a,b)=>a+b,0)===p.closePasses&&(p.closePasses===0?p.minClearance===null:Number.isFinite(p.minClearance)&&p.minClearance>=0&&p.minClearance<=48)&&exact(p.candies,['speed','dizzy','waves'])&&Object.values(p.candies).every(n=>integer(n))&&typeof p.qualified==='boolean'&&p.finished===true;
 }
 function stagePayload(p,keys,endless){const tagged=object(p)&&Object.hasOwn(p,'variationId');return exact(p,tagged?[...keys,'variationId']:keys)&&(!tagged||endless&&p.variationId===variationIdForStage(p.stageIndex));}
 export function validatePlaytestBatch(events){
@@ -28,7 +29,7 @@ export function validatePlaytestBatch(events){
  if(new TextEncoder().encode(JSON.stringify(events)).length>32768)return fail;
  const keys=['schemaVersion','eventId','installationId','sessionId','runId','type','mode','buildId','scoringVersion','theme','viewport','inputType','payload'];
  for(const e of events){
-  if(!exact(e,keys)||e.schemaVersion!==(e.mode==='endless'?2:1)||![e.eventId,e.installationId,e.sessionId].every(uuid)||!(e.runId===null||uuid(e.runId))||!['rush','festival','endless',null].includes(e.mode)||!['forest-freakout','moonlit-mycelium','neon-field-trip'].includes(e.theme)||!['small','medium','large'].includes(e.viewport)||!['mouse','touch','keyboard','mixed','unknown'].includes(e.inputType)||typeof e.buildId!=='string'||!/^[a-zA-Z0-9._-]{1,64}$/.test(e.buildId)||e.scoringVersion!=='arcade-v1'||!payload(e.type,e.payload,e.mode))return fail;
+  if(!exact(e,keys)||e.schemaVersion!==(e.mode==='endless'?2:1)||![e.eventId,e.installationId,e.sessionId].every(uuid)||!(e.runId===null||uuid(e.runId))||!['rush','festival','endless',null].includes(e.mode)||!['forest-freakout','moonlit-mycelium','neon-field-trip'].includes(e.theme)||!['small','medium','large'].includes(e.viewport)||!['mouse','touch','keyboard','mixed','unknown'].includes(e.inputType)||typeof e.buildId!=='string'||!/^[a-zA-Z0-9._-]{1,64}$/.test(e.buildId)||!GENERIC_SCORING_VERSIONS.includes(e.scoringVersion)||!payload(e.type,e.payload,e.mode))return fail;
   if(e.type!=='menu'&&(!e.runId||!e.mode))return fail;
  }
  return {ok:true,events};

@@ -31,8 +31,20 @@ function fixture(options={}) {
     round.remainingMs=60000-elapsed;
     return crowd.update({x,y},round,false);
   }
-  return {crowd,round,events,effects,update};
+  return {crowd,round,events,effects,update,scene};
 }
+
+test('Crowd uses per-dancer collision measurements for contact and shielding',()=>{
+  const {scene,round,events,update}=fixture({bumpShields:1});
+  scene.crowdEncounterMeasurement=index=>({contactRadius:28,nearest:index===0?28:500,physicalContact:index===0,travel:0});
+  for(const elapsed of [0,100]){
+    const batch=update(360,340,elapsed);
+    assert.equal(batch[0].bumped,true);assert.equal(batch[1].bumped,false);
+    assert.equal(batch[0].contactStarted,elapsed===0);
+  }
+  assert.equal(round.shieldsRemaining,0);assert.equal(round.slowedMs,0);assert.equal(round.closePasses,0);
+  assert.deepEqual(events,[['round:contact',{runId:'delivery-encounter-test'}]]);
+});
 
 test('encounter batches keep dancer IDs through reset and stage configuration',()=>{
   const {crowd,update}=fixture();

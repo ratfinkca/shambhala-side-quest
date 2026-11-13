@@ -23,8 +23,8 @@ export function createRunSummary({runId,mode,buildId,scoringVersion,stageCount=3
       if(type==='bass')current.bassUses++;
       if(type==='flow')current.flowUses++;
       if(type==='candy'&&Object.hasOwn(current.candies,payload.effect))current.candies[payload.effect]++;
-      if(type==='closepass'&&Number.isFinite(payload.clearance)&&payload.clearance>=0&&payload.clearance<=21){
-        const d=payload.clearance;current.closePasses++;current.clearanceBins[d<7?0:d<14?1:2]++;current.minClearance=Math.min(current.minClearance??21,d);
+      if(type==='closepass'&&Number.isFinite(payload.clearance)&&payload.clearance>=0&&payload.clearance<=48){
+        const d=payload.clearance;current.closePasses++;current.clearanceBins[d<7?0:d<14?1:2]++;current.minClearance=Math.min(current.minClearance??48,d);
       }
     },
     finishStage(index,{score=0,qualified=false}={}){

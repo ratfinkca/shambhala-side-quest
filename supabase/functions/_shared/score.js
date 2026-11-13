@@ -1,11 +1,11 @@
-import {GENERIC_RULES,genericTarget} from './edition-rules.js';
+import {GENERIC_RULES,GENERIC_SCORING_VERSIONS,genericTarget} from './edition-rules.js';
 export const INPUTS=['mouse','touch','keyboard','mixed','unknown'];
 export const MODES=['rush','festival','endless'];
 export const MAX_ONLINE_STAGES=1440;
 export const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const exact=(o,keys)=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).length===keys.length&&keys.every(k=>Object.hasOwn(o,k));
 const integer=n=>Number.isSafeInteger(n)&&n>=0;
-export function validRun(p){return exact(p,['runId','mode','scoringVersion','buildId'])&&UUID.test(p.runId)&&MODES.includes(p.mode)&&p.scoringVersion===GENERIC_RULES.id&&typeof p.buildId==='string'&&/^[\w.-]{1,100}$/.test(p.buildId);}
+export function validRun(p){return exact(p,['runId','mode','scoringVersion','buildId'])&&UUID.test(p.runId)&&MODES.includes(p.mode)&&GENERIC_SCORING_VERSIONS.includes(p.scoringVersion)&&typeof p.buildId==='string'&&/^[\w.-]{1,100}$/.test(p.buildId);}
 export function validateScore(p,ticket){
  const fail=code=>({ok:false,code});
  if(!exact(p,['runId','ticket','initials','mode','scoringVersion','buildId','inputType','totalScore','stagesCleared','stages'])||!validRun({runId:p.runId,mode:p.mode,scoringVersion:p.scoringVersion,buildId:p.buildId})||!/^[a-f0-9]{64}$/.test(p.ticket)||!/^[A-Z0-9]{3}$/.test(p.initials)||!INPUTS.includes(p.inputType)||!integer(p.totalScore)||!integer(p.stagesCleared)||!Array.isArray(p.stages)||p.stages.length<1||p.stages.length>(p.mode==='rush'?1:p.mode==='endless'?MAX_ONLINE_STAGES:GENERIC_RULES.mainStageIds.length))return fail('invalid');

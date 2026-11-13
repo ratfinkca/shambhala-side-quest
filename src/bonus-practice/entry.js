@@ -145,16 +145,19 @@ class BonusScene extends GameScene{
    const walking=practice.status==='playing'&&practice.state.phase==='walking';
    if(walking){
     if(!this.running)this.resumeRound();
-    // The venue clock loops indefinitely. Give the ordinary movement update a
-    // non-expiring slice, then restore the music's independent phrase position.
+    // The ordinary update advances once; finish at the same phrase position
+    // used by visible NPCs, collision and the independent putting clock.
     const frameDelta=Math.min(50,Math.max(0,Number.isFinite(delta)?delta:0));
-    this.round.remainingMs=Math.max(timing.durationMs-position,frameDelta+1);
+    this.round.remainingMs=timing.durationMs-position+frameDelta;
     super.update(time,frameDelta);
    }else if(this.running)this.pauseRound();
    this.round.remainingMs=timing.durationMs-position;
    if(this.frozenFrame!==elapsed){this.background.update(position,phaseAt(position,timing).phase,this.reducedMotion,timing);this.frozenFrame=elapsed;}
    if(practice.status==='playing')audio.sync(this.round,config.id);
-   this.puttingView?.update(practice.state,elapsed,this.reducedMotion);renderHUD();return;
+   this.puttingView?.update(practice.state,elapsed,this.reducedMotion);
+   if(practice.state.phase==='walking')this.crowdSocial?.paint();
+   else this.crowdSocial?.suspend(position);
+   renderHUD();return;
   }
   super.update(time,delta);const elapsed=elapsedMs(this.round);
   if(practice.status!=='playing'&&this.running)this.pauseRound();

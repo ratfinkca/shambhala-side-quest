@@ -6,6 +6,9 @@ export function deepFreeze(value){
  return value;
 }
 export const GENERIC_RULES=deepFreeze({id:'arcade-v1',mainStageIds:['forest','neon','sunrise'],targets:[20,25,30],roundMs:60000,endless:{targetStep:3,targetCap:45,crowdStep:2,crowdCap:22,speedStep:.08,speedCap:.2}});
+// Seasons partition rankings while retaining the legacy clock and point rules.
+export const GENERIC_SCORING_VERSION='arcade-v2';
+export const GENERIC_SCORING_VERSIONS=Object.freeze(['arcade-v1',GENERIC_SCORING_VERSION]);
 export const GENERIC_VARIATION_IDS=Object.freeze(['forest-creekside','forest-weave','neon-stereo','neon-crossfade','sunrise-islands','sunrise-lane']);
 export function routePosition(index,routeLength){
  if(!Number.isSafeInteger(index)||index<0||!Number.isSafeInteger(routeLength)||routeLength<=0)throw new RangeError('Invalid route position');

@@ -7,6 +7,7 @@ import {normalizeThemePreference,THEMES} from '../themes.js';
 import {WARDROBE} from '../wardrobe.js';
 import {createEncounter} from '../festival.js';
 import {isRushStageId,resolveRushStageId,normalizeRushRotation,lastRushStageId,limitRushBoard} from './rush-rotation.js';
+import {ORIGINAL_SMF_SCORING_VERSION,resolveSmfScoringVersion,limitSeasonBoard} from './seasons.js';
 
 const LIMIT=2*1024*1024;
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -48,8 +49,8 @@ function sceneOK(scene,stage,runId){
  const c=q.scoreComponents;if(!allowed(c,['sparks','passes'])||!Array.isArray(c.sparks)||c.sparks.length!==20||!c.sparks.every(v=>integer(v))||!Array.isArray(c.passes)||c.passes.length!==2||!c.passes.every(v=>integer(v)))return false;
  const b=q.bass;if(!allowed(b,['chargeMs','exposureMs','activeMs','activeDurationMs'])||!number(b.chargeMs,0,10000)||!number(b.exposureMs,0,6000)||!number(b.activeMs,0,6000)||!number(b.activeDurationMs,0,6000)||b.activeMs>b.activeDurationMs)return false;
  const m=q.mystery;if(!allowed(m,['phase','spawnAtMs','elapsedMs','effect','effectMs','wrapper','effectStartedAtMs'])||!['waiting','absent','available','spent'].includes(m.phase)||!integer(m.spawnAtMs,12000,39999)||!number(m.elapsedMs,0,1e9)||!['speed','dizzy','waves',null].includes(m.effect)||!number(m.effectMs,0,7000)||!allowed(m.wrapper,['colour','pattern'])||!integer(m.wrapper.colour,0,3)||!integer(m.wrapper.pattern,0,2)||m.effectStartedAtMs!==undefined&&!number(m.effectStartedAtMs,0,m.elapsedMs))return false;
- const encounterKeys=['active','spoiled','travel','cooldownUntil','previousPlayer','previousDancer','touching','nearest','protected'];
- return Array.isArray(scene.crowd)&&scene.crowd.length===stage.crowdAnchors.length&&scene.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&number(e.travel)&&number(e.cooldownUntil)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&(e.previousPlayer===null)===(e.previousDancer===null)&&['touching','protected'].every(key=>e[key]===undefined||bool(e[key]))&&(e.nearest===undefined?!e.active:number(e.nearest)));
+ const encounterKeys=['active','spoiled','travel','cooldownUntil','previousPlayer','previousDancer','touching','nearest','protected','friendPasses'];
+ return Array.isArray(scene.crowd)&&scene.crowd.length===stage.crowdAnchors.length&&scene.crowd.every(e=>allowed(e,encounterKeys)&&bool(e.active)&&bool(e.spoiled)&&number(e.travel)&&number(e.cooldownUntil)&&[e.previousPlayer,e.previousDancer].every(p=>p===null||point(p))&&(e.previousPlayer===null)===(e.previousDancer===null)&&['touching','protected'].every(key=>e[key]===undefined||bool(e[key]))&&(e.nearest===undefined?!e.active:number(e.nearest))&&(!Object.hasOwn(e,'friendPasses')||integer(e.friendPasses,0,4)))&&scene.crowd.reduce((sum,e)=>sum+(Object.hasOwn(e,'friendPasses')?e.friendPasses:0),0)<=q.closePasses;
 }
 
 function summaryOK(s,active,discoveries){
@@ -72,13 +73,13 @@ function bonusOK(b,active,discoveries){
 function submissionOK(sub,run){
  if(sub===null)return true;
  if(!allowed(sub,['runId','status','code','ticket','expiresAt','payload'])||sub.runId!==run.id||!['waiting','ready','pending','succeeded','ineligible','error'].includes(sub.status)||!(sub.ticket===null||typeof sub.ticket==='string'&&/^[a-f0-9]{64}$/.test(sub.ticket))||!(sub.expiresAt===null||number(sub.expiresAt,0,Number.MAX_SAFE_INTEGER))||!(sub.code===null||typeof sub.code==='string'&&sub.code.length<=100))return false;
- if(sub.payload!==null){const p=sub.payload;if(!object(p)||p.runId!==run.id||p.ticket!==sub.ticket||p.mode!==run.mode||p.buildId!==run.buildId||p.totalScore!==run.score||p.stagesCleared!==run.cleared||JSON.stringify(p.stages)!==JSON.stringify(run.scoreStages))return false;if(run.mode==='rush'?resolveRushStageId(p.rushStageId)!==run.rushStageId:Object.hasOwn(p,'rushStageId'))return false;}
+ if(sub.payload!==null){const p=sub.payload;if(!object(p)||p.runId!==run.id||p.ticket!==sub.ticket||p.mode!==run.mode||resolveSmfScoringVersion(p.scoringVersion)!==run.scoringVersion||p.buildId!==run.buildId||p.totalScore!==run.score||p.stagesCleared!==run.cleared||JSON.stringify(p.stages)!==JSON.stringify(run.scoreStages))return false;if(run.mode==='rush'?resolveRushStageId(p.rushStageId)!==run.rushStageId:Object.hasOwn(p,'rushStageId'))return false;}
  return !['pending','succeeded'].includes(sub.status)||sub.payload!==null;
 }
 function activeOK(active,discoveries){
  if(active.mode==='rush'?!isRushStageId(active.rushStageId):Object.hasOwn(active,'rushStageId'))return false;
- if(!allowed(active,['id','stageIndex','status','score','cleared','perks','bassChargeMs','pendingInvitation','summary','bonus','scene','mode','rushStageId','themeId','scoreStages','scoreOverflow','initialsDraft','inputType','submission','buildId','scoreSaved','needsIntro','remixPending'])||!boundedJSON(active)||!id(active.id)||!integer(active.stageIndex,0,active.mode==='endless'?1000000:active.mode==='rush'?0:ROUTE.length-1)||!['playing','summary','results','explore'].includes(active.status)||!integer(active.score)||!integer(active.cleared,0,active.mode==='endless'?1000000:ROUTE.length)||!perkList(active.perks)||!number(active.bassChargeMs,0,10000)||!bool(active.pendingInvitation)||!summaryOK(active.summary,active,discoveries)||!bonusOK(active.bonus,active,discoveries))return false;
- if(!['rush','festival','endless'].includes(active.mode)||!THEMES.some(t=>t.id===active.themeId)||!Array.isArray(active.scoreStages)||active.scoreStages.length>MAX_ONLINE_STAGES||!['unknown','mouse','touch','keyboard','mixed'].includes(active.inputType)||!/^\w{0,3}$/.test(active.initialsDraft)||!id(active.buildId)||!bool(active.scoreSaved)||!bool(active.needsIntro)||!bool(active.remixPending)||active.scoreOverflow!==undefined&&!bool(active.scoreOverflow)||!submissionOK(active.submission,active))return false;
+ if(!allowed(active,['id','stageIndex','status','score','cleared','perks','bassChargeMs','pendingInvitation','summary','bonus','scene','mode','scoringVersion','rushStageId','themeId','scoreStages','scoreOverflow','initialsDraft','inputType','submission','buildId','scoreSaved','needsIntro','remixPending'])||!boundedJSON(active)||!id(active.id)||!integer(active.stageIndex,0,active.mode==='endless'?1000000:active.mode==='rush'?0:ROUTE.length-1)||!['playing','summary','results','explore'].includes(active.status)||!integer(active.score)||!integer(active.cleared,0,active.mode==='endless'?1000000:ROUTE.length)||!perkList(active.perks)||!number(active.bassChargeMs,0,10000)||!bool(active.pendingInvitation)||!summaryOK(active.summary,active,discoveries)||!bonusOK(active.bonus,active,discoveries))return false;
+ if(!resolveSmfScoringVersion(active.scoringVersion)||!['rush','festival','endless'].includes(active.mode)||!THEMES.some(t=>t.id===active.themeId)||!Array.isArray(active.scoreStages)||active.scoreStages.length>MAX_ONLINE_STAGES||!['unknown','mouse','touch','keyboard','mixed'].includes(active.inputType)||!/^\w{0,3}$/.test(active.initialsDraft)||!id(active.buildId)||!bool(active.scoreSaved)||!bool(active.needsIntro)||!bool(active.remixPending)||active.scoreOverflow!==undefined&&!bool(active.scoreOverflow)||!submissionOK(active.submission,active))return false;
  if(active.mode==='rush'&&(active.scoreStages.length>1||active.scoreStages.some(stage=>!object(stage)||stage.stageIndex!==0||stage.stageId!==active.rushStageId||stage.activeMs!==stageForRun(active).durationMs)))return false;
  if(active.status==='explore')return active.bonus!==null&&active.score===0&&active.cleared===0&&active.perks.length===0&&active.scene===null&&active.summary===null;
  if(active.cleared>active.stageIndex+1)return false;
@@ -86,7 +87,7 @@ function activeOK(active,discoveries){
  if(active.status==='summary'&&(active.mode==='rush'||active.mode==='festival'&&active.stageIndex===ROUTE.length-1||active.cleared!==active.stageIndex+1||active.summary?.qualified!==true))return false;
  return active.scene===null||active.status==='playing'&&sceneOK(active.scene,stageForRun(active),active.id);
 }
-function resultOK(value){return allowed(value,['id','mode','rushStageId','score','cleared','completed'])&&id(value.id)&&integer(value.score)&&integer(value.cleared,0,1000000)&&bool(value.completed)&&(!value.completed||value.cleared===6)&&(value.mode==='rush'?resolveRushStageId(value.rushStageId)!==null:!Object.hasOwn(value,'rushStageId'));}
+function resultOK(value){return allowed(value,['id','mode','scoringVersion','rushStageId','score','cleared','completed'])&&resolveSmfScoringVersion(value.scoringVersion)!==null&&id(value.id)&&integer(value.score)&&integer(value.cleared,0,1000000)&&bool(value.completed)&&(!value.completed||value.cleared===6)&&(value.mode==='rush'?resolveRushStageId(value.rushStageId)!==null:!Object.hasOwn(value,'rushStageId'));}
 
 function upgradeBonusCrowd(active){
  const b=active.bonus;
@@ -114,12 +115,12 @@ export function normalizeTourProfile(raw){
  profile.initials=typeof raw.initials==='string'&&/^[A-Z0-9]{0,3}$/.test(raw.initials)?raw.initials:'';profile.playtestConsent=raw.playtestConsent===true||raw.playtestConsent==='accepted'?'accepted':raw.playtestConsent==='declined'?'declined':'unknown';
  let latestSavedRushStage=null;
  for(const mode of ['rush','festival','endless'])if(Array.isArray(raw.boards?.[mode])){
-  const rows=raw.boards[mode].filter(row=>object(row)&&id(row.id)&&/^[A-Z0-9]{3}$/.test(row.initials)&&integer(row.score)&&integer(row.cleared??row.stagesCleared,0,1000000)&&boundedJSON(row)&&(mode==='rush'||!Object.hasOwn(row,'rushStageId')));
+  const rows=raw.boards[mode].filter(row=>object(row)&&resolveSmfScoringVersion(row.scoringVersion)!==null&&id(row.id)&&/^[A-Z0-9]{3}$/.test(row.initials)&&integer(row.score)&&integer(row.cleared??row.stagesCleared,0,1000000)&&boundedJSON(row)&&(mode==='rush'||!Object.hasOwn(row,'rushStageId')));
   if(mode==='rush')latestSavedRushStage=lastRushStageId({boards:{rush:rows}});
-  profile.boards[mode]=(mode==='rush'?limitRushBoard(rows):rows.slice(0,20)).map(row=>structuredClone(row));
+  profile.boards[mode]=(mode==='rush'?limitRushBoard(rows):limitSeasonBoard(rows,mode)).map(row=>structuredClone(row));
  }
- try{if(raw.active!==null&&object(raw.active)){const defaults={mode:'festival',themeId:'forest-freakout',scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:false,remixPending:false};const active=upgradeBonusCrowd({...defaults,...raw.active});if(active.mode==='rush')active.rushStageId=resolveRushStageId(active.rushStageId);if(activeOK(active,profile.discoveries))profile.active=structuredClone(active);}}catch{}
- if(resultOK(raw.lastResult)){profile.lastResult=structuredClone(raw.lastResult);if(profile.lastResult.mode==='rush')profile.lastResult.rushStageId=resolveRushStageId(profile.lastResult.rushStageId);}
+ try{if(raw.active!==null&&object(raw.active)){const defaults={mode:'festival',scoringVersion:ORIGINAL_SMF_SCORING_VERSION,themeId:'forest-freakout',scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:false,remixPending:false};const active=upgradeBonusCrowd({...defaults,...raw.active});if(active.mode==='rush')active.rushStageId=resolveRushStageId(active.rushStageId);if(activeOK(active,profile.discoveries))profile.active=structuredClone(active);}}catch{}
+ if(resultOK(raw.lastResult)){profile.lastResult={...structuredClone(raw.lastResult),scoringVersion:resolveSmfScoringVersion(raw.lastResult.scoringVersion)};if(profile.lastResult.mode==='rush')profile.lastResult.rushStageId=resolveRushStageId(profile.lastResult.rushStageId);}
  profile.rushRotation=normalizeRushRotation(raw.rushRotation,lastRushStageId({active:profile.active,lastResult:profile.lastResult})||latestSavedRushStage);
  return profile;
 }

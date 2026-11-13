@@ -1,4 +1,4 @@
-import {SMF_RULES,smfRuleStage,SMF_DEFAULT_RUSH_STAGE_ID,isSmfRushStageId} from './smf-rules.js';
+import {SMF_RULES,SMF_SCORING_VERSIONS,smfRuleStage,SMF_DEFAULT_RUSH_STAGE_ID,isSmfRushStageId} from './smf-rules.js';
 export const INPUTS=['mouse','touch','keyboard','mixed','unknown'];
 export const MODES=['rush','festival','endless'];
 export const MAX_ONLINE_STAGES=1440;
@@ -7,7 +7,7 @@ const exact=(o,keys)=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).
 const integer=n=>Number.isSafeInteger(n)&&n>=0;
 const rushKeys=(p,keys)=>p&&Object.hasOwn(p,'rushStageId')?[...keys,'rushStageId']:keys;
 export const validRushSelection=p=>p&&(!Object.hasOwn(p,'rushStageId')||p.mode==='rush'&&isSmfRushStageId(p.rushStageId));
-export function validRun(p){return exact(p,rushKeys(p,['editionId','runId','mode','scoringVersion','buildId']))&&validRushSelection(p)&&p.editionId==='smf'&&typeof p.runId==='string'&&UUID.test(p.runId)&&MODES.includes(p.mode)&&p.scoringVersion===SMF_RULES.id&&typeof p.buildId==='string'&&/^[\w.-]{1,100}$/.test(p.buildId);}
+export function validRun(p){return exact(p,rushKeys(p,['editionId','runId','mode','scoringVersion','buildId']))&&validRushSelection(p)&&p.editionId==='smf'&&typeof p.runId==='string'&&UUID.test(p.runId)&&MODES.includes(p.mode)&&SMF_SCORING_VERSIONS.includes(p.scoringVersion)&&typeof p.buildId==='string'&&/^[\w.-]{1,100}$/.test(p.buildId);}
 export function validateScore(p,ticket){
  const fail=code=>({ok:false,code});
  if(!exact(p,rushKeys(p,['editionId','runId','ticket','initials','mode','scoringVersion','buildId','inputType','totalScore','stagesCleared','stages']))||!validRushSelection(p)||!validRun({editionId:p.editionId,runId:p.runId,mode:p.mode,scoringVersion:p.scoringVersion,buildId:p.buildId})||typeof p.ticket!=='string'||!/^[a-f0-9]{64}$/.test(p.ticket)||typeof p.initials!=='string'||!/^[A-Z0-9]{3}$/.test(p.initials)||!INPUTS.includes(p.inputType)||!integer(p.totalScore)||!integer(p.stagesCleared)||!Array.isArray(p.stages)||p.stages.length<1||p.stages.length>(p.mode==='rush'?1:p.mode==='endless'?MAX_ONLINE_STAGES:SMF_RULES.route.length))return fail('invalid');

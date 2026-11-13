@@ -1,6 +1,6 @@
 # Online operations
 
-Updated 2026-11-03. Current architecture/configuration is described here; live health is verified at release time, not guaranteed by this document. [Handoff](PROJECT-HANDOFF.md) · [roadmap](ROADMAP.md) · [historical hosted checks](history/online-operations-through-2026-10-22.md).
+Updated 2026-11-13. Current architecture/configuration is described here; live health is verified at release time, not guaranteed by this document. [Handoff](PROJECT-HANDOFF.md) · [roadmap](ROADMAP.md) · [historical hosted checks](history/online-operations-through-2026-10-22.md).
 
 ## Production and ownership
 
@@ -39,7 +39,7 @@ Analytics raw events remain private for29–30 days; daily cleanup deletes whole
 
 Arcade tickets last24 hours, issuance60/hour and submission120/hour. Submission bodies cap1 MiB; ticket/board bodies32 KiB; Endless online history1440 completed stages. Overflow disables online posting while local gameplay continues. Exact successful retries remain accepted after expiry; conflicting payloads fail. Expired unused tickets/hashes are cleaned hourly. Accepted score claims/receipts persist until owner removal/moderation.
 
-Public score fields: initials, score, stagesCleared, inputType, mode, scoringVersion, receivedAt. Endless order: clears descending → points descending → server time ascending → ID ascending. Rush/Festival: points → clears → time → ID. Boards cache30 seconds. Initials are not unique identities. Arcade-v1 remains current; change version for changes to awards, not presentation alone.
+Public score fields: initials, score, stagesCleared, inputType, mode, scoringVersion, receivedAt. Endless order: clears descending → points descending → server time ascending → ID ascending. Rush/Festival: points → clears → time → ID. Boards cache30 seconds. Initials are not unique identities. New crowd runs use arcade-v2 / smf-v2. Original v1 boards remain available; existing runs, tickets and frozen retry payloads keep their original version. Versions separate gameplay rules, not presentation alone.
 
 ## Private reporting
 
@@ -51,11 +51,15 @@ Private moderation: inspect reviewed entries using owner SQL, then set `hidden=t
 
 ## Local checks and release
 
-### SMF Quick Rush venue rollout (prepared locally 2026-11-13)
+### Crowd season rollout (2026-11-13)
+
+Apply additive migration `202611130002_scoring_seasons.sql` before deploying all eight generic/SMF ticket, score, leaderboard and playtest functions. Existing board queries already partition by scoring version. The migration extends ticket allowlists without rewriting scores, receipts, RLS or retention. New runs pin v2; older checkpoints missing a version become v1 and retain pass-through movement. Local top-score limits and Rush bests are independent per season. Playtest clearance now accepts0–48 for the smaller friendship radii; analytics remains opt-in. [Release evidence](superpowers/crowd-season-release-validation.md).
+
+### SMF Quick Rush venue rollout (shipped in PR #22)
 
 SMF services are separate from the generic arcade. Quick Rush now selects one of six main venues and preserves its authored musical duration (about 55–69 seconds). Each venue has its own local best and public board. `smf-v1` remains valid: previous Rush data belongs to Pagoda, whose rules are unchanged.
 
-For this release, apply `202611130001_smf_rush_venues.sql` **before** deploying `smf-run-ticket`, `smf-submit-score`, `smf-leaderboard` and `smf-playtest`; then publish the frontend. This is a preparation note, not evidence of hosted deployment. The migration adds and backfills `rush_stage_id`, binds tickets to venues, and preserves old RPC signatures and original receipt JSON/digests for retry compatibility. New RPC overloads remain service-role only; private tables retain RLS and retention policies.
+PR #22 applied `202611130001_smf_rush_venues.sql` **before** deploying `smf-run-ticket`, `smf-submit-score`, `smf-leaderboard` and `smf-playtest`; the frontend followed. See [verified release](superpowers/fullscreen-mobile-rush-release-validation.md). The migration adds and backfills `rush_stage_id`, binds tickets to venues, and preserves old RPC signatures and original receipt JSON/digests for retry compatibility. New RPC overloads remain service-role only; private tables retain RLS and retention policies.
 
 New Rush requests carry `rushStageId` from the selected run. Explicit-venue board responses include that field. Legacy requests without it still resolve to Pagoda and receive the old response shape. Other modes reject venue fields. SMF stage/run playtest events optionally include selected venue and `movementMode` (`tap`, `swipe`, `stick`); consent remains opt-in, and rehearsals send neither scores nor analytics. Control style is the setting at result time, not a recording of gestures or time spent in each mode.
 

@@ -67,7 +67,7 @@ export function createGameControls(scene){
    const destination=preferences.mode==='tap'?scene.target:null;
    if(destination)commandStick(motion,{x:destination.x-scene.dancer.x,y:destination.y-scene.dancer.y},input.sprint);
    const terrainFactor=movementFactor(scene.dancer,stage.mud,round.slowedMs,stage.obstacles,bassMovementFactor(round.bass,bassFactor(scene.dancer,stage.obstacles)));
-   const direction=advanceMotion(motion,scene.dancer,delta,{staminaEnabled:true,terrainFactor,destination,
+   const direction=advanceMotion(motion,scene.dancer,delta,{staminaEnabled:true,terrainFactor,destination,resolveStep:scene.resolveMovementStep,
     speedMultiplier:mysterySpeed(round.mystery)/300*(round.surferMs>0?1.25:1),
     directionTransform:direction=>destination?direction:mysteryDirection(round.mystery,direction),
     arena:{width:960,height:640,playBounds:stage.playBounds,obstacles:stage.obstacles},

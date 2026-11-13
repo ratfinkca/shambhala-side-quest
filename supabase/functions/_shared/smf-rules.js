@@ -7,6 +7,9 @@ export const SMF_RULES=Object.freeze({id:'smf-v1',editionId:'smf',route:Object.f
  Object.freeze({id:'smf-pagoda',durationMs:60000,rate:28,crowdCount:18}),
  Object.freeze({id:'smf-village',durationMs:66977,rate:30,crowdCount:20}),
 ]),endless:Object.freeze({targetStep:3,targetCap:45,crowdStep:2,crowdCap:22,speedStep:.08,speedCap:.2})});
+// New collision/friendship runs rank separately; v1 receipts remain supported.
+export const SMF_SCORING_VERSION='smf-v2';
+export const SMF_SCORING_VERSIONS=Object.freeze(['smf-v1',SMF_SCORING_VERSION]);
 export const SMF_DEFAULT_RUSH_STAGE_ID='smf-pagoda';
 export const isSmfRushStageId=id=>SMF_RULES.route.some(stage=>stage.id===id);
 export function smfRuleStage(mode,index,rushStageId){

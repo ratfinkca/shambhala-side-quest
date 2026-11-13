@@ -33,8 +33,11 @@ test('route positioning uses its supplied route length and rejects invalid input
  for(const n of [-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])assert.throws(()=>routePosition(n,6));
  for(const n of [0,-1,.5,NaN,Infinity])assert.throws(()=>routePosition(0,n));
 });
-test('published stage geometry/rules and legacy score/recovery fixtures stay unchanged',()=>{
+test('published geometry and legacy data stay unchanged while recovery pins the original season',()=>{
  assert.deepEqual(Array.from({length:15},(_,i)=>createHash('sha256').update(JSON.stringify(endlessStage(i))).digest('hex')),baseline.stageHashes);
  assert.deepEqual(validateScore(baseline.score),{ok:true,record:baseline.score});
- assert.deepEqual(readRecovery(baseline.recovery),{ok:true,value:baseline.recovery});
+ assert.equal(Object.hasOwn(baseline.recovery.run,'scoringVersion'),false);
+ const before=JSON.stringify(baseline.recovery);
+ assert.deepEqual(readRecovery(baseline.recovery),{ok:true,value:{...baseline.recovery,run:{...baseline.recovery.run,scoringVersion:'arcade-v1'}}});
+ assert.equal(JSON.stringify(baseline.recovery),before);
 });
