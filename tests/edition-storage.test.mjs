@@ -34,7 +34,7 @@ test('edition storage errors and ownership refusal retain honest in-memory fallb
  const mem=memory(),s=createStorage(mem,{context:context('smf'),canWrite:()=>false});s.saveBest(7);assert.equal(mem.data.size,0);
 });
 test('legacy recovery is generic-only and frozen retries survive profile load byte-for-byte',async()=>{
- const f=recoveryFixture(1);finishRun(f.run);f.scene=null;f.screen={name:'results'};
+ const f=recoveryFixture(1);f.run.scoringVersion='arcade-v1';finishRun(f.run);f.scene=null;f.screen={name:'results'};
  f.resultSnapshot={id:f.run.id,score:f.run.totalScore,stagesCleared:f.run.stagesCleared,inputType:'touch',outfit:{onesie:'lime',hat:'bucket',totem:'star',flair:'none'},completedAt:1000};
  const payload={runId:f.run.id,ticket:'a'.repeat(64),initials:'ABC',mode:'endless',scoringVersion:'arcade-v1',buildId:f.run.buildId,inputType:'touch',totalScore:f.run.totalScore,stagesCleared:f.run.stagesCleared,stages:f.run.scoreStages};
  f.submission={runId:f.run.id,status:'pending',code:null,ticket:payload.ticket,expiresAt:2000,payload};

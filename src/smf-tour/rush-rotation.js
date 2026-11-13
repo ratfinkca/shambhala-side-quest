@@ -1,4 +1,5 @@
 import {SMF_RULES} from '../../supabase/functions/_shared/smf-rules.js';
+import {resolveSmfScoringVersion} from './seasons.js';
 
 export const RUSH_STAGE_IDS=Object.freeze(SMF_RULES.route.map(stage=>stage.id));
 export const LEGACY_RUSH_STAGE_ID='smf-pagoda';
@@ -38,7 +39,7 @@ export function drawRushStage(rotation,rng=Math.random){
 
 export function limitRushBoard(rows){
  const counts=new Map();
- return rows.filter(row=>row&&resolveRushStageId(row.rushStageId)).map(row=>({...row,rushStageId:resolveRushStageId(row.rushStageId)}))
+ return rows.filter(row=>row&&resolveRushStageId(row.rushStageId)&&resolveSmfScoringVersion(row.scoringVersion)).map(row=>({...row,rushStageId:resolveRushStageId(row.rushStageId),scoringVersion:resolveSmfScoringVersion(row.scoringVersion)}))
   .sort((a,b)=>b.score-a.score||(b.cleared??b.stagesCleared)-(a.cleared??a.stagesCleared))
-  .filter(row=>{const count=counts.get(row.rushStageId)||0;counts.set(row.rushStageId,count+1);return count<20;});
+  .filter(row=>{const key=`${row.scoringVersion}:${row.rushStageId}`,count=counts.get(key)||0;counts.set(key,count+1);return count<20;});
 }

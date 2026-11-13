@@ -1,4 +1,4 @@
-import {GENERIC_RULES} from '../supabase/functions/_shared/edition-rules.js';
+import {GENERIC_RULES,GENERIC_SCORING_VERSION} from '../supabase/functions/_shared/edition-rules.js';
 import {MAX_ONLINE_STAGES} from '../supabase/functions/_shared/score.js';
 import {endlessStage} from './endless.js';
 import {THEME_DEFAULT,resolveTheme} from './themes.js';
@@ -14,7 +14,7 @@ export const PERKS={
  sweet:{name:'Sweet Tooth',icon:'◇',description:'All candy effects last 7 seconds instead of 5. More magic, more mayhem.'},
 };
 export function rulesFor(perks=[]){return {comboGraceMs:perks.includes('bracelet')?3000:2000,flowDurationMs:perks.includes('moth')?7000:5000,closePassPoints:perks.includes('boots')?25:15,bumpShields:perks.includes('noodle')?1:0,surferDurationMs:perks.includes('surfer')?1200:0,bassChargeRate:perks.includes('battery')?1.5:1,firstFlowBonusMs:perks.includes('encore')?3000:0,candyDurationMs:perks.includes('sweet')?7000:5000};}
-export function createRun(mode,id,themeId=THEME_DEFAULT){return {id,themeId:resolveTheme(themeId),mode:['festival','endless'].includes(mode)?mode:'rush',stageIndex:0,totalScore:0,stagesCleared:0,perks:[],scoreStages:[],bassChargeMs:0,status:'ready',submitted:false};}
+export function createRun(mode,id,themeId=THEME_DEFAULT){return {id,scoringVersion:GENERIC_SCORING_VERSION,themeId:resolveTheme(themeId),mode:['festival','endless'].includes(mode)?mode:'rush',stageIndex:0,totalScore:0,stagesCleared:0,perks:[],scoreStages:[],bassChargeMs:0,status:'ready',submitted:false};}
 const endlessStages=new WeakMap();
 export function stageFor(run){
  if(run.mode!=='endless')return STAGES[run.stageIndex];
@@ -22,7 +22,7 @@ export function stageFor(run){
  if(cached?.index!==run.stageIndex){cached={index:run.stageIndex,stage:endlessStage(run.stageIndex)};endlessStages.set(run,cached);}
  return cached.stage;
 }
-export function startStage(run){if(run.status!=='ready')return null;run.status='playing';return {stage:stageFor(run),rules:rulesFor(run.perks),bassChargeMs:run.bassChargeMs};}
+export function startStage(run){if(run.status!=='ready')return null;run.status='playing';return {stage:stageFor(run),rules:rulesFor(run.perks),bassChargeMs:run.bassChargeMs,crowdEnabled:(run.scoringVersion??GENERIC_RULES.id)===GENERIC_SCORING_VERSION};}
 export function finishStage(run,round){
  if(run.status!=='playing'||!round.ended||round.remainingMs!==0)return null;
  const qualified=run.mode==='rush'||round.pickups>=stageFor(run).target;

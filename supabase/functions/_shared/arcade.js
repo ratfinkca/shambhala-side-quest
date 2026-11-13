@@ -1,4 +1,5 @@
 import {validRun,validateScore,MODES} from './score.js';
+import {GENERIC_SCORING_VERSIONS} from './edition-rules.js';
 const hex=b=>[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join('');
 const encode=s=>new TextEncoder().encode(s);
 const hash=async s=>hex(await crypto.subtle.digest('SHA-256',encode(s)));
@@ -17,7 +18,7 @@ export function createArcadeHandler({kind,origins,secret,rpc}){
    const reader=request.body?.getReader();if(!reader)throw Error();let bytes=0,text='';const decoder=new TextDecoder();
    for(;;){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>(kind==='submit-score'?1048576:32768)){await reader.cancel();return reply(413,{code:'invalid'});}text+=decoder.decode(value,{stream:true});}p=JSON.parse(text+decoder.decode());
   }catch{return reply(400,{code:'invalid'});}
-  if(kind==='run-ticket'&&!validRun(p)||kind==='submit-score'&&!validateScore(p).ok||kind==='leaderboard'&&(!p||Object.keys(p).length!==2||!MODES.includes(p.mode)||!/^arcade-v[1-9][0-9]{0,3}$/.test(p.scoringVersion)))return reply(400,{code:'invalid'});
+  if(kind==='run-ticket'&&!validRun(p)||kind==='submit-score'&&!validateScore(p).ok||kind==='leaderboard'&&(!p||Object.keys(p).length!==2||!MODES.includes(p.mode)||!GENERIC_SCORING_VERSIONS.includes(p.scoringVersion)))return reply(400,{code:'invalid'});
   try{
    if(kind==='leaderboard'){const rows=await rpc('arcade_board',{p_mode:p.mode,p_version:p.scoringVersion});headers['Cache-Control']='public, max-age=30';return reply(200,rows);}
    const key=await crypto.subtle.importKey('raw',encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);

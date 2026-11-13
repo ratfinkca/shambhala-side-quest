@@ -7,6 +7,29 @@ test('ingestion validates allowed schema and rejects identifiers/coordinates and
  for(const modify of [e=>e.initials='ABC',e=>e.payload.x=5,e=>e.payload.score=NaN,e=>e.eventId='bad',e=>e.type='arbitrary',e=>e.payload.candies.secret=1,e=>e.payload.clearanceBins=[1,2],e=>e.payload.activeMs=60001]){const e=event();modify(e);assert.equal(validatePlaytestBatch([e]).ok,false);}
  assert.equal(validatePlaytestBatch(Array.from({length:21},event)).ok,false);
 });
+test('ingestion preserves legacy clearances and accepts the complete friendship pass range',()=>{
+ for(const minClearance of [0,7,14,21,30,48]){
+  const e=event();e.payload={...e.payload,closePasses:1,clearanceBins:minClearance<7?[1,0,0]:minClearance<14?[0,1,0]:[0,0,1],minClearance};
+  assert.equal(validatePlaytestBatch([e]).ok,true,String(minClearance));
+ }
+ for(const minClearance of [-1,48.001,Infinity,NaN,null]){
+  const e=event();e.payload.minClearance=minClearance;assert.equal(validatePlaytestBatch([e]).ok,false,String(minClearance));
+ }
+});
+
+test('a real clean pass through a zero-radius friend remains counted and ingestible',async()=>{
+ const {createEncounter,updateEncounter}=await import('../src/festival.js');
+ const {createRunSummary}=await import('../src/playtest/summary.js');
+ const encounter=createEncounter(),dancer={x:100,y:100},summary=createRunSummary({runId:id,mode:'rush',buildId:'dev',scoringVersion:'arcade-v1'});
+ summary.record('start',{runId:id,stageIndex:0});
+ for(const [index,x] of [40,100,160].entries()){
+  const hit=updateEncounter(encounter,{x,y:140},dancer,index*100,{contactRadius:0,nearest:40,physicalContact:false,travel:index?60:0});
+  if(hit.closePass)summary.record('closepass',{runId:id,clearance:hit.clearance});
+ }
+ const e=event();e.payload=summary.finishStage(0,{score:15,qualified:true});
+ assert.equal(e.payload.closePasses,1);assert.equal(e.payload.minClearance,40);assert.deepEqual(e.payload.clearanceBins,[0,0,1]);
+ assert.equal(validatePlaytestBatch([e]).ok,true);
+});
 
 test('playtest ingestion accepts the eight known perks and rejects unknown IDs',async()=>{
  const {PERKS}=await import('../src/run.js');

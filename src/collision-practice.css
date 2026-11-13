@@ -1,0 +1,85 @@
+.shell.collision-lab{
+ --collision-top:max(10px,env(safe-area-inset-top));--collision-right:max(12px,env(safe-area-inset-right));--collision-bottom:max(14px,env(safe-area-inset-bottom));--collision-left:max(12px,env(safe-area-inset-left));
+ --display:'Lilita One','Trebuchet MS',sans-serif;--body:'DM Sans',Arial,sans-serif;--paper:#f6edcc;--accent:#d8e99d;
+ position:fixed;inset:0;display:block;width:var(--play-width,100vw);height:var(--play-height,100dvh);min-height:0;max-width:none;margin:0;padding:0;overflow:hidden;isolation:isolate;background:#082524;color:var(--paper);font-family:var(--body);
+}
+.collision-lab [hidden]{display:none!important}
+.collision-lab .collision-arena,.collision-lab #game{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;touch-action:none;overscroll-behavior:none}
+.collision-lab .collision-arena{overflow:hidden}
+.collision-lab #game{outline-offset:-4px}
+.collision-lab #game canvas{display:block;margin:0!important}
+.collision-lab .collision-hud{position:absolute;z-index:5;top:var(--collision-top);left:var(--collision-left);right:var(--collision-right);display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:start;column-gap:9px;row-gap:6px;pointer-events:none;font-variant-numeric:tabular-nums}
+.collision-lab .collision-location,.collision-lab .collision-timer,.collision-lab .collision-scores{background:#092527d9;border:1px solid #d5e8bc35;border-radius:13px;box-shadow:0 4px 18px #0013142b}
+.collision-lab .collision-location{display:grid;gap:2px;justify-self:start;max-width:100%;padding:8px 11px}
+.collision-lab .collision-eyebrow{font-size:9px;font-weight:600;line-height:1.4;letter-spacing:.09em;text-transform:uppercase;color:#c9dfa7}
+.collision-lab #collision-venue-name{font-size:15px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.collision-lab #collision-mode-name{font-size:10px;color:#d3e1d1}
+.collision-lab .collision-timer{display:grid;gap:2px;min-width:60px;padding:8px 10px;text-align:right}
+.collision-lab .collision-timer span{font-size:9px;color:#d3e1d1}
+.collision-lab .collision-timer strong{font-size:21px;line-height:1.2;color:#ffebaa}
+.collision-lab .collision-actions{display:flex;gap:6px;pointer-events:auto}
+.collision-lab .quiet-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;margin:0;padding:9px 12px;border:1px solid #c3e2b768;border-radius:13px;background:#103735e8;color:#eff5dc;font:600 12px/1.2 var(--body);cursor:pointer;text-decoration:none}
+.collision-lab .quiet-button:hover:not(:disabled){background:#285447}
+.collision-lab button:disabled{opacity:.5;cursor:default}
+.collision-lab .collision-scores{grid-column:1/-1;justify-self:start;display:flex;gap:16px;padding:6px 10px;font-size:10px;color:#c6d9c6}
+.collision-lab .collision-scores strong{margin-left:3px;font-size:13px;color:#f7edc8}
+.collision-lab .movement-controls{left:var(--collision-left);bottom:var(--collision-bottom);right:auto;z-index:6;max-width:calc(100% - 112px)}
+.collision-lab[data-hand=right] .movement-controls{left:auto;right:var(--collision-right);flex-direction:row-reverse}
+.collision-lab .movement-energy{background:#092729db;border-color:#d2e7b857;border-radius:11px}
+.collision-lab .movement-sprint{min-height:48px;background:#092729e8;border-radius:14px}
+.collision-lab #bass-head{top:auto;left:auto;right:var(--collision-right);bottom:var(--collision-bottom);z-index:6;width:72px;height:72px;min-height:72px;padding:7px 4px;transform:none;touch-action:none;border-color:#c2e5bb94;box-shadow:0 4px 20px #00141980}
+.collision-lab[data-hand=right] #bass-head{left:var(--collision-left);right:auto}
+.collision-lab #bass-head .bass-control-name{font-size:8px;letter-spacing:.03em}
+.collision-lab #bass-head .bass-control-detail{font-size:12px}
+.collision-lab .collision-menu{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:calc(var(--collision-top) + 6px) var(--collision-right) calc(var(--collision-bottom) + 6px) var(--collision-left);overflow:auto;overscroll-behavior:contain;background:#04191ec9;touch-action:pan-y}
+.collision-lab .collision-card{width:min(560px,100%);max-height:100%;padding:24px;border:1px solid #c6dfa564;border-radius:26px;overflow:auto;overscroll-behavior:contain;background:linear-gradient(145deg,#20483d,#102f34 65%);box-shadow:0 14px 60px #00101277}
+.collision-lab h1{margin:6px 0 10px;font:400 clamp(30px,6vw,44px)/1.04 var(--display);letter-spacing:0;color:#f9e9b5}
+.collision-lab .collision-intro{margin:0 0 12px;font-size:14px;line-height:1.5;color:#dce5d1}
+.collision-lab .collision-note{margin:0 0 14px;padding:9px 11px;border-radius:10px;background:#092b2d;font-size:12px;line-height:1.5;color:#f1eac5}
+.collision-lab .collision-note:empty{display:none}
+.collision-lab .collision-menu-actions{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 22px}
+.collision-lab .primary-button{flex:1;min-width:0;min-height:48px;margin:0;padding:10px 18px;border:1px solid #f6e8b9;border-radius:13px;background:#d3e7a6;color:#15342b;box-shadow:0 3px 0 #071d20;font:400 22px/1.1 var(--display);cursor:pointer}
+.collision-lab .primary-button:hover:not(:disabled){background:#e4efbd;transform:none}
+.collision-lab .collision-menu-actions .quiet-button{flex:1}
+.collision-lab .collision-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 20px;padding:15px 0 0;border:0;border-top:1px solid #c8deb23d;min-width:0}
+.collision-lab .collision-options legend{padding-right:12px;font:400 21px/1.2 var(--display);color:#eddfb3}
+.collision-lab .collision-field{display:grid;gap:6px;min-width:0;font-size:12px;color:#e1e8d2}
+.collision-lab .collision-field>span:first-child{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.collision-lab .collision-wide{grid-column:1/-1}
+.collision-lab select{width:100%;min-width:0;min-height:44px;padding:8px 10px;border:1px solid #a7c8a25e;border-radius:10px;background:#0d302e;color:#f0f3de;font:600 12px/1.3 var(--body)}
+.collision-lab input[type=range]{width:100%;min-height:32px;margin:0;accent-color:#d3e7a6;touch-action:pan-x}
+.collision-lab output{min-width:28px;padding:3px 6px;border-radius:7px;background:#092d2b;text-align:center;font-variant-numeric:tabular-nums}
+.collision-lab .collision-range-hint{display:flex;justify-content:space-between;margin-top:-7px;font-size:10px;color:#b8cbb9}
+.collision-lab .collision-toggle{display:flex;align-items:center;gap:8px;min-height:44px;font-size:12px;line-height:1.4;color:#e1e8d2;cursor:pointer}
+.collision-lab .collision-toggle input{width:19px;height:19px;flex:none;margin:0;accent-color:#d3e7a6}
+.collision-lab .collision-help{margin:0;font-size:11px;line-height:1.5;color:#bdd0bd}
+.collision-lab .collision-footer{display:grid;gap:10px;margin-top:2px;font-size:11px;line-height:1.6;color:#c4d3bf}
+.collision-lab .collision-footer a{justify-self:start;color:#e7e7b1;text-underline-offset:3px}
+.collision-lab button:focus-visible,.collision-lab select:focus-visible,.collision-lab input:focus-visible,.collision-lab a:focus-visible{outline:3px solid #ffe8a8;outline-offset:3px}
+@media(max-width:500px){
+ .collision-lab .collision-hud{grid-template-columns:minmax(0,1fr) auto auto;gap:6px}
+ .collision-lab .collision-location{padding:7px 9px}
+ .collision-lab .collision-actions{flex-direction:column;gap:5px}
+ .collision-lab .collision-actions .quiet-button{min-height:35px;padding:7px 9px;font-size:10px}
+ .collision-lab .collision-scores{grid-column:1/3;margin-top:-5px;gap:12px}
+ .collision-lab .collision-card{padding:20px 17px;border-radius:22px}
+}
+@media(orientation:landscape) and (max-height:500px){
+ .shell.collision-lab{--collision-top:max(8px,env(safe-area-inset-top));--collision-bottom:max(9px,env(safe-area-inset-bottom))}
+ .collision-lab .collision-location{padding:6px 9px;grid-template-columns:auto auto;column-gap:9px}
+ .collision-lab .collision-location .collision-eyebrow{grid-column:1/-1;font-size:8px}
+ .collision-lab #collision-venue-name{font-size:14px}
+ .collision-lab #collision-mode-name{align-self:center}
+ .collision-lab .collision-scores{padding:4px 9px}
+ .collision-lab .collision-timer{padding:6px 9px}
+ .collision-lab .collision-card{width:min(640px,100%);padding:20px 24px}
+ .collision-lab h1{font-size:31px}
+ .collision-lab #bass-head{width:64px;height:64px;min-height:64px}
+}
+
+.collision-lab .collision-types{display:flex;flex-wrap:wrap;gap:5px 12px}
+.collision-lab .collision-types span:nth-child(1){color:#99e1cb}
+.collision-lab .collision-types span:nth-child(2){color:#efd58d}
+.collision-lab .collision-types span:nth-child(3){color:#ecb5ca}
+.collision-lab #collision-friends{color:#baf0cf}
+@media(max-width:500px){.collision-lab .collision-scores{grid-column:1/-1;margin-top:0;gap:12px;flex-wrap:wrap}}

@@ -1,4 +1,5 @@
 import {validRun,validateScore,validRushSelection,MODES} from './smf-score.js';
+import {SMF_SCORING_VERSIONS} from './smf-rules.js';
 const hex=b=>[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join('');
 const encode=s=>new TextEncoder().encode(s);
 const hash=async s=>hex(await crypto.subtle.digest('SHA-256',encode(s)));
@@ -17,7 +18,7 @@ export function createSmfArcadeHandler({kind,origins,secret,rpc}){
    const reader=request.body?.getReader();if(!reader)throw Error();let bytes=0,text='';const decoder=new TextDecoder();
    for(;;){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>(kind==='submit-score'?1048576:32768)){await reader.cancel();return reply(413,{code:'invalid'});}text+=decoder.decode(value,{stream:true});}p=JSON.parse(text+decoder.decode());
   }catch{return reply(400,{code:'invalid'});}
-  if(kind==='run-ticket'&&!validRun(p)||kind==='submit-score'&&!validateScore(p).ok||kind==='leaderboard'&&(!p||Array.isArray(p)||Object.keys(p).length!==(Object.hasOwn(p,'rushStageId')?4:3)||!validRushSelection(p)||p.editionId!=='smf'||!MODES.includes(p.mode)||p.scoringVersion!=='smf-v1'))return reply(400,{code:'invalid'});
+  if(kind==='run-ticket'&&!validRun(p)||kind==='submit-score'&&!validateScore(p).ok||kind==='leaderboard'&&(!p||Array.isArray(p)||Object.keys(p).length!==(Object.hasOwn(p,'rushStageId')?4:3)||!validRushSelection(p)||p.editionId!=='smf'||!MODES.includes(p.mode)||!SMF_SCORING_VERSIONS.includes(p.scoringVersion)))return reply(400,{code:'invalid'});
   try{
    const venue=Object.hasOwn(p,'rushStageId')?{p_rush_stage_id:p.rushStageId}:{};
    if(kind==='leaderboard'){const rows=await rpc('smf_board',{p_mode:p.mode,p_version:p.scoringVersion,...venue});headers['Cache-Control']='public, max-age=30';return reply(200,rows);}

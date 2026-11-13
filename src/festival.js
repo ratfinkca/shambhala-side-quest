@@ -24,21 +24,25 @@ function sweptDistance(a, b) {
   return Math.hypot(a.x + t * dx, a.y + t * dy);
 }
 
-export function updateEncounter(encounter, player, dancer, elapsedMs) {
+export function updateEncounter(encounter, player, dancer, elapsedMs, measurement) {
   const relative = { x: player.x - dancer.x, y: player.y - dancer.y };
   const previous = encounter.previousPlayer ? {
     x: encounter.previousPlayer.x - encounter.previousDancer.x,
     y: encounter.previousPlayer.y - encounter.previousDancer.y,
   } : relative;
   const distance = Math.hypot(relative.x, relative.y);
-  const nearest = sweptDistance(previous, relative);
-  const travel = encounter.previousPlayer ? Math.hypot(player.x - encounter.previousPlayer.x, player.y - encounter.previousPlayer.y) : 0;
-  const bumped = nearest < 27;
+  // A collision resolver can measure the actual sliding path and distinguish
+  // driven travel from a moving crowd pushing an otherwise stationary player.
+  const measured=value=>Number.isFinite(value)&&value>=0;
+  const contactRadius=measured(measurement?.contactRadius)?measurement.contactRadius:27;
+  const nearest = measured(measurement?.nearest)?measurement.nearest:sweptDistance(previous, relative);
+  const travel = measured(measurement?.travel)?measurement.travel:encounter.previousPlayer ? Math.hypot(player.x - encounter.previousPlayer.x, player.y - encounter.previousPlayer.y) : 0;
+  const bumped = measurement?.physicalContact===true || nearest < contactRadius;
   const contactStarted = bumped && !encounter.touching;
   const contactEnded = !bumped && !!encounter.touching;
   encounter.touching = bumped;
   let closePass = false;
-  if (nearest <= 48 && !encounter.active) {
+  if ((nearest <= 48 || bumped) && !encounter.active) {
     encounter.active = true;
     encounter.travel = 0;
     encounter.nearest = nearest;
@@ -57,7 +61,7 @@ export function updateEncounter(encounter, player, dancer, elapsedMs) {
   }
   encounter.previousPlayer = { x: player.x, y: player.y };
   encounter.previousDancer = { x: dancer.x, y: dancer.y };
-  return { bumped, closePass, contactStarted, contactEnded, clearance: closePass ? encounter.nearest - 27 : null };
+  return { bumped, closePass, contactStarted, contactEnded, clearance: closePass ? encounter.nearest - contactRadius : null };
 }
 
 const SPOTS = [[235,250],[385,255],[565,235],[735,260],[300,365],[665,365],[225,490],[410,490],[585,495],[750,485]];

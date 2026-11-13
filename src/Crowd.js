@@ -75,7 +75,7 @@ export class Crowd {
       person.body.setPosition(shake.x,shake.y);
       const distance = Math.hypot(player.x - position.x, player.y - position.y);
       person.ring.setAlpha(distance < 100 ? .7 : 0);
-      const encounter = updateEncounter(person.encounter, player, position, elapsed);
+      const encounter = updateEncounter(person.encounter, player, position, elapsed, this.scene.crowdEncounterMeasurement?.(index));
       if(encounter.contactStarted)this.scene.game.events.emit('round:contact',{runId:round.runId});
       if (applyBump(round, person.encounter, encounter)) {
         person.ring.setStrokeStyle(2, 0xf2b59b, .45);

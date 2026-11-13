@@ -26,13 +26,13 @@ import {createSubmission} from '../online/submission.js';
 import {createBoard} from '../online/board.js';
 import {DELIVERY_RECIPIENTS,recipientPortrait} from '../amp-delivery-view.js';
 import {MYSTERY_EFFECTS} from '../mystery.js';
-import {SMF_RULES,SMF_DEFAULT_RUSH_STAGE_ID,isSmfRushStageId} from '../../supabase/functions/_shared/smf-rules.js';
+import {SMF_SCORING_VERSION,SMF_SCORING_VERSIONS,SMF_DEFAULT_RUSH_STAGE_ID,isSmfRushStageId} from '../../supabase/functions/_shared/smf-rules.js';
 import {createTourRun,stageForRun,collectInvitation,finishMain,choosePerk,beginBonus,finishBonus,returnBonus,endFestival,closeResults,saveTourScore} from './model.js';
 import {createTourStore} from './store.js';
 import {tourScene} from './scene.js';
 import {titleHTML,catalogueHTML,wardrobeHTML,summaryHTML,bonusResultHTML} from './view.js';
 import {shellHTML,settingsHTML,stylesHTML,rulesHTML,boardsHTML,confirmLeaveHTML,updateTourHUD} from './ui.js';
-import {createSmfOnlineClient,readSmfArcadeConfig,resumeSmfSubmission,smfRushFields} from './online.js';
+import {createSmfOnlineClient,readSmfArcadeConfig,resumeSmfSubmission,smfRushFields,smfRunFields} from './online.js';
 import {createSmfTelemetry,readSmfTelemetryConfig} from './telemetry.js';
 
 const lab=import.meta.env.DEV&&new URLSearchParams(location.search).has('rehearsal')&&new URLSearchParams(location.search).has('tour');
@@ -44,7 +44,7 @@ if(phonePreview)controls.update({mode:'stick',camera:'follow',zoom:1});
 const store=createTourStore(browserStorage,{key}),owner=createRecoveryOwner({locks:navigator.locks,name:key});
 let profile=store.read(),scene=null,view='title',paused=true,ready=false,disposed=false,saved=true,saveClock=0,preparing=false,loadFailed=false,ownership=null;
 let returnView='title',feedback='',boardMode='rush',submission=null,exitDestination=null,telemetryStageAllowed=false,telemetryRunAllowed=false,bassAction=null;
-let boardVenue=SMF_DEFAULT_RUSH_STAGE_ID;
+let boardVenue=SMF_DEFAULT_RUSH_STAGE_ID,boardVersion=SMF_SCORING_VERSION;
 let renderedMenuKey='';
 let previewAvatar,previewReady=false,previewOutfit=null;
 const finishGate=createFinishGate();let finishKind=null,finishTimer=null,actionGuardUntil=0;
@@ -55,7 +55,7 @@ const $=s=>root.querySelector(s),text=(s,t)=>{const n=$(s);if(n&&n.textContent!=
 const status=createTourStatus(message=>text('#tour-status',message));
 const arcadeConfig=lab?{}:readSmfArcadeConfig(import.meta.env),telemetryConfig=lab?{enabled:false}:readSmfTelemetryConfig(import.meta.env);
 const arcade=createSmfOnlineClient(arcadeConfig),board=createBoard(p=>arcade.getBoard({editionId:'smf',...p}));
-const telemetry=createSmfTelemetry({config:telemetryConfig,consent:()=>profile.playtestConsent==='accepted',getMovementMode:()=>controls.value.mode});
+const telemetry=createSmfTelemetry({config:telemetryConfig,consent:()=>profile.playtestConsent==='accepted',getMovementMode:()=>controls.value.mode,getScoringVersion:()=>profile.active?.scoringVersion});
 const audio=createAudio(undefined,{timedVoices:f=>f.timing.id.includes('bonus-preview')?bonusPreviewVoices(f):smfPreviewVoices(f),useTransport:true,createMusicRenderer:createSMFInstrumentRack});
 audio.setVolumes(profile.audio);audio.setEnabled(profile.audio.enabled);
 function canPlay(){return ready&&(ownership==='owned'||ownership==='unsupported');}
@@ -103,7 +103,7 @@ function enterStage(){
   submission=arcadeConfig.baseUrl?createSubmission(a.id):null;
   if(submission){
    const current=submission,id=a.id; a.submission=current.snapshot();
-   void arcade.startRun({editionId:'smf',runId:id,mode:a.mode,...smfRushFields(a),scoringVersion:SMF_RULES.id,buildId:a.buildId}).then(result=>{
+   void arcade.startRun({editionId:'smf',runId:id,mode:a.mode,...smfRunFields(a),buildId:a.buildId}).then(result=>{
     if(disposed||profile.active?.id!==id||submission!==current)return;
     current.setTicket(id,result.ok?result.data:null);saveSubmission();if(!isLive())render();
    });
@@ -140,7 +140,7 @@ function hud(round){
   if($('#tour-order').textContent!==message){$('#tour-order').textContent=message;delete $('#tour-order').dataset.state;}
  }
 }
-function menuOptions(){return {controls:controls.value,saved,themeId:activeTheme,onlineEnabled:!!arcadeConfig.baseUrl,playtestEnabled:telemetryConfig.enabled,noticeURL:telemetryConfig.notice||`${import.meta.env.BASE_URL}smf-playtest-data.html`,submission,boardMode,boardVenue,board,feedback};}
+function menuOptions(){return {controls:controls.value,saved,themeId:activeTheme,onlineEnabled:!!arcadeConfig.baseUrl,playtestEnabled:telemetryConfig.enabled,noticeURL:telemetryConfig.notice||`${import.meta.env.BASE_URL}smf-playtest-data.html`,submission,boardMode,boardVenue,boardVersion,board,feedback};}
 function render(){
  const a=profile.active,live=isLive(),finishing=view==='finish',options=menuOptions();$('#tour-running').hidden=!live&&!finishing;
  const menuKey=JSON.stringify([view,a?.id,a?.stageIndex,a?.status,a?.bonus?.status]);
@@ -230,11 +230,11 @@ function changeControls(field,value){
 function input(kind){const a=profile.active;if(!a||a.bonus||!isLive())return;if(['mouse','touch','keyboard'].includes(kind))a.inputType=a.inputType==='unknown'?kind:a.inputType===kind?kind:'mixed';}
 for(const [name,fn] of [['round:pickup',e=>audio.pickup(e.multiplier)],['round:closepass',()=>audio.closePass()],['round:flow',()=>{audio.celebrate();status.show('FLOW · Sparks come to you',{round:scene.round,kind:'flow'});}],['round:bass',()=>{scene.round.bassUses=(scene.round.bassUses||0)+1;audio.drop();}],['round:mystery',effect=>{status.show(`${MYSTERY_EFFECTS[effect].name} · ${effect==='dizzy'?'Steering is reversed!':effect==='speed'?'Hold on!':'Ride the colours.'}`,{round:scene.round,kind:'candy'});audio.drop();}],['round:phase',phase=>{if(phase==='drop')audio.drop();}],['round:input',e=>{if(e.runId===profile.active?.id)input(e.kind);} ]])game.events.on(name,fn);
 function buttonVector(){const a=Number($('#tour-angle').value)*Math.PI/180,p=Number($('#tour-power').value)/100;return {x:Math.cos(a)*p,y:Math.sin(a)*p};}
-async function loadBoard(mode){boardMode=mode;const pending=board.select(mode,SMF_RULES.id,mode==='rush'?boardVenue:undefined);render();await pending;if(view==='scores')render();}
+async function loadBoard(mode){boardMode=mode;const pending=board.select(mode,boardVersion,mode==='rush'?boardVenue:undefined);render();await pending;if(view==='scores')render();}
 function viewMenu(next){if(isLive())setPaused(true);returnView=view;view=next;feedback='';previewOutfit=null;render();}
 function startRun(mode){
  if(profile.active||!['rush','festival','endless'].includes(mode))return;
- activeTheme=applyTheme(resolveTheme(profile.themePreference));commit(createTourRun(profile,mode,createRunId(),activeTheme));boardMode=mode;if(mode==='rush')boardVenue=profile.active.rushStageId;submission=null;telemetryRunAllowed=profile.playtestConsent==='accepted';view='rules';feedback='';render();
+ activeTheme=applyTheme(resolveTheme(profile.themePreference));commit(createTourRun(profile,mode,createRunId(),activeTheme));boardMode=mode;boardVersion=SMF_SCORING_VERSION;if(mode==='rush')boardVenue=profile.active.rushStageId;submission=null;telemetryRunAllowed=profile.playtestConsent==='accepted';view='rules';feedback='';render();
 }
 function finishAndClose(){commit(closeResults(profile));submission=null;view='title';render();if(exitDestination){const mode=exitDestination;exitDestination=null;startRun(mode);}}
 function initials(){return ($('#tour-initials')?.value||profile.active?.initialsDraft||profile.initials||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);}
@@ -242,7 +242,7 @@ async function postScore(){
  const a=profile.active;if(!a||a.bonus||a.status!=='results'||!submission||a.scoreOverflow||!a.scoreStages.length)return;
  const name=initials();if(!/^[A-Z0-9]{3}$/.test(name)){feedback='Enter three letters or numbers for your initials.';render();return;}
  a.initialsDraft=name;const current=submission,id=a.id;
- const pending=current.post({editionId:'smf',initials:name,mode:a.mode,...smfRushFields(a),scoringVersion:SMF_RULES.id,buildId:a.buildId,inputType:a.inputType,totalScore:a.score,stagesCleared:a.cleared,stages:a.scoreStages},p=>arcade.submitScore(p));
+ const pending=current.post({editionId:'smf',initials:name,mode:a.mode,...smfRunFields(a),buildId:a.buildId,inputType:a.inputType,totalScore:a.score,stagesCleared:a.cleared,stages:a.scoreStages},p=>arcade.submitScore(p));
  saveSubmission();render();await pending;if(profile.active?.id!==id||submission!==current)return;saveSubmission();render();
 }
 function route(action,id,event){
@@ -255,7 +255,7 @@ function route(action,id,event){
  if(action==='pause'){if(isLive())setPaused(!paused);return;}
  if(action==='home'||action==='title'){if(isLive())setPaused(true);view='title';audio.stop();render();return;}
  if(['settings','style','wardrobe','catalogue','scores'].includes(action)){
-  if(action==='scores'&&profile.active){boardMode=profile.active.mode;if(boardMode==='rush')boardVenue=smfRushFields(profile.active).rushStageId;}
+  if(action==='scores'&&profile.active){boardMode=profile.active.mode;boardVersion=smfRunFields(profile.active).scoringVersion;if(boardMode==='rush')boardVenue=smfRushFields(profile.active).rushStageId;}
   viewMenu(action);if(action==='scores'&&arcadeConfig.baseUrl)void loadBoard(boardMode);return;
  }
  if(action==='back'){view=returnView==='run'&&profile.active&&!profile.active.needsIntro?'run':'title';render();return;}
@@ -315,6 +315,9 @@ root.addEventListener('input',e=>{
 });
 root.addEventListener('change',e=>{
  const element=e.target;
+ if(element.matches('[data-board-season]')&&SMF_SCORING_VERSIONS.includes(element.value)){
+  boardVersion=element.value;if(arcadeConfig.baseUrl)void loadBoard(boardMode);else render();return;
+ }
  if(element.matches('[data-board-venue]')&&isSmfRushStageId(element.value)){
   boardVenue=element.value;boardMode='rush';if(arcadeConfig.baseUrl)void loadBoard(boardMode);else render();return;
  }

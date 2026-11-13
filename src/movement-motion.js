@@ -58,14 +58,14 @@ export function resetMotion(state,{refill=false}={}){
  * Advance only active play time. Pause/reset clears motion without ticking this
  * function, so neither stamina nor coasting advances while a menu is showing.
  */
-export function advanceMotion(state,position,deltaMs,{staminaEnabled=true,terrainFactor=1,speedMultiplier=1,directionTransform=d=>d,destination=null,arena={}}={}){
+export function advanceMotion(state,position,deltaMs,{staminaEnabled=true,terrainFactor=1,speedMultiplier=1,directionTransform=d=>d,destination=null,arena={},resolveStep}={}){
  if(!validPoint(position)||!finite(deltaMs)||deltaMs<=0)return zero();
  const elapsed=Math.min(50,deltaMs),factor=clamp(finite(terrainFactor)?terrainFactor:1,0,1)*clamp(finite(speedMultiplier)?speedMultiplier:1,0,4);
- const cfg=CONTROL_MOTION;let traveled=0,lastDirection=zero();
+ const cfg=CONTROL_MOTION,resolve=typeof resolveStep==='function'?resolveStep:null;let traveled=0,lastDirection=zero();
  // Small bounded slices give the same acceleration, braking and resource use
  // on 30/60/120 Hz displays, and preserve the shared obstacle collision rules.
  for(let left=elapsed;left>1e-7;){
-  const ms=Math.min(5,left,state.swipe?.remainingMs??Infinity),dt=ms/1000;left-=ms;
+  const progressStart=(elapsed-left)/elapsed,ms=Math.min(5,left,state.swipe?.remainingMs??Infinity),dt=ms/1000;left-=ms;
   const direction=directionTransform(state.heading);let desired=state.requestedSpeed;
   const boostRequested=state.requestedSpeed>cfg.walkSpeed;
   if(staminaEnabled){
@@ -78,11 +78,19 @@ export function advanceMotion(state,position,deltaMs,{staminaEnabled=true,terrai
   if(!state.swipe&&!state.stick&&state.speed<.5)state.speed=0;
   const averageSpeed=(oldSpeed+state.speed)/2,travel=Math.min(averageSpeed*factor*dt,destination?Math.hypot(destination.x-position.x,destination.y-position.y):Infinity);
   const before={x:position.x,y:position.y};
-  if(travel>0&&Math.hypot(direction.x,direction.y)>0){
-   moveInArena(position,direction,ms,{...arena,speed:travel/dt});
-   lastDirection=direction;
+  const driving=travel>0&&Math.hypot(direction.x,direction.y)>0;
+  let moved;
+  if(resolve){
+   // Moving crowds also need idle slices. Only player-driven travel contributes
+   // to speed, stamina or unblocking; depenetration and crowd pushes do not.
+   const result=resolve(position,direction,ms,{...arena,speed:driving?travel/dt:0,progressStart,progressEnd:(elapsed-left)/elapsed});
+   moved=finite(result?.drivenDistance)?Math.max(0,result.drivenDistance):0;
+  }else{
+   if(driving)moveInArena(position,direction,ms,{...arena,speed:travel/dt});
+   moved=Math.hypot(position.x-before.x,position.y-before.y);
   }
-  const moved=Math.hypot(position.x-before.x,position.y-before.y);traveled+=moved;
+  if(driving)lastDirection=direction;
+  traveled+=moved;
   const movementShare=travel>0?Math.min(1,moved/travel):0;
   if(staminaEnabled){
    const extra=clamp((averageSpeed-cfg.walkSpeed)/(cfg.sprintSpeed-cfg.walkSpeed),0,1);
@@ -91,7 +99,7 @@ export function advanceMotion(state,position,deltaMs,{staminaEnabled=true,terrai
    if(state.stamina<.001)state.stamina=0;
   }
   if(state.swipe){state.swipe.remainingMs-=ms;if(state.swipe.remainingMs<1e-7)brakeMotion(state);}
-  if(destination&&Math.hypot(destination.x-position.x,destination.y-position.y)<1){resetMotion(state);break;}
+  if(destination&&Math.hypot(destination.x-position.x,destination.y-position.y)<1){resetMotion(state);if(!resolve)break;}
   if(travel>.01&&moved<.001){
    state.blockedMs+=ms;if(state.blockedMs>=150)resetMotion(state);
   }else if(moved>.001)state.blockedMs=0;

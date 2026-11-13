@@ -1,12 +1,12 @@
 import {UUID,MODES,validRushSelection} from './smf-score.js';
-import {smfRuleStage} from './smf-rules.js';
+import {smfRuleStage,SMF_SCORING_VERSIONS} from './smf-rules.js';
 const exact=(o,keys)=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).length===keys.length&&keys.every(k=>Object.hasOwn(o,k));
 const uint=n=>Number.isSafeInteger(n)&&n>=0;
 const stages=['smf-living-room','smf-fractal','smf-grove','smf-amp','smf-pagoda','smf-village'];
 const perks=['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'];
 export function validSmfEvents(events){return Array.isArray(events)&&events.length>0&&events.length<=20&&events.every(e=>{
  const common=['editionId','scoringVersion','eventId','guestId','buildId','mode','type'];
- if(!e||e.editionId!=='smf'||e.scoringVersion!=='smf-v1'||typeof e.eventId!=='string'||!UUID.test(e.eventId)||typeof e.guestId!=='string'||!UUID.test(e.guestId)||typeof e.buildId!=='string'||!/^[\w.-]{1,100}$/.test(e.buildId)||!MODES.includes(e.mode))return false;
+ if(!e||e.editionId!=='smf'||!SMF_SCORING_VERSIONS.includes(e.scoringVersion)||typeof e.eventId!=='string'||!UUID.test(e.eventId)||typeof e.guestId!=='string'||!UUID.test(e.guestId)||typeof e.buildId!=='string'||!/^[\w.-]{1,100}$/.test(e.buildId)||!MODES.includes(e.mode))return false;
  if(Object.hasOwn(e,'movementMode')){
   if(!['run','stage'].includes(e.type)||!['tap','swipe','stick'].includes(e.movementMode))return false;
   common.push('movementMode');

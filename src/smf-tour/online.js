@@ -1,7 +1,9 @@
 import {validBoard} from '../../supabase/functions/_shared/smf-score.js';
 import {SMF_DEFAULT_RUSH_STAGE_ID} from '../../supabase/functions/_shared/smf-rules.js';
 import {createSubmission} from '../online/submission.js';
+import {resolveSmfScoringVersion} from './seasons.js';
 export function smfRushFields(run){return run?.mode==='rush'?{rushStageId:run.rushStageId??SMF_DEFAULT_RUSH_STAGE_ID}:{};}
+export function smfRunFields(run){return {scoringVersion:resolveSmfScoringVersion(run?.scoringVersion),...smfRushFields(run)};}
 export function resumeSmfSubmission(active,current){
  if(!active)return null;
  if(current?.runId===active.id)return current;

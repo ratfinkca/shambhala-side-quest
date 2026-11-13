@@ -5,7 +5,8 @@ import {BONUSES,ROUTE,createTourProfile,createFestival,collectInvitation,finishM
 import {smfPreviewStage} from '../src/editions/smf-stages.js';
 import {bonusConfig,bonusController} from '../src/smf-tour/content.js';
 import {createRound,collect,advanceRound} from '../src/game.js';
-import {createEncounter} from '../src/festival.js';
+import {createEncounter,awardClosePass} from '../src/festival.js';
+import {createCrowdFriendships} from '../src/crowd-friendship.js';
 import {rulesFor} from '../src/run.js';
 import {activateFlow} from '../src/flow.js';
 import {collectMystery} from '../src/mystery.js';
@@ -155,5 +156,66 @@ test('legacy six-dancer Garden and Ikigai visits keep checkpoint and ownership a
   assert.equal(loaded.active.bonus.scene.round.remainingMs,before.active.bonus.scene.round.remainingMs);
   assert.deepEqual(loaded.rewards,p.rewards);assert.deepEqual(p,before,'normalizing does not mutate source data');
   const restored=bonusController(config);assert.equal(restored.restore(loaded.active.bonus.activity),true);assert.equal(restored.status,'paused');
+ }
+});
+
+function addFriendships(scene){
+ scene.round.rules=rulesFor([]);for(let i=0;i<9;i++)awardClosePass(scene.round);delete scene.round.rules;
+ scene.crowd.forEach((encounter,index)=>{encounter.friendPasses=index===0?3:index===1?4:0;});
+ return scene;
+}
+function friendshipProfiles(){
+ const main=playing();addFriendships(main.active.scene);
+ const profiles=[{label:'main',profile:main,getScene:p=>p.active.scene}];
+ for(const bonus of BONUSES){
+  let profile=createTourProfile();profile.discoveries=[bonus.id];profile=beginBonus(profile,bonus.id,`friends-${bonus.id}`,{explore:true});
+  const config=bonusConfig(bonus.id),controller=bonusController(config);controller.start();controller.pause();
+  profile.active.bonus.activity=controller.capture();
+  profile.active.bonus.scene=addFriendships(snapshot(config.stage,profile.active.bonus.visitId));
+  profiles.push({label:bonus.id,profile,getScene:p=>p.active.bonus.scene});
+ }
+ return profiles;
+}
+
+test('SMF main and bonus checkpoints roundtrip third-pass and complete friendships',()=>{
+ for(const {label,profile,getScene} of friendshipProfiles()){
+  const store=createTourStore(memory()),before=structuredClone(profile);
+  assert.equal(store.write(profile),true,label);
+  const loaded=store.read(),scene=getScene(loaded);
+  assert.deepEqual(scene,getScene(before),label);assert.deepEqual(profile,before,'saving does not mutate the live scene');
+  const people=scene.crowd.map((_,index)=>({id:`dancer-${index}`}));
+  const friends=createCrowdFriendships(people,{passes:scene.crowd.map(e=>e.friendPasses??0)});
+  assert.equal(friends.get('dancer-0').radius,4.5,label);assert.equal(friends.get('dancer-1').isFriend,true,label);
+  assert.equal(friends.record([{id:'dancer-0',closePass:true}])[0].befriended,true,label);
+  assert.equal(scene.crowd[0].friendPasses,3,'model progress cannot modify a saved snapshot');
+  if(loaded.active.bonus){
+   const config=bonusConfig(label),controller=bonusController(config);
+   assert.equal(controller.restore(loaded.active.bonus.activity),true,label);assert.equal(controller.status,'paused',label);
+  }
+ }
+});
+
+test('SMF main and bonus snapshots reject malformed or unearned friendship counts without overwriting saves',()=>{
+ for(const {label,profile,getScene} of friendshipProfiles()){
+  const mem=memory(),store=createTourStore(mem);assert.equal(store.write(profile),true,label);const before=mem.getItem(KEY);
+  for(const friendPasses of [-1,5,1.5,'3',null,undefined,NaN,Infinity]){
+   const bad=structuredClone(profile);getScene(bad).crowd[0].friendPasses=friendPasses;
+   assert.equal(store.write(bad),false,`${label}: ${String(friendPasses)}`);assert.equal(normalizeTourProfile(bad).active,null,label);
+   assert.equal(mem.getItem(KEY),before,label);
+  }
+  const unearned=structuredClone(profile);getScene(unearned).crowd[2].friendPasses=4;
+  assert.equal(store.write(unearned),false,`${label}: more friendship passes than scored passes`);
+  assert.equal(mem.getItem(KEY),before,label);
+ }
+});
+
+test('SMF main and bonus legacy or partially populated friendship checkpoints stay compatible',()=>{
+ for(const {label,profile,getScene} of friendshipProfiles()){
+  const scene=getScene(profile);for(const encounter of scene.crowd)delete encounter.friendPasses;
+  const store=createTourStore(memory());assert.equal(store.write(profile),true,label);
+  assert.ok(store.read().active,label);
+  scene.crowd[0].friendPasses=3;assert.equal(store.write(profile),true,label);
+  const restored=getScene(store.read());assert.equal(restored.crowd[0].friendPasses,3,label);
+  assert.equal(Object.hasOwn(restored.crowd[1],'friendPasses'),false,label);
  }
 });

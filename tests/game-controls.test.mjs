@@ -40,6 +40,13 @@ test('movement preference validation keeps finite sensitivity and known modes',(
  assert.deepEqual(normalizeMovementPreferences({mode:'bad',sensitivity:NaN}),{mode:'tap',sensitivity:1,hand:'left'});
  assert.equal(normalizeMovementPreferences({sensitivity:100}).sensitivity,1.6);assert.equal(normalizeMovementPreferences({sensitivity:-1}).sensitivity,.6);
 });
+test('scene movement resolver can push an idle player without recording driven speed',t=>{
+ const f=fixture('stick');t.after(()=>f.controls.dispose());
+ f.scene.resolveMovementStep=(p,d,ms)=>{p.x+=ms;return {drivenDistance:0};};
+ f.controls.move(16);
+ assert.equal(f.scene.dancer.x,496);assert.equal(f.controls.motion.actualSpeed,0);
+ delete f.scene.resolveMovementStep;f.controls.move(16);assert.equal(f.scene.dancer.x,496);
+});
 test('floating stick stays inside the fullscreen game shell, uses viewport coordinates and cleans up',()=>{
  const f=fixture('stick');f.doc.fullscreenElement=f.shell;
  const stick=f.shell.children.find(node=>node.className==='movement-stick');

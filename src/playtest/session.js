@@ -1,6 +1,7 @@
 import {createRunId} from '../run-id.js';
 import {createRunSummary,createInputTracker} from './summary.js';
 import {createPlaytestTransport} from './transport.js';
+import {GENERIC_RULES,GENERIC_SCORING_VERSION} from '../../supabase/functions/_shared/edition-rules.js';
 export function createPlaytestSession({config,consent,send,uuid=()=>createRunId(),width=()=>innerWidth}){
  let sessionId=null,run=null,summary=null,input=createInputTracker(),ended=false,lastFinished=-1,lastChoice=-1;
  let recovered=false;
@@ -11,7 +12,7 @@ export function createPlaytestSession({config,consent,send,uuid=()=>createRunId(
   if(!consent.identity())consent.set('accepted');
   sessionId??=uuid();
   const isMenu=type==='menu';
-  return transport.enqueue({schemaVersion:!isMenu&&run.mode==='endless'?2:1,eventId:uuid(),installationId:consent.identity(),sessionId,runId:isMenu?null:run.id,type,mode:isMenu?null:run.mode,buildId:config.buildId||'dev',scoringVersion:'arcade-v1',theme,viewport:width()<600?'small':width()<1000?'medium':'large',inputType:isMenu?'unknown':input.inputType(),payload});
+  return transport.enqueue({schemaVersion:!isMenu&&run.mode==='endless'?2:1,eventId:uuid(),installationId:consent.identity(),sessionId,runId:isMenu?null:run.id,type,mode:isMenu?null:run.mode,buildId:config.buildId||'dev',scoringVersion:isMenu?GENERIC_SCORING_VERSION:run.scoringVersion??GENERIC_RULES.id,theme,viewport:width()<600?'small':width()<1000?'medium':'large',inputType:isMenu?'unknown':input.inputType(),payload});
  }
  return {
   setConsent(value){
@@ -23,7 +24,7 @@ export function createPlaytestSession({config,consent,send,uuid=()=>createRunId(
   start(value,replay=false){
    recovered=false;run={...value};ended=false;lastFinished=-1;lastChoice=-1;input=createInputTracker();summary=null;
    if(!enabled())return;
-   summary=createRunSummary({runId:run.id,mode:run.mode,buildId:config.buildId||'dev',scoringVersion:'arcade-v1'});
+   summary=createRunSummary({runId:run.id,mode:run.mode,buildId:config.buildId||'dev',scoringVersion:run.scoringVersion??GENERIC_RULES.id});
    emit('run_start',{});if(replay)emit('replay',{});
   },
   recover(){recovered=true;summary=null;run=null;sessionId=null;transport.stop();},

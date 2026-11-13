@@ -1,11 +1,12 @@
 import {normalizeProgress,awardStage,availablePerks} from '../progression.js';
 import {normalizeOutfit} from '../wardrobe.js';
 import {smfPreviewStage} from '../editions/smf-stages.js';
-import {smfRuleStage} from '../../supabase/functions/_shared/smf-rules.js';
+import {smfRuleStage,SMF_SCORING_VERSION} from '../../supabase/functions/_shared/smf-rules.js';
 import {isOpen} from '../geometry.js';
 import {resolveTheme,THEME_DEFAULT} from '../themes.js';
 import {MAX_ONLINE_STAGES} from '../../supabase/functions/_shared/score.js';
 import {drawRushStage,normalizeRushRotation,lastRushStageId,resolveRushStageId,limitRushBoard} from './rush-rotation.js';
+import {resolveSmfScoringVersion,limitSeasonBoard} from './seasons.js';
 
 export const ROUTE=Object.freeze([
  'smf-living-room','smf-fractal','smf-grove','smf-amp','smf-pagoda','smf-village',
@@ -31,7 +32,7 @@ export function stageForRun(run){
  }
  return {...base,...rule,crowdAnchors:anchors};
 }
-const freshRun=(id,mode='festival',themeId=THEME_DEFAULT)=>({id,mode,themeId,stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
+const freshRun=(id,mode='festival',themeId=THEME_DEFAULT)=>({id,mode,scoringVersion:SMF_SCORING_VERSION,themeId,stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
 
 export function createTourProfile(){
  const progress=normalizeProgress();progress.endless.smfVenues=[];
@@ -151,7 +152,7 @@ export function closeResults(profile){
  const run=profile?.active;
  if(!run||run.status!=='results'||run.bonus)return profile;
  const next=structuredClone(profile);
- next.lastResult={id:run.id,mode:run.mode,score:run.score,cleared:run.cleared,completed:run.mode==='festival'&&run.cleared===ROUTE.length};
+ next.lastResult={id:run.id,mode:run.mode,scoringVersion:resolveSmfScoringVersion(run.scoringVersion),score:run.score,cleared:run.cleared,completed:run.mode==='festival'&&run.cleared===ROUTE.length};
  if(run.mode==='rush')next.lastResult.rushStageId=resolveRushStageId(run.rushStageId);
  next.active=null;return next;
 }
@@ -160,7 +161,7 @@ export function saveTourScore(profile,initials){
  const run=profile?.active;if(!run||run.status!=='results'||run.bonus||run.scoreSaved)return profile;
  const name=typeof initials==='string'?initials.trim().toUpperCase():'';if(!/^[A-Z0-9]{3}$/.test(name))return profile;
  const next=structuredClone(profile),a=next.active;next.initials=name;a.initialsDraft=name;a.scoreSaved=true;
- const row={id:a.id,mode:a.mode,initials:name,score:a.score,cleared:a.cleared,stagesCleared:a.cleared,inputType:a.inputType,outfit:structuredClone(next.outfit),completedAt:Date.now()};
+ const row={id:a.id,mode:a.mode,scoringVersion:resolveSmfScoringVersion(a.scoringVersion),initials:name,score:a.score,cleared:a.cleared,stagesCleared:a.cleared,inputType:a.inputType,outfit:structuredClone(next.outfit),completedAt:Date.now()};
  if(a.mode==='rush')row.rushStageId=resolveRushStageId(a.rushStageId);
- const board=next.boards[a.mode].filter(item=>item.id!==a.id);board.push(row);board.sort((x,y)=>a.mode==='endless'?(y.cleared-x.cleared||y.score-x.score):(y.score-x.score||y.cleared-x.cleared));next.boards[a.mode]=a.mode==='rush'?limitRushBoard(board):board.slice(0,20);return next;
+ const board=next.boards[a.mode].filter(item=>item.id!==a.id||resolveSmfScoringVersion(item.scoringVersion)!==row.scoringVersion);board.push(row);next.boards[a.mode]=a.mode==='rush'?limitRushBoard(board):limitSeasonBoard(board,a.mode);return next;
 }
