@@ -5,7 +5,7 @@ import {THEMES} from './themes.js';
 import {UUID,INPUTS,MAX_ONLINE_STAGES,validateScore} from '../supabase/functions/_shared/score.js';
 export const RECOVERY_VERSION=1,RECOVERY_RULES='endless-recovery-1',RECOVERY_LIMIT=2*1024*1024;
 const runKeys='id themeId mode stageIndex totalScore stagesCleared perks scoreStages bassChargeMs status submitted availablePerks pendingPerk remixStageIndex scoreOverflow endedVoluntarily initials initialsDraft submissionMessage buildId'.split(' ');
-const roundKeys='surferMs scoreComponents bass mystery shieldsRemaining remainingMs score chain multiplier bestMultiplier pickups closePasses slowedMs flowMs flowTaken sincePickupMs ended runId bassUses'.split(' ');
+const roundKeys='surferMs scoreComponents bass mystery shieldsRemaining remainingMs score chain multiplier bestMultiplier pickups closePasses slowedMs flowMs flowTaken sincePickupMs ended runId bassUses stamina'.split(' ');
 const encounterKeys='active spoiled travel cooldownUntil previousPlayer previousDancer touching nearest protected'.split(' ');
 const pick=(v,keys)=>Object.fromEntries(keys.filter(k=>Object.hasOwn(v,k)).map(k=>[k,v[k]]));
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v);
@@ -54,6 +54,7 @@ function historyOK(r){
 function roundOK(s,r){
  if(!allowed(s,['round','player','sparks','candy','crowd'])||!point(s.player)||!Array.isArray(s.sparks)||s.sparks.length!==12||!s.sparks.every(point)||!allowed(s.candy,['placed','x','y'])||!bool(s.candy.placed)||!point({x:s.candy.x,y:s.candy.y}))return false;
  const q=s.round,rules=rulesFor(r.perks);
+ if(q?.stamina!==undefined&&!finite(q.stamina,0,100))return false;
  if(!allowed(q,roundKeys)||q.runId!==r.id||q.ended!==false||!finite(q.remainingMs,.001,60000)||!integer(q.score)||!integer(q.chain)||!integer(q.multiplier,1,5)||q.multiplier!==Math.min(5,1+Math.floor(q.chain/5))||!integer(q.bestMultiplier,q.multiplier,5)||!integer(q.pickups)||!integer(q.closePasses)||!integer(q.shieldsRemaining,0,rules.bumpShields)||!finite(q.slowedMs,0,600)||!finite(q.surferMs,0,rules.surferDurationMs)||!finite(q.flowMs,0,rules.flowDurationMs+rules.firstFlowBonusMs)||!(q.sincePickupMs===null||finite(q.sincePickupMs))||q.bassUses!==undefined&&!integer(q.bassUses))return false;
  if(!Array.isArray(q.flowTaken)||q.flowTaken.length>2||new Set(q.flowTaken).size!==q.flowTaken.length||!q.flowTaken.every(v=>v===0||v===1))return false;
  const c=q.scoreComponents;if(!allowed(c,['sparks','passes'])||!counts(c.sparks,20)||!counts(c.passes,2))return false;

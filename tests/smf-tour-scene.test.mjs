@@ -11,6 +11,7 @@ import {getTiming} from '../src/stage-clock.js';
 import {createSMFStageView} from '../src/editions/smf-stage-view.js';
 import {createAMPBackstageView} from '../src/amp-delivery-view.js';
 import {createSouvenirView} from '../src/smf-tour/cosmetic-view.js';
+import {createPlayerCamera} from '../src/player-camera.js';
 import * as rabbit from '../src/bonus-practice/views/rabbit-hole.js';
 import * as garden from '../src/bonus-practice/views/secret-garden.js';
 import * as ikigai from '../src/bonus-practice/views/ikigai-mori.js';
@@ -89,4 +90,19 @@ test('Villagio walking survives a music wrap and enters a green without spending
  assert.equal(scene.practice.state.phase,'aim');assert.equal(scene.running,false);assert.equal(scene.practice.state.strokes,0);assert.equal(scene.cameras.main.zoom,2.35);
  scene.pauseTour();const before=scene.capture();scene.update(2000,950);assert.deepEqual(scene.capture(),before);
  scene.resumeTour();assert.equal(scene.running,false,'putting does not also move the player');
+});
+
+test('Villagio temporarily frames the whole green and returns to the selected mobile camera',()=>{
+ const {scene}=harness(visit('villagio'));
+ scene.game.scale={gameSize:{width:390,height:620}};
+ scene.playerCamera=createPlayerCamera(scene,{mode:'follow'});scene.loadActive();
+ const walkingZoom=scene.cameras.main.zoom;assert.equal(walkingZoom,620/640);
+ scene.dancer.setPosition(218,366);scene.update(50,50);
+ assert.equal(scene.practice.state.phase,'aim');assert.equal(scene.running,false);
+ assert.equal(scene.cameras.main.zoom,390/300,'entire first green and its padding fit portrait width');
+ scene.game.scale.gameSize={width:844,height:220};scene.playerCamera.resize();
+ assert.equal(scene.cameras.main.zoom,220/116,'landscape rotation still shows the complete green');
+ scene.practice.state.phase='between';scene.paint();
+ assert.equal(scene.cameras.main.zoom,844/960,'leaving the green restores follow framing');
+ scene.clearVisit();assert.equal(scene.cameras.main.zoom,844/960);
 });

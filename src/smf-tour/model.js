@@ -5,6 +5,7 @@ import {smfRuleStage} from '../../supabase/functions/_shared/smf-rules.js';
 import {isOpen} from '../geometry.js';
 import {resolveTheme,THEME_DEFAULT} from '../themes.js';
 import {MAX_ONLINE_STAGES} from '../../supabase/functions/_shared/score.js';
+import {drawRushStage,normalizeRushRotation,lastRushStageId,resolveRushStageId,limitRushBoard} from './rush-rotation.js';
 
 export const ROUTE=Object.freeze([
  'smf-living-room','smf-fractal','smf-grove','smf-amp','smf-pagoda','smf-village',
@@ -22,9 +23,9 @@ const validId=id=>typeof id==='string'&&id.trim().length>0&&id.length<=100;
 const count=value=>Number.isSafeInteger(value)&&value>=0;
 const bonusFor=id=>BONUSES.find(bonus=>bonus.id===id);
 const parentBonus=run=>run.mode==='rush'?null:BONUSES.find(bonus=>bonus.parentId===mainStageId(run));
-export const mainStageId=run=>smfRuleStage(run.mode||'festival',run.stageIndex).id;
+export const mainStageId=run=>smfRuleStage(run.mode||'festival',run.stageIndex,run.rushStageId).id;
 export function stageForRun(run){
- const rule=smfRuleStage(run.mode||'festival',run.stageIndex),base=smfPreviewStage(rule.id),anchors=base.crowdAnchors.map(p=>[...p]);
+ const rule=smfRuleStage(run.mode||'festival',run.stageIndex,run.rushStageId),base=smfPreviewStage(rule.id),anchors=base.crowdAnchors.map(p=>[...p]);
  for(const spacing of [70,55,40])for(let y=base.playBounds.minY+30;y<=590&&anchors.length<rule.crowdCount;y+=25)for(let x=130;x<=830&&anchors.length<rule.crowdCount;x+=25){
   if(isOpen({x,y},75,base.obstacles)&&Math.hypot(x-base.spawn.x,y-base.spawn.y)>110&&anchors.every(([ax,ay])=>Math.hypot(x-ax,y-ay)>spacing))anchors.push([x,y]);
  }
@@ -34,13 +35,15 @@ const freshRun=(id,mode='festival',themeId=THEME_DEFAULT)=>({id,mode,themeId,sta
 
 export function createTourProfile(){
  const progress=normalizeProgress();progress.endless.smfVenues=[];
- return {version:1,progress,discoveries:[],rewards:[],outfit:normalizeOutfit(),souvenir:null,active:null,lastResult:null,audio:{enabled:true,music:.45,effects:.65},themePreference:THEME_DEFAULT,boards:{rush:[],festival:[],endless:[]},initials:'',playtestConsent:'unknown'};
+ return {version:1,progress,discoveries:[],rewards:[],outfit:normalizeOutfit(),souvenir:null,active:null,lastResult:null,rushRotation:{remaining:[],lastStageId:null},audio:{enabled:true,music:.45,effects:.65},themePreference:THEME_DEFAULT,boards:{rush:[],festival:[],endless:[]},initials:'',playtestConsent:'unknown'};
 }
 
 /** Model transitions return a new profile; invalid or repeated actions are no-ops. */
-export function createTourRun(profile,mode,id,themeId=THEME_DEFAULT){
+export function createTourRun(profile,mode,id,themeId=THEME_DEFAULT,rng=Math.random){
  if(!profile||profile.active||!validId(id)||!['rush','festival','endless'].includes(mode))return profile;
- const next=structuredClone(profile);next.active=freshRun(id,mode,resolveTheme(themeId));return next;
+ const next=structuredClone(profile);next.active=freshRun(id,mode,resolveTheme(themeId));
+ if(mode==='rush'){const draw=drawRushStage(normalizeRushRotation(profile.rushRotation,lastRushStageId(profile)),rng);next.active.rushStageId=draw.rushStageId;next.rushRotation=draw.rotation;}
+ return next;
 }
 export function createFestival(profile,id){return createTourRun(profile,'festival',id);}
 
@@ -149,6 +152,7 @@ export function closeResults(profile){
  if(!run||run.status!=='results'||run.bonus)return profile;
  const next=structuredClone(profile);
  next.lastResult={id:run.id,mode:run.mode,score:run.score,cleared:run.cleared,completed:run.mode==='festival'&&run.cleared===ROUTE.length};
+ if(run.mode==='rush')next.lastResult.rushStageId=resolveRushStageId(run.rushStageId);
  next.active=null;return next;
 }
 
@@ -157,5 +161,6 @@ export function saveTourScore(profile,initials){
  const name=typeof initials==='string'?initials.trim().toUpperCase():'';if(!/^[A-Z0-9]{3}$/.test(name))return profile;
  const next=structuredClone(profile),a=next.active;next.initials=name;a.initialsDraft=name;a.scoreSaved=true;
  const row={id:a.id,mode:a.mode,initials:name,score:a.score,cleared:a.cleared,stagesCleared:a.cleared,inputType:a.inputType,outfit:structuredClone(next.outfit),completedAt:Date.now()};
- const board=next.boards[a.mode].filter(item=>item.id!==a.id);board.push(row);board.sort((x,y)=>a.mode==='endless'?(y.cleared-x.cleared||y.score-x.score):(y.score-x.score||y.cleared-x.cleared));next.boards[a.mode]=board.slice(0,20);return next;
+ if(a.mode==='rush')row.rushStageId=resolveRushStageId(a.rushStageId);
+ const board=next.boards[a.mode].filter(item=>item.id!==a.id);board.push(row);board.sort((x,y)=>a.mode==='endless'?(y.cleared-x.cleared||y.score-x.score):(y.score-x.score||y.cleared-x.cleared));next.boards[a.mode]=a.mode==='rush'?limitRushBoard(board):board.slice(0,20);return next;
 }

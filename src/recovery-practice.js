@@ -1,3 +1,4 @@
+import {createRunId} from './run-id.js';
 import {genericContext} from './editions/storage-context.js';
 // DEV-only, imported conditionally by main. Never accesses the real profile keys.
 import {createRun,startStage,finishStage,chooseUpgrade,keepPerks,stageFor,PERKS,finishRun} from './run.js';
@@ -8,7 +9,7 @@ export function practiceStorage(local,context=genericContext){return {getItem:k=
 export function resetPractice(local,context=genericContext){for(const k of [context.profileKey,'sidequest.best','sidequest.sound'])local?.removeItem(context.labPrefix+k);}
 export function recoveryPreview(preset,themeId){
  if(!['live','bass','swap','results'].includes(preset))return null;
- const run=createRun('endless',crypto.randomUUID(),themeId);run.buildId='recovery-practice';run.availablePerks=Object.keys(PERKS);
+ const run=createRun('endless',createRunId(),themeId);run.buildId='recovery-practice';run.availablePerks=Object.keys(PERKS);
  const clears=preset==='swap'?5:2;
  let summary;
  for(let i=0;i<clears;i++){const config=startStage(run),round=createRound(config.rules);while(round.pickups<config.stage.target)collect(round);round.remainingMs=0;round.ended=true;summary=finishStage(run,round);if(i<clears-1){if(i<4)chooseUpgrade(run,['boots','moth','noodle','bracelet'][i]);else keepPerks(run);}}

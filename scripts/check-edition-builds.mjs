@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import {assetsForEdition} from '../build/edition-assets.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const venueArt=['living-room-v1','fractal-forest-v1','grove-v1','amp-v1','pagoda-v1','village-v1','rabbit-hole-v1','secret-garden-v1','ikigai-mori-v1','villagio-v1'];
-const practiceOnly=/bonus-select|bonus-help-copy|amp-delivery-entry|clock-practice-entry|Timing and instrument practice|clock-lab-select|Tour integration lab|Collect invitation \(lab\)|Clear current stage \(lab\)|Souvenir unlocked:|Club tour complete!/;
+const practiceOnly=/bonus-select|bonus-help-copy|amp-delivery-entry|clock-practice-entry|control-practice-entry|control-stamina|Find your moves|Timing and instrument practice|clock-lab-select|Tour integration lab|Collect invitation \(lab\)|Clear current stage \(lab\)|Souvenir unlocked:|Club tour complete!/;
 function excludes(text,pattern,message){const match=text.match(pattern);assert.ok(!match,`${message}${match?`: ${match[0]}`:''}`);}
 async function files(dir){return (await Promise.all((await readdir(dir,{withFileTypes:true})).map(async e=>e.isDirectory()?files(resolve(dir,e.name)):resolve(dir,e.name)))).flat();}
 function build(id,out){return spawnSync(process.execPath,['node_modules/vite/bin/vite.js','build','--outDir',out,'--emptyOutDir'],{cwd:root,env:{...process.env,VITE_EDITION:id},encoding:'utf8'});}

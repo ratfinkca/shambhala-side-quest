@@ -35,6 +35,13 @@ function playing(){
  return profile;
 }
 
+test('SMF checkpoints retain stamina and accept older snapshots without it',()=>{
+ const profile=playing(),store=createTourStore(memory());profile.active.scene.round.stamina=31.25;
+ assert.equal(store.write(profile),true);assert.equal(store.read().active.scene.round.stamina,31.25);
+ delete profile.active.scene.round.stamina;assert.equal(store.write(profile),true);
+ for(const value of [-1,101,NaN,'50']){profile.active.scene.round.stamina=value;assert.equal(store.write(profile),false);}
+});
+
 test('SMF storage commits ownership and checkpoint together without reading or changing generic data',()=>{
  const mem=memory();mem.setItem('sidequest.profile.v1','generic profile bytes');mem.setItem('sidequest.best','999');
  const store=createTourStore(mem);assert.equal(store.read().progress.xp,0);

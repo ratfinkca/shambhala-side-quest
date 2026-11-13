@@ -1,0 +1,12 @@
+.control-settings{border:1px solid #c8cd9150;border-radius:15px;padding:14px;margin:22px 0;color:#f5ebca;min-width:0;text-align:left}
+.control-settings legend{font-family:'Lilita One',sans-serif;font-size:22px;padding:0 8px}
+.control-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:10px 0}
+.control-setting-row>span{font-size:14px;line-height:1.4}
+.control-setting-row select{font:inherit;font-size:14px;max-width:60%;min-height:44px;border:1px solid #c8cd9170;border-radius:9px;padding:6px 9px;background:#173b37;color:#fff0cf}
+.control-setting-row input[type=range]{width:45%;min-width:90px;min-height:44px;accent-color:#d6ee9d}
+.control-setting-row output{display:block;font-size:12px;font-variant-numeric:tabular-nums;color:#e9d49d}
+.control-settings .control-setting-hint{font-size:12px;line-height:1.5;color:#c6d5c6;margin:6px 0 16px}
+.control-settings .control-setting-feedback{font-size:12px;line-height:1.4;color:#f5d69b;margin:6px 0}
+.control-setting-feedback:empty{display:none}
+.control-setting-row input:disabled{opacity:.4}
+@media(max-width:400px){.control-settings{padding:10px}.control-setting-row{gap:8px}.control-setting-row select{max-width:62%;font-size:12px}.control-setting-row>span{font-size:12px}}
