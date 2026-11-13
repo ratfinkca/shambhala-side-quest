@@ -1,5 +1,7 @@
 import {validBoard} from '../../supabase/functions/_shared/smf-score.js';
+import {SMF_DEFAULT_RUSH_STAGE_ID} from '../../supabase/functions/_shared/smf-rules.js';
 import {createSubmission} from '../online/submission.js';
+export function smfRushFields(run){return run?.mode==='rush'?{rushStageId:run.rushStageId??SMF_DEFAULT_RUSH_STAGE_ID}:{};}
 export function resumeSmfSubmission(active,current){
  if(!active)return null;
  if(current?.runId===active.id)return current;
@@ -18,5 +20,5 @@ export function createSmfOnlineClient({baseUrl,fetch:send=globalThis.fetch,timeo
    return validate(data)?{ok:true,data}:{ok:false,code:'unavailable'};
   }catch{return {ok:false,code:'unavailable'};}finally{clearTimeout(timeout);}
  }
- return {startRun:p=>request('smf-run-ticket',p,d=>typeof d?.ticket==='string'&&/^[a-f0-9]{64}$/.test(d.ticket)&&Number.isFinite(Date.parse(d.expiresAt))),submitScore:p=>request('smf-submit-score',p,d=>d?.accepted===true),getBoard:p=>request('smf-leaderboard',p,d=>validBoard(d,p.mode,p.scoringVersion))};
+ return {startRun:p=>request('smf-run-ticket',p,d=>typeof d?.ticket==='string'&&/^[a-f0-9]{64}$/.test(d.ticket)&&Number.isFinite(Date.parse(d.expiresAt))),submitScore:p=>request('smf-submit-score',p,d=>d?.accepted===true),getBoard:p=>request('smf-leaderboard',p,d=>validBoard(d,p.mode,p.scoringVersion,p.rushStageId))};
 }

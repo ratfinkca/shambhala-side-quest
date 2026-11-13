@@ -36,7 +36,9 @@ export function createPuttingView(scene,practice,{onShot,onAim=()=>{}}){
   const hole=PUTTING_HOLES[state.holeIndex],key=close?state.holeIndex:'room';
   if(framing!==key){
    framing=key;cancelAim();
-   if(close)camera.setZoom(2.35).centerOn(hole.center.x,hole.center.y);
+   if(scene.playerCamera){
+    scene.playerCamera.focus(close?{...hole.center,width:hole.radiusX*2+40,height:hole.radiusY*2+40}:null);
+   }else if(close)camera.setZoom(2.35).centerOn(hole.center.x,hole.center.y);
    else camera.setZoom(1).centerOn(480,320);
   }
   scene.dancer.setVisible(!close);
@@ -73,7 +75,8 @@ export function createPuttingView(scene,practice,{onShot,onAim=()=>{}}){
  return {update,cancelAim,setButtonAim(vector){buttonAim=vector;},destroy(){
   cancelAim();
   for(const [name,fn] of [['pointerdown',down],['pointermove',move],['pointerup',up],['pointercancel',cancelled],['lostpointercapture',cancelled]])canvas.removeEventListener(name,fn);
-  ink.destroy();reward.destroy();camera.setZoom(1).centerOn(480,320);
+  ink.destroy();reward.destroy();
+  if(scene.playerCamera)scene.playerCamera.focus(null);else camera.setZoom(1).centerOn(480,320);
   scene.dancer.setVisible(true);scene.crowd.people.forEach(p=>p.node.setVisible(true));
  }};
 }

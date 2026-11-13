@@ -1,3 +1,35 @@
+import {createRunId} from '../run-id.js';
 import {validSmfEvents} from '../../supabase/functions/_shared/smf-playtest.js';
 export function readSmfTelemetryConfig(env={}){try{const endpoint=new URL(env.VITE_SMF_PLAYTEST_URL),notice=new URL(env.VITE_SMF_PLAYTEST_NOTICE_URL);const secure=u=>u.protocol==='https:'||(env.DEV===true&&u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname));if(env.VITE_SMF_PLAYTEST_ENABLED!=='true'||!secure(endpoint)||!secure(notice)||endpoint.username||endpoint.password||notice.username||notice.password)return {enabled:false};return {enabled:true,endpoint:endpoint.href,notice:notice.href,buildId:env.VITE_BUILD_ID||'dev'};}catch{return {enabled:false};}}
-export function createSmfTelemetry({config,consent,send,uuid=()=>crypto.randomUUID()}){let queue=[],guest=null,controller=null,generation=0,pending=false;const enabled=()=>config.enabled&&consent();return {record({mode,type='run',...fields}){if(!enabled())return false;guest??=uuid();const event={editionId:'smf',scoringVersion:'smf-v1',eventId:uuid(),guestId:guest,buildId:config.buildId||'dev',mode,type,...fields};if(!validSmfEvents([event]))return false;queue.push(event);queue=queue.slice(-100);return true;},stop(){generation++;queue=[];guest=null;controller?.abort();},size:()=>queue.length,async flush(){if(!enabled()){this.stop();return;}if(pending||!queue.length)return;pending=true;const batch=queue.splice(0,20),token=generation;controller=new AbortController();try{const response=send?await send(batch,controller.signal):await fetch(config.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(batch),signal:AbortSignal.any([controller.signal,AbortSignal.timeout(5000)]),credentials:'omit'});const ok=typeof response==='boolean'?response:response.ok&&(await response.json()).accepted?.length===batch.length;if(!ok&&token===generation&&enabled())queue=[...batch,...queue].slice(-100);}catch{if(token===generation&&enabled())queue=[...batch,...queue].slice(-100);}finally{pending=false;controller=null;}}};}
+export function createSmfTelemetry({config,consent,send,getMovementMode,uuid=()=>createRunId()}){
+ let queue=[],guest=null,controller=null,generation=0,pending=false;
+ const enabled=()=>config.enabled&&consent();
+ return {
+  record({mode,type='run',...fields}){
+   if(!enabled())return false;
+   // Snapshot the selected setting only after consent. It does not describe
+   // gestures, time spent, switches, or the device used to move the player.
+   if(['run','stage'].includes(type)&&!Object.hasOwn(fields,'movementMode')&&typeof getMovementMode==='function'){
+    const movementMode=getMovementMode();
+    if(movementMode!==undefined)fields.movementMode=movementMode;
+   }
+   guest??=uuid();
+   const event={editionId:'smf',scoringVersion:'smf-v1',eventId:uuid(),guestId:guest,buildId:config.buildId||'dev',mode,type,...fields};
+   if(!validSmfEvents([event]))return false;
+   queue.push(event);queue=queue.slice(-100);return true;
+  },
+  stop(){generation++;queue=[];guest=null;controller?.abort();},
+  size:()=>queue.length,
+  async flush(){
+   if(!enabled()){this.stop();return;}
+   if(pending||!queue.length)return;
+   pending=true;const batch=queue.splice(0,20),token=generation;controller=new AbortController();
+   try{
+    const response=send?await send(batch,controller.signal):await fetch(config.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(batch),signal:AbortSignal.any([controller.signal,AbortSignal.timeout(5000)]),credentials:'omit'});
+    const ok=typeof response==='boolean'?response:response.ok&&(await response.json()).accepted?.length===batch.length;
+    if(!ok&&token===generation&&enabled())queue=[...batch,...queue].slice(-100);
+   }catch{if(token===generation&&enabled())queue=[...batch,...queue].slice(-100);}
+   finally{pending=false;controller=null;}
+  },
+ };
+}

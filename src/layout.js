@@ -2,7 +2,7 @@ export function fitGameWidth(width, height, chrome) {
   return Math.max(0, Math.min(width, (height - chrome - 2) * 1.5 + 2));
 }
 
-export function setupResponsiveLayout(game) {
+export function setupResponsiveLayout(game,{getScene=()=>null}={}) {
   const shell = document.querySelector('.shell');
   const frame = document.querySelector('.game-frame');
   const outside = ['.masthead', '.intro', '.page-footer'].map(s => document.querySelector(s));
@@ -17,7 +17,11 @@ export function setupResponsiveLayout(game) {
     const chrome = inside.reduce((sum, el) => sum + el.getBoundingClientRect().height, 0);
     const menu=frame.dataset.menu!=='playing';
     frame.style.height=menu?`${Math.max(180,height)}px`:'';
-    frame.style.width = `${menu?width:fitGameWidth(width, height, chrome)}px`;
+    frame.style.width = `${width}px`;
+    const arena=frame.querySelector('.arena-wrap');
+    arena.style.height=`${Math.max(120,height-chrome-2)}px`;
+    arena.style.aspectRatio='auto';
+    resizeGameViewport(game,arena.clientWidth,arena.clientHeight,getScene());
     game.scale.refresh();
   };
   const schedule = () => { if (!pending) { pending = true; requestAnimationFrame(resize); } };
@@ -29,3 +33,4 @@ export function setupResponsiveLayout(game) {
   schedule();
   return schedule;
 }
+import {resizeGameViewport} from './game-viewport.js';

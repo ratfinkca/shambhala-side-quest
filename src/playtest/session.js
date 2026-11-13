@@ -1,6 +1,7 @@
+import {createRunId} from '../run-id.js';
 import {createRunSummary,createInputTracker} from './summary.js';
 import {createPlaytestTransport} from './transport.js';
-export function createPlaytestSession({config,consent,send,uuid=()=>crypto.randomUUID(),width=()=>innerWidth}){
+export function createPlaytestSession({config,consent,send,uuid=()=>createRunId(),width=()=>innerWidth}){
  let sessionId=null,run=null,summary=null,input=createInputTracker(),ended=false,lastFinished=-1,lastChoice=-1;
  let recovered=false;
  const enabled=()=>!recovered&&!!config.enabled&&consent.enabled();

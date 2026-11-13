@@ -49,3 +49,10 @@ test('malformed empty history objects and inherited wardrobe reward categories c
 });
 
 test('interrupted exit confirmation returns to the original between-stage perk choice',()=>{assert.equal(recoveryScreen({name:'confirmExit',returnTo:'upgrade'},{status:'upgrade'}),'upgrade');});
+
+test('stamina survives recovery while legacy checkpoints and invalid resource values are handled safely',()=>{
+ const f=recoveryFixture();f.scene.round.stamina=37.5;
+ const checkpoint=makeRecovery(f);assert.equal(readRecovery(checkpoint).value.scene.round.stamina,37.5);
+ delete checkpoint.scene.round.stamina;assert.equal(readRecovery(checkpoint).ok,true);
+ for(const value of [-1,101,NaN,'50']){checkpoint.scene.round.stamina=value;assert.equal(readRecovery(checkpoint).ok,false);}
+});

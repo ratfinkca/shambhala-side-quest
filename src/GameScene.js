@@ -13,6 +13,7 @@ import {MysteryRenderer} from './MysteryRenderer.js';
 import {collectMystery,findCandySpawn,mysteryDirection,mysteryTarget,mysterySpeed} from './mystery.js';
 import {bassOffset} from './bass-motion.js';
 import {drawPlayerBass} from './bass-feedback.js';
+import {createGameControls,normalizeMovementPreferences} from './game-controls.js';
 
 const W = 960, H = 640;
 const COLORS = [0xcff598, 0x93ffd6, 0xfaa5d6, 0xc6b0ff];
@@ -47,14 +48,26 @@ export class GameScene extends Phaser.Scene {
     this.target = null;
     this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
     this.input.keyboard.removeCapture(['W', 'A', 'S', 'D', 'UP', 'DOWN', 'LEFT', 'RIGHT']);
-    const point = pointer => {
-      if (!this.running || pointer.event?.target !== this.game.canvas || pointer.x < 0 || pointer.y < 0 || pointer.x > W || pointer.y > H) return;
-      this.target = mysteryTarget(this.round.mystery,this.dancer,{x:pointer.x,y:pointer.y},{playBounds:this.stage.playBounds});
-      this.game.events.emit('round:input',{kind:pointer.wasTouch?'touch':'mouse',runId:this.round.runId});
-      document.querySelector('#game').focus({ preventScroll: true });
-    };
-    this.input.on('pointerdown', point);
+    this.input.on('pointerdown', this.pointTo, this);
+    if(this.controlPreferences)this.setControlPreferences(this.controlPreferences);
+    const disposeControls=()=>{this.gameControls?.dispose();this.gameControls=null;this.playerCamera?.dispose();this.playerCamera=null;};
+    this.events?.once('shutdown',disposeControls);
+    this.events?.once('destroy',disposeControls);
     this.game.events.emit('forest:ready', this);
+  }
+  setControlPreferences(value) {
+    this.controlPreferences=normalizeMovementPreferences(value);
+    if(!this.gameControls&&this.keys&&this.game.canvas?.ownerDocument)this.gameControls=createGameControls(this);
+    this.gameControls?.setPreferences(this.controlPreferences);
+    this.target=null;
+  }
+  pointTo(pointer) {
+    if (!this.running || this.controlPreferences&&this.controlPreferences.mode!=='tap' || pointer.event?.target !== this.game.canvas || pointer.x < 0 || pointer.y < 0 || pointer.x > (this.scale?.width??W) || pointer.y > (this.scale?.height??H)) return;
+    const point=this.cameras?.main?.getWorldPoint?.(pointer.x,pointer.y)??{x:pointer.x,y:pointer.y};
+    if(point.x<0||point.y<0||point.x>W||point.y>H)return;
+    this.target = mysteryTarget(this.round.mystery,this.dancer,point,{playBounds:this.stage.playBounds});
+    this.game.events.emit('round:input',{kind:pointer.wasTouch?'touch':'mouse',runId:this.round.runId});
+    document.querySelector('#game').focus({ preventScroll: true });
   }
   makeSpark(i) {
     const color = COLORS[i % COLORS.length];
@@ -73,22 +86,25 @@ export class GameScene extends Phaser.Scene {
     if(this.dancer)avoid.push({x:this.dancer.x,y:this.dancer.y,radius:80});
     const pos=findSpawn(this.stage,Math.random,avoid,spark.preferBass);spark.setPosition(pos.x,pos.y);spark.art.setPosition(0,0);
   }
-  clearInput() { this.target = null; this.input.keyboard.resetKeys(); }
-  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null,timingId='generic-60-v1'} = {}) {
+  clearInput() { this.target = null; this.gameControls?.cancel(); this.input.keyboard.resetKeys(); }
+  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null,timingId='generic-60-v1',stamina=100} = {}) {
     getTiming(timingId);
     this.stage = stage;
     this.background.show(stage); this.fireflies = this.background.fireflies;
     this.crowd.configure(stage); setOutfit(this.avatar, outfit);
     this.round = createRound(rules,timingId); this.round.runId=runId; this.round.bass=createBass(bassChargeMs); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
+    if(this.gameControls)this.round.stamina=Math.max(0,Math.min(100,stamina));
     this.mysteryView.reset(this.round.mystery.wrapper);
     this.avatar.setPosition(0,0);this.bassFeedback.clear();
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
+    this.playerCamera?.reset();
     this.crowd.reset();
     this.flowSlot = -1; this.flowPickup.setVisible(false);
     this.phase = 'cruise';
     this.dropWash.setAlpha(0);
     this.sparks.forEach(s=>this.placeSpark(s));
     this.running = true; this.lastTrail = 0;
+    this.gameControls?.refresh();
     this.game.events.emit('round:update', this.round);
   }
   captureRecovery() {
@@ -103,6 +119,7 @@ export class GameScene extends Phaser.Scene {
     this.round={...structuredClone(value.round),rules};if(this.round.sincePickupMs===null)this.round.sincePickupMs=Infinity;
     const elapsed=elapsedMs(this.round),cycle=cycleAt(elapsed,timing);this.phase=cycle.phase;
     this.dancer.setPosition(value.player.x,value.player.y);this.dancer.setRotation(0);this.avatar.setPosition(0,0);
+    this.playerCamera?.reset();
     this.sparks.forEach((s,i)=>{s.setPosition(value.sparks[i].x,value.sparks[i].y);s.art?.setPosition(0,0);});
     this.mysteryView.reset(this.round.mystery.wrapper);this.mysteryView.placed=value.candy.placed;this.mysteryView.pickup.setPosition(value.candy.x,value.candy.y);this.mysteryView.update(this.round.mystery,this.reducedMotion);
     this.crowd.restoreRecovery(value.crowd,elapsed,timing);
@@ -134,8 +151,33 @@ export class GameScene extends Phaser.Scene {
       this.tweens.add({targets:p,x:x+Math.cos(angle)*distance,y:y+Math.sin(angle)*distance,alpha:0,scale:0,duration:celebrate?800:450,onComplete:()=>p.destroy()});
     }
   }
+  // Practice scenes may supply a different controller without replacing the
+  // shared clock, pickups, crowd encounters, hazards or stage rendering.
+  movePlayer(delta) {
+    const movementDelta = Math.min(delta, 50) * movementFactor(this.dancer,this.stage.mud,this.round.slowedMs,this.stage.obstacles,bassMovementFactor(this.round.bass,bassFactor(this.dancer,this.stage.obstacles)));
+    const speed=mysterySpeed(this.round.mystery)*(this.round.surferMs>0?1.25:1);
+    const k=this.keys;
+    let direction={x:Number(k.D.isDown||k.RIGHT.isDown)-Number(k.A.isDown||k.LEFT.isDown),y:Number(k.S.isDown||k.DOWN.isDown)-Number(k.W.isDown||k.UP.isDown)};
+    if(this.gameControls){
+      if(direction.x||direction.y)this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});
+      return this.gameControls.move(delta,direction);
+    }
+    if(direction.x||direction.y) {
+      this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});
+      this.target=null;
+      direction=mysteryDirection(this.round.mystery,direction);
+      moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
+    } else if(this.target) {
+      direction={x:this.target.x-this.dancer.x,y:this.target.y-this.dancer.y};
+      const distance=Math.hypot(direction.x,direction.y),step=Math.min(movementDelta,distance/speed*1000);
+      moveInArena(this.dancer,direction,step,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
+      if(Math.hypot(this.target.x-this.dancer.x,this.target.y-this.dancer.y)<1)this.target=null;
+    }
+    return direction;
+  }
   update(time, delta) {
     this.reducedMotion=this.motionQuery?.matches??this.reducedMotion;
+    this.playerCamera?.update(delta);
     if (!this.reducedMotion && (this.running || this.menuAmbient)) {
       this.sparks.forEach(s=>s.setScale(1+Math.sin(time*.003+s.phase)*.12));
       this.fireflies.forEach((f,i)=>f.setAlpha(.2+Math.sin(time*.001+i)*.15));
@@ -154,21 +196,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.background.update(elapsedMs(this.round),cycle.phase,this.reducedMotion,roundTiming(this.round));
     this.dropWash.setAlpha(this.reducedMotion ? 0 : cycle.phase === 'drop' ? .045 : 0);
-    const movementDelta = Math.min(delta, 50) * movementFactor(this.dancer,this.stage.mud,this.round.slowedMs,this.stage.obstacles,bassMovementFactor(this.round.bass,bassFactor(this.dancer,this.stage.obstacles)));
-    const speed=mysterySpeed(this.round.mystery)*(this.round.surferMs>0?1.25:1);
-    const k=this.keys;
-    let direction={x:Number(k.D.isDown||k.RIGHT.isDown)-Number(k.A.isDown||k.LEFT.isDown),y:Number(k.S.isDown||k.DOWN.isDown)-Number(k.W.isDown||k.UP.isDown)};
-    if(direction.x||direction.y) {
-      this.game.events.emit('round:input',{kind:'keyboard',runId:this.round.runId});
-      this.target=null;
-      direction=mysteryDirection(this.round.mystery,direction);
-      moveInArena(this.dancer,direction,movementDelta,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
-    } else if(this.target) {
-      direction={x:this.target.x-this.dancer.x,y:this.target.y-this.dancer.y};
-      const distance=Math.hypot(direction.x,direction.y),step=Math.min(movementDelta,distance/speed*1000);
-      moveInArena(this.dancer,direction,step,{width:W,height:H,playBounds:this.stage.playBounds,obstacles:this.stage.obstacles,speed});
-      if(Math.hypot(this.target.x-this.dancer.x,this.target.y-this.dancer.y)<1)this.target=null;
-    }
+    const direction=this.movePlayer(delta);
     if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
     if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
     animateAvatar(this.avatar,elapsedMs(this.round),this.reducedMotion,cycle.phase==='drop');

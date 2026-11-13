@@ -51,6 +51,16 @@ Private moderation: inspect reviewed entries using owner SQL, then set `hidden=t
 
 ## Local checks and release
 
+### SMF Quick Rush venue rollout (prepared locally 2026-11-13)
+
+SMF services are separate from the generic arcade. Quick Rush now selects one of six main venues and preserves its authored musical duration (about 55–69 seconds). Each venue has its own local best and public board. `smf-v1` remains valid: previous Rush data belongs to Pagoda, whose rules are unchanged.
+
+For this release, apply `202611130001_smf_rush_venues.sql` **before** deploying `smf-run-ticket`, `smf-submit-score`, `smf-leaderboard` and `smf-playtest`; then publish the frontend. This is a preparation note, not evidence of hosted deployment. The migration adds and backfills `rush_stage_id`, binds tickets to venues, and preserves old RPC signatures and original receipt JSON/digests for retry compatibility. New RPC overloads remain service-role only; private tables retain RLS and retention policies.
+
+New Rush requests carry `rushStageId` from the selected run. Explicit-venue board responses include that field. Legacy requests without it still resolve to Pagoda and receive the old response shape. Other modes reject venue fields. SMF stage/run playtest events optionally include selected venue and `movementMode` (`tap`, `swipe`, `stick`); consent remains opt-in, and rehearsals send neither scores nor analytics. Control style is the setting at result time, not a recording of gestures or time spent in each mode.
+
+Local regression coverage exercises the real additive migration, legacy accepted retries after expiry, six independent boards, wrong-venue tickets/receipts, permissions, cache isolation, scene recovery, and local saved scores. At rollout, verify endpoints with deliberately nonexistent tickets and compare deployed function source; do not create fake production scores or telemetry.
+
 Node 24: `npm ci`, `npm test`, `npm run build`, `git diff --check`. Tests use actual migrations with PGlite; full CI uses a disposable Supabase/Docker stack:
 
 ```

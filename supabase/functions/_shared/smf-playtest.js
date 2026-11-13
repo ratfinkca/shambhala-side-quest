@@ -1,4 +1,4 @@
-import {UUID,MODES} from './smf-score.js';
+import {UUID,MODES,validRushSelection} from './smf-score.js';
 import {smfRuleStage} from './smf-rules.js';
 const exact=(o,keys)=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).length===keys.length&&keys.every(k=>Object.hasOwn(o,k));
 const uint=n=>Number.isSafeInteger(n)&&n>=0;
@@ -7,8 +7,16 @@ const perks=['boots','noodle','moth','bracelet','surfer','battery','encore','swe
 export function validSmfEvents(events){return Array.isArray(events)&&events.length>0&&events.length<=20&&events.every(e=>{
  const common=['editionId','scoringVersion','eventId','guestId','buildId','mode','type'];
  if(!e||e.editionId!=='smf'||e.scoringVersion!=='smf-v1'||typeof e.eventId!=='string'||!UUID.test(e.eventId)||typeof e.guestId!=='string'||!UUID.test(e.guestId)||typeof e.buildId!=='string'||!/^[\w.-]{1,100}$/.test(e.buildId)||!MODES.includes(e.mode))return false;
+ if(Object.hasOwn(e,'movementMode')){
+  if(!['run','stage'].includes(e.type)||!['tap','swipe','stick'].includes(e.movementMode))return false;
+  common.push('movementMode');
+ }
+ if(Object.hasOwn(e,'rushStageId')){
+  if(!['run','stage'].includes(e.type)||!validRushSelection(e))return false;
+  common.push('rushStageId');
+ }
  if(e.type==='run')return exact(e,[...common,'outcome','stagesCleared','totalScore'])&&['complete','failed','banked','exit'].includes(e.outcome)&&uint(e.stagesCleared)&&e.stagesCleared<=1440&&uint(e.totalScore);
- if(e.type==='stage')return exact(e,[...common,'stageIndex','stageId','pickups','closePasses','bassUses'])&&uint(e.stageIndex)&&e.stageIndex<1440&&stages.includes(e.stageId)&&(e.mode==='endless'||e.stageIndex<(e.mode==='rush'?1:6))&&smfRuleStage(e.mode,e.stageIndex).id===e.stageId&&[e.pickups,e.closePasses,e.bassUses].every(n=>uint(n)&&n<=100000);
+ if(e.type==='stage')return exact(e,[...common,'stageIndex','stageId','pickups','closePasses','bassUses'])&&uint(e.stageIndex)&&e.stageIndex<1440&&stages.includes(e.stageId)&&(e.mode==='endless'||e.stageIndex<(e.mode==='rush'?1:6))&&smfRuleStage(e.mode,e.stageIndex,e.rushStageId).id===e.stageId&&[e.pickups,e.closePasses,e.bassUses].every(n=>uint(n)&&n<=100000);
  if(e.type==='perk')return exact(e,[...common,'stageIndex','action','perk','replaced'])&&uint(e.stageIndex)&&e.stageIndex<1440&&['keep','take','swap'].includes(e.action)&&(e.perk===null||perks.includes(e.perk))&&(e.replaced===null||perks.includes(e.replaced));
  return false;
 });}

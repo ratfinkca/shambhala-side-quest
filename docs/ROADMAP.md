@@ -1,5 +1,7 @@
 # Development roadmap
 
+**Current release candidate — 2026-11-13:** fullscreen SMF play, three mobile control styles and six-venue Quick Rush are owner-approved for publication. 710 tests and both edition builds pass; the backend migration/functions have been deployed first. [Release verification](superpowers/fullscreen-mobile-rush-release-validation.md) and its release PR track hosted checks, CI, merge, Pages and public acceptance. Older status paragraphs below describe their historical milestone snapshots. Next: an isolated crowd-collision/emote feel preview, with adjustable contact size and strictness; no production scoring change is included in this release.
+
 Updated 2026-11-10. The current forward plan is the [two-edition roadmap](EDITION-ROADMAP.md): shared engine, generic game and a polished SMF edition with six main venues and five optional bonus spaces. Its M0–M6 labels are a new program; the M1–M4 sections below retain the completed Endless program history. Build/preview one milestone at a time, then release only when authorized.
 
 ## Completed foundation

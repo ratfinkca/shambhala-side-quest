@@ -1,5 +1,6 @@
+import {createRunId} from '../run-id.js';
 // Identity belongs to optional analytics only; scores never consume it.
-export function createConsent({storage,uuid=()=>crypto.randomUUID()}) {
+export function createConsent({storage,uuid=()=>createRunId()}) {
   return {
     enabled:()=>storage.profile.playtestConsent==='accepted',
     identity:()=>storage.profile.playtestConsent==='accepted'?storage.profile.playtestIdentity:null,
