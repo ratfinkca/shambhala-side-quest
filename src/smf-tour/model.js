@@ -18,6 +18,7 @@ export const ROUTE=Object.freeze([
 
 export const BONUSES=Object.freeze([
  {id:'rabbit-hole',parentId:'smf-living-room',name:'Rabbit Hole',reward:{id:'rabbit-ears',name:'Rabbit Ears'},kind:'visit'},
+ {id:'prism-party',parentId:'smf-fractal',name:'Prism Party',reward:{id:'prism-crown',name:'Prism Crown'},kind:'challenge'},
  {id:'secret-garden',parentId:'smf-grove',name:'Secret Garden',reward:{id:'glow-blossom',name:'Glow Blossom'},kind:'visit'},
  {id:'amp-backstage',parentId:'smf-amp',name:'AMP backstage',reward:{id:'cheese-totem',name:'Cheese Totem'},kind:'challenge'},
  {id:'ikigai-mori',parentId:'smf-pagoda',name:'Ikigai Mori',reward:{id:'lantern-totem',name:'Lantern Totem'},kind:'visit'},

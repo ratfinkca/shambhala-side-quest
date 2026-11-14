@@ -24,7 +24,7 @@ test('missing runtime handlers fail explicitly instead of booting the other edit
  assert.deepEqual(calls,[]);
  assert.equal(await startEdition({DEV:true,VITE_EDITION:'smf'},{bonus:'invalid',tour:()=> 'tour'},{bonusPractice:true}),'tour');
 });
-test('legacy catalogue renderer keeps eleven tiles but conceals undiscovered stage identities',()=>{
+test('legacy catalogue renderer keeps twelve tiles but conceals undiscovered stage identities',()=>{
  const classes=new Set(),root={innerHTML:'',classList:{add:v=>classes.add(v),remove:v=>classes.delete(v)}},dispose=renderScaffold(root,getEdition('smf'));
  assert.ok(classes.has('edition-scaffold'));
  assert.match(root.innerHTML,/Content preview — gameplay coming next/);
@@ -32,9 +32,9 @@ test('legacy catalogue renderer keeps eleven tiles but conceals undiscovered sta
   if(c.kind==='main')assert.ok(root.innerHTML.includes(`data-stage-id="${c.id}"`));
   else{assert.ok(!root.innerHTML.includes(c.name));assert.ok(!root.innerHTML.includes(c.id));}
  }
- assert.equal((root.innerHTML.match(/<article class="stage-preview/g)||[]).length,11);
- assert.equal((root.innerHTML.match(/aria-label="Undiscovered stage"/g)||[]).length,5);
- assert.equal((root.innerHTML.match(/Somewhere secret/g)||[]).length,5);
+ assert.equal((root.innerHTML.match(/<article class="stage-preview/g)||[]).length,12);
+ assert.equal((root.innerHTML.match(/aria-label="Undiscovered stage"/g)||[]).length,6);
+ assert.equal((root.innerHTML.match(/Somewhere secret/g)||[]).length,6);
  assert.doesNotMatch(root.innerHTML,/data-action=|<canvas|<button|Share playtest data|Post score/);
  dispose();assert.equal(root.innerHTML,'');assert.equal(classes.size,0);
  const generic=renderTitle('forest-freakout','unknown',false);assert.match(generic,/Three stages/);assert.match(generic,/Festival Side Quest/);
@@ -45,5 +45,5 @@ test('only discovered secrets reveal their name and parent while others remain c
  renderScaffold(root,edition,{discoveredStageIds:['smf-rabbit-hole','not-a-stage']});
  assert.match(root.innerHTML,/Rabbit Hole/);assert.match(root.innerHTML,/Discovered from The Living Room/);
  assert.doesNotMatch(root.innerHTML,/Secret Garden|Ikigai Mori|Villagio|AMP backstage|smf-secret-garden|smf-ikigai-mori|smf-villagio|smf-amp-backstage/);
- assert.equal((root.innerHTML.match(/aria-label="Undiscovered stage"/g)||[]).length,4);
+ assert.equal((root.innerHTML.match(/aria-label="Undiscovered stage"/g)||[]).length,5);
 });

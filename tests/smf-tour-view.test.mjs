@@ -20,8 +20,8 @@ const cleared=index=>{
 
 test('unvisited secret names and rewards are absent from catalogue and wardrobe HTML',()=>{
  const p=createTourProfile(),catalogue=catalogueHTML(p),wardrobe=wardrobeHTML(p);
- assert.equal((catalogue.match(/A secret awaits/g)||[]).length,5);
- assert.equal((wardrobe.match(/Sealed keepsake/g)||[]).length,5);
+ assert.equal((catalogue.match(/A secret awaits/g)||[]).length,6);
+ assert.equal((wardrobe.match(/Sealed keepsake/g)||[]).length,6);
  for(const bonus of BONUSES){
   assert.ok(!catalogue.includes(bonus.name));assert.ok(!catalogue.includes(`data-id="${bonus.id}"`));
   assert.ok(!wardrobe.includes(bonus.name));assert.ok(!wardrobe.includes(bonus.reward.name));assert.ok(!wardrobe.includes(`data-id="${bonus.reward.id}"`));

@@ -40,8 +40,13 @@ export function bonusPracticeRequested(env,search){
  const edition=editionIdFromEnv(env),params=new URLSearchParams(search);
  return env.DEV===true&&edition==='smf'&&params.has('rehearsal')&&['rabbit-hole','secret-garden','ikigai-mori','villagio'].includes(params.get('bonus'));
 }
-export async function startEdition(env,actions={}, {collisionPractice=false,clockPractice=false,venuePractice=false,backstagePractice=false,bonusPractice=false,controlPractice=false}={}){
+export function prismPracticeRequested(env,search){
+ const params=new URLSearchParams(search);
+ return env.DEV===true&&editionIdFromEnv(env)==='smf'&&params.has('rehearsal')&&params.has('prism');
+}
+export async function startEdition(env,actions={}, {prismPractice=false,collisionPractice=false,clockPractice=false,venuePractice=false,backstagePractice=false,bonusPractice=false,controlPractice=false}={}){
  const edition=getEdition(editionIdFromEnv(env));
+ if(env.DEV===true&&edition.id==='smf'&&prismPractice&&typeof actions?.prism==='function')return actions.prism(edition);
  if(env.DEV===true&&edition.id==='smf'&&collisionPractice&&typeof actions?.collision==='function')return actions.collision(edition);
  if(env.DEV===true&&edition.id==='smf'&&controlPractice&&typeof actions?.controls==='function')return actions.controls(edition);
  if(env.DEV===true&&edition.id==='smf'&&bonusPractice&&typeof actions?.bonus==='function')return actions.bonus(edition);

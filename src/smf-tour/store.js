@@ -14,6 +14,7 @@ import {isChallenge,normalizeChallenge,CHALLENGES} from '../../supabase/function
 import {createEncounter} from '../festival.js';
 import {isRushStageId,resolveRushStageId,normalizeRushRotation,lastRushStageId,limitRushBoard} from './rush-rotation.js';
 import {ORIGINAL_SMF_SCORING_VERSION,resolveSmfScoringVersion,limitSeasonBoard} from './seasons.js';
+import {pointInPrismWalkable} from '../prism-practice/model.js';
 
 const LIMIT=2*1024*1024;
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -63,6 +64,18 @@ function summaryOK(s,active,discoveries){
  if(s===null)return true;
  return allowed(s,['stageId','qualified','score','xp','bonusId','bonusOffered','target','pickups','totalScore'])&&s.stageId===mainStageId(active)&&bool(s.qualified)&&['score','xp','target','pickups','totalScore'].every(key=>integer(s[key]))&&s.target===stageForRun(active).target&&s.qualified===(active.mode==='rush'||s.pickups>=s.target)&&s.totalScore===active.score&&bool(s.bonusOffered)&&(!s.bonusOffered||s.bonusId!==null)&&(s.bonusId===null||s.qualified&&discoveries.includes(s.bonusId)&&BONUSES.some(b=>b.id===s.bonusId&&b.parentId===s.stageId));
 }
+function prismBonusOK(b,content){
+ if(b.scene===null)return b.status==='playing'||!b.completed&&!b.won&&b.rewardId===null&&!b.newReward;
+ const s=b.activity.state,round=b.scene.round;
+ if(!pointInPrismWalkable(b.scene.player)||round.ended)return false;
+ const clock=s.phase==='approach'?s.elapsedMs:s.partyMs+s.celebrationMs;
+ const duration=getTiming(content.timingId).durationMs,remaining=duration-clock%duration;
+ if(Math.abs(round.remainingMs-remaining)>1e-6)return false;
+ if(b.status==='playing')return !['ready','complete','ended'].includes(b.activity.status);
+ // Completion, the permanent prize and its checkpoint are one atomic record.
+ // A paused early exit is recoverable, but cannot claim the challenge's crown.
+ return b.completed===s.complete&&b.won===s.complete&&b.rewardId===(s.complete?'prism-crown':null)&&(s.complete||!b.newReward);
+}
 function bonusOK(b,active,discoveries){
  if(b===null)return true;
  const config=BONUSES.find(item=>item.id===b?.id);
@@ -74,6 +87,7 @@ function bonusOK(b,active,discoveries){
  const content=bonusConfig(b.id);
  if((b.activity===null)!==(b.scene===null))return false;
  if(b.activity!==null&&(!object(b.activity)||!boundedJSON(b.activity)||!bonusController(content).restore(b.activity)))return false;
+ if(b.id==='prism-party'&&!prismBonusOK(b,content))return false;
  return b.scene===null||sceneOK(b.scene,content.stage,b.visitId);
 }
 function submissionOK(sub,run){

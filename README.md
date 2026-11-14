@@ -154,6 +154,10 @@ Stage awards and checkpoints persist together. Local score saving stays separate
 
 ## Local edition previews
 
+**Fractal Prism Party:** Festival and Endless now offer a hidden pyramid detour after clearing Fractal with a fresh invitation. Dance in each lit section to charge three faces and earn the permanent Prism Crown. Visits have no countdown, preserve partial charge when paused/reloaded, and leave main-run scores/perks unchanged.
+
+**Isolated feel preview:** run `VITE_EDITION=smf npm run dev -- --port 5202 --strictPort` and open [Prism Party](http://127.0.0.1:5202/?rehearsal&prism). Walk up the ramp, keep moving in the lit section and charge all three pyramid faces. Tap, swipe and thumbstick, three crowd densities, portrait/landscape framing, audio sliders and gentler lights are available. This isolated development preview has no saves or online services; its extra lab controls are excluded from production. [Rules and playtest notes](docs/superpowers/plans/2026-11-13-fractal-prism-preview.md).
+
 The default build/development edition is now `generic` (working title Festival Side Quest). `VITE_EDITION=smf npm run dev -- --port 5191 --strictPort` opens the non-playable nine-stage SMF catalogue. Unknown configured editions fail. Use `npm run build:generic` / `npm run build:smf` for separate `dist/generic` / `dist/smf` artifacts, and `npm run check:editions` for build/asset checks. Neither command publishes. Edition verification uses temporary builds and preserves the default `dist/`; rebuild the default artifact before any later default Pages upload after using the explicit nested output commands. The existing Pages workflow is unchanged; a public rebrand/release remains a later explicit decision.
 
 Generic retains existing same-origin saves/consent/recovery; SMF uses a separate context; its normal catalogue initializes no game or online services. The isolated DEV clock lab described below is the only playable SMF entry in this slice. [M0 preview validation](docs/superpowers/edition-foundation-preview-validation.md) records tested flows and device/network observation limits.

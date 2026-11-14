@@ -36,6 +36,7 @@ import {requirement} from '../progression.js';
 import {createAudio} from '../audio.js';
 import {createFinishGate,finishHTML} from './finish.js';
 import {createTourStatus} from './status.js';
+import {prismHUD} from '../prism-practice/hud.js';
 import {smfPreviewVoices} from '../editions/smf-music.js';
 import {bonusPreviewVoices} from '../bonus-practice/music.js';
 import {createSMFInstrumentRack} from '../editions/smf-instruments.js';
@@ -76,7 +77,7 @@ root.dataset.phonePreview=String(phonePreview);root.dataset.hand=controls.value.
 let activeTheme=applyTheme(profile.active?.themeId||resolveTheme(profile.themePreference==='surprise'?undefined:profile.themePreference));
 const $=s=>root.querySelector(s),text=(s,t)=>{const n=$(s);if(n&&n.textContent!==String(t))n.textContent=String(t);};
 const status=createTourStatus((message,{kind}={})=>{text('#tour-status',message);$('#tour-status').dataset.kind=kind||'notice';});
-const statusClock=()=>scene?.config?.activity==='putt'?scene.practice.state.elapsedMs:undefined;
+const statusClock=()=>['putt','prism'].includes(scene?.config?.activity)?scene.practice.state.elapsedMs:undefined;
 function announce(message,{kind}={}){status.show(message,{round:scene?.round,kind,clockMs:statusClock()});}
 const arcadeConfig=lab?{}:readSmfArcadeConfig(import.meta.env),telemetryConfig=lab?{enabled:false}:readSmfTelemetryConfig(import.meta.env);
 const arcade=createSmfOnlineClient(arcadeConfig),board=createBoard(p=>arcade.getBoard({editionId:'smf',...p}));
@@ -151,9 +152,10 @@ function hud(round){
  status.update(round,{paused,clockMs:statusClock()});
  const a=profile.active,b=a.bonus,p=scene.practice,stage=b?scene.config.stage:stageForRun(a);
  root.dataset.bonus=String(!!b);
- text('#tour-stage',b?`${scene.config.name} · ${scene.config.dj}`:a.mode==='rush'?`${stage.name} · Quick Rush`:a.mode==='endless'?`${stage.name} · Stage ${a.stageIndex+1} · Loop ${stage.loop}`:`${a.stageIndex+1} / 6 · ${stage.name}`);
- text('#tour-points',b?(scene.config.activity==='delivery'?`${p.state.delivered} / 3 delivered`:`${p.state.progress} / ${p.state.goal} ${scene.config.activity==='putt'?'holes':'found'}`):`${a.score+round.score} points · ${round.pickups}${a.mode==='rush'?'':` / ${stage.target}`} sparks`);
- const putt=b&&scene.config.activity==='putt';text('#tour-clock-label',putt?'SHOTS':'TIME LEFT');text('#tour-time',putt?`${p.state.strokes} / 8`:`${Math.ceil(round.remainingMs/1000)}s`);
+ const prism=b&&scene.config.activity==='prism'?prismHUD(p.state):null;
+ text('#tour-stage',b?[scene.config.name,scene.config.dj].filter(Boolean).join(' · '):a.mode==='rush'?`${stage.name} · Quick Rush`:a.mode==='endless'?`${stage.name} · Stage ${a.stageIndex+1} · Loop ${stage.loop}`:`${a.stageIndex+1} / 6 · ${stage.name}`);
+ text('#tour-points',prism?prism.progress:b?(scene.config.activity==='delivery'?`${p.state.delivered} / 3 delivered`:`${p.state.progress} / ${p.state.goal} ${scene.config.activity==='putt'?'holes':'found'}`):`${a.score+round.score} points · ${round.pickups}${a.mode==='rush'?'':` / ${stage.target}`} sparks`);
+ const putt=b&&scene.config.activity==='putt';text('#tour-clock-label',prism?prism.clockLabel:putt?'SHOTS':'TIME LEFT');text('#tour-time',prism?prism.clock:putt?`${p.state.strokes} / 8`:`${Math.ceil(round.remainingMs/1000)}s`);
  $('#game').setAttribute('aria-label',putt&&p.state.phase!=='walking'?'Putting green. Drag anywhere opposite your shot and release, or use the aim and power controls. Escape pauses.':`Festival dancefloor. ${controls.value.mode==='swipe'?'Swipe anywhere and release to move in that screen direction.':controls.value.mode==='stick'?'Drag to steer with the floating thumbstick. Push to its outer ring to sprint. Release to stop.':'Click or tap a destination.'} WASD or arrows also move. Sprint spends stamina. Escape pauses.`);
  updateBassButton($('#bass-head'),round.bass,{playing:!paused&&!b,hasSpeakers:!!scene.stage.obstacles.length});
  updateTourHUD(root,{round,run:a,stage,paused,bonus:b,practice:p,config:scene.config});
@@ -163,7 +165,7 @@ function hud(round){
   const person=DELIVERY_RECIPIENTS.find(x=>x.id===p.state.recipientId),signature=`${person?.id}|${p.state.carrying}|${p.state.complete}`;
   if($('#tour-order').dataset.state!==signature){$('#tour-order').dataset.state=signature;$('#tour-order').innerHTML=p.state.complete?'<p>All deliveries made. Enjoy your grilled cheese!</p>':`${recipientPortrait(person?.id)}<p><strong>${person?.name} · ${person?.costume}</strong><br>${p.state.carrying?'Sandwich in hand. Smooth-pass this costume.':'Return to the vendor to pick up a sandwich.'}</p>`;}
  }else{
-  const message=putt?(p.state.phase==='walking'?`Walk onto green ${p.state.holeIndex+1} to putt. Explore the party on the way.`:p.state.phase==='between'?'In the cup! Head to the next green.':'Drag opposite your shot, then release. No time limit.'):b?scene.config.activity==='garden'&&p.state.carrying?'Seed in hand → smooth-pass into the garden bed.':scene.config.instruction:'';
+  const message=prism?prism.instruction:putt?(p.state.phase==='walking'?`Walk onto green ${p.state.holeIndex+1} to putt. Explore the party on the way.`:p.state.phase==='between'?'In the cup! Head to the next green.':'Drag opposite your shot, then release. No time limit.'):b?scene.config.activity==='garden'&&p.state.carrying?'Seed in hand → smooth-pass into the garden bed.':scene.config.instruction:'';
   if($('#tour-order').textContent!==message){$('#tour-order').textContent=message;delete $('#tour-order').dataset.state;}
  }
 }
@@ -212,6 +214,13 @@ function completeBonus({completed=false,won=false}={}){
 }
 function activity(event){
  if(preparing||!isLive())return;
+ if(scene?.config?.activity==='prism'){
+  if(event.type==='complete'){completeBonus({won:true,completed:true});return;}
+  if(event.type==='entered'){audio.stop();announce('Inside the pyramid. Follow the lit section.',{kind:'bonus'});}
+  if(event.type==='charged'){audio.closePass();announce('Face lit! Keep the party moving.',{kind:'bonus'});}
+  if(event.type==='finale'){audio.celebrate();announce('All three faces lit!',{kind:'bonus'});}
+  checkpoint();return;
+ }
  const messages={'green-entered':'On the green. Pull back and release to putt.',pickup:'Picked up! Find the matching destination.',dropped:'Sandwich dropped. Pick up another at the vendor.',wrong:'You made their night! This delivery does not count.',delivered:'Delivery made! Back to the vendor.',planted:'A little more colour in the garden.',collected:'Found it. Follow the next glow.',greeted:'Good company!',shot:'Let it roll…',holed:'In the cup! Head to the next green.',settled:'Line up your next putt.',exhausted:'Eight shots played. Come back for another try.'};
  announce(messages[event.type]||'',{kind:'bonus'});
  if(event.type==='complete'){completeBonus({won:true,completed:true});return;}

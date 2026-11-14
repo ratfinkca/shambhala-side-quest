@@ -1,5 +1,7 @@
 # Two-edition delivery roadmap
 
+**Current addition — 2026-11-14:** The SMF edition now has six main venues and six invitation-only bonus discoveries, including Fractal’s Prism Party. Its movement-driven three-face challenge awards a device-local Prism Crown, with paused recovery and no main-score contribution. [Implementation/release plan](superpowers/plans/2026-11-14-prism-integration.md). Earlier local-preview status below is historical; current public release status is tracked by the release PR and Pages workflow.
+
 Updated 2026-11-10. Approved program with a local parity candidate for Festival, Quick Rush and Endless, five optional discoveries, permanent souvenirs and paused recovery. Automated and local browser verification has progressed; native fullscreen, physical-phone and owner acceptance remain open. SMF remains unpublished. Authority: [edition split design](superpowers/specs/2026-11-06-edition-split-design.md), updated by the [secret/backstage direction](superpowers/specs/2026-11-10-secret-backstage-expansion-design.md). User target: nearly fully polished SMF edition before pitching; no fixed pitch date. Published recovery baseline remains PR #19 /67c44e0.
 
 ## Product target

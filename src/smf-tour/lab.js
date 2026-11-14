@@ -1,4 +1,5 @@
 import {createTourProfile,collectInvitation} from './model.js';
+import './lab.css';
 // DEV-only, separate profile/lock key. These visible controls exercise the same
 // transitions as play without altering anyone's real Festival profile.
 export function mountTourLab(node,{getProfile,commit,load,render,scene,activity,finish,home}){

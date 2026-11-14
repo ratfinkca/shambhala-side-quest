@@ -23,7 +23,9 @@ User requested a follow-up pixel styling pass for on-field announcements, short 
 - Isolated browser playtest collected a real invitation, confirmed the post-expiry screen had no notice or duplicate banner, entered Rabbit Hole, and returned without a second visit offer. The discovered map card now requires a fresh invitation and has no bypass button.
 - Checked the map and bonus flow at a 390 × 844 viewport; browser warnings/errors were empty. The active invitation notice was not captured before expiry; its duration is covered by the clock regression tests. Physical-phone readability and feel remain for user playtesting.
 
-## Fractal pyramid proposal (not implemented)
+## Fractal pyramid proposal (isolated preview now implemented)
+
+The first disposable [Prism Party preview](2026-11-13-fractal-prism-preview.md) now implements the direction below. Festival discovery and a permanent new cosmetic remain later work after feel feedback.
 
 **Prism Party** is the recommended direction. The party remains visible outside until the player walks up a short ramp; the near face becomes a cutaway and the camera settles on a triangular dancefloor. Dance through three illuminated sections over generous musical phrases, with a small crowd providing the navigation challenge. Each completed section charges a pyramid face; finishing lights the whole structure and earns a prism-themed cosmetic.
 
