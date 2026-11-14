@@ -1,3 +1,12 @@
+import {createInstallHelp} from './install-app.js';
+import './install-app.css';
+import {createCharacterOnboarding,mountCharacterWelcome} from './onboarding.js';
+import './onboarding.css';
+import {openHowToDemo} from './how-to-play.js';
+import './how-to-play.css';
+import {createMenuAmbience} from './menu-ambience.js';
+import {openArcadeWelcome} from './arcade-welcome.js';
+import './arcade-welcome.css';
 import {createRunId} from './run-id.js';
 import {getTiming,roundTiming,elapsedMs,phaseProgress} from './stage-clock.js';
 import {GENERIC_RULES} from '../supabase/functions/_shared/edition-rules.js';
@@ -77,6 +86,10 @@ let replayPending=false;
 let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,progressReward,previewAvatar,previewReady=false;
 let characterFacing='down';
+const characterOnboarding=createCharacterOnboarding();
+let closeDemo=null,closeWelcome=null;
+const installHelp=createInstallHelp();
+const menuAmbience=createMenuAmbience(audio,{isMenu:()=>['title','wardrobe','help','rules','style','scores'].includes(screen.name)||screen.name==='settings'&&screen.returnTo==='title',settings:()=>saved.profile.audio});
 let runInputs=createInputTracker(),recoveryRecord=null,recoveredRun=false;
 if(ownership==='busy')screen={name:'recoveryBusy'};
 else if(recoveryOwner.held&&saved.recovery!==null){recoveryRecord=readRecovery(saved.recovery,{editionId:edition.id});screen={name:recoveryRecord.ok?'recovery':'recoveryInvalid'};}
@@ -115,6 +128,8 @@ function clearToast(){clearTimeout(toastTimer);$('#toast').textContent=''}
 function toast(text,duration=2000){clearToast();$('#toast').textContent=text;toastTimer=setTimeout(clearToast,duration)}
 function soundLabel(){$('#sound').textContent=saved.sound?'Sound on':'Sound off';$('#sound').setAttribute('aria-pressed',String(saved.sound))}
 function render(){
+ const content=$('#menu-content');content.classList.remove('character-onboarding','character-expanded');
+ menuAmbience.refresh();
  soundLabel();$('#best').textContent=fmt(saved.bestFor(run?runScoringVersion(run):SCORING_VERSION));
  const playing=screen.name==='playing';document.body.dataset.mode='game';
  if(!playing)bassAction?.cancel();
@@ -130,6 +145,7 @@ function render(){
  $('#avatar-preview-label').textContent='Your festival look';
  $('#avatar-preview').setAttribute('aria-label','Your festival look');
  menus.show(screen.name,{controls:controls.value,recovery:recoveryRecord,progressReward,onlineSubmission:submission,onlineInput:runInputs.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:{...saved.profile,bestRush:saved.bestFor(run?runScoringVersion(run):SCORING_VERSION)},scoreSeason,run,summary,stage:run?stageFor(run):STAGES[0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ if(screen.name==='wardrobe'&&characterOnboarding.pendingMode)mountCharacterWelcome($('#menu-content'));
  if(screen.name==='wardrobe'){updateCharacterControls($('#menu'),saved.profile.outfit,{facing:characterFacing});void mountCharacterPortraits($('#menu'));}
  if(rewardLab&&screen.name==='wardrobe'){$('#outfit-feedback').textContent='Reward preview · temporary profile · reload to reset. Real progress is untouched.';if(progressReward)$('#outfit-feedback').insertAdjacentHTML('afterend',renderReward(progressReward));}
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage||'Score saved on this device.';$('#initials').value=run.initials;$('#initials').disabled=true;}
@@ -161,6 +177,11 @@ function navigateResults(destination,confirmed=false){
  recovery.clear();
  if(destination==='replay'){replayPending=true;newRun(run.mode);go('REPLAY');}else{run=null;go('TITLE');}
 }
+function startFromTitle(mode){
+ if(screen.name!=='title')return;
+ if(!rehearsal&&characterOnboarding.request(mode,saved.profile.characterConfirmed)){go('WARDROBE');return;}
+ newRun(mode);if(mode==='rush')begin();else{if(mode==='festival')playtest.menu('instructions',activeTheme);go('RULES');}
+}
 function action(name,value){
  if(!recovery.canWrite){if(name==='recovery-retry')location.reload();return;}
  if(name==='recover-resume'){restoreRun();return;}
@@ -168,14 +189,20 @@ function action(name,value){
  if(name==='recovery-cancel'){screen={name:'recovery'};render();return;}
  if(name==='recovery-discard-confirm'){recovery.clear();recoveryRecord=null;screen=createScreenState();run=null;render();return;}
  switch(name){
+  case 'install':installHelp.open();break;
+  case 'help':if(screen.name==='title')go('HELP');break;
+  case 'show-demo':closeDemo?.();closeDemo=openHowToDemo({controls:controls.value});break;
+  case 'character-ready':{const mode=characterOnboarding.confirm();if(!mode||screen.name!=='wardrobe')return;saved.saveCharacterConfirmed();screen=createScreenState();startFromTitle(mode);break;}
+  case 'character-cancel':characterOnboarding.cancel();screen=createScreenState();render();break;
+  case 'character-customize':{const c=$('#menu-content'),expanded=c.classList.toggle('character-expanded');const b=c.querySelector('[data-action=character-customize]');b.setAttribute('aria-expanded',String(expanded));b.textContent=expanded?'Keep it simple':'Make it mine';refreshLayout();break;}
   case 'playtest-accept':case 'playtest-decline':{
    const result=playtest.setConsent(name==='playtest-accept'?'accepted':'declined');render();
    $('#announcement').textContent=result.persisted?'Playtest sharing preference saved.':'Preference applies for this session; browser storage is unavailable.';break;
   }
   case 'playtest-notice':if(onlineConfig.enabled)window.open(onlineConfig.notice,'_blank','noopener,noreferrer');break;
-  case 'rush':if(screen.name!=='title')return;newRun('rush');begin();break;
-  case 'endless':if(screen.name!=='title')return;newRun('endless');go('RULES');break;
-  case 'festival':if(screen.name!=='title')return;newRun('festival');playtest.menu('instructions',activeTheme);go('RULES');break;
+  case 'rush':startFromTitle('rush');break;
+  case 'endless':startFromTitle('endless');break;
+  case 'festival':startFromTitle('festival');break;
   case 'start':begin();break;
   case 'resume':if(screen.name!=='paused')return;audio.setEnabled(saved.sound);scene.resumeRound();go('RESUME');break;
   case 'settings':if(screen.name==='playing'){scene.pauseRound();audio.stop()}go('SETTINGS');break;
@@ -213,7 +240,7 @@ function action(name,value){
    const owner=run.id,current=submission,token=recovery.token();const pending=current.post({initials,mode:run.mode,scoringVersion:runScoringVersion(run),buildId:run.buildId||arcadeConfig.buildId,inputType:runInputs.inputType(),totalScore:run.totalScore,stagesCleared:run.stagesCleared,stages:run.scoreStages},p=>arcade.submitScore(p));recovery.save(true);render();
    void pending.then(()=>{if(!recovery.valid(token)||run?.id!==owner||submission!==current)return;recovery.save(true);if(screen.name==='results')render();});break;
   }
-  case 'back':go('BACK');break;
+  case 'back':characterOnboarding.cancel();go('BACK');break;
   case 'exit':go('EXIT');break;
   case 'cancel':go('CANCEL');break;
   case 'confirm':{
@@ -269,15 +296,16 @@ game.events.on('forest:ready',value=>{
 bassAction=bindActionButton($('#bass-head'),{isEnabled:()=>screen.name==='playing'&&!$('#bass-head').disabled,onActivate:event=>{if(scene.activateBassHead())recordInput(activationInput(event));$('#game').focus({preventScroll:true});}});
 if(import.meta.hot)import.meta.hot.dispose(()=>bassAction.dispose());
 $('#pause').addEventListener('click',()=>pause());$('#settings').addEventListener('click',()=>action('settings'));
-$('#sound').addEventListener('click',()=>{if(!recovery.canWrite)return;saved.saveSound(!saved.sound);audio.setEnabled(saved.sound);soundLabel();if(screen.name==='settings')render()});
+$('#sound').addEventListener('click',()=>{if(!recovery.canWrite)return;saved.saveSound(!saved.sound);audio.setEnabled(saved.sound);menuAmbience.refresh();soundLabel();if(screen.name==='settings')render()});
 const fullscreen=$('#fullscreen');fullscreen.hidden=!document.fullscreenEnabled;
 fullscreen.addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{toast('Fullscreen is unavailable in this browser.')}});
 document.addEventListener('fullscreenchange',()=>{fullscreen.textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen'});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){pause('HIDDEN');void playtest.flush();}});
 setInterval(()=>{if(screen.name==='playing')void playtest.flush();},30000);window.addEventListener('blur',()=>pause('HIDDEN'));
 window.addEventListener('keydown',e=>{
+ if(e.defaultPrevented||document.querySelector('dialog[open]'))return;
  if(e.key.toLowerCase()==='b'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&screen.name==='playing'){if(scene.activateBassHead())recordInput('keyboard');e.preventDefault();}
- if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores','style'].includes(screen.name))action('back');else if(['confirmExit','confirmLeave'].includes(screen.name))action('cancel')}
+ if(e.key==='Escape'&&!e.repeat){if(screen.name==='playing')pause();else if(screen.name==='paused')action('resume');else if(['settings','wardrobe','scores','style','help'].includes(screen.name))action('back');else if(['confirmExit','confirmLeave'].includes(screen.name))action('cancel')}
  if(preventGameKeyDefault(e.key,screen.name==='playing',document.activeElement===$('#game')))e.preventDefault();
 });
 game.events.on('round:input',({kind,runId})=>recordInput(kind,runId));
@@ -332,9 +360,11 @@ game.events.on('round:end',round=>{
  if(!rehearsal||recoveryLab){const committed=run.mode==='endless'?recovery.commitStage(award):saved.awardProgress(award);if(committed)progressReward=committed;}
  render();$('#announcement').textContent=`Stage complete. ${round.pickups} sparks. ${run.totalScore} total points.`;
 });
-window.addEventListener('pagehide',()=>{pause('HIDDEN');recovery.save(true);recovery.release();});
+window.addEventListener('pagehide',()=>{menuAmbience.stop();closeDemo?.();closeWelcome?.();pause('HIDDEN');recovery.save(true);recovery.release();});
 window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
 render();
+if(!rehearsal&&!saved.profile.characterConfirmed&&screen.name==='title')closeWelcome=openArcadeWelcome({onEnter:()=>menuAmbience.unlock()});
+if(import.meta.hot)import.meta.hot.dispose(()=>{menuAmbience.dispose();installHelp.dispose();closeDemo?.();closeWelcome?.();});
 
 if(import.meta.env.DEV && rehearsal && ownership!=='busy')import('./rehearsal.js').then(({installRehearsal})=>{
  const openRewards=()=>{scene?.pauseRound();audio.stop();screen=createScreenState();go('WARDROBE');};

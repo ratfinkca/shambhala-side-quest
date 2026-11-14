@@ -36,7 +36,7 @@ const freshRun=(id,mode='festival',themeId=THEME_DEFAULT)=>({id,mode,scoringVers
 
 export function createTourProfile(){
  const progress=normalizeProgress();progress.endless.smfVenues=[];
- return {version:1,progress,discoveries:[],rewards:[],outfit:normalizeOutfit(),souvenir:null,active:null,lastResult:null,rushRotation:{remaining:[],lastStageId:null},audio:{enabled:true,music:.45,effects:.65},themePreference:THEME_DEFAULT,boards:{rush:[],festival:[],endless:[]},initials:'',playtestConsent:'unknown'};
+ return {version:1,progress,discoveries:[],rewards:[],outfit:normalizeOutfit(),souvenir:null,active:null,lastResult:null,rushRotation:{remaining:[],lastStageId:null},audio:{enabled:true,music:.45,effects:.65},themePreference:THEME_DEFAULT,characterConfirmed:false,boards:{rush:[],festival:[],endless:[]},initials:'',playtestConsent:'unknown'};
 }
 
 /** Model transitions return a new profile; invalid or repeated actions are no-ops. */

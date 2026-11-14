@@ -11,16 +11,18 @@ import {renderTitle,renderFestivalStyles,renderPerks,renderEndlessPerks} from '.
 import { WARDROBE } from './wardrobe.js';
 import {renderCharacterControls} from './character-view.js';
 import { PERKS } from './run.js';
-import {renderControlSettings,controlSettingValue,controlInstructions} from './control-settings-view.js';
+import {renderControlSettings,controlSettingValue} from './control-settings-view.js';
+import {renderHowToPlay} from './how-to-play.js';
 export const createScreenState = () => ({name:'title',returnTo:'title'});
 export function transition(s,event) {
   const type=event.type;
   if(type==='START'&&['title','rules'].includes(s.name))return {...s,name:'playing'};
   if(type==='RULES'&&s.name==='title')return {...s,name:'rules'};
+  if(type==='HELP'&&s.name==='title')return {name:'help',returnTo:'title'};
   if(['PAUSE','HIDDEN'].includes(type)&&s.name==='playing')return {...s,name:'paused'};
   if(type==='RESUME'&&s.name==='paused')return {...s,name:'playing'};
   if(type==='SETTINGS'&&['title','paused','playing'].includes(s.name))return {name:'settings',returnTo:s.name==='title'?'title':'paused'};
-  if(type==='BACK'&&['settings','wardrobe','scores','style'].includes(s.name))return {name:s.returnTo,returnTo:'title'};
+  if(type==='BACK'&&['settings','wardrobe','scores','style','help'].includes(s.name))return {name:s.returnTo,returnTo:'title'};
   if(type==='STYLE'&&s.name==='title')return {name:'style',returnTo:'title'};
   if(type==='WARDROBE'&&s.name==='title')return {name:'wardrobe',returnTo:'title'};
   if(type==='SCORES'&&['title','results'].includes(s.name))return {name:'scores',returnTo:s.name};
@@ -38,6 +40,18 @@ export function transition(s,event) {
   return s;
 }
 const button=(action,text,primary=false)=>`<button type="button" class="${primary?'primary-button':'menu-button'}" data-action="${action}">${text}</button>`;
+function ruleTips(run){
+  const perks=run?.perks??[];
+  const current=!run||runScoringVersion(run)===SCORING_VERSION;
+  const tips=[
+    '<p><strong>Flow and points.</strong> Golden Flow pickups attract nearby sparks. Bass drops double all points.</p>',
+    current?'<p><strong>Friendship.</strong> Dancers have different personal-space sizes. Bumps block and slow you. Four smooth passes with one dancer earn a heart and let you move through them until the next stage.</p>':'<p><strong>Original season.</strong> Bumps slow you. Dancers let you move through them.</p>',
+    `<p><strong>Bass pressure.</strong> Speakers block your path. About ${perks.includes('battery')?'6.7':'10'} seconds near them fully charges Bass Head. Spending your charge gives 1.5 to 6 seconds of protection and doubles spark points when you and the spark are in the bass zone. Mud and bumps still slow you.</p>`,
+    `<p><strong>Mystery candy.</strong> Optional candy gives ${perks.includes('sweet')?'seven':'five'} seconds of super speed, reversed controls or wavy colours. Flow leaves candy alone.</p>`,
+  ];
+  if(run?.mode==='endless')tips.push('<p><strong>Endless.</strong> Missing a target ends the run. Later loops change the speaker, mud and crowd layouts. Equip up to four perks and swap them between stages. Completed stages save XP. Runs can resume paused from the last checkpoint on this browser when storage is available. Optional online posting needs a connection at the start and a finished run posted within 24 hours.</p>');
+  return tips;
+}
 export function createScreens(root,callbacks) {
   const content=root.querySelector('#menu-content');
   root.addEventListener('error',e=>{if(e.target.tagName==='IMG'){e.target.hidden=true;e.target.parentElement.classList.add('asset-error');}},true);
@@ -53,7 +67,7 @@ export function createScreens(root,callbacks) {
       const seasonLabel=version=>SCORING_SEASONS.find(season=>season.id===version)?.label??'Original season';
       const canFinish=data.run?.mode==='endless'&&data.run.scoreStages.length>0;
       const exitLabel=canFinish?'Finish run & save score':'Return to title';
-      const header=(eyebrow,title,copy='')=>`<p class="menu-eyebrow">${eyebrow}</p><h2>${title}</h2>${copy?`<p class="menu-copy">${copy}</p>`:''}`;
+      const header=(eyebrow,title,copy='')=>`${eyebrow?`<p class="menu-eyebrow">${eyebrow}</p>`:''}<h2>${title}</h2>${copy?`<p class="menu-copy">${copy}</p>`:''}`;
       let html='';
       if(['recovery','discardRecovery','recoveryInvalid','recoveryBusy'].includes(name))html=renderRecovery(name,data.recovery);
       if(name==='title')html=renderTitle(data.themeId,profile.playtestConsent,data.playtestAvailable);
@@ -61,10 +75,22 @@ export function createScreens(root,callbacks) {
       if(name==='wardrobe')html=header('YOUR FOREST ALTER EGO','Character','Choose your look, then dress for the dancefloor.')+`<p id="outfit-feedback" role="status"></p>`+renderCharacterControls(profile.outfit)+`<h3>Clothes & accessories</h3>`+Object.entries(WARDROBE).map(([key,options])=>`<label class="setting-row">${key==='onesie'?'Onesie':key==='hat'?'Hat':key==='flair'?'Flourish':'Totem'}<select data-outfit="${key}" aria-label="${key}">${options.map(o=>`<option value="${o.id}" ${requirement(profile.progress,`${key}:${o.id}`)?'disabled':''} ${profile.outfit[key]===o.id?'selected':''}>${o.name}${requirement(profile.progress,`${key}:${o.id}`)?' · Locked':''}</option>`).join('')}</select></label>`).join('')+button('back','Back to title',true);
       if(name==='wardrobe')html+=renderEndlessRewards(profile.progress)+renderPassport(profile.progress)+`<details class="unlock-list"><summary>How to unlock wardrobe pieces</summary><ul>${Object.entries(WARDROBE).flatMap(([key,options])=>options.map(o=>{const need=requirement(profile.progress,`${key}:${o.id}`);return need?`<li><strong>${o.name}</strong> · ${need} <button class="menu-button" data-action="preview-outfit" data-value="${key}:${o.id}">Preview ${o.name}</button></li>`:''})).join('')}</ul></details>`;
       if(name==='settings')html=header('FIND YOUR FREQUENCY','Sound & settings','Your choices save on this device.')+renderControlSettings(data.controls)+`<button class="menu-button" data-action="mute" aria-pressed="${profile.audio.enabled}">${profile.audio.enabled?'Sound on':'Sound muted'}</button>`+['music','effects'].map(key=>`<label class="setting-row" for="volume-${key}">${key==='music'?'Music':'Sound effects'} <output id="value-${key}">${Math.round(profile.audio[key]*100)}%</output><input id="volume-${key}" data-volume="${key}" type="range" min="0" max="100" value="${Math.round(profile.audio[key]*100)}"></label>`).join('')+`<p class="menu-footnote">Reduced motion follows your device preference.</p>`+button('back',data.returnTo==='paused'?'Back to pause':'Back to title',true);
-      if(name==='rules')html=header(data.run.mode==='rush'?'ONE MINUTE, ALL GOOD VIBES':data.run.mode==='endless'?`ENDLESS · STAGE ${data.run.stageIndex+1} · LOOP ${data.stage.loop}`:`STAGE ${data.run.stageIndex+1} OF ${GENERIC_RULES.mainStageIds.length}`,data.stage.name+(data.run.mode==='endless'&&data.stage.variationId!=='original'&&data.stage.variationName?' · '+data.stage.variationName:''),data.run.mode==='rush'?'Chase your best score in 60 seconds.':`Collect ${data.stage.target} sparks in 60 seconds to ${data.run.mode==='endless'?'keep the festival going':data.run.stageIndex===GENERIC_RULES.mainStageIds.length-1?'complete your night':'earn your encore'}.`)+`<div class="rule-grid"><p>✦ Catch sparks quickly to build combos.</p><p>◇ Golden Flow pickups attract nearby sparks.</p><p>${runScoringVersion(data.run)===SCORING_VERSION?'◎ Dancers have different personal-space sizes. Slip past cleanly for points; touching blocks and slows you. Four smooth passes with the same dancer make a friend you can move through. Hearts mark friends until the next stage.':'◎ Original season: slip past dancers cleanly for points. Bumps slow you, and dancers do not block your movement.'}</p><p>▣ Speakers block your path. Bass pressure builds while you stay near speakers. ${data.run.perks.includes('battery')?'About 6.7':'Ten'} seconds fully charges Bass Head. From 25%, tap the on-field meter or press B to spend your charge: 1.5 to 6 seconds of bass immunity and double spark points when you and the spark are in bass. Mud and bumps still slow you.</p><p>Wrapped candy is optional: ${data.run.perks.includes('sweet')?'seven':'five'} seconds of super speed, reversed controls or wavy colours. Flow leaves candy alone.</p></div><p class="menu-copy">${data.run.perks.map(p=>PERKS[p].name).join(' · ')||'Bass drops double all points.'}</p>`+button('start',data.run.stageIndex?'Next stage ↗':'Enter the forest ↗',true)+button('exit',exitLabel);
-      if(name==='rules'&&data.run.mode==='endless')html=html.replace('<div class="rule-grid">','<p class="menu-footnote">Clear each target to continue through repeating stages. Later loops alternate distinct speaker, mud and crowd layouts. Miss a target and the run ends. Between stages, choose a perk or keep your build; four slots maximum, with optional swaps. XP saves after completed stages. Endless can recover on this browser when storage is available; reopening returns paused at the last saved moment. Optional online posting needs a connection when you start and a finished run posted within 24 hours.</p><div class="rule-grid">');
-      if(name==='rules')html=html.replace('<div class="rule-grid">',`<p class="menu-copy">${controlInstructions(data.controls)}</p><div class="rule-grid">`);
-      if(name==='rules'&&data.stage?.variationDescription)html=html.replace('<div class="rule-grid">',`<p class="menu-copy">${data.stage.variationDescription}</p><div class="rule-grid">`);
+      if(name==='help')html=header('','How to play','Collect sparks before time runs out.')+renderHowToPlay({controls:data.controls,tips:[
+        '<p><strong>Festival Run</strong> takes you through '+GENERIC_RULES.mainStageIds.length+' stages. <strong>Quick Rush</strong> is one minute. <strong>Endless Festival</strong> keeps going while you clear each target.</p>',
+        ...ruleTips(),
+      ]})+button('back','Back to title',true);
+      if(name==='rules'){
+        const {run,stage,controls}=data;
+        const endless=run.mode==='endless',rush=run.mode==='rush';
+        const eyebrow=rush?'ONE MINUTE, ALL GOOD VIBES':endless?`ENDLESS · STAGE ${run.stageIndex+1} · LOOP ${stage.loop}`:`STAGE ${run.stageIndex+1} OF ${GENERIC_RULES.mainStageIds.length}`;
+        const title=stage.name+(endless&&stage.variationId!=='original'&&stage.variationName?' · '+stage.variationName:'');
+        const objective=rush?'Chase your best score in 60 seconds.':`Collect ${stage.target} sparks in 60 seconds to ${endless?'keep the festival going':run.stageIndex===GENERIC_RULES.mainStageIds.length-1?'complete your night':'earn your encore'}.`;
+        html=header(eyebrow,title,objective);
+        if(stage.variationDescription)html+=`<p class="menu-copy">${stage.variationDescription}</p>`;
+        if(run.perks.length)html+=`<p class="menu-copy">${run.perks.map(p=>PERKS[p].name).join(' · ')}</p>`;
+        const startAction=button('start',run.stageIndex?'Next stage ↗':'Enter the forest ↗',true);
+        html+=renderHowToPlay({controls,tips:ruleTips(run),startAction})+button('exit',exitLabel);
+      }
       if(name==='paused')html=header('TAKE A BREATHER','Your flow can wait.','The clock, crowd and music are paused.')+`<div class="menu-actions">${button('resume','Back to the forest ↗',true)}${button('settings','Sound & settings')}${button('exit',exitLabel)}</div>`;
       if(name==='confirmExit')html=canFinish?header('YOUR NIGHT, YOUR CALL','Finish and bank your score?',`${data.run.stagesCleared} completed stage${data.run.stagesCleared===1?'':'s'} · ${data.run.totalScore} points. Any unfinished stage is excluded. Next: enter initials and choose local saving or public posting.`)+button('confirm','Continue to save score',true)+button('cancel','Keep playing'):header('LEAVING SO SOON?','End this run?','No score will be saved. Only fully completed stages can be banked. XP already awarded stays saved.')+button('cancel','Keep my run',true)+button('confirm','End run & return to title');
       if(name==='confirmLeave')html=header('BEFORE YOU GO','Leave without saving?', 'This score has not been saved on this device or posted online. Leaving will discard it. Your earned XP stays saved.')+button('cancel','Back to save score',true)+button('leave-confirm','Leave without saving');

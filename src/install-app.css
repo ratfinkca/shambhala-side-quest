@@ -1,0 +1,46 @@
+.installed-app [data-action="install"]{display:none}
+.install-sheet{
+  box-sizing:border-box;
+  width:min(430px,calc(100% - 28px));
+  max-height:calc(100dvh - 24px);
+  padding:clamp(14px,4vw,24px);
+  overflow:auto;
+  background:var(--panel,#211d35);
+  color:var(--paper,#fff3f4);
+  border:2px solid var(--accent,#e9adff);
+  box-shadow:5px 5px 0 var(--pixel-shadow,#110d20);
+}
+.install-sheet::backdrop{background:#100c20c7}
+.install-sheet h2{
+  margin:0 0 14px;
+  color:var(--accent,#e9adff);
+  font:clamp(18px,5vw,24px)/1.4 var(--display,Silkscreen,monospace);
+}
+.install-device{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font:12px/1.4 var(--display,Silkscreen,monospace);
+}
+.install-device select{
+  min-height:44px;
+  padding:6px 8px;
+  border:1px solid var(--border,#d2a4e2);
+  border-radius:0;
+  background:var(--field,#19142b);
+  color:var(--paper,#fff3f4);
+  font:16px/1.4 var(--body,sans-serif);
+}
+.install-steps p{font-size:14px;line-height:1.5;margin:12px 0}
+.install-note{font-size:12px;color:var(--muted,#d4c7da);margin:12px 0}
+.install-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.install-actions button{
+  min-height:44px;
+  padding:8px 12px;
+  border:1px solid var(--accent,#e9adff);
+  background:var(--surface,#302840);
+  color:var(--paper,#fff3f4);
+  font:12px/1.4 var(--display,Silkscreen,monospace);
+}
+.install-actions [data-install-prompt]{background:var(--accent,#e9adff);color:var(--ink,#120f21)}
+.install-sheet :is(button,select):focus-visible{outline:2px solid var(--paper,#fff3f4);outline-offset:2px}

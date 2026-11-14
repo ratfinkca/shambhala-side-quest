@@ -4,7 +4,7 @@ import {preloadSMFVenueArt} from '../editions/smf-venue-assets.js';
 import {createActivityView} from '../bonus-practice/activity-view.js';
 import {createPuttingView} from '../bonus-practice/putting-view.js';
 import {attemptPuttingShot} from '../bonus-practice/putting-input.js';
-import {createDeliveryView,createAMPBackstageView,VENDOR_POINT} from '../amp-delivery-view.js';
+import {createDeliveryView,createAMPBackstageView,preloadAMPBackstageArt,VENDOR_POINT} from '../amp-delivery-view.js';
 import * as rabbit from '../bonus-practice/views/rabbit-hole.js';
 import * as garden from '../bonus-practice/views/secret-garden.js';
 import * as ikigai from '../bonus-practice/views/ikigai-mori.js';
@@ -19,7 +19,7 @@ import {createFinishView} from './finish.js';
 const bonusViews=[rabbit,garden,ikigai,villagio];
 export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRoundEnd,onAim}){
  return class TourScene extends GameScene{
-  preload(){preloadSMFVenueArt(this);bonusViews.forEach(v=>v.preload(this));}
+  preload(){preloadAMPBackstageArt(this);preloadSMFVenueArt(this);bonusViews.forEach(v=>v.preload(this));}
   create(){
    this.stageRendererOptions={venueView:(s,stage)=>createSMFStageView(s,stage)||createAMPBackstageView(s,stage)||bonusViews.map(v=>v.createView(s,stage)).find(Boolean)};
    super.create();this.allSparks=this.sparks;this.souvenirView=createSouvenirView(this);this.finishView=createFinishView(this);

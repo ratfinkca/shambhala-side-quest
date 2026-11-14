@@ -12,3 +12,7 @@
 .shell :is(.hud strong,.result-total,.personal-best strong){font-family:var(--display);letter-spacing:-.04em;font-weight:400}
 @media(max-width:650px){.shell :is(.primary-button,.menu-button){font-size:14px}}
 @media(prefers-reduced-motion:reduce){.shell :is(.primary-button,.menu-button,.perk-card):active:not(:disabled){transform:none}}
+.shell :is(.quiet-button,.festival-nav button,.setting-row,.control-settings legend,.control-setting-row>span,.unlock-list summary,.style-option-copy b,.perk-pick){
+  font-family:var(--display);
+  font-weight:400;
+}

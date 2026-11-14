@@ -4,7 +4,7 @@ import { createAudio } from '../src/audio.js';
 function fake(){
  const gains=[],voices=[];let resumes=0;
  const param=()=>({value:0,setValueAtTime(v){this.value=v},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}});
- const ctx={sampleRate:100,createBuffer(){return {getChannelData(){return new Float32Array(100)}}},createBufferSource(){const n={connect(){},disconnect(){},start(){},stop(){this.stopped=true}};voices.push(n);return n},createBiquadFilter(){return {frequency:param(),connect(){},disconnect(){}}},state:'running',currentTime:0,destination:{},resume(){resumes++;return Promise.resolve()},createGain(){const n={gain:param(),connect(to){this.to=to},disconnect(){}};gains.push(n);return n},createOscillator(){const n={frequency:param(),connect(to){this.to=to},disconnect(){},start(){},stop(){this.stopped=true}};voices.push(n);return n}};
+ const ctx={sampleRate:100,createBuffer(){return {getChannelData(){return new Float32Array(100)}}},createBufferSource(){const n={connect(){},disconnect(){},start(){},stop(){this.stopped=true}};voices.push(n);return n},createBiquadFilter(){return {frequency:param(),connect(to){this.to=to},disconnect(){}}},state:'running',currentTime:0,destination:{},resume(){resumes++;return Promise.resolve()},createGain(){const n={gain:param(),connect(to){this.to=to},disconnect(){}};gains.push(n);return n},createOscillator(){const n={frequency:param(),connect(to){this.to=to},disconnect(){this.disconnected=true},start(){},stop(){this.stopped=true}};voices.push(n);return n}};
  return {ctx,gains,voices,get resumes(){return resumes}};
 }
 test('audio remains lazy and routes music and effects through separate adjustable buses',()=>{
@@ -100,4 +100,50 @@ test('optional venue renderer stays lazy, shares music volume and flushes on pau
  audio.sync(round);assert.equal(scheduled.length,2);assert.equal(factories.length,1);
  audio.sync({...round,timingId:'smf-pagoda-clock-preview-1',remainingMs:60000});assert.ok(stops>stopped);
  audio.setEnabled(false);const muted=scheduled.length;audio.sync(round);assert.equal(scheduled.length,muted);
+});
+
+test('menu and gameplay cancel queued music before handing off in either direction', async () => {
+ const f=fake(), scheduled=[], canceled=[];
+ const audio=createAudio(()=>f.ctx,{useTransport:true,timedVoices:()=>[{kind:'game',frequency:110,duration:.2,volume:.03}],createMusicRenderer:(_context,bus)=>({
+  schedule(voice,at){scheduled.push({voice,at,volume:bus.gain.value});},
+  stop(){canceled.push(scheduled.length);}
+ })});
+ const round={remainingMs:60000,multiplier:1,flowMs:0};
+ audio.syncMenu(0);
+ assert.equal(scheduled.length,0);
+ audio.setVolumes({music:.25,effects:.7});
+ await audio.setEnabled(true);
+ audio.syncMenu(0);
+ const afterMenu=scheduled.length;
+ assert.ok(afterMenu>0);
+ assert.ok(scheduled.every(item=>item.volume===.25));
+ audio.syncMenu(0);
+ assert.equal(scheduled.length,afterMenu);
+ audio.sync(round);
+ assert.equal(canceled.at(-1),afterMenu);
+ assert.equal(scheduled.at(-1).voice.kind,'game');
+ const afterGame=scheduled.length;
+ audio.syncMenu(0);
+ assert.equal(canceled.at(-1),afterGame);
+ assert.ok(scheduled.length>afterGame);
+ audio.stop();
+ assert.equal(canceled.at(-1),scheduled.length);
+ audio.syncMenu(0);
+ audio.setEnabled(false);
+ assert.equal(canceled.at(-1),scheduled.length);
+ const muted=scheduled.length;
+ audio.syncMenu(100);
+ assert.equal(scheduled.length,muted);
+});
+
+test('the generic menu uses its music bus and stops queued sources on handoff', async () => {
+ const f=fake(), audio=createAudio(()=>f.ctx);
+ await audio.setEnabled(true);
+ audio.syncMenu(0);
+ const menu=f.voices.slice();
+ assert.ok(menu.length>2);
+ assert.ok(menu.every(voice=>voice.to?.to===f.gains[0] || voice.to?.to?.to===f.gains[0]));
+ audio.sync({remainingMs:60000,multiplier:1,flowMs:0},'forest');
+ assert.ok(menu.every(voice=>voice.disconnected));
+ assert.ok(f.voices.length>menu.length);
 });

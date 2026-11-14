@@ -147,3 +147,14 @@
  .shell.smf-tour[data-immersive=true] #tour-finish{gap:7px}
  .shell.smf-tour[data-immersive=true] #tour-finish h2{font-size:24px}
 }
+.shell.smf-tour :is(.quiet-button,.tour-setting,.tour-outfit label,.control-settings legend,.control-setting-row>span,.tour-board-season,.tour-board-venue,.tour-passport summary){
+  font-family:var(--display);
+  font-weight:400;
+}
+.shell.smf-tour :is(.tour-setting,.tour-outfit,.tour-board-season,.tour-board-venue) select{font-family:var(--body)}
+.shell.smf-tour #tour-menu>.tour-rush-best-line{
+  margin:6px 0 0;
+  font-size:12px;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}

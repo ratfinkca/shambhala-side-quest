@@ -3,7 +3,7 @@ import './clock-practice.css';
 import './amp-delivery.css';
 import {GameScene} from './GameScene.js';
 import {createDeliveryPractice} from './amp-delivery-practice.js';
-import {AMP_DELIVERY_STAGE,DELIVERY_RECIPIENTS,VENDOR_POINT,createAMPBackstageView,createDeliveryView,recipientPortrait} from './amp-delivery-view.js';
+import {AMP_DELIVERY_STAGE,DELIVERY_RECIPIENTS,VENDOR_POINT,createAMPBackstageView,preloadAMPBackstageArt,createDeliveryView,recipientPortrait} from './amp-delivery-view.js';
 import {createAudio} from './audio.js';
 import {smfPreviewVoices} from './editions/smf-music.js';
 import {createSMFInstrumentRack} from './editions/smf-instruments.js';
@@ -74,6 +74,7 @@ function feedback(event){
 }
 
 class DeliveryScene extends GameScene{
+ preload(){preloadAMPBackstageArt(this);}
  create(){
   this.stageRendererOptions={venueView:createAMPBackstageView};super.create();
   if(disposed){this.game.destroy(true);return;}

@@ -1,0 +1,9 @@
+.shell .character-welcome{border-bottom:2px solid var(--accent);padding:0 0 18px;margin:0 0 20px;text-align:left}
+.shell .character-welcome h2{font:clamp(19px,4vw,28px)/1.4 var(--display);margin:10px 0}
+.shell .character-welcome p{font-size:15px;line-height:1.55}
+.shell .character-welcome .primary-button{display:block;width:100%;margin:16px 0 12px;min-height:56px}
+.shell .character-welcome .quiet-button{margin:0 8px 0 0;min-height:44px}
+.shell .character-onboarding:not(.character-expanded) .character-extra{display:none!important}
+.shell .character-onboarding .character-identity>h3{font-size:14px}
+.shell .character-onboarding .character-presets{margin-bottom:20px}
+@media(orientation:landscape) and (max-height:500px){.shell .character-welcome{padding-bottom:12px}.shell .character-welcome h2{font-size:18px}.shell .character-welcome .primary-button{margin:8px 0;min-height:48px}}
