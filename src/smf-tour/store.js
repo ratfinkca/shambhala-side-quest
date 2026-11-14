@@ -1,4 +1,5 @@
 import {BONUSES,ROUTE,createTourProfile,stageForRun,mainStageId} from './model.js';
+import {normalizeCharacterConfirmed} from '../onboarding.js';
 import {mainStage,bonusConfig,bonusController} from './content.js';
 import {getTiming} from '../stage-clock.js';
 import {PERKS} from '../run.js';
@@ -110,7 +111,8 @@ export function normalizeTourProfile(raw){
  profile.progress.endless.smfVenues=unique(source.endless?.smfVenues,ROUTE);profile.progress.endless.bestCleared=count(source.endless?.bestCleared);profile.progress.endless.remixed=source.endless?.remixed===true;
  profile.progress.receipts=Array.isArray(source.receipts)?[...new Set(source.receipts.filter(value=>typeof value==='string'&&value.length>0&&value.length<150))].slice(-256):[];
  profile.outfit=normalizeOutfit(raw.outfit);
- profile.themePreference=normalizeThemePreference(raw.themePreference);
+ profile.themePreference=normalizeThemePreference(raw.themePreference??'forest-freakout');
+ profile.characterConfirmed=normalizeCharacterConfirmed(raw.characterConfirmed,true);
  if(object(raw.audio)){profile.audio.enabled=raw.audio.enabled!==false;for(const key of ['music','effects'])if(number(raw.audio[key],0,1))profile.audio[key]=raw.audio[key];}
  profile.initials=typeof raw.initials==='string'&&/^[A-Z0-9]{0,3}$/.test(raw.initials)?raw.initials:'';profile.playtestConsent=raw.playtestConsent===true||raw.playtestConsent==='accepted'?'accepted':raw.playtestConsent==='declined'?'declined':'unknown';
  let latestSavedRushStage=null;

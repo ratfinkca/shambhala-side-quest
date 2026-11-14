@@ -1,3 +1,12 @@
+import {createInstallHelp} from '../install-app.js';
+import '../install-app.css';
+import {createCharacterOnboarding,mountCharacterWelcome} from '../onboarding.js';
+import '../onboarding.css';
+import {openHowToDemo} from '../how-to-play.js';
+import '../how-to-play.css';
+import {createMenuAmbience} from '../menu-ambience.js';
+import {openArcadeWelcome} from '../arcade-welcome.js';
+import '../arcade-welcome.css';
 import {createRunId} from '../run-id.js';
 import Phaser from 'phaser';
 import './style.css';
@@ -52,6 +61,9 @@ let boardVenue=SMF_DEFAULT_RUSH_STAGE_ID,boardVersion=SMF_SCORING_VERSION;
 let renderedMenuKey='';
 let previewAvatar,previewReady=false,previewOutfit=null;
 let characterFacing='down';
+const characterOnboarding=createCharacterOnboarding();
+let closeDemo=null,closeWelcome=null;
+const installHelp=createInstallHelp();
 const finishGate=createFinishGate();let finishKind=null,finishTimer=null,actionGuardUntil=0;
 const root=document.querySelector('.shell');root.className='shell smf-tour';root.innerHTML=shellHTML();
 root.dataset.phonePreview=String(phonePreview);root.dataset.hand=controls.value.hand||'left';
@@ -62,7 +74,8 @@ const arcadeConfig=lab?{}:readSmfArcadeConfig(import.meta.env),telemetryConfig=l
 const arcade=createSmfOnlineClient(arcadeConfig),board=createBoard(p=>arcade.getBoard({editionId:'smf',...p}));
 const telemetry=createSmfTelemetry({config:telemetryConfig,consent:()=>profile.playtestConsent==='accepted',getMovementMode:()=>controls.value.mode,getScoringVersion:()=>profile.active?.scoringVersion});
 const audio=createAudio(undefined,{timedVoices:f=>f.timing.id.includes('bonus-preview')?bonusPreviewVoices(f):smfPreviewVoices(f),useTransport:true,createMusicRenderer:createSMFInstrumentRack});
-audio.setVolumes(profile.audio);audio.setEnabled(profile.audio.enabled);
+audio.setVolumes(profile.audio);
+const menuAmbience=createMenuAmbience(audio,{isMenu:()=>['title','wardrobe','catalogue','style','scores','rules'].includes(view)||view==='settings'&&returnView!=='run',settings:()=>profile.audio});
 function canPlay(){return ready&&(ownership==='owned'||ownership==='unsupported');}
 function notice(message){
  for(const selector of ['#tour-notice','#tour-pause-notice']){$(selector).hidden=!message;text(selector,message);}
@@ -147,6 +160,8 @@ function hud(round){
 }
 function menuOptions(){return {controls:controls.value,saved,themeId:activeTheme,onlineEnabled:!!arcadeConfig.baseUrl,playtestEnabled:telemetryConfig.enabled,noticeURL:telemetryConfig.notice||`${import.meta.env.BASE_URL}smf-playtest-data.html`,submission,boardMode,boardVenue,boardVersion,board,feedback};}
 function render(){
+ $('#tour-menu').classList.remove('character-onboarding','character-expanded');
+ menuAmbience.refresh();
  const a=profile.active,live=isLive(),finishing=view==='finish',options=menuOptions();$('#tour-running').hidden=!live&&!finishing;
  const menuKey=JSON.stringify([view,a?.id,a?.stageIndex,a?.status,a?.bonus?.status]);
  $('#tour-header-actions').hidden=finishing;$('#tour-proceed').hidden=!finishing;$('#tour-proceed').disabled=!finishing||!finishGate.ready(performance.now());
@@ -172,6 +187,7 @@ function render(){
  root.querySelectorAll('[data-action="start"],[data-action="resume"],[data-action="explore"],[data-action="enter"]').forEach(b=>b.disabled=b.disabled||!canPlay());
  $('#tour-character-preview').hidden=view!=='wardrobe';$('#tour-avatar-preview').hidden=view!=='wardrobe';$('#tour-avatar-preview-label').hidden=view!=='wardrobe';
  if(previewReady){if(view==='wardrobe'){setOutfit(previewAvatar,previewOutfit||profile.outfit);preview.loop.wake();}else preview.loop.sleep();}
+ if(view==='wardrobe'&&characterOnboarding.pendingMode)mountCharacterWelcome($('#tour-menu'));
  if(view==='wardrobe'){updateCharacterControls($('#tour-menu'),profile.outfit,{facing:characterFacing});void mountCharacterPortraits($('#tour-menu'));}
  scheduleLayout();
 }
@@ -252,6 +268,7 @@ function changeAppearance(key,value){
 }
 function startRun(mode){
  if(profile.active||!['rush','festival','endless'].includes(mode))return;
+ if(!lab&&characterOnboarding.request(mode,profile.characterConfirmed)){returnView='title';view='wardrobe';render();return;}
  activeTheme=applyTheme(resolveTheme(profile.themePreference));commit(createTourRun(profile,mode,createRunId(),activeTheme));boardMode=mode;boardVersion=SMF_SCORING_VERSION;if(mode==='rush')boardVenue=profile.active.rushStageId;submission=null;telemetryRunAllowed=profile.playtestConsent==='accepted';view='rules';feedback='';render();
 }
 function finishAndClose(){commit(closeResults(profile));submission=null;view='title';render();if(exitDestination){const mode=exitDestination;exitDestination=null;startRun(mode);}}
@@ -269,14 +286,19 @@ function route(action,id,event){
   if(action==='proceed'&&finishGate.accept(event?.detail??0,performance.now())){clearTimeout(finishTimer);scene?.finishView.stop();finishKind=null;view='run';actionGuardUntil=performance.now()+350;render();}
   return;
  }
- if(!['fullscreen','back','home','title','settings','style','scores','catalogue','wardrobe','rules'].includes(action)&&!canPlay())return;
+ if(!['fullscreen','back','home','title','settings','style','scores','catalogue','wardrobe','rules','show-demo','install'].includes(action)&&!canPlay())return;
+ if(action==='install'){installHelp.open();return;}
+ if(action==='show-demo'){closeDemo?.();closeDemo=openHowToDemo({controls:controls.value});return;}
+ if(action==='character-ready'){const mode=characterOnboarding.confirm();if(!mode||view!=='wardrobe')return;profile.characterConfirmed=true;persist();startRun(mode);return;}
+ if(action==='character-cancel'){characterOnboarding.cancel();view='title';render();return;}
+ if(action==='character-customize'){const c=$('#tour-menu'),expanded=c.classList.toggle('character-expanded');const b=c.querySelector('[data-action=character-customize]');b.setAttribute('aria-expanded',String(expanded));b.textContent=expanded?'Keep it simple':'Make it mine';scheduleLayout();return;}
  if(action==='pause'){if(isLive())setPaused(!paused);return;}
- if(action==='home'||action==='title'){if(isLive())setPaused(true);view='title';audio.stop();render();return;}
+ if(action==='home'||action==='title'){characterOnboarding.cancel();if(isLive())setPaused(true);view='title';audio.stop();render();return;}
  if(['settings','style','wardrobe','catalogue','scores'].includes(action)){
   if(action==='scores'&&profile.active){boardMode=profile.active.mode;boardVersion=smfRunFields(profile.active).scoringVersion;if(boardMode==='rush')boardVenue=smfRushFields(profile.active).rushStageId;}
   viewMenu(action);if(action==='scores'&&arcadeConfig.baseUrl)void loadBoard(boardMode);return;
  }
- if(action==='back'){view=returnView==='run'&&profile.active&&!profile.active.needsIntro?'run':'title';render();return;}
+ if(action==='back'){characterOnboarding.cancel();view=returnView==='run'&&profile.active&&!profile.active.needsIntro?'run':'title';render();return;}
  if(action==='rules'){viewMenu('rules');return;}
  if(action==='theme'&&isThemePreference(id)){profile.themePreference=id;persist();if(!profile.active)activeTheme=applyTheme(resolveTheme(id==='surprise'?undefined:id));render();return;}
  if(action==='start'){startRun(id||'festival');return;}
@@ -350,12 +372,13 @@ root.addEventListener('change',e=>{
   boardVenue=element.value;boardMode='rush';if(arcadeConfig.baseUrl)void loadBoard(boardMode);else render();return;
  }
  if(element.matches('select[data-control-setting]'))changeControls(element.dataset.controlSetting,element.value);
- if(element.id==='tour-sound-enabled'&&canPlay()){profile.audio.enabled=element.checked;persist();audio.setEnabled(element.checked);}
+ if(element.id==='tour-sound-enabled'&&canPlay()){profile.audio.enabled=element.checked;persist();audio.setEnabled(element.checked);menuAmbience.refresh();}
  const category=element.dataset.outfit,value=element.value;if(!category||!canPlay()||!WARDROBE[category]?.some(o=>o.id===value))return;
  const need=category==='onesie'&&value==='mycelium'?(profile.progress.endless.smfVenues.length>=6?null:'Explore all six venues in Endless.'):requirement(profile.progress,`${category}:${value}`);
  if(need)return;profile.outfit={...profile.outfit,[category]:value};previewOutfit=null;persist();if(previewReady)setOutfit(previewAvatar,profile.outfit);text('#outfit-feedback',saved?'Outfit saved.':'Outfit selected for this session.');text('#tour-avatar-preview-label','Your festival look');
 });
 function keys(e){
+ if(e.defaultPrevented||document.querySelector('dialog[open]'))return;
  if(e.target.matches('input,select,textarea'))return;
  if(e.code==='Escape'&&!e.repeat){if(isLive()){e.preventDefault();setPaused(!paused);}else if(view==='confirm-close')route('cancel-close');else if(view==='confirm-leave')route('cancel-leave');else if(['settings','wardrobe','style','scores','catalogue','rules'].includes(view))route('back');}
  if(!isLive())return;
@@ -366,7 +389,7 @@ function hidden(){if(document.hidden&&isLive()&&!paused)setPaused(true);if(docum
 function blurred(){if(isLive()&&!paused)setPaused(true);}
 function pagehide(e){if(isLive())setPaused(true);void telemetry.flush();if(!e.persisted)dispose();}
 function fullscreenChanged(){const b=$('[data-action="fullscreen"]');if(b)b.textContent=document.fullscreenElement?'Exit fullscreen':'Fullscreen';scheduleLayout();}
-function dispose(){if(disposed)return;disposed=true;clearTimeout(finishTimer);finishGate.cancel();bassAction?.dispose();audio.stop();telemetry.stop();owner.release();scene?.clearVisit();scene?.souvenirView.destroy();game.destroy(true);preview.destroy(true);layoutObserver.disconnect();document.body.classList.remove('immersive-play');document.removeEventListener('keydown',keys);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('fullscreenchange',fullscreenChanged);window.removeEventListener('blur',blurred);window.removeEventListener('pagehide',pagehide);window.removeEventListener('resize',scheduleLayout);window.visualViewport?.removeEventListener('resize',scheduleLayout);}
+function dispose(){if(disposed)return;disposed=true;menuAmbience.dispose();installHelp.dispose();closeDemo?.();closeWelcome?.();clearTimeout(finishTimer);finishGate.cancel();bassAction?.dispose();audio.stop();telemetry.stop();owner.release();scene?.clearVisit();scene?.souvenirView.destroy();game.destroy(true);preview.destroy(true);layoutObserver.disconnect();document.body.classList.remove('immersive-play');document.removeEventListener('keydown',keys);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('fullscreenchange',fullscreenChanged);window.removeEventListener('blur',blurred);window.removeEventListener('pagehide',pagehide);window.removeEventListener('resize',scheduleLayout);window.visualViewport?.removeEventListener('resize',scheduleLayout);}
 document.addEventListener('keydown',keys);document.addEventListener('visibilitychange',hidden);document.addEventListener('fullscreenchange',fullscreenChanged);window.addEventListener('blur',blurred);window.addEventListener('pagehide',pagehide);
 const fullscreenButton=$('[data-action="fullscreen"]');if(fullscreenButton)fullscreenButton.hidden=!document.fullscreenEnabled;
 ownership=await owner.acquire();
@@ -377,5 +400,6 @@ const recentRun=profile.active||profile.lastResult;
 if(recentRun&&['rush','festival','endless'].includes(recentRun.mode))boardMode=recentRun.mode;
 boardVenue=smfRushFields(recentRun).rushStageId||profile.rushRotation?.lastStageId||SMF_DEFAULT_RUSH_STAGE_ID;
 restoreSubmission();render();
+if(!lab&&!profile.characterConfirmed&&!profile.active)closeWelcome=openArcadeWelcome({onEnter:()=>menuAmbience.unlock()});
 if(import.meta.env.DEV&&lab&&!phonePreview){const {mountTourLab}=await import('./lab.js');mountTourLab($('#tour-lab'),{getProfile:()=>profile,commit,load,render,scene:()=>scene,activity,finish:()=>{const r=scene.round,stage=stageForRun(profile.active);r.pickups=stage.target||24;r.score=r.pickups*10;r.scoreComponents={sparks:[r.pickups,...Array(19).fill(0)],passes:[0,0]};r.closePasses=0;r.remainingMs=0;r.ended=true;scene.pauseTour();paused=true;audio.stop();hud(r);commit(finishMain(profile,r));showFinish('main');},home:()=>{view='title';submission=null;render();}});}
 if(import.meta.hot)import.meta.hot.dispose(dispose);

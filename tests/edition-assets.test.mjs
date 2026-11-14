@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {access} from 'node:fs/promises';
-import {assetsForEdition,editionAssetsPlugin} from '../build/edition-assets.js';
+import {assetsForEdition,editionAssetsPlugin,manifestForEdition} from '../build/edition-assets.js';
 import {renderBrand} from '../src/editions/brand-view.js';
 import {getEdition} from '../src/editions/registry.js';
 test('edition asset allowlists exclude embedded SMF titles and unused concept boards',async()=>{
@@ -10,7 +10,15 @@ test('edition asset allowlists exclude embedded SMF titles and unused concept bo
   for(const asset of ['backdrop','boots','moth','noodle','bracelet'])assert.ok(generic.includes(`themes/${id}/${asset}.webp`));
  }
  assert.ok(!smf.some(p=>p.startsWith('themes/previews/')));assert.throws(()=>assetsForEdition('unknown'));
- for(const path of smf)await access(new URL('../public/'+path,import.meta.url));
+ for(const [id,assets] of [['generic',generic],['smf',smf]]){
+  assert.ok(assets.includes('manifest.webmanifest'));
+  const manifest=manifestForEdition(id);
+  assert.equal(manifest.name,getEdition(id).brand.title);
+  for(const icon of manifest.icons)assert.ok(assets.includes(icon.src.slice(2)));
+  for(const path of assets){
+   if(path!=='manifest.webmanifest')await access(new URL('../public/'+path,import.meta.url));
+  }
+ }
 });
 test('generic brand uses a neutral backdrop and accessible text; SMF uses its owned title art',()=>{
  const generic=renderBrand(getEdition(),'moonlit-mycelium');assert.match(generic,/Festival Side Quest/);assert.match(generic,/backdrop.webp/);assert.doesNotMatch(generic,/title.webp|Shambhala/);

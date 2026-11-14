@@ -84,3 +84,6 @@
  .shell .menu-card .festival-play{font-size:18px;min-height:56px;margin-top:0}
  .shell .festival-nav button{min-height:44px}
 }
+.shell .festival-nav button{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.shell .festival-nav button:last-child:nth-child(odd){grid-column:1/-1}
+.shell .setting-row select{font-family:var(--body)}

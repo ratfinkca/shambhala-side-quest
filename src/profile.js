@@ -3,6 +3,7 @@ import {GENERIC_RULES,GENERIC_SCORING_VERSIONS} from '../supabase/functions/_sha
 import {normalizeProgress} from './progression.js';
 import {normalizeThemePreference} from './themes.js';
 import {normalizeOutfit} from './wardrobe.js';
+import {normalizeCharacterConfirmed} from './onboarding.js';
 export const PROFILE_KEY=genericContext.profileKey;
 export const DEFAULT_AUDIO={enabled:true,music:.45,effects:.65};
 export function normalizeAudio(value={}){
@@ -23,5 +24,5 @@ export function readProfile(storage,context=genericContext){
  const bestRush=Number.isSafeInteger(best)&&best>=0?best:0;
  const bestRushBySeason=Object.fromEntries(GENERIC_SCORING_VERSIONS.map(version=>{const value=raw?.bestRushBySeason?.[version];return [version,Number.isSafeInteger(value)&&value>=0?value:version===GENERIC_RULES.id?bestRush:0];}));
  if(!raw&&['true','false'].includes(legacySound))audio.enabled=legacySound==='true';
- return {version:1,progress:normalizeProgress(raw?.progress,!!raw||legacyBestPresent||legacySound!==undefined&&legacySound!==null),playtestConsent:['accepted','declined'].includes(raw?.playtestConsent)?raw.playtestConsent:'unknown',playtestIdentity:raw?.playtestConsent==='accepted'&&typeof raw.playtestIdentity==='string'&&raw.playtestIdentity.length<=100?raw.playtestIdentity:null,themePreference:normalizeThemePreference(raw?.themePreference),audio,outfit:normalizeOutfit(raw?.outfit),bestRush:bestRushBySeason[GENERIC_RULES.id],bestRushBySeason,boards:{rush:rankScores(raw?.boards?.rush),festival:rankScores(raw?.boards?.festival),endless:rankScores(raw?.boards?.endless,'endless')}};
+ return {version:1,progress:normalizeProgress(raw?.progress,!!raw||legacyBestPresent||legacySound!==undefined&&legacySound!==null),playtestConsent:['accepted','declined'].includes(raw?.playtestConsent)?raw.playtestConsent:'unknown',playtestIdentity:raw?.playtestConsent==='accepted'&&typeof raw.playtestIdentity==='string'&&raw.playtestIdentity.length<=100?raw.playtestIdentity:null,themePreference:normalizeThemePreference(raw?.themePreference??(raw?'forest-freakout':undefined)),characterConfirmed:normalizeCharacterConfirmed(raw?.characterConfirmed,!!raw||legacyBestPresent||legacySound!=null),audio,outfit:normalizeOutfit(raw?.outfit),bestRush:bestRushBySeason[GENERIC_RULES.id],bestRushBySeason,boards:{rush:rankScores(raw?.boards?.rush),festival:rankScores(raw?.boards?.festival),endless:rankScores(raw?.boards?.endless,'endless')}};
 }

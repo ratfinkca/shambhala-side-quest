@@ -28,7 +28,7 @@ test('SMF Festival starts with its own empty profile and leaves input objects un
  const profile=createTourProfile(),before=structuredClone(profile),p=createFestival(profile,'tour-one');
  assert.deepEqual(profile,before);assert.equal(profile.active,null);
  assert.equal(profile.progress.xp,0);assert.deepEqual(profile.discoveries,[]);assert.deepEqual(profile.rewards,[]);
- assert.deepEqual(p.active,{id:'tour-one',mode:'festival',scoringVersion:'smf-v2',themeId:'forest-freakout',stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
+ assert.deepEqual(p.active,{id:'tour-one',mode:'festival',scoringVersion:'smf-v2',themeId:'neon-field-trip',stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
  assert.deepEqual(p.outfit,{onesie:'lime',hat:'bucket',totem:'none',flair:'none',appearance:DEFAULT_APPEARANCE});
  assert.equal(createFestival(p,'replacement'),p);
  assert.equal(createFestival(profile,''),profile);

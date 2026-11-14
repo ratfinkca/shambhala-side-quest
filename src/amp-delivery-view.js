@@ -2,6 +2,7 @@ import {pixelizeGraphics,pixelSandwich,pixelCheese,pixelHeart} from './pixel-art
 import {setCrowdOutfit} from './Crowd.js';
 import {playerAvatarAnchors} from './pixel-art/player-anchors.js';
 import {createPixelProp} from './pixel-art/props.js';
+import {pixelVenueTexture} from './pixel-art/venue-texture.js';
 // Disposable AMP backstage art. All motion follows round elapsed time so pause
 // freezes lighting, deliveries and the temporary prize together.
 export const VENDOR_POINT = {x:205,y:250,radius:42};
@@ -91,8 +92,39 @@ export function recipientPortrait(id) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="${person.name}: ${person.costume}" shape-rendering="crispEdges"><path d="M1 1h94v94H1z" fill="#1c2633" stroke="${color}" stroke-opacity=".5"/><path d="M31 60h34v7h8v29H23V67h8z" fill="${color}"/>${pattern}<path d="M36 27h24v6h6v25h-6v7H36v-7h-6V33h6z" fill="${person.index===1?'#a87051':'#e7b28e'}"/><path d="M40 42h4v4h-4zM52 42h4v4h-4z" fill="#141c28"/><path d="M43 53h10v3H43z" fill="#855440"/>${accessory}</svg>`;
 }
 
+const ART_KEY='smf-amp-backstage-pixel-v1';
+
+export function preloadAMPBackstageArt(scene) {
+  if(!scene.textures.exists(ART_KEY))scene.load.image(ART_KEY,new URL('./amp-delivery-assets/amp-backstage-pixel-v1.webp',import.meta.url).href);
+}
+
 export function createAMPBackstageView(scene,stage) {
-  if(stage.id!=='smf-amp-backstage')return null;
+  if(stage.id!==AMP_DELIVERY_STAGE.id)return null;
+  if(!scene.textures.exists(ART_KEY))return createProceduralBackstageView(scene);
+
+  scene.add.image(0,0,pixelVenueTexture(scene,ART_KEY)).setOrigin(0).setDisplaySize(960,640).setDepth(-4);
+  const accents=pixelizeGraphics(scene.add.graphics()).setDepth(-3);
+  const lamps=[[165,35],[274,35],[497,72],[542,88],[575,91],[597,84],[622,91],[654,88],[679,81]];
+  return {
+    ownsLighting:true,
+    update(elapsed=0,phase,reducedMotion=false) {
+      accents.clear();
+      for(const [i,[x,y]] of lamps.entries()){
+        const pulse=reducedMotion?.3:.5+.5*Math.sin(elapsed*.002+i*.75);
+        accents.fillStyle(C.gold,.018+pulse*.035).fillCircle(x,y,8);
+        accents.fillStyle(C.cream,.1+pulse*.14).fillRect(x-1,y-1,2,2);
+      }
+      for(const [i,x] of [166,192].entries()){
+        const rise=reducedMotion?5:(elapsed*.012+i*9)%18;
+        const y=133-rise,drift=reducedMotion?0:Math.sin(elapsed*.002+i)*3;
+        accents.lineStyle(2,C.cream,.27-rise*.01).beginPath()
+          .moveTo(x,y).lineTo(x-3+drift,y-4).lineTo(x+1+drift,y-8).strokePath();
+      }
+    },
+  };
+}
+
+function createProceduralBackstageView(scene) {
   const g=pixelizeGraphics(scene.add.graphics()).setDepth(0);
   g.fillStyle(0x142329).fillRect(0,0,960,640);
   // Warm, quiet floor leaves the approach and clean-pass lanes easy to read.
@@ -208,7 +240,8 @@ export function createDeliveryView(scene) {
   const owned=[],track=node=>(owned.push(node),node);
   applyDeliveryCostumes(scene.crowd.people);
   const vendor=track(pixelizeGraphics(scene.add.graphics()).setDepth(6));
-  const ticket=track(pixelizeGraphics(scene.add.graphics()).setPosition(302,180).setScale(.46).setDepth(6.1));
+  const {x:ticketX,y:ticketY}=scene.textures.exists(ART_KEY)?{x:257,y:174}:{x:302,y:180};
+  const ticket=track(pixelizeGraphics(scene.add.graphics()).setPosition(ticketX,ticketY).setScale(.46).setDepth(6.1));
   const pickupText=track(scene.add.text(VENDOR_POINT.x,VENDOR_POINT.y+34,'PICK UP',{fontFamily:'Silkscreen, monospace',fontSize:'12px',fontStyle:'bold',color:'#ffe4a5',letterSpacing:2}).setOrigin(.5).setDepth(7));
   const hand=track(createPixelProp(scene,'sandwich',{size:28}));scene.dancer.add(hand);
   const prize=track(pixelizeGraphics(scene.add.graphics()));scene.dancer.add(prize);prize.setVisible(false);
@@ -231,9 +264,9 @@ export function createDeliveryView(scene) {
     vendor.lineStyle(2,C.cream,ready?.7:.16).lineBetween(x-10,y-2,x,y+7).lineBetween(x,y+7,x+10,y-2);
     pickupText.setText(state.complete?'ENJOY!':state.carrying?'ONE AT A TIME':'PICK UP').setAlpha(ready||state.complete?.95:.45);
     // The order ticket is mounted on the cart beside the serving counter.
-    vendor.fillStyle(C.ink).fillRoundedRect(282,153,40,41,5);
-    vendor.lineStyle(2,recipient?.color??C.gold,.8).strokeRoundedRect(282,153,40,41,5);
-    if(state.complete)cheese(vendor,302,176,.45);
+    vendor.fillStyle(C.ink).fillRoundedRect(ticketX-20,ticketY-27,40,41,5);
+    vendor.lineStyle(2,recipient?.color??C.gold,.8).strokeRoundedRect(ticketX-20,ticketY-27,40,41,5);
+    if(state.complete)cheese(vendor,ticketX,ticketY-4,.45);
     ticket.setVisible(Boolean(recipient)&&!state.complete);
     if(recipient&&lastTicket!==recipient.id){drawRecipient(ticket,recipient);lastTicket=recipient.id;}
     transient.clear();

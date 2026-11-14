@@ -44,3 +44,4 @@
  .shell .screen-layer[data-screen="wardrobe"]{grid-template-columns:150px minmax(0,1fr);gap:12px}
  .shell .screen-layer[data-screen="wardrobe"] .menu-card{padding:14px}
 }
+.shell :is(.character-features label,.character-skin legend,.character-skin button,.character-angles>span,.character-angles button){font-family:var(--display)}

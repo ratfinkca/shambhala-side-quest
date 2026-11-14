@@ -1,0 +1,141 @@
+.arcade-arrival {
+ --arrival-ink:#110d28;
+ --arrival-pink:#ff758e;
+ --arrival-mint:#a5ffe5;
+ position:fixed;
+ inset:0;
+ box-sizing:border-box;
+ width:100%;
+ height:100%;
+ max-width:none;
+ max-height:none;
+ margin:0;
+ padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+ border:0;
+ color:#fff2de;
+ background:var(--arrival-ink);
+ overflow:auto;
+ isolation:isolate;
+}
+.arcade-arrival[open] {display:grid;place-items:safe center}
+.arcade-arrival::backdrop {background:var(--arrival-ink)}
+.arcade-arrival__sky {
+ position:absolute;
+ inset:0;
+ z-index:-1;
+ overflow:hidden;
+ background:
+  radial-gradient(circle at 15% 30%,#ffd49d 1px,transparent 2px),
+  radial-gradient(circle at 77% 18%,#a5ffe5 1px,transparent 2px),
+  radial-gradient(circle at 52% 9%,#ff758e 1px,transparent 2px),
+  linear-gradient(#110d28 15%,#34204f 49%,#773256 71%,#1a142f);
+ background-size:137px 163px,211px 131px,251px 199px,100% 100%;
+}
+.arcade-arrival__sun {
+ position:absolute;
+ left:50%;
+ top:46%;
+ width:clamp(160px,43vmin,430px);
+ aspect-ratio:1;
+ transform:translate(-50%,-55%);
+ clip-path:polygon(25% 0,75% 0,75% 7%,88% 7%,88% 18%,96% 18%,96% 30%,100% 30%,100% 70%,96% 70%,96% 82%,88% 82%,88% 93%,75% 93%,75% 100%,25% 100%,25% 93%,12% 93%,12% 82%,4% 82%,4% 70%,0 70%,0 30%,4% 30%,4% 18%,12% 18%,12% 7%,25% 7%);
+ background:repeating-linear-gradient(0deg,transparent 0 8px,#4a2b62 8px 11px,transparent 11px 21px),linear-gradient(#ffdf9f,#ff6d8e 68%,#dc4a93);
+ animation:arrival-sun 1.55s steps(16,end) both;
+}
+.arcade-arrival__hills {
+ position:absolute;
+ inset:37% 0 25%;
+ background:#27193e;
+ clip-path:polygon(0 63%,6% 63%,6% 51%,12% 51%,12% 38%,18% 38%,18% 26%,21% 26%,21% 44%,26% 44%,26% 64%,30% 64%,30% 50%,35% 50%,35% 65%,40% 65%,40% 78%,55% 78%,55% 69%,60% 69%,60% 54%,68% 54%,68% 39%,73% 39%,73% 23%,78% 23%,78% 36%,84% 36%,84% 52%,89% 52%,89% 44%,94% 44%,94% 31%,100% 31%,100% 100%,0 100%);
+}
+.arcade-arrival__floor {
+ position:absolute;
+ inset:68% -25% -44%;
+ transform:perspective(230px) rotateX(39deg);
+ transform-origin:center top;
+ background:repeating-linear-gradient(90deg,transparent 0 63px,#ad54762e 63px 65px),repeating-linear-gradient(0deg,transparent 0 30px,#a5ffe533 30px 32px),#16132e;
+ animation:arrival-floor 1.45s steps(16,end) both;
+}
+.arcade-arrival__gate {
+ position:absolute;
+ inset:12% max(5%,calc((100% - 800px) / 2)) 18%;
+ border:4px solid #5d3f74;
+ border-bottom:0;
+ box-shadow:0 0 0 5px #1b132e,0 0 0 8px #785272,inset 0 0 0 4px #281d4a;
+ animation:arrival-gate 1.2s steps(12,end) both;
+}
+.arcade-arrival__gate span {
+ position:absolute;
+ top:-4px;
+ width:16%;
+ height:4px;
+ background:var(--arrival-pink);
+ box-shadow:0 0 16px #ff758ecc;
+}
+.arcade-arrival__gate span:nth-child(2) {left:42%;background:var(--arrival-mint);box-shadow:0 0 16px #a5ffe5cc}
+.arcade-arrival__gate span:nth-child(3) {right:0}
+.arcade-arrival__sparks {
+ position:absolute;
+ top:28%;
+ left:18%;
+ width:4px;
+ height:4px;
+ background:#fff1c9;
+ box-shadow:12vw -7vh #a5ffe5,61vw 8vh #fff1c9,51vw -10vh #ff758e,3vw 36vh #ff758e,55vw 39vh #a5ffe5;
+ animation:arrival-sparks 1.35s steps(6,end) both;
+}
+.arcade-arrival__card {
+ max-width:100%;
+ padding:clamp(14px,4vmin,32px);
+ border:2px solid #a5759b;
+ box-shadow:5px 5px #110d28,inset 0 0 0 3px #38294a;
+ background:#1b1532f5;
+ text-align:center;
+}
+.arcade-arrival__label {
+ margin:0;
+ color:var(--arrival-mint);
+ font:400 clamp(.65rem,2.5vmin,1rem)/1.5 var(--display,monospace);
+ letter-spacing:.025em;
+}
+.arcade-arrival h1 {
+ margin:.08em 0 .36em;
+ font:400 clamp(2rem,9vmin,5.25rem)/1.1 var(--display,monospace);
+ letter-spacing:-.065em;
+ text-shadow:3px 3px #98486d;
+}
+.arcade-arrival button {
+ display:block;
+ box-sizing:border-box;
+ min-height:44px;
+ width:max-content;
+ max-width:100%;
+ margin:0 auto;
+ padding:8px 16px;
+ border-radius:0;
+ cursor:pointer;
+}
+.arcade-arrival__enter {
+ border:2px solid #fff1c9;
+ color:#261734;
+ background:var(--arrival-pink);
+ box-shadow:3px 3px #9d4d70;
+ font:400 clamp(.86rem,3.6vmin,1.1rem)/1.25 var(--display,monospace);
+}
+.arcade-arrival .arcade-arrival__skip {
+ margin-top:5px;
+ border:1px solid transparent;
+ color:#fff2de;
+ background:transparent;
+ text-decoration:underline;
+ font:inherit;
+ font-size:.9rem;
+}
+.arcade-arrival button:focus-visible {outline:2px solid var(--arrival-mint);outline-offset:3px}
+@keyframes arrival-sun {from{translate:0 26vh;opacity:.4}to{translate:0 0;opacity:1}}
+@keyframes arrival-floor {from{background-position:0 50px}to{background-position:0 0}}
+@keyframes arrival-gate {from{transform:scale(.85) translateY(10px);opacity:.45}to{transform:none;opacity:1}}
+@keyframes arrival-sparks {from{transform:translateY(9vh);opacity:.15}to{transform:none;opacity:.85}}
+@media(prefers-reduced-motion:reduce) {
+ .arcade-arrival__sky * {animation:none}
+}

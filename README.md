@@ -10,6 +10,20 @@ earned effects. Appearance is saved on this device; starter looks keep equipped
 clothing. Hat sockets and held-item grips follow the animated body. See the
 [implementation and release checks](docs/superpowers/pixel-world-validation.md).
 
+**Arcade welcome:** New profiles start with
+Neon Field Trip; existing themes and recovered runs retain their choices. First
+Play guides new players through Character confirmation while keeping their chosen
+mode. Pixel-styled controls, illustrated **How to play** cards and an optional
+15-second, four-step sprite demo introduce sparks, smooth passes, bumps and Bass
+Head. A short skippable arrival and original 32-bar menu groove accompany the
+menus, and AMP backstage has a new illustrated pixel scene.
+
+The title's **Install app** button offers short iPhone/iPad, Android and desktop
+instructions, plus a native install action when the browser provides one. Each
+edition includes its own app manifest identity and shared home-screen icons for
+standalone launch. Play still requires an internet connection. See the
+[implementation plan](docs/superpowers/plans/2026-11-14-arcade-welcome.md).
+
 ## SMF public test edition
 
 [Play the SMF edition](https://ratfinkca.github.io/shambhala-side-quest/smf/): six main venues, five discoverable bonus parties, permanent souvenirs, venue-specific artwork, original synthesized music and animated lighting. Festival Run visits all six venues; Quick Rush shuffles through those venues without immediate repeats and saves separate best scores for each; Endless repeats the six-venue route with rising difficulty and four active perk slots.

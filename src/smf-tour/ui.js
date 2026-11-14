@@ -7,7 +7,8 @@ import {rewardName} from '../progression-view.js';
 import {cycleAt} from '../festival.js';
 import {roundTiming,elapsedMs} from '../stage-clock.js';
 import {MYSTERY_EFFECTS} from '../mystery.js';
-import {renderControlSettings,controlInstructions} from '../control-settings-view.js';
+import {renderControlSettings} from '../control-settings-view.js';
+import {renderHowToPlay} from '../how-to-play.js';
 import {ROUTE} from './model.js';
 import {mainStage} from './content.js';
 import {smfRuleStage,SMF_SCORING_VERSION} from '../../supabase/functions/_shared/smf-rules.js';
@@ -18,9 +19,14 @@ const inputLabel=value=>({mouse:'Mouse',touch:'Touch',keyboard:'Keyboard',mixed:
 const modeName=m=>({rush:'Quick Rush',festival:'Festival Run',endless:'Endless Festival'}[m]||'Festival Run');
 const rushVenueId=id=>ROUTE.includes(id)?id:'smf-pagoda';
 const rushRows=(rows,venue)=>(Array.isArray(rows)?rows:[]).filter(row=>row&&(row.rushStageId??'smf-pagoda')===venue);
-export function rushBestHTML(profile,stageId,{saved=true,scoringVersion=SMF_SCORING_VERSION}={}){
+export function rushBestHTML(profile,stageId,{saved=true,scoringVersion=SMF_SCORING_VERSION,compact=false}={}){
  const venue=rushVenueId(stageId),scores=rushRows(smfSeasonRows(profile.boards?.rush,scoringVersion),venue).map(row=>row.score).filter(score=>Number.isSafeInteger(score)&&score>=0);
  const best=scores.length?Math.max(...scores):null;
+ if(compact){
+  const summary=best===null?(saved?'No score saved for this venue yet.':'No score kept for this venue yet.'):
+   `${saved?'Your saved best':'Your session best'} · ${esc(mainStage(venue).name)} · ${best} points`;
+  return `<p class="tour-rush-best-line">${summary}</p>`;
+ }
  return `<section class="tour-rush-best" aria-label="${saved?'Locally saved':'Session'} personal best"><span>${saved?'Your saved best':'Your session best'} · ${esc(mainStage(venue).name)}</span><strong>${best===null?saved?'No score saved for this venue yet.':'No score kept for this venue yet.':`${best} points`}</strong><small>${saved?best===null?'Save a result on this device to set a personal best.':'Saved on this device.':'Saving is unavailable. Scores are held for this session.'} Online scores are separate.</small></section>`;
 }
 export function wardrobeControlsHTML(profile){
@@ -40,7 +46,20 @@ export function stylesHTML(profile){return `<h2>Pick your festival style.</h2><p
 export function rulesHTML(profile,{stage,controls,saved=true}={}){
  const a=profile.active,rush=a?.mode==='rush',venue=rushVenueId(a?.rushStageId),scoringVersion=a?resolveSmfScoringVersion(a.scoringVersion):SMF_SCORING_VERSION;
  if(rush)stage={...mainStage(venue),...smfRuleStage('rush',0,venue)};
- return `<span class="tour-eyebrow">${rush?'QUICK RUSH · YOUR NEXT VENUE':esc(stage?.name||'READY TO DANCE')}</span><h2>${esc(stage?.name||'How to play')}</h2>${rush?`<p class="tour-rush-set">One set · about ${Math.round(stage.durationMs/1000)} seconds · no secret invitations.</p>${rushBestHTML(profile,venue,{saved,scoringVersion})}`:''}<p>${esc(stage?.dj||'')} ${stage?.target?`· Collect ${stage.target} sparks before time runs out.`:'Collect sparks before the set ends. Smooth passes score points.'}</p><p><strong>Festival Run:</strong> clear six stages. <strong>Quick Rush:</strong> one shuffled venue per run, about 55–69 seconds. Dance all six before the next shuffle; each venue has its own saved best. <strong>Endless Festival:</strong> keep clearing stages as the festival repeats and gets tougher.</p><p>${controlInstructions(controls)}</p><p><strong>${smfSeasonName(scoringVersion)}.</strong> ${scoringVersion===SMF_SCORING_VERSION?'Dancers have different personal-space sizes. Four clean passes with the same dancer shrink their ring to nothing: a heart marks a friend you can move through. Bumps don’t erase friendship. New stages bring a fresh crowd; later stages and Endless revisits add more dancers.':'This saved run keeps its original rules, without crowd collisions or friendship. Its scores stay on the Original season boards.'}</p><p>Speakers slow you and charge Bass Head: use B or its on-field button at 25% charge.</p><p>Flow pickups give a temporary boost. Mystery candy brings surprising temporary effects. Smooth passes and chains build your score, and the music’s 2× VIBES phase doubles points.</p>${rush?'':'<p>Discover optional hidden parties by collecting invitations and clearing the stage. Bonus visits do not change your main score.</p>'}${a?.status==='playing'&&a.needsIntro&&!a.bonus?button('enter','Enter the dancefloor'):''} ${button('back','Back')}`;
+ const title=stage?.name||'How to play';
+ const goal=stage?.target?`Collect ${stage.target} sparks before time runs out.`:'Collect sparks before the set ends.';
+ const tips=[
+  '<p><strong>Festival Run</strong> spans six stages. <strong>Quick Rush</strong> gives you one shuffled venue for about 55–69 seconds, with a separate best at each of the six. <strong>Endless Festival</strong> repeats the route at higher difficulty.</p>',
+  `<p><strong>${smfSeasonName(scoringVersion)}.</strong> ${scoringVersion===SMF_SCORING_VERSION?'Dancers have different personal-space sizes. Four clean passes shrink a dancer’s ring to nothing. A heart marks a friend you can move through. The next stage brings a fresh crowd.':'This saved run keeps its original rules, without crowd collisions or friendship. Its scores stay on the Original season boards.'}</p>`,
+  '<p><strong>Boosts and points.</strong> Golden Flow pulls in nearby sparks. Mystery candy brings temporary effects. While Bass Head is active, sparks in the bass zone earn double points. Music’s 2× VIBES phase doubles points.</p>',
+ ];
+ if(!rush)tips.push('<p><strong>Optional parties.</strong> Collect invitations and clear the stage to earn an optional visit. Bonus visits keep their own score.</p>');
+ const rushIntro=rush?`<p class="tour-rush-set">One set · about ${Math.round(stage.durationMs/1000)} seconds · no secret invitations.</p>${rushBestHTML(profile,venue,{saved,scoringVersion,compact:true})}`:'';
+ const enter=a?.status==='playing'&&a.needsIntro&&!a.bonus?
+  '<button type="button" class="primary-button" data-action="enter">Enter the dancefloor</button>':'';
+ return `${rush?'<span class="tour-eyebrow">QUICK RUSH · YOUR NEXT VENUE</span>':''}<h2>${esc(title)}</h2>
+  <p>${stage?.dj?`${esc(stage.dj)} · `:''}${goal}</p>${rushIntro}
+  ${renderHowToPlay({controls,tips,startAction:enter})} ${button('back','Back')}`;
 }
 export function pausedHTML(){return `<section class="tour-pause-card" aria-label="Pause menu"><strong>Take a breather.</strong><span id="tour-pause-message">Your adventure is paused.</span><div>${button('pause','Resume')} ${button('settings','Settings')} ${button('leave','Finish run')}</div><p id="tour-pause-notice" hidden></p></section>`;}
 export function confirmLeaveHTML(profile){const bonus=!!profile.active?.bonus;return `<h2>${bonus?'Leave this visit?':'Finish your run?'}</h2><p>${bonus?'An unfinished challenge earns no souvenir.':'Only completed stages count; the current stage is left unfinished.'}</p>${button('confirm-leave',bonus?'Leave visit':'Finish run')} ${button('cancel-leave','Keep playing')}`;}

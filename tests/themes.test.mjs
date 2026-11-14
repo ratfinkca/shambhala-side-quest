@@ -29,7 +29,7 @@ test('Surprise selects only complete themes, supports multiple styles and fixed 
  assert.equal(resolveTheme('surprise',()=>.999,registry),'neon');
  assert.equal(resolveTheme('neon',()=>0,registry),'neon');
  assert.equal(resolveTheme('surprise',()=>.9),'neon-field-trip');
- for(const invalid of [null,{},'bad','unknown-theme'])assert.equal(normalizeThemePreference(invalid),'forest-freakout');
+ for(const invalid of [null,{},'bad','unknown-theme'])assert.equal(normalizeThemePreference(invalid),'neon-field-trip');
 });
 
 test('Moonlit selection persists and stays concrete through a festival stage',()=>{
