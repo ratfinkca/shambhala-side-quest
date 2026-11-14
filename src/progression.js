@@ -14,7 +14,7 @@ export const ACHIEVEMENTS=[
  {id:'layouts',endless:true,name:'Trail Mixer',description:'Clear all 6 Endless layout variants, across any number of runs',target:6,reward:'onesie:mycelium'},
  {id:'endless12',endless:true,name:'Still Dancing',description:'Clear 12 stages in one Endless run',target:12,reward:'flair:aurora'},
 ];
-export const RANK_REWARDS={'perk:surfer':2,'perk:battery':3,'perk:encore':4,'perk:sweet':5,'onesie:tiger':1,'hat:mushroom':1,'totem:heart':1,'onesie:bee':2,'hat:flower':2,'totem:peace':2,'flair:fireflies':2,'onesie:skeleton':3,'hat:antenna':3,'totem:eye':3,'onesie:patchwork':4,'hat:crown':4,'totem:moon':4,'totem:ufo':5,'flair:prism':5};
+export const RANK_REWARDS={'perk:candy-magnet':3,'perk:flow-finder':4,'perk:surfer':2,'perk:battery':3,'perk:encore':4,'perk:sweet':5,'onesie:tiger':1,'hat:mushroom':1,'totem:heart':1,'onesie:bee':2,'hat:flower':2,'totem:peace':2,'flair:fireflies':2,'onesie:skeleton':3,'hat:antenna':3,'totem:eye':3,'onesie:patchwork':4,'hat:crown':4,'totem:moon':4,'totem:ufo':5,'flair:prism':5};
 export function normalizeProgress(value,legacy=false){
  return {xp:count(value?.xp),legacyWardrobe:value?value.legacyWardrobe===true:legacy,totals:Object.fromEntries(ACHIEVEMENTS.filter(a=>!a.endless).map(a=>[a.id,count(value?.totals?.[a.id])])),endless:{bestCleared:Math.min(1e6,count(value?.endless?.bestCleared)),layouts:VARIATION_IDS.filter(id=>Array.isArray(value?.endless?.layouts)&&value.endless.layouts.includes(id)),remixed:value?.endless?.remixed===true},receipts:Array.isArray(value?.receipts)?[...new Set(value.receipts.filter(x=>typeof x==='string'&&x.length<150))].slice(-256):[]};
 }
@@ -53,5 +53,5 @@ export function awardStage(progress,{id,pickups=0,passes=0,flows=0,bass=0,qualif
 
 export function availablePerks(progress){
  const starter=progress.legacyWardrobe?['boots','bracelet','noodle','moth']:['boots','bracelet',...(rankFor(progress)>=1?['noodle']:[]),...(rankFor(progress)>=2?['moth']:[])];
- return [...starter,...['surfer','battery','encore','sweet'].filter(id=>rankFor(progress)>=RANK_REWARDS[`perk:${id}`])];
+ return [...starter,...['surfer','battery','encore','sweet','candy-magnet','flow-finder'].filter(id=>rankFor(progress)>=RANK_REWARDS[`perk:${id}`])];
 }

@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BONUSES,ROUTE,createTourProfile,createFestival,beginBonus,finishBonus,finishMain} from '../src/smf-tour/model.js';
 import {catalogueHTML,wardrobeHTML,titleHTML,summaryHTML,bonusResultHTML} from '../src/smf-tour/view.js';
+import {invitedBonusVisit} from './fixtures/smf-bonus-profile.mjs';
 import {mainStage} from '../src/smf-tour/content.js';
 import {createRound,advanceRound} from '../src/game.js';
 import {PERKS} from '../src/run.js';
 
 const result=({owned=false,won=false,completed=won}={})=>{
  let p=createTourProfile();p.discoveries=['villagio'];if(owned)p.rewards=['golden-chicken'];
- p=beginBonus(p,'villagio','view-test-visit',{explore:true});return finishBonus(p,{won,completed});
+ p=invitedBonusVisit('villagio','view-test-visit',p);return finishBonus(p,{won,completed});
 };
 const cleared=index=>{
  let p=createFestival(createTourProfile(),'view-test-festival');p.active.stageIndex=index;p.active.cleared=index;
@@ -31,7 +32,7 @@ test('unvisited secret names and rewards are absent from catalogue and wardrobe 
 test('discovery reveals only its own map card and earned souvenir equip choice',()=>{
  const p=createTourProfile();p.discoveries=['rabbit-hole'];
  let catalogue=catalogueHTML(p),wardrobe=wardrobeHTML(p);
- assert.match(catalogue,/Visit Rabbit Hole/);assert.match(wardrobe,/Rabbit Ears/);
+ assert.match(catalogue,/Rabbit Hole/);assert.match(catalogue,/fresh invitation/i);assert.doesNotMatch(catalogue,/data-action="explore"/);assert.match(wardrobe,/Rabbit Ears/);
  assert.doesNotMatch(wardrobe,/data-action="equip"[^>]*data-id="rabbit-ears"/);
  p.rewards=['rabbit-ears'];p.souvenir='rabbit-ears';wardrobe=wardrobeHTML(p);
  assert.match(wardrobe,/data-id="rabbit-ears" aria-pressed="true"/);

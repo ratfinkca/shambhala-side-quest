@@ -13,14 +13,14 @@ const memory=()=>{const data=new Map();return {getItem:key=>data.get(key)??null,
 const entry=(id,score,scoringVersion)=>({id,initials:'AAA',score,stagesCleared:1,completedAt:1000,...(scoringVersion?{scoringVersion}:{})});
 
 test('new generic runs enable the current crowd season while missing-version stages stay original',()=>{
- const current=createRun('endless','current');assert.equal(current.scoringVersion,'arcade-v2');assert.equal(startStage(current).crowdEnabled,true);
+ const current=createRun('endless','current');assert.equal(current.scoringVersion,'arcade-v3');assert.equal(startStage(current).crowdEnabled,true);
  const old=createRun('endless','old');delete old.scoringVersion;assert.equal(startStage(old).crowdEnabled,false);
  const pinned=createRun('rush','pinned');pinned.scoringVersion='arcade-v1';assert.equal(startStage(pinned).crowdEnabled,false);
 });
 
 test('generic recovery pins new seasons and normalizes old missing versions without changing ticket state',()=>{
- const current=makeRecovery(recoveryFixture());assert.equal(current.scoringVersion,'arcade-v2');assert.equal(readRecovery(current).value.run.scoringVersion,'arcade-v2');
- const legacy=structuredClone(current);delete legacy.scoringVersion;delete legacy.run.scoringVersion;
+ const current=makeRecovery(recoveryFixture());assert.equal(current.scoringVersion,'arcade-v3');assert.equal(readRecovery(current).value.run.scoringVersion,'arcade-v3');
+ const legacy=makeRecovery(recoveryFixture(0,'arcade-v1'));delete legacy.scoringVersion;delete legacy.run.scoringVersion;
  legacy.submission={runId:legacy.run.id,status:'ready',code:null,ticket:'a'.repeat(64),expiresAt:999999,payload:null};
  const restored=readRecovery(legacy);assert.equal(restored.ok,true);assert.equal(restored.value.scoringVersion,'arcade-v1');assert.equal(restored.value.run.scoringVersion,'arcade-v1');
  assert.deepEqual(restored.value.submission,legacy.submission);assert.equal(startStage({...restored.value.run,status:'ready'}).crowdEnabled,false);
@@ -50,7 +50,7 @@ test('saved original submission retries keep their exact original payload after 
 });
 
 test('completed original recovery retains a validated pending payload and rejects a cross-season payload',async()=>{
- const source=recoveryFixture(1);source.run.scoringVersion='arcade-v1';
+ const source=recoveryFixture(1,'arcade-v1');
  const submission=createSubmission(source.run.id);submission.setTicket(source.run.id,{ticket:'a'.repeat(64),expiresAt:'2030-01-01T00:00:00Z'});
  const payload={initials:'AAA',mode:'endless',scoringVersion:runScoringVersion(source.run),buildId:source.run.buildId,inputType:'touch',totalScore:source.run.totalScore,stagesCleared:source.run.stagesCleared,stages:source.run.scoreStages};
  await submission.post(payload,async()=>({ok:false,code:'unavailable'}));source.submission=submission;
@@ -68,12 +68,12 @@ test('offline score screen defaults to current season and original scores remain
  const root={dataset:{},parentElement:{},querySelector:()=>content,addEventListener:(name,fn)=>listeners.set(name,fn)};
  globalThis.document={createElement:node};globalThis.requestAnimationFrame=()=>{};
  t.after(()=>{for(const [key,value] of Object.entries(originals)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}});
- const saved=createStorage(memory());saved.submitScore('rush',{...entry('old',900),initials:'OLD'});saved.submitScore('rush',{...entry('new',10,'arcade-v2'),initials:'NEW'});
+ const saved=createStorage(memory());saved.submitScore('rush',{...entry('old',900),initials:'OLD'});saved.submitScore('rush',{...entry('new',10,'arcade-v3'),displayName:'New Dancer',challenge:'been-around'});
  const screens=createScreens(root,{action:(...args)=>actions.push(args)}),profile=saved.profile;
  screens.show('scores',{profile});
- assert.match(content.html,/Current crowd season/);assert.match(content.html,/Original season/);
- assert.match(content.html,/data-value="arcade-v2" aria-pressed="true"/);
- assert.deepEqual(lists.get('#board-rush').children.map(row=>row.children[0]?.textContent),['NEW']);
+ assert.match(content.html,/Challenge season/);assert.match(content.html,/Original season/);
+ assert.match(content.html,/data-value="arcade-v3" aria-pressed="true"/);
+ assert.deepEqual(lists.get('#board-rush').children.map(row=>row.children[0]?.textContent),['New Dancer']);
  listeners.get('click')({target:{closest:()=>({dataset:{action:'score-season',value:'arcade-v1'},disabled:false})}});
  assert.deepEqual(actions,[['score-season','arcade-v1']]);
  screens.show('scores',{profile,scoreSeason:actions[0][1]});
@@ -83,6 +83,7 @@ test('offline score screen defaults to current season and original scores remain
 
 test('online board caption identifies the selected scoring season',()=>{
  const board={mode:'rush',status:'ready',rows:[]};
- assert.match(renderOnlineBoard({...board,scoringVersion:'arcade-v2'}),/Casual scores · Current crowd season · all control types/);
+ assert.match(renderOnlineBoard({...board,scoringVersion:'arcade-v3',challenge:'been-around'}),/Casual scores · Challenge season · all control types/);
+ assert.match(renderOnlineBoard({...board,scoringVersion:'arcade-v2'}),/Casual scores · Crowd season · all control types/);
  assert.match(renderOnlineBoard({...board,scoringVersion:'arcade-v1'}),/Casual scores · Original season · all control types/);
 });

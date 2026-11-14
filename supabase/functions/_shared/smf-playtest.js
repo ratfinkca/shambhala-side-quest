@@ -5,6 +5,7 @@ const uint=n=>Number.isSafeInteger(n)&&n>=0;
 const stages=['smf-living-room','smf-fractal','smf-grove','smf-amp','smf-pagoda','smf-village'];
 const perks=['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'];
 export function validSmfEvents(events){return Array.isArray(events)&&events.length>0&&events.length<=20&&events.every(e=>{
+ const allowedPerks=e?.scoringVersion==='smf-v3'?[...perks,'candy-magnet','flow-finder']:perks;
  const common=['editionId','scoringVersion','eventId','guestId','buildId','mode','type'];
  if(!e||e.editionId!=='smf'||!SMF_SCORING_VERSIONS.includes(e.scoringVersion)||typeof e.eventId!=='string'||!UUID.test(e.eventId)||typeof e.guestId!=='string'||!UUID.test(e.guestId)||typeof e.buildId!=='string'||!/^[\w.-]{1,100}$/.test(e.buildId)||!MODES.includes(e.mode))return false;
  if(Object.hasOwn(e,'movementMode')){
@@ -17,7 +18,7 @@ export function validSmfEvents(events){return Array.isArray(events)&&events.leng
  }
  if(e.type==='run')return exact(e,[...common,'outcome','stagesCleared','totalScore'])&&['complete','failed','banked','exit'].includes(e.outcome)&&uint(e.stagesCleared)&&e.stagesCleared<=1440&&uint(e.totalScore);
  if(e.type==='stage')return exact(e,[...common,'stageIndex','stageId','pickups','closePasses','bassUses'])&&uint(e.stageIndex)&&e.stageIndex<1440&&stages.includes(e.stageId)&&(e.mode==='endless'||e.stageIndex<(e.mode==='rush'?1:6))&&smfRuleStage(e.mode,e.stageIndex,e.rushStageId).id===e.stageId&&[e.pickups,e.closePasses,e.bassUses].every(n=>uint(n)&&n<=100000);
- if(e.type==='perk')return exact(e,[...common,'stageIndex','action','perk','replaced'])&&uint(e.stageIndex)&&e.stageIndex<1440&&['keep','take','swap'].includes(e.action)&&(e.perk===null||perks.includes(e.perk))&&(e.replaced===null||perks.includes(e.replaced));
+ if(e.type==='perk')return exact(e,[...common,'stageIndex','action','perk','replaced'])&&uint(e.stageIndex)&&e.stageIndex<1440&&['keep','take','swap'].includes(e.action)&&(e.perk===null||allowedPerks.includes(e.perk))&&(e.replaced===null||allowedPerks.includes(e.replaced));
  return false;
 });}
 export function createSmfPlaytestHandler({origins,secret,rpc}){return async request=>{

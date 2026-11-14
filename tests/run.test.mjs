@@ -18,7 +18,7 @@ test('stage thresholds, populations and exactly-once transition guards',()=>{
 });
 test('failed stage contributes score but ends the run; rush always ends',()=>{
  const run=createRun('festival','fail');startStage(run);assert.equal(finishStage(run,completed(19)).qualified,false);assert.equal(run.status,'ended');assert.equal(run.totalScore,100);
- const rush=createRun('rush','rush');assert.deepEqual(startStage(rush).rules,rulesFor([]));finishStage(rush,completed(0));assert.equal(rush.status,'ended');
+ const rush=createRun('rush','rush');assert.deepEqual(startStage(rush).rules,rulesFor([],rush.scoringVersion));finishStage(rush,completed(0));assert.equal(rush.status,'ended');
  assert.deepEqual(createRun('festival','new').perks,[]);
 });
 test('upgrades alter only their configured rules, respect drops and expire exactly',()=>{

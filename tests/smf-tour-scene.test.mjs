@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 import {EventEmitter} from 'node:events';
-import {BONUSES,createTourProfile,createFestival,beginBonus,returnBonus,collectInvitation} from '../src/smf-tour/model.js';
+import {BONUSES,createTourProfile,createFestival,beginBonus,returnBonus,collectInvitation,endFestival,closeResults} from '../src/smf-tour/model.js';
+import {invitedBonusVisit,legacyExploreVisit} from './fixtures/smf-bonus-profile.mjs';
 import {createTourStore} from '../src/smf-tour/store.js';
 import {bonusConfig,INVITATIONS} from '../src/smf-tour/content.js';
 import {createAvatar} from '../src/Avatar.js';
@@ -59,7 +60,7 @@ function harness(initial){
  scene.crowdSocial=createCrowdSocial(scene,{getOptions:()=>scene.crowdOptions()});
  return {scene,textLabels,graphics,get profile(){return profile;},set profile(v){profile=v;},get frames(){return frames;},get invitations(){return invitations;},listenerCount:()=>[...canvasListeners.values()].reduce((n,set)=>n+set.size,0)};
 }
-function visit(id){let p=createTourProfile();p.discoveries=[id];return beginBonus(p,id,`visit-${id}`,{explore:true});}
+function visit(id){return invitedBonusVisit(id);}
 function memory(){const data=new Map();return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value)};}
 function advanceScene(scene,ms){for(let remaining=ms;remaining>0;remaining-=50){const step=Math.min(50,remaining);scene.update(elapsedMs(scene.round)+step,step);}}
 function sinkCurrentPutt(scene){
@@ -95,8 +96,8 @@ for(const {id} of BONUSES)test(`${id}: real scene loads, paints, checkpoints, re
  const store=createTourStore(memory());assert.equal(store.write(h.profile),true);h.profile=store.read();
  assert.doesNotThrow(()=>s.loadActive({paused:true}));assert.equal(s.running,false);assert.equal(s.practice.status,'paused');
  const restored=s.capture();assert.deepEqual(restored,snapshot);s.update(6000,5000);assert.deepEqual(s.capture(),restored);
- h.profile=returnBonus(h.profile);s.clearVisit();assert.equal(h.profile.active,null);assert.equal(s.sparks.length,12);assert.equal(s.allSparks.every(p=>p.visible),true);assert.equal(s.dancer.visible,true);assert.equal(h.listenerCount(),0);
- h.profile=createFestival(h.profile,'next-main');s.loadActive();assert.equal(s.stage.id,'smf-living-room');assert.equal(s.sparks.length,12);assert.equal(s.practice,null);
+ h.profile=returnBonus(h.profile);s.clearVisit();assert.equal(h.profile.active.bonus,null);assert.equal(s.sparks.length,12);assert.equal(s.allSparks.every(p=>p.visible),true);assert.equal(s.dancer.visible,true);assert.equal(h.listenerCount(),0);
+ h.profile=createFestival(closeResults(endFestival(h.profile)),'next-main');s.loadActive();assert.equal(s.stage.id,'smf-living-room');assert.equal(s.sparks.length,12);assert.equal(s.practice,null);
  assert.ok(s.crowdSocial.captureCounts().every(count=>count===0),'a new main round starts without visit friendships');
 });
 
@@ -126,17 +127,17 @@ test('a bonus visit learns through real movement, recovers paused and resets for
  const store=createTourStore(memory());assert.equal(store.write(h.profile),true);h.profile=store.read();assert.ok(h.profile.active);
  s.loadActive({paused:true});assert.equal(s.running,false);assert.equal(s.practice.status,'paused');assert.equal(s.crowdSocial.friendships.get('dancer-3').passes,2);
  assert.deepEqual(s.capture(),checkpoint);advanceScene(s,1000);assert.deepEqual(s.capture(),checkpoint);
- h.profile=returnBonus(h.profile);s.clearVisit();h.profile=beginBonus(h.profile,'rabbit-hole','second-social-visit',{explore:true});s.loadActive();
+ h.profile=returnBonus(h.profile);s.clearVisit();h.profile=invitedBonusVisit('rabbit-hole','second-social-visit',closeResults(endFestival(h.profile)));s.loadActive();
  assert.ok(s.crowdSocial.captureCounts().every(count=>count===0));
 });
 
-test('the main-scene sealed invitation waits for active time and hides after collection or discovery',()=>{
+test('the main-scene invitation hides after collection but appears again for a known venue',()=>{
  const h=harness(createFestival(createTourProfile(),'invitation-tour')),s=h.scene;s.loadActive();const duration=getTiming(s.stage.timingId).durationMs;
  s.round.remainingMs=duration-17999;s.paint();assert.equal(s.invitation.visible,false);
  s.round.remainingMs=duration-18000;s.paint();assert.equal(s.invitation.visible,true);assert.deepEqual({x:s.invitation.x,y:s.invitation.y},INVITATIONS['smf-living-room']);
  s.dancer.setPosition(s.invitation.x,s.invitation.y);s.update(18000,0);assert.equal(h.invitations,1);assert.equal(h.profile.active.pendingInvitation,true);assert.equal(s.invitation.visible,false);
  s.update(18000,0);assert.equal(h.invitations,1);
- h.profile.active.pendingInvitation=false;h.profile.discoveries=['rabbit-hole'];s.paint();assert.equal(s.invitation.visible,false);
+ h.profile.active.pendingInvitation=false;h.profile.discoveries=['rabbit-hole'];s.paint();assert.equal(s.invitation.visible,true);
 });
 
 test('putting responds immediately when reduced-motion preference changes',()=>{
@@ -200,11 +201,26 @@ test('an aiming checkpoint preserves friendship and remains unchanged while paus
  scene.resumeTour();advanceScene(scene,1000);assert.deepEqual(scene.crowdSocial.captureCounts(),counts);assert.equal(scene.running,false);
 });
 
+for(const season of ['smf-v1','smf-v2','smf-v3'])for(const phase of ['aim','rolling'])test(`${season}: Villagio ${phase} time preserves a recoverable checkpoint`,()=>{
+ const profile=visit('villagio');profile.active.scoringVersion=season;
+ const h=harness(profile),scene=h.scene;scene.loadActive();advanceScene(scene,1000);
+ scene.dancer.setPosition(218,366);advanceScene(scene,50);assert.equal(scene.practice.state.phase,'aim');
+ advanceScene(scene,1000);
+ if(phase==='rolling'){scene.shoot({x:.8,y:.12});advanceScene(scene,137);}
+ assert.equal(scene.practice.state.phase,phase);
+ assert.notEqual(elapsedMs(scene.round),scene.round.mystery.elapsedMs,'putting music advances while the disabled candy clock stays parked');
+ scene.pauseTour();const checkpoint=scene.capture();
+ h.profile.active.bonus.scene=checkpoint.scene;h.profile.active.bonus.activity=checkpoint.activity;
+ const store=createTourStore(memory());assert.equal(store.write(h.profile),true);h.profile=store.read();assert.ok(h.profile.active);
+ scene.loadActive({paused:true});assert.deepEqual(scene.capture(),checkpoint);assert.equal(scene.running,false);assert.equal(scene.practice.status,'paused');
+ advanceScene(scene,1000);assert.deepEqual(scene.capture(),checkpoint);
+});
+
 test('restored original-season runs retain pass-through rules through their bonus visits',()=>{
  const p=createFestival(createTourProfile(),'original-season');p.active.scoringVersion='smf-v1';
  const h=harness(p),s=h.scene;s.loadActive();s.update(50,50);
  assert.equal(s.resolveMovementStep,undefined);assert.equal(s.crowdOptions().enabled,false);
- h.profile.discoveries=['rabbit-hole'];h.profile=beginBonus(h.profile,'rabbit-hole','original-bonus',{explore:true});h.profile.active.scoringVersion='smf-v1';
+ h.profile=legacyExploreVisit('rabbit-hole','original-bonus');h.profile.active.scoringVersion='smf-v1';
  s.loadActive();s.update(50,50);assert.equal(s.resolveMovementStep,undefined);
  h.profile=createFestival(createTourProfile(),'crowd-season');h.profile.active.scoringVersion='smf-v2';
  s.loadActive();s.update(50,50);assert.equal(typeof s.resolveMovementStep,'function');

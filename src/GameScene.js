@@ -11,7 +11,7 @@ import { STAGES } from './stages.js';
 import { moveInArena, findSpawn, movementFactor, bassFactor, isOpen } from './geometry.js';
 import { Crowd } from './Crowd.js';
 import {MysteryRenderer} from './MysteryRenderer.js';
-import {collectMystery,findCandySpawn,mysteryDirection,mysteryTarget,mysterySpeed} from './mystery.js';
+import {collectMystery,skipMystery,findCandySpawn,mysteryDirection,mysteryTarget,mysterySpeed} from './mystery.js';
 import {bassOffset} from './bass-motion.js';
 import {drawPlayerBass} from './bass-feedback.js';
 import {createGameControls,normalizeMovementPreferences} from './game-controls.js';
@@ -59,7 +59,7 @@ export class GameScene extends Phaser.Scene {
     this.events?.once('destroy',disposeControls);
     this.game.events.emit('forest:ready', this);
   }
-  crowdOptions(){return {enabled:this.crowdEnabled!==false};}
+  crowdOptions(){return {enabled:this.crowdEnabled!==false,requiredPasses:this.friendPasses??4};}
   setControlPreferences(value) {
     this.controlPreferences=normalizeMovementPreferences(value);
     if(!this.gameControls&&this.keys&&this.game.canvas?.ownerDocument)this.gameControls=createGameControls(this);
@@ -88,14 +88,14 @@ export class GameScene extends Phaser.Scene {
     const pos=findSpawn(this.stage,Math.random,avoid,spark.preferBass);spark.setPosition(pos.x,pos.y);spark.art.setPosition(0,0);
   }
   clearInput() { this.target = null; this.gameControls?.cancel(); this.input.keyboard.resetKeys(); }
-  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null,timingId='generic-60-v1',stamina=100,crowdEnabled=true} = {}) {
+  startRound({stage = STAGES[0], rules = {}, outfit, bassChargeMs=0,runId=null,timingId='generic-60-v1',stamina=100,crowdEnabled=true,friendPasses=4} = {}) {
     getTiming(timingId);
-    this.stage = stage;this.crowdEnabled=crowdEnabled;
+    this.stage = stage;this.crowdEnabled=crowdEnabled;this.friendPasses=friendPasses;
     this.background.show(stage); this.fireflies = this.background.fireflies;
     this.crowd.configure(stage); setOutfit(this.avatar, outfit);
     this.round = createRound(rules,timingId); this.round.runId=runId; this.round.bass=createBass(bassChargeMs); this.clearInput(); this.effects.clear(true,true); this.tweens.killAll(); this.tweens.resumeAll();
     if(this.gameControls)this.round.stamina=Math.max(0,Math.min(100,stamina));
-    this.mysteryView.reset(this.round.mystery.wrapper);
+    this.mysteryView.reset(this.round.mystery.wrapper);this.candySlot=this.round.mystery.schedule?.slot??0;
     this.avatar.setPosition(0,0);this.bassFeedback.clear();
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
     resetAvatarMotion(this.avatar,{x:this.dancer.x,y:this.dancer.y,elapsed:0});
@@ -116,9 +116,9 @@ export class GameScene extends Phaser.Scene {
     const friendship=this.crowdSocial?.captureCounts()??[];
     return {round:copy,player:{x:this.dancer.x,y:this.dancer.y},sparks:this.sparks.map(s=>({x:s.x,y:s.y})),candy:{placed:this.mysteryView.placed,x:this.mysteryView.pickup.x,y:this.mysteryView.pickup.y},crowd:this.crowd.people.map((p,index)=>({...structuredClone(p.encounter),friendPasses:friendship[index]??0}))};
   }
-  restoreRecovery(value,{stage,rules,outfit,crowdEnabled=true}) {
+  restoreRecovery(value,{stage,rules,outfit,crowdEnabled=true,friendPasses=4}) {
     const timing=roundTiming(value.round);
-    this.running=false;this.stage=stage;this.crowdEnabled=crowdEnabled;this.background.show(stage);this.fireflies=this.background.fireflies;
+    this.running=false;this.stage=stage;this.crowdEnabled=crowdEnabled;this.friendPasses=friendPasses;this.background.show(stage);this.fireflies=this.background.fireflies;
     this.crowd.configure(stage);setOutfit(this.avatar,outfit);this.clearInput();this.effects.clear(true,true);this.tweens.killAll();this.tweens.pauseAll();
     this.round={...structuredClone(value.round),rules};if(this.round.sincePickupMs===null)this.round.sincePickupMs=Infinity;
     const elapsed=elapsedMs(this.round),cycle=cycleAt(elapsed,timing);this.phase=cycle.phase;
@@ -126,10 +126,10 @@ export class GameScene extends Phaser.Scene {
     resetAvatarMotion(this.avatar,{x:this.dancer.x,y:this.dancer.y,elapsed});
     this.playerCamera?.reset();
     this.sparks.forEach((s,i)=>{s.setPosition(value.sparks[i].x,value.sparks[i].y);s.art?.setPosition(0,0);});
-    this.mysteryView.reset(this.round.mystery.wrapper);this.mysteryView.placed=value.candy.placed;this.mysteryView.pickup.setPosition(value.candy.x,value.candy.y);this.mysteryView.update(this.round.mystery,this.reducedMotion);
+    this.mysteryView.reset(this.round.mystery.wrapper);this.candySlot=this.round.mystery.schedule?.slot??0;this.mysteryView.placed=value.candy.placed;this.mysteryView.pickup.setPosition(value.candy.x,value.candy.y);this.mysteryView.update(this.round.mystery,this.reducedMotion);
     this.crowd.restoreRecovery(value.crowd,elapsed,timing);
     this.crowdSocial?.reset(value.crowd.map(person=>person.friendPasses??0),elapsed);
-    this.flowSlot=availableFlow(this.round);this.flowPickup.setVisible(this.flowSlot>=0);if(this.flowSlot>=0){const p=stage.flowSpawns[this.flowSlot];this.flowPickup.setPosition(p.x,p.y);}
+    this.flowSlot=availableFlow(this.round);this.flowPickup.setVisible(this.flowSlot>=0);if(this.flowSlot>=0){const p=stage.flowSpawns[this.flowSlot%stage.flowSpawns.length];this.flowPickup.setPosition(p.x,p.y);}
     this.background.update(elapsed,cycle.phase,this.reducedMotion,timing);this.dropWash.setAlpha(0);
     this.halo.setRadius(this.round.flowMs>0?42:26);this.bassFeedback.clear();drawPlayerBass(this.bassFeedback,this.round.bass,bassFactor(this.dancer,stage.obstacles),elapsed,this.reducedMotion);
     this.lastTrail=0;this.game.events.emit('round:update',this.round);
@@ -221,11 +221,12 @@ export class GameScene extends Phaser.Scene {
     this.crowdSocial?.afterEncounters(encounters);
     this.onCrowdEncounters?.(encounters);
     const mystery=this.round.mystery;
+    const candySlot=mystery.schedule?.slot??0;if(candySlot!==this.candySlot){this.candySlot=candySlot;this.mysteryView.reset(mystery.wrapper);}
     if(mystery.phase==='available'&&!this.mysteryView.placed){
       const avoid=[{x:this.dancer.x,y:this.dancer.y,radius:100},...this.sparks.map(s=>({x:s.x,y:s.y,radius:45})),...this.stage.flowSpawns.map(p=>({...p,radius:50})),...this.crowd.people.map(p=>({x:p.node.x,y:p.node.y,radius:38}))];
       const pos=findCandySpawn(this.stage,avoid);
       if(pos){this.mysteryView.pickup.setPosition(pos.x,pos.y);this.mysteryView.placed=true;}
-      else mystery.phase='spent';
+      else skipMystery(mystery);
     }
     if(mystery.phase==='available'&&this.mysteryView.placed&&Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,this.mysteryView.pickup.x,this.mysteryView.pickup.y)<23){
       this.takeCandy();
@@ -235,7 +236,7 @@ export class GameScene extends Phaser.Scene {
     if (slot !== this.flowSlot) {
       this.flowSlot = slot;
       this.flowPickup.setVisible(slot >= 0);
-      if (slot >= 0) this.flowPickup.setPosition(this.stage.flowSpawns[slot].x,this.stage.flowSpawns[slot].y);
+      if (slot >= 0) this.flowPickup.setPosition(this.stage.flowSpawns[slot%this.stage.flowSpawns.length].x,this.stage.flowSpawns[slot%this.stage.flowSpawns.length].y);
     }
     if (slot >= 0 && Phaser.Math.Distance.Between(this.dancer.x, this.dancer.y, this.flowPickup.x, this.flowPickup.y) < 29 && activateFlow(this.round)) {
       this.flowPickup.setVisible(false);

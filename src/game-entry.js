@@ -1,6 +1,11 @@
+import {hasChallenge,challengeFields} from './player-setup-view.js';
+import {isChallenge,normalizeChallenge,CHALLENGES} from '../supabase/functions/_shared/challenges.js';
+import {validatePlayerName} from '../supabase/functions/_shared/player-name.js';
+import './player-setup.css';
 import {createInstallHelp} from './install-app.js';
+import './pickup-notice.css';
 import './install-app.css';
-import {createCharacterOnboarding,mountCharacterWelcome} from './onboarding.js';
+import {createCharacterOnboarding,mountCharacterWelcome,requiresCharacterSetup} from './onboarding.js';
 import './onboarding.css';
 import {openHowToDemo} from './how-to-play.js';
 import './how-to-play.css';
@@ -80,8 +85,8 @@ const onlineConfig=services.playtestEnabled?readOnlineConfig(import.meta.env):{e
 const playtest=createPlaytestSession({config:onlineConfig,consent:createConsent({storage:saved}),send:onlineConfig.enabled?createPlaytestSender(onlineConfig.endpoint):async()=>false});
 const arcadeConfig=services.arcadeEnabled?readArcadeConfig(import.meta.env):{};
 const arcade=createOnlineClient(arcadeConfig),board=createBoard(p=>arcade.getBoard(p));
-let submission=null,scoreSeason=SCORING_VERSION;
-async function loadBoard(mode){const pending=board.select(mode,scoreSeason);render();if(await pending&&screen.name==='scores')render();}
+let submission=null,scoreSeason=SCORING_VERSION,boardChallenge=normalizeChallenge(saved.profile.challengePreference);
+async function loadBoard(mode){const pending=board.select(mode,scoreSeason,undefined,hasChallenge(scoreSeason)?boardChallenge:undefined);render();if(await pending&&screen.name==='scores')render();}
 let replayPending=false;
 let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,progressReward,previewAvatar,previewReady=false;
@@ -108,7 +113,7 @@ function restoreRun(){
  activeTheme=applyTheme(run.themeId);submission=v.submission?createSubmission(run.id,v.submission):null;runInputs=createInputTracker();
  if(v.inputType==='mixed'){runInputs.recordInput('mouse');runInputs.recordInput('touch');}else runInputs.recordInput(v.inputType);
  playtest.recover();screen={name:v.screen,returnTo:'title'};
- if(v.scene)scene.restoreRecovery(v.scene,{stage:stageFor(run),rules:rulesFor(run.perks),outfit:saved.profile.outfit,crowdEnabled:runScoringVersion(run)===SCORING_VERSION});
+ if(v.scene)scene.restoreRecovery(v.scene,{stage:stageFor(run),rules:rulesFor(run.perks,run.scoringVersion),outfit:saved.profile.outfit,crowdEnabled:runScoringVersion(run)!=='arcade-v1',friendPasses:hasChallenge(run.scoringVersion)?CHALLENGES[normalizeChallenge(run.challenge)].friendPasses:4});
  $('#stage-name').textContent=stageLabel(run);
  render();recovery.save(true);
 }
@@ -117,7 +122,7 @@ const fmt=n=>String(n).padStart(3,'0');
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:960,height:640,backgroundColor:'#102430',scene:GameScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},audio:{noAudio:true},banner:false});
 const refreshLayout=setupResponsiveLayout(game,{getScene:()=>scene});
 const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'avatar-preview',width:240,height:240,transparent:true,audio:{noAudio:true},banner:false,fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,saved.profile.outfit);previewAvatar.setPosition(105,147).setScale(2.5);previewReady=true;},update(time){if(previewAvatar)animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches,cycleAt(time%60000).phase==='drop')}}});
-const menus=createScreens($('#menu'),{action,volume,outfit,appearance:changeAppearance,controls:changeControls,initials:value=>{if(run){run.initialsDraft=value;recovery.save(true);}}});
+const menus=createScreens($('#menu'),{action,volume,outfit,appearance:changeAppearance,controls:changeControls,initials:value=>{if(run){run[hasChallenge(run.scoringVersion)?'displayNameDraft':'initialsDraft']=value;recovery.save(true);}}});
 function changeControls(field,value){
  const result=controls.update({[field]:value});scene?.setControlPreferences(result.value);
  scene?.playerCamera?.setOptions({mode:result.value.camera,zoom:result.value.zoom});
@@ -130,7 +135,7 @@ function soundLabel(){$('#sound').textContent=saved.sound?'Sound on':'Sound off'
 function render(){
  const content=$('#menu-content');content.classList.remove('character-onboarding','character-expanded');
  menuAmbience.refresh();
- soundLabel();$('#best').textContent=fmt(saved.bestFor(run?runScoringVersion(run):SCORING_VERSION));
+ soundLabel();$('#best').textContent=fmt(saved.bestFor(run?runScoringVersion(run):SCORING_VERSION,run?.challenge??saved.profile.challengePreference));
  const playing=screen.name==='playing';document.body.dataset.mode='game';
  if(!playing)bassAction?.cancel();
  $('#game').setAttribute('aria-label',`Festival dancefloor. ${controlInstructions(controls.value)} Collect sparks and avoid bumps.`);
@@ -144,42 +149,42 @@ function render(){
  if(previewReady){if($('#avatar-preview').hidden)preview.loop.sleep();else{setOutfit(previewAvatar,saved.profile.outfit);preview.loop.wake()}}
  $('#avatar-preview-label').textContent='Your festival look';
  $('#avatar-preview').setAttribute('aria-label','Your festival look');
- menus.show(screen.name,{controls:controls.value,recovery:recoveryRecord,progressReward,onlineSubmission:submission,onlineInput:runInputs.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:{...saved.profile,bestRush:saved.bestFor(run?runScoringVersion(run):SCORING_VERSION)},scoreSeason,run,summary,stage:run?stageFor(run):STAGES[0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ menus.show(screen.name,{controls:controls.value,recovery:recoveryRecord,progressReward,onlineSubmission:submission,onlineInput:runInputs.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:{...saved.profile,bestRush:saved.bestFor(run?runScoringVersion(run):SCORING_VERSION,run?.challenge??saved.profile.challengePreference)},scoreSeason,boardChallenge,run,summary,stage:run?stageFor(run):STAGES[0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
  if(screen.name==='wardrobe'&&characterOnboarding.pendingMode)mountCharacterWelcome($('#menu-content'));
  if(screen.name==='wardrobe'){updateCharacterControls($('#menu'),saved.profile.outfit,{facing:characterFacing});void mountCharacterPortraits($('#menu'));}
  if(rewardLab&&screen.name==='wardrobe'){$('#outfit-feedback').textContent='Reward preview · temporary profile · reload to reset. Real progress is untouched.';if(progressReward)$('#outfit-feedback').insertAdjacentHTML('afterend',renderReward(progressReward));}
- if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage||'Score saved on this device.';$('#initials').value=run.initials;$('#initials').disabled=true;}
- if(screen.name==='results'&&submission?.initials){$('#initials').value=submission.initials;$('#initials').disabled=true;}
+ if(screen.name==='results'&&run.submitted&&submission?.code!=='invalid_name'){$('#save-feedback').textContent=run.submissionMessage||'Score saved on this device.';$('#initials').value=hasChallenge(run.scoringVersion)?run.displayName:run.initials;$('#initials').disabled=true;}
+ if(screen.name==='results'&&(submission?.initials||submission?.displayName)){$('#initials').value=submission.displayName??submission.initials;$('#initials').disabled=true;}
  if(rehearsal&&!recoveryLab&&screen.name==='results'){const b=$('[data-action=submit]');b.disabled=true;b.textContent='Rehearsal · scores disabled';}
  if(['title','recovery'].includes(screen.name)&&!scene)$('#menu-content').querySelectorAll('button').forEach(b=>b.disabled=true);
  refreshLayout();if(playing)$('#game').focus({preventScroll:true});
 }
 function go(type,extra={}){const next=transition(screen,{type,...extra});if(next===screen)return false;screen=next;clearToast();render();recovery.save(true);return true}
 function pause(type='PAUSE'){if(screen.name!=='playing')return;scene.pauseRound();audio.stop();go(type)}
-function newRun(mode){recoveredRun=false;runInputs=createInputTracker();activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,createRunId(),activeTheme);run.buildId=arcadeConfig.buildId||'dev';run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);summary=null;progressReward=null;resultSnapshot=null;submission=null;}
+function newRun(mode){recoveredRun=false;runInputs=createInputTracker();activeTheme=applyTheme(resolveTheme(saved.profile.themePreference));run=createRun(mode,createRunId(),activeTheme,saved.profile.challengePreference);run.displayNameDraft=saved.profile.playerName||'';run.buildId=arcadeConfig.buildId||'dev';run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(saved.profile.progress);summary=null;progressReward=null;resultSnapshot=null;submission=null;}
 function begin(){
  if(!scene||!['title','rules'].includes(screen.name))return;
  const config=startStage(run);if(!config)return;
  if(run.stageIndex===0){playtest.start(run,replayPending);replayPending=false;
-  if(arcadeConfig.baseUrl){const owner=run.id,current=createSubmission(owner),token=recovery.token();submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:runScoringVersion(run),buildId:run.buildId}).then(result=>{if(!recovery.valid(token)||run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);recovery.save(true);if(screen.name==='results')render();});}
+  if(arcadeConfig.baseUrl){const owner=run.id,current=createSubmission(owner),token=recovery.token();submission=current;void arcade.startRun({runId:owner,mode:run.mode,scoringVersion:runScoringVersion(run),...challengeFields(run),buildId:run.buildId}).then(result=>{if(!recovery.valid(token)||run?.id!==owner||submission!==current)return;current.setTicket(owner,result.ok?result.data:null);recovery.save(true);if(screen.name==='results')render();});}
  }
  playtest.stageStart(run.stageIndex,config.stage.variationId);
  audio.stop();audio.setEnabled(saved.sound);audio.setVolumes(saved.profile.audio);
  go('START');scene.startRound({...config,runId:run.id,outfit:saved.profile.outfit});recovery.save(true);refreshLayout();
  $('#stage-name').textContent=stageLabel(run);
 }
-function captureResult(){resultSnapshot={id:run.id,scoringVersion:runScoringVersion(run),score:run.totalScore,stagesCleared:run.stagesCleared,inputType:runInputs.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};}
+function captureResult(){resultSnapshot={id:run.id,scoringVersion:runScoringVersion(run),...challengeFields(run),score:run.totalScore,stagesCleared:run.stagesCleared,inputType:runInputs.inputType(),outfit:saved.profile.outfit,completedAt:Date.now()};}
 function navigateResults(destination,confirmed=false){
  if(screen.name!=='results'||!run)return;
  const state=resultsExitState(run,submission);
  if(state==='pending'){toast('Wait for posting to finish before leaving.');return;}
  if(!confirmed&&state==='unsaved'){go('LEAVE',{destination});return;}
  recovery.clear();
- if(destination==='replay'){replayPending=true;newRun(run.mode);go('REPLAY');}else{run=null;go('TITLE');}
+ if(destination==='replay'){const mode=run.mode;run=null;screen=createScreenState();replayPending=true;startFromTitle(mode);}else{run=null;go('TITLE');}
 }
 function startFromTitle(mode){
  if(screen.name!=='title')return;
- if(!rehearsal&&characterOnboarding.request(mode,saved.profile.characterConfirmed)){go('WARDROBE');return;}
+ if(!rehearsal&&characterOnboarding.request(mode,!requiresCharacterSetup(saved.profile))){go('WARDROBE');return;}
  newRun(mode);if(mode==='rush')begin();else{if(mode==='festival')playtest.menu('instructions',activeTheme);go('RULES');}
 }
 function action(name,value){
@@ -189,10 +194,18 @@ function action(name,value){
  if(name==='recovery-cancel'){screen={name:'recovery'};render();return;}
  if(name==='recovery-discard-confirm'){recovery.clear();recoveryRecord=null;screen=createScreenState();run=null;render();return;}
  switch(name){
+  case 'challenge':if(screen.name==='title'&&isChallenge(value)){saved.saveChallenge(value);render();}break;
+  case 'board-challenge':if(screen.name==='scores'&&isChallenge(value)){boardChallenge=value;if(arcadeConfig.baseUrl)void loadBoard(board.mode);else render();}break;
+  case 'player-name-save':saveName();break;
+  case 'character-slot-save':case 'character-slot-load':case 'character-slot-delete':{
+   if(screen.name!=='wardrobe')return;if(name==='character-slot-save'&&!saveName())return;
+   const method={'character-slot-save':'saveCharacterSlot','character-slot-load':'loadCharacterSlot','character-slot-delete':'deleteCharacterSlot'}[name],result=saved[method](Number(value));
+   render();const details=$('.character-slot-details');if(details)details.open=true;const note=$('#player-name-feedback');if(note)note.textContent=!result.accepted?'That character could not be saved or loaded.':result.persisted?'Character slot updated on this device.':'Character slot updated for this session; storage is unavailable.';break;
+  }
   case 'install':installHelp.open();break;
   case 'help':if(screen.name==='title')go('HELP');break;
   case 'show-demo':closeDemo?.();closeDemo=openHowToDemo({controls:controls.value});break;
-  case 'character-ready':{const mode=characterOnboarding.confirm();if(!mode||screen.name!=='wardrobe')return;saved.saveCharacterConfirmed();screen=createScreenState();startFromTitle(mode);break;}
+  case 'character-ready':{if(!saveName())return;const mode=characterOnboarding.confirm();if(!mode||screen.name!=='wardrobe')return;saved.saveCharacterConfirmed();screen=createScreenState();startFromTitle(mode);break;}
   case 'character-cancel':characterOnboarding.cancel();screen=createScreenState();render();break;
   case 'character-customize':{const c=$('#menu-content'),expanded=c.classList.toggle('character-expanded');const b=c.querySelector('[data-action=character-customize]');b.setAttribute('aria-expanded',String(expanded));b.textContent=expanded?'Keep it simple':'Make it mine';refreshLayout();break;}
   case 'playtest-accept':case 'playtest-decline':{
@@ -231,13 +244,13 @@ function action(name,value){
    characterFacing=value;if(previewAvatar)previewAvatar.pixelMotion.facing=value;
    updateCharacterControls($('#menu'),saved.profile.outfit,{facing:characterFacing});break;
   }
-  case 'scores':if(run)scoreSeason=runScoringVersion(run);if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
+  case 'scores':if(run){scoreSeason=runScoringVersion(run);boardChallenge=normalizeChallenge(run.challenge);}if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
   case 'score-season':if(screen.name==='scores'&&SCORING_VERSIONS.includes(value)){scoreSeason=value;if(arcadeConfig.baseUrl)void loadBoard(board.mode);else render();}break;
   case 'online-board':if(screen.name==='scores'&&['rush','festival','endless'].includes(value))void loadBoard(value);break;
   case 'post-online':{
    if(rehearsal||screen.name!=='results'||!run||run.scoreOverflow||!submission)return;
-   const initials=$('#initials').value.toUpperCase();if(!/^[A-Z0-9]{3}$/.test(initials)){toast('Enter three letters or digits first.');return;}
-   const owner=run.id,current=submission,token=recovery.token();const pending=current.post({initials,mode:run.mode,scoringVersion:runScoringVersion(run),buildId:run.buildId||arcadeConfig.buildId,inputType:runInputs.inputType(),totalScore:run.totalScore,stagesCleared:run.stagesCleared,stages:run.scoreStages},p=>arcade.submitScore(p));recovery.save(true);render();
+   const identity=scoreIdentity();if(!identity)return;
+   const owner=run.id,current=submission,token=recovery.token();const pending=current.post({...identity,...challengeFields(run),mode:run.mode,scoringVersion:runScoringVersion(run),buildId:run.buildId||arcadeConfig.buildId,inputType:runInputs.inputType(),totalScore:run.totalScore,stagesCleared:run.stagesCleared,stages:run.scoreStages},p=>arcade.submitScore(p));recovery.save(true);render();
    void pending.then(()=>{if(!recovery.valid(token)||run?.id!==owner||submission!==current)return;recovery.save(true);if(screen.name==='results')render();});break;
   }
   case 'back':characterOnboarding.cancel();go('BACK');break;
@@ -265,14 +278,26 @@ function action(name,value){
   case 'title':navigateResults('title');break;
   case 'submit':{
    if(rehearsal&&!recoveryLab||screen.name!=='results'||!run||run.submitted||!resultSnapshot)return;
-   const initials=($('#initials').value.toUpperCase().replace(/[^A-Z0-9]/g,'')+'AAA').slice(0,3);
-   const before=run.submitted;run.submitted=true;run.initials=initials;
-   const result=run.mode==='endless'?recovery.commitScore(run.mode,{...resultSnapshot,scoringVersion:runScoringVersion(run),initials}):saved.submitScore(run.mode,{...resultSnapshot,scoringVersion:runScoringVersion(run),initials});
+   const identity=scoreIdentity();if(!identity)return;
+   const before=run.submitted;run.submitted=true;Object.assign(run,identity);
+   const result=run.mode==='endless'?recovery.commitScore(run.mode,{...resultSnapshot,scoringVersion:runScoringVersion(run),...challengeFields(run),...identity}):saved.submitScore(run.mode,{...resultSnapshot,scoringVersion:runScoringVersion(run),...challengeFields(run),...identity});
    if(!result.accepted)run.submitted=before;
    if(result.accepted){run.submissionMessage=!result.ranked?'Good run! This score did not reach the local top ten.':result.persisted?'Score saved. See you on the next run!':'Saved for this session only — browser storage is unavailable.';render();}
    break;
   }
  }
+}
+function saveName(){
+ if(screen.name!=='wardrobe')return false;
+ const result=saved.savePlayerName($('[data-player-name]')?.value??saved.profile.playerName),note=$('#player-name-feedback');
+ if(note)note.textContent=result.accepted?(result.persisted?'Name saved. Future scores can use it.':'Name set for this session.'):result.error||'Choose a name with 2–16 letters or numbers.';
+ if(result.accepted)$('[data-player-name]').value=saved.profile.playerName;else $('[data-player-name]')?.focus();
+ return result.accepted;
+}
+function scoreIdentity(){
+ const value=$('#initials')?.value??'';
+ if(hasChallenge(run.scoringVersion)){const valid=validatePlayerName(value);if(!valid.ok){$('#save-feedback').textContent=valid.error||'Choose another rave name.';return null;}run.displayNameDraft=valid.name;return {displayName:valid.name};}
+ const initials=value.toUpperCase();if(!/^[A-Z0-9]{3}$/.test(initials)){toast('Enter three letters or digits first.');return null;}return {initials};
 }
 function volume(key,value){if(!recovery.canWrite)return;const settings={...saved.profile.audio,[key]:value};saved.saveAudio(settings);audio.setVolumes(settings);audio.setEnabled(settings.enabled);$(`#value-${key}`).textContent=`${Math.round(value*100)}%`;if(key==='effects')audio.pickup(1)}
 function saveCharacterLook(next){
@@ -354,7 +379,7 @@ game.events.on('round:end',round=>{
  const award={id:`${run.id}:${run.stageIndex}`,pickups:round.pickups,passes:round.closePasses,flows:round.flowTaken.length,bass:round.bassUses||0,qualified:result.qualified,festivalComplete:run.mode==='festival'&&run.stagesCleared===GENERIC_RULES.mainStageIds.length,...result.progressContext};
  progressReward=rehearsal&&!recoveryLab?null:awardStage(saved.profile.progress,award);
  run.availablePerks=rehearsal?Object.keys(PERKS):availablePerks(progressReward.progress);
- summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore,runScoringVersion(run));
+ summary=result;audio.stop();clearToast();if(!rehearsal&&run.mode==='rush')saved.saveBest(run.totalScore,runScoringVersion(run),run.challenge);
  if(run.status==='ended')captureResult();
  screen=transition(screen,{type:'END',qualified:run.status==='upgrade'});
  if(!rehearsal||recoveryLab){const committed=run.mode==='endless'?recovery.commitStage(award):saved.awardProgress(award);if(committed)progressReward=committed;}

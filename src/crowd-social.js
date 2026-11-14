@@ -34,7 +34,7 @@ export function createCrowdSocial(scene,{getOptions=()=>({})}={}){
   get friendships(){return friendships;},
   reset(passes=[],at=elapsedMs(scene.round)){
    clearHooks();previousMs=at;suspended=false;
-   const {baseRadius,enabled}=options();friendships=createCrowdFriendships(scene.crowd.people,{baseRadius,enabled,passes});
+   const {baseRadius,enabled,requiredPasses}=options();friendships=createCrowdFriendships(scene.crowd.people,{baseRadius,enabled,passes,requiredPasses});
    view.reset();social.paint();
   },
   beforeMove(delta){

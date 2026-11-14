@@ -1,6 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createRunSummary,createInputTracker} from '../src/playtest/summary.js';
 const make=()=>createRunSummary({runId:'r',mode:'festival',buildId:'dev',scoringVersion:'arcade-v1'});
+test('v3 summaries retain the new frequency perks and keep old seasons unchanged',()=>{
+ for(const version of ['arcade-v1','arcade-v2','arcade-v3']){
+  const s=createRunSummary({runId:'r',mode:'festival',buildId:'dev',scoringVersion:version});
+  for(const perk of ['candy-magnet','flow-finder'])s.record('perk',{runId:'r',perk,displayName:'Private Name'});
+  assert.deepEqual(s.snapshot().perks,version==='arcade-v3'?['candy-magnet','flow-finder']:[]);
+  assert.equal(JSON.stringify(s.snapshot()).includes('Private Name'),false);
+ }
+});
 test('run summaries reject stale data and finish a stage once',()=>{
  const s=make();s.record('start',{runId:'r',stageIndex:0});s.record('pickup',{runId:'old',chain:9});s.record('pickup',{runId:'r',chain:3});
  s.record('tick',{runId:'r',activeMs:16,bassMs:16,chargeMs:16});

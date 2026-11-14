@@ -20,7 +20,7 @@ test('style and settings expose choices and truthful default consent',()=>{
 });
 test('boards escape player names and local and online results are distinct',()=>{
  const p=createTourProfile();p.boards={rush:[{initials:'<X>',score:5}],festival:[],endless:[]};
- const html=boardsHTML(p,{boardVersion:'smf-v1',mode:'rush'});assert.doesNotMatch(html,/<X>/);assert.match(html,/&lt;X&gt;/);assert.match(html,/On this device/);assert.match(html,/Online/);
+ const html=boardsHTML(p,{boardVersion:'smf-v1',mode:'rush'});assert.doesNotMatch(html,/<X>/);assert.match(html,/Guest/);assert.match(html,/On this device/);assert.match(html,/Online/);
 });
 test('shell keeps finish confirmation outside steering and pause settings reachable',()=>{
  const html=shellHTML();for(const id of ['tour-pause','tour-proceed','tour-running','tour-stage','tour-points','tour-time','game','tour-paused','tour-pause-message','tour-menu','tour-order','tour-status','tour-putt'])assert.match(html,new RegExp(`id="${id}"`));
@@ -90,7 +90,7 @@ test('Rush boards show only the selected venue and its locally saved best',()=>{
  for(const name of ['The Living Room','Fractal Forest','The Grove','The AMP','The Pagoda','The Village'])assert.ok(html.includes(name));
  assert.match(html,/On this device · Quick Rush · The AMP/);assert.match(html,/Online · Quick Rush · The AMP/);
  assert.match(html,/Your saved best · The AMP[\s\S]*480 points/);
- assert.match(html,/AMP/);assert.match(html,/&lt;A&gt;/);assert.match(html,/WEB/);
+ assert.match(html,/AMP/);assert.match(html,/Guest/);assert.match(html,/WEB/);
  assert.doesNotMatch(html,/<A>|>OLD<|>PAG<|>LEAK<|>OLDWEB<|900 points|800 points/);
 });
 

@@ -1,16 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
- ROUTE,BONUSES,createTourProfile,createFestival,collectInvitation,finishMain,
+ ROUTE,BONUSES,createTourProfile,createFestival,createTourRun,stageForRun,collectInvitation,finishMain,
  choosePerk,beginBonus,finishBonus,returnBonus,endFestival,closeResults,
 } from '../src/smf-tour/model.js';
 import {createRound} from '../src/game.js';
-import {smfPreviewStage} from '../src/editions/smf-stages.js';
 import {DEFAULT_APPEARANCE} from '../src/wardrobe.js';
 
 const fresh=()=>createFestival(createTourProfile(),'tour-one');
 function ended(profile,overrides={}){
- const stage=smfPreviewStage(ROUTE[profile.active.stageIndex]);
+ const stage=stageForRun(profile.active);
  return {...createRound({},stage.timingId),runId:profile.active.id,ended:true,remainingMs:0,pickups:stage.target,score:100,...overrides};
 }
 const clear=profile=>finishMain(profile,ended(profile));
@@ -28,7 +27,7 @@ test('SMF Festival starts with its own empty profile and leaves input objects un
  const profile=createTourProfile(),before=structuredClone(profile),p=createFestival(profile,'tour-one');
  assert.deepEqual(profile,before);assert.equal(profile.active,null);
  assert.equal(profile.progress.xp,0);assert.deepEqual(profile.discoveries,[]);assert.deepEqual(profile.rewards,[]);
- assert.deepEqual(p.active,{id:'tour-one',mode:'festival',scoringVersion:'smf-v2',themeId:'neon-field-trip',stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
+ assert.deepEqual(p.active,{id:'tour-one',mode:'festival',scoringVersion:'smf-v3',challenge:'been-around',displayNameDraft:'',themeId:'neon-field-trip',stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
  assert.deepEqual(p.outfit,{onesie:'lime',hat:'bucket',totem:'none',flair:'none',appearance:DEFAULT_APPEARANCE});
  assert.equal(createFestival(p,'replacement'),p);
  assert.equal(createFestival(profile,''),profile);
@@ -64,15 +63,19 @@ test('incomplete, unrelated or invalid round completions cannot advance the tour
  assert.equal(finishMain(p,null),p);assert.equal(finishMain(createTourProfile(),ended(p)).active,null);
 });
 
-test('a discovered detour can be skipped and offered after a later qualifying parent',()=>{
+test('a skipped detour stays discovered but needs a fresh invitation next run',()=>{
  let p=parentSummary(0);
  p=choosePerk(p,null);
  assert.equal(p.active.stageIndex,1);assert.deepEqual(p.discoveries,['rabbit-hole']);
  assert.equal(collectInvitation(p),p); // Fractal has no bonus invitation.
  p=closeResults(endFestival(p));p=createFestival(p,'tour-two');
- assert.equal(collectInvitation(p),p); // Already discovered: no invitation needed.
- p=clear(p);
- assert.equal(p.active.summary.bonusId,'rabbit-hole');assert.equal(p.active.summary.bonusOffered,true);
+ const withoutInvite=clear(p);
+ assert.equal(withoutInvite.active.summary.bonusId,null);assert.equal(withoutInvite.active.summary.bonusOffered,false);
+ assert.equal(beginBonus(withoutInvite,'rabbit-hole','unearned'),withoutInvite);
+ p=collectInvitation(p);assert.equal(p.active.pendingInvitation,true);
+ assert.equal(collectInvitation(p),p);
+ p=clear(p);assert.equal(p.active.summary.bonusId,'rabbit-hole');assert.equal(p.active.summary.bonusOffered,true);
+ assert.deepEqual(p.discoveries,['rabbit-hole'],'repeat invites do not duplicate the permanent discovery');
 });
 
 test('a completed bonus parks main points, perks, charge and the pending upgrade',()=>{
@@ -82,7 +85,7 @@ test('a completed bonus parks main points, perks, charge and the pending upgrade
  const parent=structuredClone(p.active),xp=p.progress.xp;
  const visiting=beginBonus(p,'rabbit-hole','visit-one');
  assert.equal(visiting.active.status,'summary');assert.equal(visiting.active.bonus.returnTo,'summary');
- assert.deepEqual(visiting.active.summary,parent.summary);assert.equal(visiting.active.bassChargeMs,4000);
+ assert.deepEqual(visiting.active.summary,{...parent.summary,bonusOffered:false});assert.equal(visiting.active.bassChargeMs,4000);
  assert.equal(choosePerk(visiting,'boots'),visiting);assert.equal(endFestival(visiting),visiting);
  const won=finishBonus(visiting,{completed:true});
  assert.deepEqual(won.rewards,['rabbit-ears']);assert.equal(won.souvenir,'rabbit-ears');
@@ -114,19 +117,39 @@ test('AMP and Villagio prizes require actual wins; a full visit or timeout is in
  }
 });
 
-test('Explore requires discovery, keeps main results intact and never repeats owned rewards',()=>{
+test('permanent discoveries cannot bypass invitation entry from the catalogue',()=>{
  let p=closeResults(endFestival(parentSummary(0)));
  const result=structuredClone(p.lastResult);
  assert.equal(beginBonus(p,'secret-garden','locked',{explore:true}),p);
  assert.equal(beginBonus(p,'rabbit-hole','wrong-mode'),p);
- p=beginBonus(p,'rabbit-hole','explore-one',{explore:true});
- assert.equal(p.active.status,'explore');assert.equal(p.active.bonus.returnTo,'title');
- p=returnBonus(finishBonus(p,{completed:true}));
- assert.equal(p.active,null);assert.deepEqual(p.lastResult,result);assert.deepEqual(p.rewards,['rabbit-ears']);
- p.souvenir=null;
- p=returnBonus(finishBonus(beginBonus(p,'rabbit-hole','explore-two',{explore:true}),{completed:true}));
- assert.deepEqual(p.rewards,['rabbit-ears']);assert.equal(p.souvenir,null);
+ assert.equal(beginBonus(p,'rabbit-hole','explore-one',{explore:true}),p);
+ assert.equal(p.active,null);assert.deepEqual(p.lastResult,result);assert.deepEqual(p.discoveries,['rabbit-hole']);
  assert.equal(p.progress.xp,96);
+});
+
+test('using an invite consumes entry while cosmetics survive later invitation-gated visits',()=>{
+ let p=beginBonus(parentSummary(0),'rabbit-hole','first-visit');
+ assert.equal(p.active.summary.bonusOffered,false,'entry consumes the invite before the activity starts');
+ p=returnBonus(finishBonus(p,{completed:true}));
+ assert.equal(beginBonus(p,'rabbit-hole','reused-invite'),p);
+ p=closeResults(endFestival(p));p.souvenir=null;
+ p=createFestival(p,'second-run');
+ assert.deepEqual(p.rewards,['rabbit-ears']);assert.deepEqual(p.discoveries,['rabbit-hole']);
+ const noInvite=clear(p);assert.equal(beginBonus(noInvite,'rabbit-hole','no-invite'),noInvite);
+ p=beginBonus(clear(collectInvitation(p)),'rabbit-hole','second-visit');
+ p=finishBonus(p,{completed:true});assert.equal(p.active.bonus.newReward,false);
+ assert.deepEqual(p.rewards,['rabbit-ears']);assert.equal(p.souvenir,null);
+});
+
+test('Endless requires another invitation when the parent returns in a later loop',()=>{
+ let p=createTourRun(createTourProfile(),'endless','endless-invites');
+ p=returnBonus(finishBonus(beginBonus(clear(collectInvitation(p)),'rabbit-hole','loop-one'),{completed:true}));
+ for(let i=0;i<6;i++){p=choosePerk(p,null);if(i<5)p=clear(p);}
+ assert.equal(p.active.stageIndex,6);assert.equal(p.active.pendingInvitation,false);
+ assert.equal(clear(p).active.summary.bonusOffered,false);
+ p=clear(collectInvitation(p));assert.equal(p.active.summary.bonusOffered,true);
+ p=beginBonus(p,'rabbit-hole','loop-two');assert.equal(p.active.summary.bonusOffered,false);
+ assert.equal(p.active.bonus.visitId,'loop-two');assert.deepEqual(p.discoveries,['rabbit-hole']);
 });
 
 test('bonus entry rejects wrong parents, nested visits, unknown IDs and stale offers',()=>{
@@ -171,7 +194,7 @@ test('six venues follow the approved route and final Villagio returns to earned 
  assert.equal(p.active.cleared,6);assert.equal(choosePerk(p,'boots'),p);
  assert.equal(p.progress.totals.festivals,1);
  p=closeResults(p);assert.equal(p.active,null);
- assert.deepEqual(p.lastResult,{id:'tour-one',mode:'festival',scoringVersion:'smf-v2',score:600,cleared:6,completed:true});
+ assert.deepEqual(p.lastResult,{id:'tour-one',mode:'festival',scoringVersion:'smf-v3',challenge:'been-around',score:600,cleared:6,completed:true});
 });
 
 test('voluntary finish discards current live progress and pending invitations',()=>{

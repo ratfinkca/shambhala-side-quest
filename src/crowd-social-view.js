@@ -39,7 +39,7 @@ export function createCrowdSocialView(scene){
    if(bond.isFriend){
     pixelHeart(marks,x+16,y-39,1.4,0xf3a1b7,.95);
    }else if(near){
-    for(let i=0;i<4;i++)marks.fillStyle(i<bond.passes?0xbaf0cf:0x132e30,i<bond.passes?.95:.6).fillRect(Math.round(x-9+i*5),Math.round(y+20),3,3);
+    for(let i=0;i<(bond.requiredPasses??4);i++)marks.fillStyle(i<bond.passes?0xbaf0cf:0x132e30,i<bond.passes?.95:.6).fillRect(Math.round(x-((bond.requiredPasses??4)-1)*2.5+i*5),Math.round(y+20),3,3);
    }
   }
   if(debug)diagnostics.fillStyle(0xffffff,.9).fillCircle(scene.dancer.x,scene.dancer.y,2);

@@ -1,3 +1,4 @@
+import {isChallenge} from './challenges.js';
 import {validRun,validateScore,validRushSelection,MODES} from './smf-score.js';
 import {SMF_SCORING_VERSIONS} from './smf-rules.js';
 const hex=b=>[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join('');
@@ -18,17 +19,21 @@ export function createSmfArcadeHandler({kind,origins,secret,rpc}){
    const reader=request.body?.getReader();if(!reader)throw Error();let bytes=0,text='';const decoder=new TextDecoder();
    for(;;){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>(kind==='submit-score'?1048576:32768)){await reader.cancel();return reply(413,{code:'invalid'});}text+=decoder.decode(value,{stream:true});}p=JSON.parse(text+decoder.decode());
   }catch{return reply(400,{code:'invalid'});}
-  if(kind==='run-ticket'&&!validRun(p)||kind==='submit-score'&&!validateScore(p).ok||kind==='leaderboard'&&(!p||Array.isArray(p)||Object.keys(p).length!==(Object.hasOwn(p,'rushStageId')?4:3)||!validRushSelection(p)||p.editionId!=='smf'||!MODES.includes(p.mode)||!SMF_SCORING_VERSIONS.includes(p.scoringVersion)))return reply(400,{code:'invalid'});
+  const v3=p?.scoringVersion==='smf-v3';
+  if(kind==='submit-score'){const result=validateScore(p);if(!result.ok)return reply(400,{code:result.code==='invalid_name'?'invalid_name':'invalid'});p=result.record;}
+  if(kind==='run-ticket'&&!validRun(p)||kind==='leaderboard'&&(!p||typeof p!=='object'||Array.isArray(p)||Object.keys(p).length!==(3+(v3?1:0)+(Object.hasOwn(p,'rushStageId')?1:0))||!MODES.includes(p.mode)||!SMF_SCORING_VERSIONS.includes(p.scoringVersion)||(v3?!isChallenge(p.challenge):Object.hasOwn(p,'challenge'))||!validRushSelection(p)||p.editionId!=='smf'))return reply(400,{code:'invalid'});
   try{
+   const challenge=v3?{p_challenge:p.challenge}:{};
    const venue=Object.hasOwn(p,'rushStageId')?{p_rush_stage_id:p.rushStageId}:{};
-   if(kind==='leaderboard'){const rows=await rpc('smf_board',{p_mode:p.mode,p_version:p.scoringVersion,...venue});headers['Cache-Control']='public, max-age=30';return reply(200,rows);}
+   const selectedVenue=v3?{p_rush_stage_id:p.mode==='rush'?(p.rushStageId??'smf-pagoda'):null}:venue;
+   if(kind==='leaderboard'){let rows=await rpc('smf_board',{p_mode:p.mode,p_version:p.scoringVersion,...selectedVenue,...challenge});if(v3&&!Object.hasOwn(p,'rushStageId')&&Array.isArray(rows))rows=rows.map(({rushStageId,...row})=>row);headers['Cache-Control']='public, max-age=30';return reply(200,rows);}
    const key=await crypto.subtle.importKey('raw',encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
    const ip=(request.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim().slice(0,128);
    const bucket=hex(await crypto.subtle.sign('HMAC',key,encode(new Date().toISOString().slice(0,10)+':'+ip)));
    let result;
    if(kind==='run-ticket'){
     const ticket=hex(crypto.getRandomValues(new Uint8Array(32)));
-    result=await rpc('smf_ticket',{p_hash:await hash(ticket),p_run:p.runId,p_mode:p.mode,p_version:p.scoringVersion,p_build:p.buildId,p_bucket:bucket,...venue});
+    result=await rpc('smf_ticket',{p_hash:await hash(ticket),p_run:p.runId,p_mode:p.mode,p_version:p.scoringVersion,p_build:p.buildId,p_bucket:bucket,...selectedVenue,...challenge});
     if(!result.code)result={...result,ticket};
    }else result=await rpc('smf_submit',{p_hash:await hash(p.ticket),p_digest:await hash(JSON.stringify(canonical(p))),p_record:{...p,ticket:undefined},p_bucket:bucket,...venue});
    return reply(result.code?result.code==='limited'?429:400:200,result);
