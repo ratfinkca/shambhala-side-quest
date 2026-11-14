@@ -1,0 +1,46 @@
+.shell .character-identity{margin:22px 0 26px;text-align:left;border-block:2px solid var(--pixel-line,var(--border));padding:20px 0}
+.shell .character-identity h3{font:18px/1.4 var(--display);margin:0 0 8px;color:var(--accent)}
+.shell .character-help{font:13px/1.6 var(--body);margin:0 0 16px;color:var(--muted);max-width:60ch}
+.shell .character-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.shell .character-identity .character-preset{display:grid;grid-template-columns:60px minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;row-gap:5px;align-content:center;width:100%;max-width:none;margin:0;padding:12px 10px;min-height:90px;text-align:left;border:2px solid var(--border);background:var(--surface);color:var(--paper);box-shadow:3px 3px 0 var(--pixel-shadow)}
+.shell .character-portrait{grid-column:1;grid-row:1/3;align-self:center;position:relative;display:block;width:60px;height:60px;overflow:hidden;background:var(--field);border:1px solid var(--border)}
+.shell .character-portrait img{position:absolute;display:block;left:50%;top:50%;width:96px;height:96px;max-width:none;transform:translate(-50%,-50%);object-fit:contain;image-rendering:pixelated}
+.shell .character-preset :is(strong,small){grid-column:2;overflow-wrap:anywhere}
+.shell .character-preset strong{font:13px/1.5 var(--display)}
+.shell .character-preset small{font:12px/1.5 var(--body);color:var(--muted)}
+.shell .character-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+.shell .character-features label{display:grid;gap:8px;min-width:0;font:13px/1.5 var(--body);color:var(--paper)}
+.shell .character-features select{min-height:46px;width:100%;max-width:none;border:1px solid var(--border);border-radius:0;padding:9px;background:var(--field);color:var(--paper);font:16px/1.4 var(--body)}
+.shell .character-skin{padding:0;border:0;margin:18px 0;min-width:0}
+.shell .character-skin legend{font:13px/1.5 var(--body);color:var(--paper);padding:0;margin-bottom:9px}
+.shell .character-skin>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.shell .character-skin button{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:46px;margin:0;padding:8px 5px;border:2px solid var(--border);border-radius:0;background:var(--surface);color:var(--paper);font:13px/1.4 var(--body)}
+.shell .character-swatch{flex:none;width:20px;height:20px;border:1px solid var(--paper);background:var(--skin-swatch);box-shadow:2px 2px 0 var(--pixel-shadow)}
+.shell .character-angles{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.shell .character-angles>span{width:100%;font:12px/1.5 var(--body);color:var(--muted)}
+.shell .character-angles button{flex:1;min-height:44px;margin:0;padding:8px 5px;border:2px solid var(--border);border-radius:0;background:var(--surface);color:var(--paper);font:12px/1.4 var(--body)}
+.shell .character-look-name{font:12px/1.5 var(--display);margin:14px 0 0;color:var(--secondary)}
+.shell .character-identity button[aria-pressed="true"]{border-color:var(--accent);outline:1px solid var(--accent);outline-offset:-4px;background:var(--hover);color:var(--paper)}
+.shell .character-identity button:hover{background:var(--hover)}
+.shell .character-identity :is(button,select):focus-visible,.shell .character-identity button[aria-pressed="true"]:focus-visible{outline:3px solid var(--paper);outline-offset:4px}
+@media(max-width:420px){.shell .character-presets{gap:8px}.shell .character-identity .character-preset{padding:10px 7px;grid-template-columns:44px minmax(0,1fr);column-gap:7px}.shell .character-portrait{width:44px;height:54px}.shell .character-preset strong{font-size:11px}.shell .character-preset small{font-size:11px}.shell .character-skin button{font-size:12px}.shell .character-swatch{width:17px;height:19px}}
+
+/* Keep the real avatar visible while the generic Character controls scroll. */
+.shell .screen-layer[data-screen="wardrobe"]{display:grid;grid-template-columns:minmax(160px,220px) minmax(0,1fr);gap:18px;align-items:stretch}
+.shell .screen-layer[data-screen="wardrobe"] #avatar-preview{position:static;display:flex!important;flex-direction:column;align-items:center;align-self:start;justify-content:center;transform:none;width:100%;height:auto;max-height:none;margin:0;padding:8px}
+.shell .screen-layer[data-screen="wardrobe"] #avatar-preview canvas{width:100%!important;height:auto!important;image-rendering:pixelated}
+.shell .screen-layer[data-screen="wardrobe"] #avatar-preview-label{position:static;order:2;margin:0 0 8px;font:12px/1.5 var(--body)}
+.shell .screen-layer[data-screen="wardrobe"] .menu-card{margin:0;width:100%;min-height:0;max-height:100%;padding:20px;overflow:auto}
+.shell .screen-layer[data-screen="wardrobe"] .menu-card>h2{font-size:26px;margin:8px 0}
+.shell .screen-layer[data-screen="wardrobe"] .menu-card>h2::after{display:none}
+@media(max-width:650px) and (orientation:portrait){
+ .shell .screen-layer[data-screen="wardrobe"]{grid-template-columns:minmax(0,1fr);grid-template-rows:158px minmax(0,1fr);gap:10px}
+ .shell .screen-layer[data-screen="wardrobe"] #avatar-preview{align-self:stretch;height:158px;padding:3px}
+ .shell .screen-layer[data-screen="wardrobe"] #avatar-preview canvas{width:132px!important;height:132px!important}
+ .shell .screen-layer[data-screen="wardrobe"] #avatar-preview-label{font-size:11px;line-height:1.3;margin:0}
+ .shell .screen-layer[data-screen="wardrobe"] .menu-card{padding:15px 12px}
+}
+@media(orientation:landscape) and (max-height:500px){
+ .shell .screen-layer[data-screen="wardrobe"]{grid-template-columns:150px minmax(0,1fr);gap:12px}
+ .shell .screen-layer[data-screen="wardrobe"] .menu-card{padding:14px}
+}

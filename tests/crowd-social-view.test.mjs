@@ -8,7 +8,7 @@ function harness(){
  const graphics=[],labels=[];
  const people=Array.from({length:3},(_,index)=>({id:`dancer-${index}`,node:{x:100+index*60,y:200,visible:true},encounter:{active:false},ring:ring(),smooth:{list:[ring(),ring(),ring()]}}));
  const scene={running:true,round:{ended:false},dancer:{x:160,y:240},crowd:{people},add:{
-  graphics(){const g={commands:[],destroyed:false,setDepth(value){this.depth=value;return this;},clear(){this.commands=[];return this;},destroy(){this.destroyed=true;this.commands=[];}};for(const key of ['lineStyle','strokeCircle','fillStyle','fillCircle','fillTriangle'])g[key]=function(...args){this.commands.push([key,...args]);return this;};graphics.push(g);return g;},
+  graphics(){const g={commands:[],destroyed:false,setDepth(value){this.depth=value;return this;},clear(){this.commands=[];return this;},destroy(){this.destroyed=true;this.commands=[];}};for(const key of ['lineStyle','strokeCircle','strokePoints','fillStyle','fillCircle','fillTriangle','fillRect'])g[key]=function(...args){this.commands.push([key,...args]);return this;};graphics.push(g);return g;},
   text(x,y,text,style){const label={x,y,text,style,destroyed:false,alpha:1,setOrigin(){return this;},setDepth(){return this;},setPosition(x,y){this.x=x;this.y=y;return this;},setAlpha(value){this.alpha=value;return this;},destroy(){this.destroyed=true;}};labels.push(label);return label;},
  }};
  const friendships=createCrowdFriendships(people);
@@ -23,7 +23,7 @@ test('mixed personal-space rings match friendship radii and disappear outside ne
  assert.ok(h.people.every(p=>p.ring.alpha>0));assert.deepEqual(h.commands(),[],'normal play has no diagnostic circles');
  h.friendships.record([pass('dancer-0')]);h.view.paint(h.friendships);
  assert.equal(h.people[0].ring.radius,13.5);assert.equal(h.people[0].smooth.list[0].radius,13.5);assert.equal(h.people[0].smooth.list[1].radius,30.75);
- assert.equal(h.commands().filter(c=>c[0]==='fillCircle').length,4,'a developing friendship shows four progress pips');
+ assert.equal(h.commands().filter(c=>c[0]==='fillRect').length,4,'a developing friendship shows four progress pips');
  h.scene.dancer.x=900;h.view.paint(h.friendships);
  assert.ok(h.people.every(p=>p.ring.alpha===0));assert.deepEqual(h.commands(),[]);
 });
@@ -33,8 +33,8 @@ test('four passes replace personal space and pips with a heart without changing 
  const positions=h.people.map(p=>({...p.node})),encounters=structuredClone(h.people.map(p=>p.encounter)),state=h.friendships.get('dancer-0');
  h.view.paint(h.friendships);
  assert.equal(h.people[0].ring.radius,0);assert.equal(h.people[0].ring.alpha,0);assert.equal(h.people[0].smooth.list[0].visible,false);
- assert.equal(h.commands().filter(c=>c[0]==='fillTriangle').length,1);
- assert.equal(h.commands().filter(c=>c[0]==='fillCircle').length,2);
+ assert.equal(h.commands().filter(c=>c[0]==='fillRect').length,7,'a seven-run pixel heart replaces the pips');
+ assert.equal(h.commands().filter(c=>c[0]==='fillCircle').length,0);
  assert.deepEqual(h.people.map(p=>p.node),positions);assert.deepEqual(h.people.map(p=>p.encounter),encounters);assert.deepEqual(h.friendships.get('dancer-0'),state);
 });
 
@@ -42,7 +42,7 @@ test('Off uses the baseline radius and suppresses friendship marks; diagnostic g
  const h=harness();h.friendships.record([pass('dancer-0')]);h.view.paint(h.friendships,{enabled:false});
  assert.deepEqual(h.people.map(p=>p.ring.radius),[27,27,27]);assert.ok(h.people.every(p=>p.ring.stroke.colour===0xb2c5c1));assert.deepEqual(h.commands(),[]);
  h.view.paint(h.friendships,{enabled:false,debug:true});
- assert.equal(h.commands().filter(c=>c[0]==='strokeCircle').length,6);
+ assert.equal(h.commands().filter(c=>c[0]==='strokePoints').length,6);
  assert.equal(h.commands().filter(c=>c[0]==='fillCircle').length,1,'only the player diagnostic dot is filled');
 });
 

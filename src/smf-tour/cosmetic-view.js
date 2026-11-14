@@ -1,29 +1,55 @@
+import {createPixelProp} from '../pixel-art/props.js';
+import {playerAvatarAnchors} from '../pixel-art/player-anchors.js';
 import {createPuttingReward} from '../bonus-practice/putting-reward.js';
+import {createHeldPropView} from '../pixel-art/held-prop.js';
+import {setAvatarCarry} from '../Avatar.js';
+
+function drawRabbitEars(g,fit){
+ const cx=Math.round(fit.x),base=Math.round(fit.y),side=Boolean(fit.side),flip=Boolean(fit.flipX);
+ const half=Math.round(Math.max(16,Math.min(22,fit.width??19))/2);
+ const r=(colour,x,y,w,h)=>g.fillStyle(colour).fillRect(cx+Math.round(flip?-x-w:x),base+y,w,h);
+ // The band touches the measured cap opening; profile ears overlap naturally.
+ r(0x302a48,-half,-2,half*2,3);r(0xd9c5bd,-half+1,-1,half*2-2,2);
+ for(const [x,tip]of side?[[-5,-14],[1,-17]]:[[-7,-17],[3,-17]]){
+  r(0x302a48,x+1,tip,3,2);r(0x302a48,x,tip+2,5,-tip-3);
+  r(0xffefcf,x+1,tip+2,3,-tip-4);r(0xdcc9b1,x+1,-4,3,2);
+  if(!fit.back)r(0xe79db6,x+2,tip+4,1,-tip-7);
+ }
+}
 
 // An edition-owned accessory layer; generic wardrobe IDs remain unchanged.
 export function createSouvenirView(scene){
- const g=scene.add.graphics().setDepth(23),chicken=createPuttingReward(scene);
+ const headLayer=scene.add.container(0,0).setDepth(23),g=scene.add.graphics(),chicken=createPuttingReward(scene,{manageCarry:false});
+ const blossom=createPixelProp(scene,'blossom',{size:17}).setVisible(false);headLayer.add([g,blossom]);
+ const lantern=createHeldPropView(scene,'lantern-on'),cheese=createHeldPropView(scene,'toast');
+ let carrying=false;
  return {
   update(id,elapsed=0,reduced=false){
-   g.clear();const {x,y,visible}=scene.dancer;
-   chicken.update(scene.dancer,elapsed,reduced,id==='golden-chicken'&&visible);
+   // Completing the putting activity already displays the temporary chicken.
+   // Prefer that prize to a second equipped staff for its celebration.
+   const puttingPrize=Boolean(scene.config?.activity==='putt'&&scene.practice?.state.complete);
+   const nextCarry=puttingPrize||['lantern-totem','cheese-totem','golden-chicken'].includes(id);
+   if(nextCarry!==carrying){carrying=nextCarry;setAvatarCarry(scene.avatar??scene.dancer,nextCarry);}
+   g.clear();const player=scene.dancer,avatar=scene.avatar??player,{head,headwear}=playerAvatarAnchors(scene);
+   const visible=player.visible!==false&&avatar.visible!==false;
+   const sx=Number.isFinite(player.scaleX)?player.scaleX:1,sy=Number.isFinite(player.scaleY)?player.scaleY:1;
+   const alpha=(Number.isFinite(player.alpha)?player.alpha:1)*(avatar!==player&&Number.isFinite(avatar.alpha)?avatar.alpha:1);
+   const depth=Number.isFinite(player.depth)?player.depth:20;
+   headLayer.setPosition(player.x,player.y).setScale(sx,sy).setAlpha(alpha).setDepth(depth+3).setVisible(visible);
+   blossom.setVisible(Boolean(visible&&id==='glow-blossom'));
+   chicken.update(scene.dancer,elapsed,reduced,id==='golden-chicken'&&visible&&!puttingPrize);
+   lantern.update(scene.dancer,elapsed,reduced,id==='lantern-totem'&&visible&&!puttingPrize);
+   cheese.update(scene.dancer,elapsed,reduced,id==='cheese-totem'&&visible&&!puttingPrize);
    if(!visible)return;
+   const fit=headwear??{x:head.x,y:head.y-2,crown:{x:head.x,y:head.y-8},width:19};
    if(id==='rabbit-ears'){
-    g.fillStyle(0xfff0d7).fillEllipse(x-7,y-38,10,30).fillEllipse(x+7,y-38,10,30);
-    g.fillStyle(0xe49fba).fillEllipse(x-7,y-38,4,21).fillEllipse(x+7,y-38,4,21);
+    drawRabbitEars(g,fit);
    }else if(id==='glow-blossom'){
-    for(let i=0;i<6;i++){const a=i*Math.PI/3+(reduced?0:elapsed*.0005);g.fillStyle(i%2?0xffbbce:0xf6e597).fillCircle(x+Math.cos(a)*10,y-30+Math.sin(a)*10,6);}
-    g.fillStyle(0xecffd1).fillCircle(x,y-30,6);
-   }else if(id==='lantern-totem'){
-    g.lineStyle(3,0xa7c5b3).lineBetween(x+20,y+7,x+20,y-49);
-    g.fillStyle(0xffcf86,.12).fillCircle(x+20,y-54,25);g.fillStyle(0xffda96).fillRoundedRect(x+11,y-64,18,22,5);
-    g.lineStyle(1,0x986a4f).strokeRoundedRect(x+11,y-64,18,22,5).lineBetween(x+20,y-64,x+20,y-42);
-   }else if(id==='cheese-totem'){
-    g.lineStyle(3,0xb59365).lineBetween(x+23,y+8,x+23,y-53);
-    g.fillStyle(0xffcc40).fillRoundedRect(x+9,y-62,30,20,3);
-    g.fillStyle(0xffeda1).fillTriangle(x+9,y-62,x+27,y-74,x+39,y-62);
-    g.fillStyle(0xbe7c2a).fillCircle(x+17,y-54,3).fillCircle(x+31,y-50,4).fillCircle(x+27,y-59,2);
+    const side=Boolean(fit.side),offset=side?-3:Math.min(6,(fit.width??19)*.28),sign=fit.flipX?-1:1;
+    blossom.setPosition(Math.round(fit.x+offset*sign),Math.round((fit.crown?.y??fit.y-6)+4));
+    blossom.setScale(side?.8:1,1);blossom.propSprite?.setFlipX(Boolean(fit.flipX));
+    blossom.setAlpha(reduced?1:.9+Math.sin(elapsed*.003)*.1);
    }
-  },destroy(){g.destroy();chicken.destroy();},
+  },destroy(){if(carrying)setAvatarCarry(scene.avatar??scene.dancer,false);headLayer.destroy();chicken.destroy();lantern.destroy();cheese.destroy();},
  };
 }

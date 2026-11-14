@@ -2,7 +2,7 @@ import {genericContext} from './editions/storage-context.js';
 import {awardStage,requirement} from './progression.js';
 import {isThemePreference} from './themes.js';
 import {readProfile,normalizeAudio,rankScores,validScore,scoreSeason} from './profile.js';
-import {normalizeOutfit} from './wardrobe.js';
+import {normalizeOutfit,WARDROBE} from './wardrobe.js';
 import {GENERIC_RULES,GENERIC_SCORING_VERSION,GENERIC_SCORING_VERSIONS} from '../supabase/functions/_shared/edition-rules.js';
 const scoreKey=e=>`${scoreSeason(e)}:${e.id}`;
 export function createStorage(storage,{canWrite=()=>true,context=genericContext}={}){
@@ -21,7 +21,7 @@ export function createStorage(storage,{canWrite=()=>true,context=genericContext}
   saveSound(value){profile.audio.enabled=Boolean(value);return {accepted:true,persisted:persist()}},
   saveAudio(value){profile.audio=normalizeAudio(value);return {accepted:true,persisted:persist()}},
   saveTheme(value){if(!isThemePreference(value))return {accepted:false,persisted:false};profile.themePreference=value;return {accepted:true,persisted:persist()};},
-  saveOutfit(value){const next=normalizeOutfit(value);if(Object.entries(next).some(([key,id])=>requirement(profile.progress,`${key}:${id}`)))return {accepted:false,persisted:false};profile.outfit=next;return {accepted:true,persisted:persist()}},
+  saveOutfit(value){const next=normalizeOutfit(value);if(Object.keys(WARDROBE).some(key=>requirement(profile.progress,`${key}:${next[key]}`)))return {accepted:false,persisted:false};profile.outfit=next;return {accepted:true,persisted:persist()}},
   awardProgress(stage){const result=awardStage(profile.progress,stage);profile.progress=result.progress;return {...result,persisted:persist()};},
   submitScore(mode,entry){if(!['rush','festival','endless'].includes(mode)||!validScore(entry,mode)||submitted.has(scoreKey(entry)))return {accepted:false,persisted:false};submitted.add(scoreKey(entry));profile.boards[mode]=rankScores([...profile.boards[mode],entry],mode);return {accepted:true,persisted:persist(),ranked:profile.boards[mode].some(e=>scoreKey(e)===scoreKey(entry))};},
  };

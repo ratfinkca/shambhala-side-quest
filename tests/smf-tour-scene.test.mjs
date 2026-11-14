@@ -29,7 +29,7 @@ const villagio=await import('../src/bonus-practice/views/villagio.js');
 // venue views, activity views, controllers and storage all run unchanged.
 function display(scene,x=0,y=0){
  let node;const value={x,y,scene,visible:true,list:[],rotation:0,draws:[],
-  clear(){this.draws=[];return node;},fillCircle(...args){this.draws.push(['circle',...args]);return node;},fillTriangle(...args){this.draws.push(['triangle',...args]);return node;},setDepth(value){this.depth=value;return node;},
+  clear(){this.draws=[];return node;},fillCircle(...args){this.draws.push(['circle',...args]);return node;},fillTriangle(...args){this.draws.push(['triangle',...args]);return node;},fillRect(...args){this.draws.push(['rect',...args]);return node;},setDepth(value){this.depth=value;return node;},
   setPosition(a,b){this.x=a;this.y=b;return node;},setVisible(v){this.visible=v;return node;},
   setText(v){this.text=v;return node;},setZoom(v){this.zoom=v;return node;},centerOn(x,y){this.center={x,y};return node;},
   add(items){this.list.push(...(Array.isArray(items)?items:[items]));return node;},
@@ -179,13 +179,13 @@ test('putting hides social marks and chatter, then restores marks without replay
  const counts=scene.crowd.people.map((_,index)=>index===0?4:0);scene.crowdSocial.reset(counts,0);
  scene.crowdSocial.afterEncounters([{id:'dancer-0',contactStarted:true}]);
  const marks=h.graphics.find(g=>g.depth===33),reaction=h.textLabels.findLast(label=>label.text==='Oop!');
- assert.ok(marks.draws.some(command=>command[0]==='triangle'));assert.ok(reaction);
+ assert.ok(marks.draws.some(command=>command[0]==='rect'));assert.ok(reaction);
  scene.dancer.setPosition(330,350);scene.update(50,50);
  assert.equal(scene.practice.state.phase,'aim');assert.ok(scene.crowd.people.every(person=>!person.node.visible));
  assert.deepEqual(marks.draws,[]);assert.equal(reaction.destroyed,true);
  advanceScene(scene,1000);assert.deepEqual(marks.draws,[]);
  sinkCurrentPutt(scene);
- assert.ok(scene.crowd.people.every(person=>person.node.visible));assert.ok(marks.draws.some(command=>command[0]==='triangle'));
+ assert.ok(scene.crowd.people.every(person=>person.node.visible));assert.ok(marks.draws.some(command=>command[0]==='rect'));
  assert.equal(h.textLabels.filter(label=>label.text==='New friend! ♥').length,0);assert.deepEqual(scene.crowdSocial.captureCounts(),counts);
 });
 

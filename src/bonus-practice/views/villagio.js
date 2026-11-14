@@ -1,12 +1,13 @@
+import {pixelVenueTexture} from '../../pixel-art/venue-texture.js';
 import Phaser from 'phaser';
 
-// Original illustrated miniature resort; not a reconstruction of backstage.
+// Original pixel-art miniature resort; not a reconstruction of backstage.
 // Art and accents share the fixed 960 × 640 rehearsal coordinates.
 const ART_KEY='bonus-villagio-art-v1';
 const FOUNTAINS=[{x:315,y:205},{x:637,y:205}];
 
 export function preload(scene){
- if(!scene.textures.exists(ART_KEY))scene.load.image(ART_KEY,new URL('../assets/villagio-v1.png',import.meta.url).href);
+ if(!scene.textures.exists(ART_KEY))scene.load.image(ART_KEY,new URL('../assets/villagio-pixel-v1.webp',import.meta.url).href);
 }
 
 export function createView(scene,stage){
@@ -14,11 +15,11 @@ export function createView(scene,stage){
  const base=scene.add.graphics().setDepth(-5);
  base.fillStyle(0x142a35).fillRect(0,0,960,640);
  if(scene.textures.exists(ART_KEY)){
-  scene.add.image(0,0,ART_KEY).setOrigin(0).setDisplaySize(960,640).setDepth(-4);
+  scene.add.image(0,0,pixelVenueTexture(scene,ART_KEY)).setOrigin(0).setDisplaySize(960,640).setDepth(-4);
  }
  scene.add.text(480,66,'V I L L A G I O',{
-  fontFamily:'Georgia',fontSize:'21px',color:'#ffe2a3',
-  shadow:{offsetX:0,offsetY:2,color:'#452016',blur:3,fill:true},
+  fontFamily:'monospace',fontStyle:'bold',fontSize:'20px',color:'#ffe2a3',
+  shadow:{offsetX:2,offsetY:2,color:'#452016',blur:0,fill:true},
  }).setOrigin(.5).setDepth(-1);
 
  // Follow the painted tube, with small silhouettes visible through its shell.
@@ -28,10 +29,13 @@ export function createView(scene,stage){
  const chickens=Array.from({length:4},()=>{
   const c=scene.add.container(0,0).setDepth(1).setScale(.66).setAlpha(.82);
   const b=scene.add.graphics();
-  b.fillStyle(0xf8eed4).fillEllipse(0,0,22,17).fillCircle(8,-7,8);
-  b.fillStyle(0xe26d63).fillCircle(7,-15,3).fillCircle(12,-14,3);
-  b.fillStyle(0xf6bd56).fillTriangle(14,-9,23,-6,14,-3);
-  b.fillStyle(0x182c31).fillCircle(11,-9,1.7);c.add(b);return c;
+  // Chunky stepped silhouette reads as a chicken even inside the purple tube.
+  b.fillStyle(0x182c31).fillRect(-13,-7,23,14).fillRect(-9,7,14,3).fillRect(3,-16,14,15);
+  b.fillStyle(0xf8eed4).fillRect(-10,-5,20,12).fillRect(-13,-9,7,5).fillRect(5,-14,10,14);
+  b.fillStyle(0xd6c79e).fillRect(-7,0,10,5).fillRect(-8,7,12,2);
+  b.fillStyle(0xe26d63).fillRect(5,-19,4,5).fillRect(11,-18,4,4);
+  b.fillStyle(0xf6bd56).fillRect(15,-10,7,4).fillRect(15,-6,4,2);
+  b.fillStyle(0x182c31).fillRect(11,-12,2,2);c.add(b);return c;
  });
  const light=scene.add.graphics().setDepth(-2);
  const accents=scene.add.graphics().setDepth(0);
@@ -66,7 +70,7 @@ export function createView(scene,stage){
    const a=Math.PI+i/43*Math.PI;
    const x=480+183*Math.cos(a),y=211+126*Math.sin(a);
    const chase=reduced?.24:.15+.55*Math.pow(Math.max(0,Math.cos(i*.36-t*1.1)),6);
-   accents.fillStyle(i%4?0xffcb76:0xa2eee0,chase).fillCircle(x,y,1.5);
+   accents.fillStyle(i%4?0xffcb76:0xa2eee0,chase).fillRect(Math.round(x)-1,Math.round(y)-1,3,3);
   }
   for(let j=0;j<3;j++){
    const points=Array.from({length:32},(_,i)=>({x:395+i*5.3,y:192+j*5+Math.sin(i*.35+t*.65+j)*3}));

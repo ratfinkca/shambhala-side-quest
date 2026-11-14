@@ -1,3 +1,7 @@
+import {pixelizeGraphics,pixelSandwich,pixelCheese,pixelHeart} from './pixel-art/shapes.js';
+import {setCrowdOutfit} from './Crowd.js';
+import {playerAvatarAnchors} from './pixel-art/player-anchors.js';
+import {createPixelProp} from './pixel-art/props.js';
 // Disposable AMP backstage art. All motion follows round elapsed time so pause
 // freezes lighting, deliveries and the temporary prize together.
 export const VENDOR_POINT = {x:205,y:250,radius:42};
@@ -7,6 +11,21 @@ export const DELIVERY_RECIPIENTS = [
   {id:'dancer-1',index:1,name:'Orbit',costume:'Mint headphones',color:0x75e0d2},
   {id:'dancer-2',index:2,name:'Violet',costume:'Purple wizard hat',color:0xc4a1ff},
 ];
+const BYSTANDER_HATS=['bucket','flower','cat','antenna','mushroom','none'];
+
+// Orders name the costume itself. Keep those three silhouettes unique in this
+// bonus crowd while preserving every dancer, encounter and physical profile.
+export function applyDeliveryCostumes(people=[]){
+ let bystander=0;
+ for(const person of people){
+  const recipient=DELIVERY_RECIPIENTS.find(candidate=>candidate.id===person.id);
+  if(recipient){
+   setCrowdOutfit(person,{onesie:['bee','frog','moth'][recipient.index],hat:['crown','headphones','wizard'][recipient.index],totem:'none',flair:'none'},{skinTone:recipient.index===1?'medium':'light'});
+  }else{
+   setCrowdOutfit(person,{...person.avatar?.outfit,hat:BYSTANDER_HATS[bystander++%BYSTANDER_HATS.length]});
+  }
+ }
+}
 
 export const AMP_DELIVERY_STAGE = {
   id:'smf-amp-backstage',name:'AMP backstage',timingId:'smf-amp-clock-preview-1',
@@ -27,24 +46,8 @@ function starPoints(x,y,outer,inner,points=5) {
   });
 }
 
-function sandwich(g,x,y,size=1,alpha=1) {
-  const p=(dx,dy)=>({x:x+dx*size,y:y+dy*size});
-  g.fillStyle(0x5a332a,.35*alpha).fillEllipse(x,y+9*size,34*size,14*size);
-  g.fillStyle(0xab5a32,alpha).fillPoints([p(-16,-5),p(16,-5),p(-6,14)],true);
-  g.fillStyle(0xffc332,alpha).fillPoints([p(-17,-9),p(18,-8),p(-6,12)],true);
-  g.fillStyle(0xffd44e,alpha).fillRoundedRect(x-5*size,y+3*size,4*size,11*size,2*size);
-  g.fillStyle(0xc97b3c,alpha).fillPoints([p(-17,-13),p(18,-12),p(-6,8)],true);
-  g.fillStyle(0xffdf94,alpha).fillPoints([p(-12,-11),p(12,-10),p(-5,3)],true);
-  g.lineStyle(2*size,0xc38142,.85*alpha).lineBetween(x-9*size,y-7*size,x-1*size,y-3*size).lineBetween(x-2*size,y-9*size,x+5*size,y-6*size);
-}
-
-function cheese(g,x,y,size=1) {
-  const points=[{x:x-20*size,y:y-10*size},{x:x+10*size,y:y-24*size},{x:x+24*size,y:y-8*size},{x:x+24*size,y:y+15*size},{x:x-20*size,y:y+15*size}];
-  g.fillStyle(0xd27a2b).fillPoints(points,true);
-  g.fillStyle(0xffcd42).fillRect(x-20*size,y-8*size,44*size,21*size);
-  g.fillStyle(0xffe691).fillTriangle(x-20*size,y-10*size,x+10*size,y-24*size,x+24*size,y-8*size);
-  g.fillStyle(0xc18429).fillCircle(x-10*size,y+1*size,4*size).fillCircle(x+12*size,y+6*size,5*size).fillCircle(x+2*size,y-4*size,2.5*size);
-}
+function sandwich(g,x,y,size=1,alpha=1){return pixelSandwich(g,x,y,size,alpha);}
+function cheese(g,x,y,size=1){return pixelCheese(g,x,y,size);}
 
 function portraitAccessory(g,recipient) {
   const color=recipient.color;
@@ -80,16 +83,17 @@ function drawRecipient(g,recipient) {
 export function recipientPortrait(id) {
   const person=byId(id)??DELIVERY_RECIPIENTS[0],color=hex(person.color);
   const accessory=person.index===0
-    ? `<path d="M27 29V14l9 7 12-16 12 16 9-7v15z" fill="${color}"/><path d="M28 29h40" stroke="#ffedba" stroke-width="3"/>`
+    ? `<path d="M27 29V13h6v12h12V7h6v18h12V13h6v27H27z" fill="${color}"/><path d="M30 31h36v4H30z" fill="#ffedba"/>`
     : person.index===1
-      ? `<path d="M31 36a17 17 0 0 1 34 0" fill="none" stroke="${color}" stroke-width="6"/><rect x="26" y="30" width="8" height="20" rx="4" fill="${color}"/><rect x="62" y="30" width="8" height="20" rx="4" fill="${color}"/>`
-      : `<ellipse cx="48" cy="29" rx="29" ry="6" fill="${color}"/><path d="M29 29 50 0l17 29z" fill="${color}"/><path d="m48 12 2 4 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z" fill="#ffedba"/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="${person.name}: ${person.costume}"><rect x="1" y="1" width="94" height="94" rx="21" fill="#1c2633" stroke="${color}" stroke-opacity=".5"/><ellipse cx="48" cy="96" rx="29" ry="38" fill="${color}"/><rect x="39" y="63" width="18" height="30" rx="7" fill="#142434" opacity=".3"/><circle cx="48" cy="42" r="18" fill="${person.index===1?'#a87051':'#e7b28e'}"/><circle cx="42" cy="42" r="2" fill="#141c28"/><circle cx="54" cy="42" r="2" fill="#141c28"/><path d="M43 51q5 4 10 0" fill="none" stroke="#855440" stroke-width="2"/>${accessory}</svg>`;
+      ? `<path d="M30 25h36v5H30zM26 30h7v24h-7zM63 30h7v24h-7z" fill="${color}"/><path d="M29 33h3v16h-3zM65 33h3v16h-3z" fill="#c5f6df"/>`
+      : `<path d="M19 29h58v7H19zM32 29v-8h6v-7h6V7h6V1h6v13h5v8h5v7z" fill="${color}"/><path d="M47 15h4v13h-4zM43 19h12v4H43z" fill="#ffedba"/>`;
+  const pattern=person.index===0?'<path d="M24 73h48v7H24zM24 86h48v7H24z" fill="#564637"/>':person.index===1?'<path d="M41 64h14v29H41z" fill="#b1e89e"/>':'<path d="M19 62h10v27H19zM67 62h10v27H67z" fill="#79528c"/>';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="${person.name}: ${person.costume}" shape-rendering="crispEdges"><path d="M1 1h94v94H1z" fill="#1c2633" stroke="${color}" stroke-opacity=".5"/><path d="M31 60h34v7h8v29H23V67h8z" fill="${color}"/>${pattern}<path d="M36 27h24v6h6v25h-6v7H36v-7h-6V33h6z" fill="${person.index===1?'#a87051':'#e7b28e'}"/><path d="M40 42h4v4h-4zM52 42h4v4h-4z" fill="#141c28"/><path d="M43 53h10v3H43z" fill="#855440"/>${accessory}</svg>`;
 }
 
 export function createAMPBackstageView(scene,stage) {
   if(stage.id!=='smf-amp-backstage')return null;
-  const g=scene.add.graphics().setDepth(0);
+  const g=pixelizeGraphics(scene.add.graphics()).setDepth(0);
   g.fillStyle(0x142329).fillRect(0,0,960,640);
   // Warm, quiet floor leaves the approach and clean-pass lanes easy to read.
   g.fillStyle(0x31403d).fillRoundedRect(43,178,874,446,28);
@@ -130,8 +134,8 @@ export function createAMPBackstageView(scene,stage) {
   g.lineStyle(3,0xcea7f5).lineBetween(556,107,542,113).lineBetween(581,107,591,112);
   g.lineStyle(3,0x86ddd0).beginPath().arc(568,92,11,Math.PI,Math.PI*2).strokePath();
   g.fillStyle(0x86ddd0).fillRoundedRect(554,89,5,10,2).fillRoundedRect(578,89,5,10,2);
-  scene.add.text(570,63,'S2',{fontFamily:'Arial',fontSize:'29px',fontStyle:'bold',color:'#e8d5ff',letterSpacing:5}).setOrigin(.5).setDepth(.5);
-  scene.add.text(570,151,'AFTER HOURS',{fontFamily:'Arial',fontSize:'11px',fontStyle:'bold',color:'#d0b8ec',letterSpacing:4}).setOrigin(.5).setDepth(.5);
+  scene.add.text(570,63,'S2',{fontFamily:'Silkscreen, monospace',fontSize:'29px',fontStyle:'bold',color:'#e8d5ff',letterSpacing:5}).setOrigin(.5).setDepth(.5);
+  scene.add.text(570,151,'AFTER HOURS',{fontFamily:'Silkscreen, monospace',fontSize:'11px',fontStyle:'bold',color:'#d0b8ec',letterSpacing:4}).setOrigin(.5).setDepth(.5);
   // The cart: striped canvas, warm griddle, wheels and a smiling cook.
   for(let i=7;i>0;i--)g.fillStyle(0xffc46f,.012).fillEllipse(205,179,i*46,i*29);
   g.fillStyle(0x152126,.55).fillEllipse(205,196,247,31);
@@ -146,7 +150,7 @@ export function createAMPBackstageView(scene,stage) {
   g.fillStyle(0xe8bd74).fillPoints([{x:85,y:55},{x:321,y:55},{x:337,y:91},{x:69,y:91}],true);
   for(let i=0;i<9;i++)g.fillStyle(i%2?0xb45e45:0xffd88f).fillRect(72+i*29,89,29,16);
   g.fillStyle(0x402f2a).fillRoundedRect(91,58,227,29,4);
-  scene.add.text(205,73,'GRILLED CHEESE',{fontFamily:'Arial',fontSize:'17px',fontStyle:'bold',color:'#ffe7b0',letterSpacing:1}).setOrigin(.5).setDepth(.5);
+  scene.add.text(205,73,'GRILLED CHEESE',{fontFamily:'Silkscreen, monospace',fontSize:'17px',fontStyle:'bold',color:'#ffe7b0',letterSpacing:1}).setOrigin(.5).setDepth(.5);
   g.fillStyle(0xe5ad88).fillCircle(212,113,9);
   g.fillStyle(0xffebca).fillRoundedRect(198,121,29,21,7).fillEllipse(212,103,26,9).fillRoundedRect(203,95,18,12,4);
   g.lineStyle(2,0x633a32).lineBetween(209,116,215,116);
@@ -156,7 +160,7 @@ export function createAMPBackstageView(scene,stage) {
   sandwich(g,142,129,.6);sandwich(g,173,129,.54);
   g.fillStyle(0xe7d2ad).fillEllipse(248,137,40,8);
   sandwich(g,248,132,.74);
-  scene.add.text(205,167,'HOT • GOLDEN • GOOD',{fontFamily:'Arial',fontSize:'10px',fontStyle:'bold',color:'#ffe3ad',letterSpacing:1}).setOrigin(.5).setDepth(.5);
+  scene.add.text(205,167,'HOT • GOLDEN • GOOD',{fontFamily:'Silkscreen, monospace',fontSize:'10px',fontStyle:'bold',color:'#ffe3ad',letterSpacing:1}).setOrigin(.5).setDepth(.5);
   // Greenery frames the floor without introducing hidden collision scenery.
   for(const [x,y,s] of [[31,210,1],[928,220,1.1],[27,414,.85],[931,435,.9],[48,627,.9],[912,624,1]]) {
     g.fillStyle(0x754e43).fillRoundedRect(x-12*s,y-4*s,24*s,24*s,4);
@@ -175,10 +179,10 @@ export function createAMPBackstageView(scene,stage) {
     points.filter((_,i)=>i%3===0).forEach(p=>{
       g.lineStyle(1,0x826b54,.8).lineBetween(p.x,p.y,p.x,p.y+5);
       g.fillStyle(C.gold,.055).fillCircle(p.x,p.y+7,13);
-      bulbs.push(scene.add.circle(p.x,p.y+7,2.6,0xffdc9e,1).setDepth(.7));
+      bulbs.push(scene.add.rectangle(Math.round(p.x),Math.round(p.y+7),4,4,0xffdc9e,1).setDepth(.7));
     });
   }
-  const led=scene.add.graphics().setDepth(.3),steam=scene.add.graphics().setDepth(.8);
+  const led=pixelizeGraphics(scene.add.graphics()).setDepth(.3),steam=pixelizeGraphics(scene.add.graphics()).setDepth(.8);
   return {
     ownsLighting:true,
     update(elapsed,phase,reducedMotion) {
@@ -202,26 +206,24 @@ export function createAMPBackstageView(scene,stage) {
 
 export function createDeliveryView(scene) {
   const owned=[],track=node=>(owned.push(node),node);
-  for(const recipient of DELIVERY_RECIPIENTS) {
-    const person=scene.crowd.people[recipient.index];
-    if(!person)continue;
-    drawRecipient(person.body,recipient);
-  }
-  const vendor=track(scene.add.graphics().setDepth(6));
-  const ticket=track(scene.add.graphics().setPosition(302,180).setScale(.46).setDepth(6.1));
-  const pickupText=track(scene.add.text(VENDOR_POINT.x,VENDOR_POINT.y+34,'PICK UP',{fontFamily:'Arial',fontSize:'12px',fontStyle:'bold',color:'#ffe4a5',letterSpacing:2}).setOrigin(.5).setDepth(7));
-  const hand=track(scene.add.graphics());sandwich(hand,22,-2,.83);scene.dancer.add(hand);
-  const prize=track(scene.add.graphics());scene.dancer.add(prize);prize.setVisible(false);
+  applyDeliveryCostumes(scene.crowd.people);
+  const vendor=track(pixelizeGraphics(scene.add.graphics()).setDepth(6));
+  const ticket=track(pixelizeGraphics(scene.add.graphics()).setPosition(302,180).setScale(.46).setDepth(6.1));
+  const pickupText=track(scene.add.text(VENDOR_POINT.x,VENDOR_POINT.y+34,'PICK UP',{fontFamily:'Silkscreen, monospace',fontSize:'12px',fontStyle:'bold',color:'#ffe4a5',letterSpacing:2}).setOrigin(.5).setDepth(7));
+  const hand=track(createPixelProp(scene,'sandwich',{size:28}));scene.dancer.add(hand);
+  const prize=track(pixelizeGraphics(scene.add.graphics()));scene.dancer.add(prize);prize.setVisible(false);
   prize.lineStyle(3,0xb59365).lineBetween(-21,8,-21,-57);cheese(prize,-21,-61,.65);
-  const transient=track(scene.add.graphics().setDepth(26));
+  const transient=track(pixelizeGraphics(scene.add.graphics()).setDepth(26));
   let elapsed=0,reduced=false,lastState=null,feedbacks=[],destroyed=false,lastTicket=null;
 
   function update(state,now=0,reducedMotion=false) {
     if(destroyed)return;
     elapsed=now;reduced=reducedMotion;lastState=state;
     const recipient=byId(state.recipientId),ready=!state.carrying&&!state.complete;
+    const handAnchor=playerAvatarAnchors(scene).hand;
+    hand.setPosition(Math.round(handAnchor.x+(handAnchor.x<0?-7:7)),Math.round(handAnchor.y+4));
     hand.setVisible(Boolean(state.carrying||state.complete));prize.setVisible(Boolean(state.complete));
-    if(state.complete)prize.setRotation(reduced?0:Math.sin(elapsed*.004)*.04);
+    if(state.complete)prize.setRotation(0);
     vendor.clear();
     const {x,y,radius}=VENDOR_POINT;
     vendor.fillStyle(C.gold,ready?.095:.025).fillCircle(x,y,radius);
@@ -247,7 +249,7 @@ export function createDeliveryView(scene) {
         const px=person?.node.x??item.x,py=person?.node.y??item.y;
         const rise=reduced?0:progress*26,color=item.type==='wrong'?C.pink:C.mint;
         if(item.type==='wrong') {
-          transient.fillStyle(color,alpha).fillCircle(px-5,py-41-rise,6).fillCircle(px+5,py-41-rise,6).fillTriangle(px-10,py-40-rise,px+10,py-40-rise,px,py-27-rise);
+          pixelHeart(transient,px,py-43-rise,2.5,color,alpha);
           sandwich(transient,px+22,py-4,.7,alpha);
         } else if(item.type==='delivered'||item.type==='complete') {
           transient.lineStyle(4,color,alpha).lineBetween(px-8,py-41-rise,px-1,py-34-rise).lineBetween(px-1,py-34-rise,px+13,py-49-rise);

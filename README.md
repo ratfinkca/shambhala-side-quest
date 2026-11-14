@@ -4,9 +4,15 @@ A tiny, unofficial festival-inspired game: wander a glowing forest, collect good
 
 Two editions share the same engine. The original generic game stays at the site root; the SMF public test build is published at `/smf/`. See the [two-edition roadmap](docs/EDITION-ROADMAP.md) and [release validation](docs/superpowers/smf-feature-parity-validation.md).
 
+**Pixel art and Character selection:** The Character screen adds four starter looks, three faces,
+four hairstyles and six skin tones alongside existing clothes, hats, totems and
+earned effects. Appearance is saved on this device; starter looks keep equipped
+clothing. Hat sockets and held-item grips follow the animated body. See the
+[implementation and release checks](docs/superpowers/pixel-world-validation.md).
+
 ## SMF public test edition
 
-[Play the SMF edition](https://ratfinkca.github.io/shambhala-side-quest/smf/): six main venues, five discoverable bonus parties, permanent souvenirs, venue-specific artwork, original synthesized music and animated lighting. Festival Run visits all six venues; Quick Rush is a 60-second Pagoda set; Endless repeats the six-venue route with rising difficulty and four active perk slots.
+[Play the SMF edition](https://ratfinkca.github.io/shambhala-side-quest/smf/): six main venues, five discoverable bonus parties, permanent souvenirs, venue-specific artwork, original synthesized music and animated lighting. Festival Run visits all six venues; Quick Rush shuffles through those venues without immediate repeats and saves separate best scores for each; Endless repeats the six-venue route with rising difficulty and four active perk slots.
 
 Pause/resume, interrupted-run recovery, wardrobe progression, three visual themes, independent music/effects controls, local initials boards and optional online boards are included. SMF saves, scores and opt-in playtest sharing are separate from the generic edition. Bonus visits do not increase the main score. Recorded-track auditions and accelerated rehearsal tools remain local development features.
 
@@ -85,7 +91,7 @@ Pages uses the **GitHub Actions** publishing source in repository Settings → P
 
 ## Implementation
 
-Phaser 3.90 + Vite with JavaScript modules. `src/game.js` owns basic rules, `src/festival.js` owns crowd encounters and drop timing, `src/Crowd.js` renders the dancers, `src/GameScene.js` coordinates the arena, and `src/main.js` connects menus and HUD. `src/music.js` defines the beat and `src/audio.js` synthesizes it from active game time. Run state, stage definitions, geometry, profile validation and menu transitions are separate testable modules. `Avatar.js` shares the wardrobe and player renderer; `StageRenderer.js` owns stage scenery. Arena artwork and audio are procedural. Forest Freakout uses original generated illustrations and locally served OFL fonts (see public/ASSETS.md). Optional consent-gated playtest tracking and initials-based online scores use separate Supabase services; no player account is required.
+Phaser 3.90 + Vite with JavaScript modules. `src/game.js` owns basic rules, `src/festival.js` owns crowd encounters and drop timing, `src/Crowd.js` renders the dancers, `src/GameScene.js` coordinates the arena, and `src/main.js` connects menus and HUD. `src/music.js` defines the beat and `src/audio.js` synthesizes it from active game time. Run state, stage definitions, geometry, profile validation and menu transitions are separate testable modules. `Avatar.js` shares the wardrobe and player renderer; `StageRenderer.js` owns stage scenery. The pixel preview combines generated character/prop atlases and venue plates with editable wardrobe layers, procedural scenery and reactive lighting. Audio remains synthesized unless a local rehearsal track is selected. All three menu themes use original generated illustrations and locally served OFL fonts (see public/ASSETS.md). Optional consent-gated playtest tracking and initials-based online scores use separate Supabase services; no player account is required.
 
 Reduced-motion mode disables ambient pulses, decorative dancer swaying, trails, and bursts; dancers still travel because their positions matter to gameplay. The drop countdown and double-points indicator remain readable with sound and motion disabled. Storage and audio failures degrade gracefully. This is a personal fan project, not an official festival product.
 

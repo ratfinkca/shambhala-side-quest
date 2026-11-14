@@ -13,7 +13,7 @@ test('scene start configures stage, outfit, rules and resets transient state',()
  scene.startRound({stage:STAGES[1],rules:rulesFor(['moth','noodle']),bassChargeMs:7500,outfit:{onesie:'moth',hat:'wizard',totem:'star'}});
  assert.equal(scene.round.bass.chargeMs,7500);assert.equal(scene.round.bass.exposureMs,0);assert.equal(scene.round.bass.activeMs,0);
  assert.equal(scene.tweens.paused,false);assert.equal(scene.stage.id,'neon');assert.equal(scene.round.rules.flowDurationMs,7000);assert.equal(scene.round.shieldsRemaining,1);assert.equal(scene.round.remainingMs,60000);assert.equal(scene.running,true);
- assert.ok(calls.some(c=>c[0]==='stage'&&c[1]==='neon'));assert.ok(calls.some(c=>c[0]==='crowd'&&c[1]===14));assert.ok(calls.some(c=>c[0]==='fillTriangle'));
+ assert.ok(calls.some(c=>c[0]==='stage'&&c[1]==='neon'));assert.ok(calls.some(c=>c[0]==='crowd'&&c[1]===14));assert.deepEqual(scene.avatar.outfit,{onesie:'moth',hat:'wizard',totem:'star',flair:'none',appearance:{face:'smile',hair:'bob',skinTone:'light'}});
  scene.round.mystery.effect='speed';scene.round.mystery.effectMs=4000;
  scene.startRound();assert.equal(scene.round.bass.chargeMs,0);assert.equal(scene.stage.id,'forest');assert.equal(scene.round.shieldsRemaining,0);
  assert.equal(scene.round.mystery.effect,null);assert.equal(scene.round.mystery.effectMs,0);

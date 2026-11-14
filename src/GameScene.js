@@ -5,7 +5,8 @@ import { createRound, advanceRound, collect } from './game.js';
 import { cycleAt } from './festival.js';
 import { availableFlow, activateFlow, attractSpark } from './flow.js';
 import { StageRenderer } from './StageRenderer.js';
-import { createAvatar, setOutfit, animateAvatar } from './Avatar.js';
+import { createAvatar, setOutfit, animateAvatar, setAvatarMotion, resetAvatarMotion } from './Avatar.js';
+import {createPixelPickup,updatePixelPickup} from './pixel-art/items.js';
 import { STAGES } from './stages.js';
 import { moveInArena, findSpawn, movementFactor, bassFactor, isOpen } from './geometry.js';
 import { Crowd } from './Crowd.js';
@@ -33,7 +34,7 @@ export class GameScene extends Phaser.Scene {
     this.effects = this.add.group();
     this.sparks = Array.from({ length: 12 }, (_, i) => this.makeSpark(i));
     this.dancer = this.add.container(480, 380).setDepth(20);
-    this.dancer.add(this.add.ellipse(0, 13, 32, 12, 0x041519, .65));
+    this.dancer.add(this.add.rectangle(0, 13, 30, 8, 0x041519, .65));
     this.halo = this.add.circle(0, 0, 26, 0xcfffad, .09);
     this.dancer.add(this.halo);
     this.dancer.add(this.add.circle(0, 0, 17, 0x92dfb2, .15));
@@ -41,9 +42,9 @@ export class GameScene extends Phaser.Scene {
     this.avatar = createAvatar(this);
     this.dancer.add(this.avatar);
     this.flowPickup = this.add.container(0, 0).setDepth(15).setVisible(false);
-    this.flowPickup.add(this.add.circle(0, 0, 30, 0xffd886, .12));
-    this.flowPickup.add(this.add.star(0, 0, 4, 9, 20, 0xffd886).setStrokeStyle(2, 0xfff8d9));
-    this.flowPickup.add(this.add.text(0, 32, 'FLOW', {fontFamily:'Arial',fontSize:'12px',color:'#ffe3a3'}).setOrigin(.5));
+    this.flowPickup.art=createPixelPickup(this,'flow');
+    this.flowPickup.add(this.flowPickup.art);
+    this.flowPickup.add(this.add.text(0, 32, 'FLOW', {fontFamily:'Silkscreen, monospace',fontSize:'12px',color:'#ffe3a3'}).setOrigin(.5));
     this.flowSlot = -1;
     this.mysteryView = new MysteryRenderer(this);
     this.target = null;
@@ -76,11 +77,7 @@ export class GameScene extends Phaser.Scene {
   makeSpark(i) {
     const color = COLORS[i % COLORS.length];
     const spark = this.add.container(0, 0).setDepth(10);
-    spark.art=this.add.container(0,0);spark.add(spark.art);
-    spark.art.add(this.add.circle(0, 0, 20, color, .035));
-    spark.art.add(this.add.circle(0, 0, 13, color, .09));
-    spark.art.add(this.add.star(0, 0, 4, 3, 8, color, .95).setRotation(Math.PI / 4));
-    spark.art.add(this.add.circle(0, 0, 2, 0xffffff, .95));
+    spark.art=createPixelPickup(this,'spark');spark.add(spark.art);
     spark.color = color; spark.phase = i * 1.7; spark.preferBass = i < 3;
     this.placeSpark(spark);
     return spark;
@@ -101,6 +98,7 @@ export class GameScene extends Phaser.Scene {
     this.mysteryView.reset(this.round.mystery.wrapper);
     this.avatar.setPosition(0,0);this.bassFeedback.clear();
     this.dancer.setPosition(stage.spawn.x, stage.spawn.y); this.dancer.setRotation(0);
+    resetAvatarMotion(this.avatar,{x:this.dancer.x,y:this.dancer.y,elapsed:0});
     this.playerCamera?.reset();
     this.crowd.reset();
     this.crowdSocial?.reset([],0);
@@ -125,6 +123,7 @@ export class GameScene extends Phaser.Scene {
     this.round={...structuredClone(value.round),rules};if(this.round.sincePickupMs===null)this.round.sincePickupMs=Infinity;
     const elapsed=elapsedMs(this.round),cycle=cycleAt(elapsed,timing);this.phase=cycle.phase;
     this.dancer.setPosition(value.player.x,value.player.y);this.dancer.setRotation(0);this.avatar.setPosition(0,0);
+    resetAvatarMotion(this.avatar,{x:this.dancer.x,y:this.dancer.y,elapsed});
     this.playerCamera?.reset();
     this.sparks.forEach((s,i)=>{s.setPosition(value.sparks[i].x,value.sparks[i].y);s.art?.setPosition(0,0);});
     this.mysteryView.reset(this.round.mystery.wrapper);this.mysteryView.placed=value.candy.placed;this.mysteryView.pickup.setPosition(value.candy.x,value.candy.y);this.mysteryView.update(this.round.mystery,this.reducedMotion);
@@ -148,14 +147,14 @@ export class GameScene extends Phaser.Scene {
   pauseRound() { this.running = false; this.clearInput(); this.tweens.pauseAll(); }
   resumeRound() { if (!this.round.ended) { this.running = true; this.clearInput(); this.tweens.resumeAll(); } }
   effect(x,y,color,points,celebrate,label) {
-    const text = this.add.text(x,y-19,label || `+${points}`,{fontFamily:'Arial',fontSize:label?'12px':'17px',fontStyle:'bold',color:'#edffd2'}).setOrigin(.5).setDepth(30);
+    const text = this.add.text(x,y-19,label || `+${points}`,{fontFamily:'Silkscreen, monospace',fontSize:label?'12px':'16px',color:'#edffd2'}).setOrigin(.5).setDepth(30);
     this.effects.add(text);
     this.tweens.add({targets:text,y:this.reducedMotion?y-19:y-48,alpha:0,duration:800,onComplete:()=>text.destroy()});
     if (this.reducedMotion) return;
     for (let i=0;i<(celebrate?22:7);i++) {
       const angle=Math.random()*Math.PI*2, distance=celebrate?Phaser.Math.Between(40,120):Phaser.Math.Between(15,45);
-      const p=this.add.circle(x,y,Phaser.Math.Between(1,3),color,.9).setDepth(25); this.effects.add(p);
-      this.tweens.add({targets:p,x:x+Math.cos(angle)*distance,y:y+Math.sin(angle)*distance,alpha:0,scale:0,duration:celebrate?800:450,onComplete:()=>p.destroy()});
+      const size=Phaser.Math.Between(2,5),p=this.add.rectangle(x,y,size,size,color,.9).setDepth(25); this.effects.add(p);
+      this.tweens.add({targets:p,x:x+Math.cos(angle)*distance,y:y+Math.sin(angle)*distance,alpha:0,duration:celebrate?800:450,onComplete:()=>p.destroy()});
     }
   }
   // Practice scenes may supply a different controller without replacing the
@@ -194,7 +193,6 @@ export class GameScene extends Phaser.Scene {
     this.reducedMotion=this.motionQuery?.matches??this.reducedMotion;
     this.playerCamera?.update(delta);
     if (!this.reducedMotion && (this.running || this.menuAmbient)) {
-      this.sparks.forEach(s=>s.setScale(1+Math.sin(time*.003+s.phase)*.12));
       this.fireflies.forEach((f,i)=>f.setAlpha(.2+Math.sin(time*.001+i)*.15));
       this.halo.setScale(1+Math.sin(time*.004)*.08);
     }
@@ -212,9 +210,12 @@ export class GameScene extends Phaser.Scene {
     this.background.update(elapsedMs(this.round),cycle.phase,this.reducedMotion,roundTiming(this.round));
     this.dropWash.setAlpha(this.reducedMotion ? 0 : cycle.phase === 'drop' ? .045 : 0);
     this.crowdSocial?.beforeMove(delta);
-    const direction=this.movePlayer(delta);
-    if(!this.reducedMotion) this.dancer.rotation=(direction.x||direction.y)?Math.sin(time*.015)*.09:0;
-    if(!this.reducedMotion&&(direction.x||direction.y)&&time-this.lastTrail>65){this.lastTrail=time;const p=this.add.circle(this.dancer.x,this.dancer.y+10,this.round.flowMs > 0 ? 6 : 3,this.round.flowMs > 0 ? 0xffd886 : 0xbdeca6,this.round.flowMs > 0 ? .6 : .25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,scale:0,duration:450,onComplete:()=>p.destroy()});}
+    const beforeMove={x:this.dancer.x,y:this.dancer.y};
+    const direction=this.movePlayer(delta),motion=this.gameControls?.motion;
+    const drivenSpeed=motion?.actualSpeed??((direction.x||direction.y)&&delta>0?Math.hypot(this.dancer.x-beforeMove.x,this.dancer.y-beforeMove.y)*1000/Math.min(50,delta):0);
+    setAvatarMotion(this.avatar,{x:this.dancer.x,y:this.dancer.y,speed:drivenSpeed,sprinting:drivenSpeed>330,elapsed:elapsedMs(this.round)});
+    this.dancer.rotation=0;
+    if(!this.reducedMotion&&drivenSpeed>1&&time-this.lastTrail>65){this.lastTrail=time;const size=this.round.flowMs>0?6:3,p=this.add.rectangle(this.dancer.x,this.dancer.y+10,size,size,this.round.flowMs>0?0xffd886:0xbdeca6,this.round.flowMs>0?.6:.25).setDepth(8);this.effects.add(p);this.tweens.add({targets:p,alpha:0,duration:450,onComplete:()=>p.destroy()});}
     animateAvatar(this.avatar,elapsedMs(this.round),this.reducedMotion,cycle.phase==='drop');
     const encounters=this.crowd.update(this.dancer, this.round, this.reducedMotion);
     this.crowdSocial?.afterEncounters(encounters);
@@ -247,16 +248,17 @@ export class GameScene extends Phaser.Scene {
     this.sparks.forEach(spark => {
       if (this.round.flowMs > 0) { const old={x:spark.x,y:spark.y};attractSpark(spark,this.dancer,delta);if(!isOpen(spark,8,this.stage.obstacles))spark.setPosition(old.x,old.y); }
       spark.setAlpha(cycle.phase === 'drop' ? 1 : .85);
-      if (this.reducedMotion) spark.setScale(cycle.phase === 'drop' ? 1.15 : 1);
+      updatePixelPickup(spark.art,elapsedMs(this.round)+spark.phase*100,this.reducedMotion);
     });
     for(const spark of this.sparks){if(Phaser.Math.Distance.Between(this.dancer.x,this.dancer.y,spark.x,spark.y)<25){const result=collect(this.round,{playerInBass:bassFactor(this.dancer,this.stage.obstacles)<1,sparkInBass:bassFactor(spark,this.stage.obstacles)<1});this.effect(spark.x,spark.y,spark.color,result.points,result.celebrate);this.game.events.emit('round:pickup',{...result,runId:this.round.runId,chain:this.round.chain,multiplier:this.round.multiplier,pickups:this.round.pickups});this.placeSpark(spark);}}
     const elapsed=elapsedMs(this.round);
-    const shakeArt=(position,art)=>{const offset=bassOffset(position,this.stage.obstacles,elapsed,cycle.phase,this.reducedMotion,roundTiming(this.round));art.setPosition(offset.x,offset.y)};
+    const shakeArt=(position,art)=>{if(typeof art?.setPosition!=='function')return;const offset=bassOffset(position,this.stage.obstacles,elapsed,cycle.phase,this.reducedMotion,roundTiming(this.round));art.setPosition(Math.round(offset.x),Math.round(offset.y))};
     if(this.round.bass.activeMs>0)this.avatar.setPosition(0,0);else shakeArt(this.dancer,this.avatar);
     for(const spark of this.sparks)shakeArt(spark,spark.art);
     shakeArt(this.mysteryView.pickup,this.mysteryView.art);
     // The Flow label stays still; only its central artwork vibrates.
-    for(const art of this.flowPickup.list.slice(0,2))shakeArt(this.flowPickup,art);
+    updatePixelPickup(this.flowPickup.art,elapsed,this.reducedMotion);
+    if(this.flowPickup.art)shakeArt(this.flowPickup,this.flowPickup.art);
     this.game.events.emit('round:update',this.round);
   }
 }
