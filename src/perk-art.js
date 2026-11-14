@@ -1,5 +1,7 @@
 // Small procedural illustrations inherit each festival theme's palette.
 const drawings={
+ 'candy-magnet':'<path d="M25 26v35a35 35 0 0 0 70 0V26H75v35a15 15 0 0 1-30 0V26zM25 40h20m30 0h20"/><path class="perk-solid" d="m51 30 9-10 10 10-10 10z"/>',
+ 'flow-finder':'<circle cx="60" cy="60" r="36"/><path d="m60 17 9 32 32 11-32 10-9 32-10-32-32-10 32-11z"/><circle cx="60" cy="60" r="7"/>',
  surfer:'<path d="M14 82q15-20 30 0t30 0t30 0M18 97q15-15 30 0t30 0t24 0"/><ellipse cx="61" cy="74" rx="28" ry="5"/><circle cx="62" cy="27" r="8"/><path d="m60 36-8 20 17 1 8 16M53 53 40 71m18-30-20 5m21-6 20 10"/>',
  battery:'<rect x="29" y="25" width="62" height="76" rx="10"/><path d="M48 25v-8h24v8"/><path class="perk-solid" d="m68 35-25 31h18l-7 26 26-34H62z"/>',
  encore:'<circle cx="60" cy="58" r="24"/><path d="M60 20V10m0 86v12M22 58H10m86 0h12M33 31l-9-9m63 9 9-9M33 85l-9 9m63-9 9 9M49 52q11-15 23 0M47 69q13 12 26 0"/><path d="M36 108q24-12 48 0"/>',

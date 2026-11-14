@@ -1,5 +1,9 @@
 import {normalizeProgress,awardStage,availablePerks} from '../progression.js';
 import {normalizeOutfit} from '../wardrobe.js';
+import {setCharacterPlayerName,saveCharacterSlot,loadCharacterSlot,deleteCharacterSlot} from '../character-slots.js';
+import {validatePlayerName} from '../../supabase/functions/_shared/player-name.js';
+import {DEFAULT_CHALLENGE,normalizeChallenge} from '../../supabase/functions/_shared/challenges.js';
+export {setCharacterPlayerName as setTourPlayerName,saveCharacterSlot as saveTourCharacterSlot,loadCharacterSlot as loadTourCharacterSlot,deleteCharacterSlot as deleteTourCharacterSlot};
 import {smfPreviewStage} from '../editions/smf-stages.js';
 import {smfRuleStage,SMF_SCORING_VERSION} from '../../supabase/functions/_shared/smf-rules.js';
 import {isOpen} from '../geometry.js';
@@ -24,25 +28,25 @@ const validId=id=>typeof id==='string'&&id.trim().length>0&&id.length<=100;
 const count=value=>Number.isSafeInteger(value)&&value>=0;
 const bonusFor=id=>BONUSES.find(bonus=>bonus.id===id);
 const parentBonus=run=>run.mode==='rush'?null:BONUSES.find(bonus=>bonus.parentId===mainStageId(run));
-export const mainStageId=run=>smfRuleStage(run.mode||'festival',run.stageIndex,run.rushStageId).id;
+export const mainStageId=run=>smfRuleStage(run.mode||'festival',run.stageIndex,run.rushStageId,run.challenge,run.scoringVersion).id;
 export function stageForRun(run){
- const rule=smfRuleStage(run.mode||'festival',run.stageIndex,run.rushStageId),base=smfPreviewStage(rule.id),anchors=base.crowdAnchors.map(p=>[...p]);
+ const rule=smfRuleStage(run.mode||'festival',run.stageIndex,run.rushStageId,run.challenge,run.scoringVersion),base=smfPreviewStage(rule.id),anchors=base.crowdAnchors.map(p=>[...p]);
  for(const spacing of [70,55,40])for(let y=base.playBounds.minY+30;y<=590&&anchors.length<rule.crowdCount;y+=25)for(let x=130;x<=830&&anchors.length<rule.crowdCount;x+=25){
   if(isOpen({x,y},75,base.obstacles)&&Math.hypot(x-base.spawn.x,y-base.spawn.y)>110&&anchors.every(([ax,ay])=>Math.hypot(x-ax,y-ay)>spacing))anchors.push([x,y]);
  }
- return {...base,...rule,crowdAnchors:anchors};
+ return {...base,...rule,crowdAnchors:anchors.slice(0,rule.crowdCount)};
 }
-const freshRun=(id,mode='festival',themeId=THEME_DEFAULT)=>({id,mode,scoringVersion:SMF_SCORING_VERSION,themeId,stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
+const freshRun=(id,mode='festival',themeId=THEME_DEFAULT,challenge='been-around')=>({id,mode,scoringVersion:SMF_SCORING_VERSION,challenge:normalizeChallenge(challenge),displayNameDraft:'',themeId,stageIndex:0,status:'playing',score:0,cleared:0,perks:[],bassChargeMs:0,pendingInvitation:false,summary:null,bonus:null,scene:null,scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:true,remixPending:false});
 
 export function createTourProfile(){
  const progress=normalizeProgress();progress.endless.smfVenues=[];
- return {version:1,progress,discoveries:[],rewards:[],outfit:normalizeOutfit(),souvenir:null,active:null,lastResult:null,rushRotation:{remaining:[],lastStageId:null},audio:{enabled:true,music:.45,effects:.65},themePreference:THEME_DEFAULT,characterConfirmed:false,boards:{rush:[],festival:[],endless:[]},initials:'',playtestConsent:'unknown'};
+ return {version:1,progress,playerName:'',characterSlots:[null,null,null,null],challengePreference:DEFAULT_CHALLENGE,discoveries:[],rewards:[],outfit:normalizeOutfit(),souvenir:null,active:null,lastResult:null,rushRotation:{remaining:[],lastStageId:null},audio:{enabled:true,music:.45,effects:.65},themePreference:THEME_DEFAULT,characterConfirmed:false,boards:{rush:[],festival:[],endless:[]},initials:'',playtestConsent:'unknown'};
 }
 
 /** Model transitions return a new profile; invalid or repeated actions are no-ops. */
-export function createTourRun(profile,mode,id,themeId=THEME_DEFAULT,rng=Math.random){
+export function createTourRun(profile,mode,id,themeId=THEME_DEFAULT,rng=Math.random,challenge=profile?.challengePreference){
  if(!profile||profile.active||!validId(id)||!['rush','festival','endless'].includes(mode))return profile;
- const next=structuredClone(profile);next.active=freshRun(id,mode,resolveTheme(themeId));
+ const next=structuredClone(profile);next.active=freshRun(id,mode,resolveTheme(themeId),challenge);next.active.displayNameDraft=profile.playerName||'';
  if(mode==='rush'){const draw=drawRushStage(normalizeRushRotation(profile.rushRotation,lastRushStageId(profile)),rng);next.active.rushStageId=draw.rushStageId;next.rushRotation=draw.rotation;}
  return next;
 }
@@ -52,7 +56,7 @@ export function collectInvitation(profile){
  const run=profile?.active;
  if(!run||run.status!=='playing'||run.bonus||run.pendingInvitation)return profile;
  const bonus=parentBonus(run);
- if(!bonus||profile.discoveries.includes(bonus.id))return profile;
+ if(!bonus)return profile;
  const next=structuredClone(profile);next.active.pendingInvitation=true;return next;
 }
 
@@ -77,7 +81,8 @@ export function finishMain(profile,round){
  next.progress=award.progress;
  if(active.mode==='endless'&&qualified){next.progress.endless.smfVenues=[...new Set([...(next.progress.endless.smfVenues||[]),stage.id])];}
  active.remixPending=false;
- const bonusId=qualified&&bonus&&next.discoveries.includes(bonus.id)?bonus.id:null;
+ // Discoveries remember a venue; only this stage's pickup grants a visit.
+ const bonusId=qualified&&bonus&&active.pendingInvitation?bonus.id:null;
  active.summary={stageId:stage.id,qualified,score:round.score,xp:award.xp,bonusId,bonusOffered:!!bonusId,target:stage.target,pickups:round.pickups,totalScore:active.score};
  active.status=!qualified||festivalComplete||active.mode==='rush'?'results':'summary';
  active.bassChargeMs=Number.isFinite(round.bass?.chargeMs)?Math.max(0,Math.min(10000,round.bass.chargeMs)):0;
@@ -89,7 +94,7 @@ export function choosePerk(profile,perkId,replaceId){
  const run=profile?.active;
  if(!run||run.status!=='summary'||run.bonus||!run.summary?.qualified||run.mode==='rush'||run.mode==='festival'&&run.stageIndex>=ROUTE.length-1)return profile;
  if(perkId!==null){
-  if(!availablePerks(profile.progress).includes(perkId)||run.perks.includes(perkId))return profile;
+  if(!availablePerks(profile.progress).includes(perkId)||run.perks.includes(perkId)||run.scoringVersion!=='smf-v3'&&['candy-magnet','flow-finder'].includes(perkId))return profile;
   if(run.perks.length>=4?!run.perks.includes(replaceId):replaceId!=null)return profile;
  }else if(replaceId!=null)return profile;
  const next=structuredClone(profile),active=next.active;
@@ -103,14 +108,14 @@ export function choosePerk(profile,perkId,replaceId){
 
 export function beginBonus(profile,bonusId,visitId,{explore=false}={}){
  const bonus=bonusFor(bonusId),run=profile?.active;
- if(!profile||!bonus||!validId(visitId)||!profile.discoveries.includes(bonusId))return profile;
- if(explore){if(run)return profile;}
- else if(!run||run.bonus||!['summary','results'].includes(run.status)
+ // Legacy Explore visits may recover, but discovery no longer starts a visit.
+ if(explore||!profile||!bonus||!validId(visitId)||!profile.discoveries.includes(bonusId))return profile;
+ if(!run||run.bonus||!['summary','results'].includes(run.status)
   ||!run.summary?.qualified||!run.summary.bonusOffered||run.summary.bonusId!==bonusId
   ||mainStageId(run)!==bonus.parentId)return profile;
  const next=structuredClone(profile);
- if(explore)next.active={...freshRun(visitId),status:'explore'};
- next.active.bonus={id:bonusId,visitId,status:'playing',scene:null,activity:null,returnTo:explore?'title':run.status};
+ next.active.summary.bonusOffered=false;
+ next.active.bonus={id:bonusId,visitId,status:'playing',scene:null,activity:null,returnTo:run.status};
  return next;
 }
 
@@ -152,16 +157,19 @@ export function closeResults(profile){
  const run=profile?.active;
  if(!run||run.status!=='results'||run.bonus)return profile;
  const next=structuredClone(profile);
- next.lastResult={id:run.id,mode:run.mode,scoringVersion:resolveSmfScoringVersion(run.scoringVersion),score:run.score,cleared:run.cleared,completed:run.mode==='festival'&&run.cleared===ROUTE.length};
+ next.lastResult={id:run.id,mode:run.mode,scoringVersion:resolveSmfScoringVersion(run.scoringVersion),...(run.scoringVersion==='smf-v3'?{challenge:normalizeChallenge(run.challenge)}:{}),score:run.score,cleared:run.cleared,completed:run.mode==='festival'&&run.cleared===ROUTE.length};
  if(run.mode==='rush')next.lastResult.rushStageId=resolveRushStageId(run.rushStageId);
  next.active=null;return next;
 }
 
-export function saveTourScore(profile,initials){
+export function saveTourScore(profile,value){
  const run=profile?.active;if(!run||run.status!=='results'||run.bonus||run.scoreSaved)return profile;
- const name=typeof initials==='string'?initials.trim().toUpperCase():'';if(!/^[A-Z0-9]{3}$/.test(name))return profile;
- const next=structuredClone(profile),a=next.active;next.initials=name;a.initialsDraft=name;a.scoreSaved=true;
- const row={id:a.id,mode:a.mode,scoringVersion:resolveSmfScoringVersion(a.scoringVersion),initials:name,score:a.score,cleared:a.cleared,stagesCleared:a.cleared,inputType:a.inputType,outfit:structuredClone(next.outfit),completedAt:Date.now()};
+ const named=resolveSmfScoringVersion(run.scoringVersion)==='smf-v3',validated=validatePlayerName(value??profile.playerName);
+ const initials=typeof value==='string'?value.trim().toUpperCase():'';
+ if(named?!validated.ok:!/^[A-Z0-9]{3}$/.test(initials))return profile;
+ const next=structuredClone(profile),a=next.active;a.scoreSaved=true;
+ if(!named){next.initials=initials;a.initialsDraft=initials;}
+ const row={id:a.id,mode:a.mode,scoringVersion:resolveSmfScoringVersion(a.scoringVersion),...(named?{displayName:validated.name,challenge:normalizeChallenge(a.challenge)}:{initials}),score:a.score,cleared:a.cleared,stagesCleared:a.cleared,inputType:a.inputType,outfit:structuredClone(next.outfit),completedAt:Date.now()};
  if(a.mode==='rush')row.rushStageId=resolveRushStageId(a.rushStageId);
  const board=next.boards[a.mode].filter(item=>item.id!==a.id||resolveSmfScoringVersion(item.scoringVersion)!==row.scoringVersion);board.push(row);next.boards[a.mode]=a.mode==='rush'?limitRushBoard(board):limitSeasonBoard(board,a.mode);return next;
 }

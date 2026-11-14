@@ -1,4 +1,6 @@
 /* Edition-owned menu selectors stay out of the generic bundle. */
+.smf-tour[data-immersive=true] #tour-order{border:1px solid var(--border);border-radius:0;background:var(--ink);box-shadow:3px 3px 0 #0006;padding:8px 10px}
+.smf-tour[data-immersive=true] #tour-order strong{font:400 10px/1.5 var(--display);color:var(--accent)}
 .shell :is(.screen-layer,.tour-menu){scrollbar-width:thin;scrollbar-color:var(--accent) var(--ink)}
 .shell :is(.menu-card,.tour-menu)>:is(h2,h3){text-wrap:balance}
 .shell :is(.menu-card,.tour-menu)>h2::after{content:'';display:block;width:48px;height:4px;margin:16px auto 20px;background:var(--accent);box-shadow:12px 6px 0 -1px var(--secondary)}

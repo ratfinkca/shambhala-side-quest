@@ -117,7 +117,7 @@ Forest Freakout is the first implemented style: illustrated title, perk cards, f
 
 Public playtest sharing is opt-in, with controls on the title screen and in settings. Players can share compact gameplay summaries and stop sharing at any time. Local scores and gameplay do not require consent. Online arcade posting is a separate explicit choice. See [operations and setup](docs/online-operations.md).
 
-Online arcade implementation is available behind `VITE_ARCADE_ENABLED` and `VITE_ARCADE_URL`. It uses three-character initials, separate Rush/Festival/Endless top-50 boards, and explicit posting independent of optional analytics. Backend release checks passed; production enablement uses repository configuration. See `docs/online-operations.md`.
+Online arcade implementation is available behind `VITE_ARCADE_ENABLED` and `VITE_ARCADE_URL`. New runs use editable rave names and separate First-timer, Been-around and Seasoned-vet boards within Rush/Festival/Endless. SMF Rush also separates each venue. Historical seasons preserve their initials and scores. Posting remains explicit and independent of optional analytics; character presets stay on the device. See `docs/online-operations.md` for backend-first release details.
 
 
 ## M2 layout preview (local development)

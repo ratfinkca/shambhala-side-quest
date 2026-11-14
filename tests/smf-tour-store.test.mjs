@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTourStore,normalizeTourProfile} from '../src/smf-tour/store.js';
-import {BONUSES,ROUTE,createTourProfile,createFestival,collectInvitation,finishMain,choosePerk,beginBonus,finishBonus,returnBonus,closeResults} from '../src/smf-tour/model.js';
+import {BONUSES,ROUTE,createTourProfile,createFestival,collectInvitation,finishMain,stageForRun,choosePerk,beginBonus,finishBonus,returnBonus,closeResults} from '../src/smf-tour/model.js';
 import {smfPreviewStage} from '../src/editions/smf-stages.js';
 import {bonusConfig,bonusController} from '../src/smf-tour/content.js';
 import {createRound,collect,advanceRound} from '../src/game.js';
@@ -9,9 +9,10 @@ import {createEncounter,awardClosePass} from '../src/festival.js';
 import {createCrowdFriendships} from '../src/crowd-friendship.js';
 import {rulesFor} from '../src/run.js';
 import {activateFlow} from '../src/flow.js';
-import {collectMystery} from '../src/mystery.js';
+import {collectMystery,createMystery} from '../src/mystery.js';
 import {createBass,activateBass} from '../src/bass-head.js';
 import {registerHooks} from 'node:module';
+import {invitedBonusVisit,legacyExploreVisit} from './fixtures/smf-bonus-profile.mjs';
 
 registerHooks({resolve(s,c,next){return s==='phaser'?{url:'test:smf-store-phaser',shortCircuit:true}:next(s,c);},load(url,c,next){return url==='test:smf-store-phaser'?{format:'module',source:'export default {Scene: class {}}',shortCircuit:true}:next(url,c);}});
 const {GameScene}=await import('../src/GameScene.js');
@@ -25,14 +26,14 @@ function gameScene(){
 
 const KEY='sidequest.smf.profile.v1';
 function memory(){const data=new Map();return {data,getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value)};}
-function snapshot(stage,id){
- const {rules,...round}=createRound({},stage.timingId);
+function snapshot(stage,id,{scoringVersion=null,perks=[]}={}){
+ const {rules,...round}=createRound(rulesFor(perks,scoringVersion),stage.timingId);
  round.runId=id;round.sincePickupMs=null;
  return {round,player:{...stage.spawn},sparks:Array.from({length:12},()=>({x:450,y:400})),candy:{placed:false,x:0,y:0},crowd:stage.crowdAnchors.map(()=>createEncounter())};
 }
 function playing(){
  const profile=createFestival(createTourProfile(),'tour-123');
- profile.active.scene=snapshot(smfPreviewStage('smf-living-room'),profile.active.id);
+ profile.active.scene=snapshot(stageForRun(profile.active),profile.active.id,profile.active);
  return profile;
 }
 
@@ -85,9 +86,9 @@ test('oversized or cyclic records cannot replace an existing save',()=>{
  mem.data.set(KEY,'{broken');assert.equal(store.read().active,null);
 });
 
-test('all five bonus activities preserve their scene and activity from Explore',()=>{
+test('all five bonus activities preserve legacy Explore checkpoints without reopening catalogue entry',()=>{
  for(const bonus of BONUSES){
-  let profile=createTourProfile();profile.discoveries=[bonus.id];profile=beginBonus(profile,bonus.id,`visit-${bonus.id}`,{explore:true});
+  const profile=legacyExploreVisit(bonus.id,`visit-${bonus.id}`);
   const config=bonusConfig(bonus.id),controller=bonusController(config);controller.start();
   profile.active.bonus.activity=controller.capture();profile.active.bonus.scene=snapshot(config.stage,profile.active.bonus.visitId);
   const store=createTourStore(memory());assert.equal(store.write(profile),true,bonus.id);const restored=store.read();
@@ -98,7 +99,7 @@ test('all five bonus activities preserve their scene and activity from Explore',
 });
 
 test('partial bonus checkpoints cannot reset an activity or its remaining time on reload',()=>{
- let profile=createTourProfile();profile.discoveries=['secret-garden'];profile=beginBonus(profile,'secret-garden','garden-visit',{explore:true});
+ const profile=invitedBonusVisit('secret-garden','garden-visit');
  const config=bonusConfig('secret-garden'),controller=bonusController(config);controller.start();controller.step({player:config.points[0]});controller.pause();
  const scene=snapshot(config.stage,'garden-visit');scene.round.remainingMs-=12000;scene.round.mystery.elapsedMs=12000;
  profile.active.bonus.scene=scene;profile.active.bonus.activity=controller.capture();
@@ -106,17 +107,38 @@ test('partial bonus checkpoints cannot reset an activity or its remaining time o
  for(const field of ['scene','activity']){const corrupt=structuredClone(profile);corrupt.active.bonus[field]=null;assert.equal(normalizeTourProfile(corrupt).active,null,field);}
 });
 
-test('a summary cannot offer a missing or undiscovered bonus, or bypass a consumed invitation',()=>{
+test('a summary cannot offer a missing or undiscovered bonus, and entered visits retain consumed entry on reload',()=>{
  let profile=collectInvitation(createFestival(createTourProfile(),'invitation-run'));
  const round=createRound({},smfPreviewStage('smf-living-room').timingId);while(round.pickups<23)collect(round);advanceRound(round,round.remainingMs);profile=finishMain(profile,round);
  for(const mutate of [p=>p.active.summary.bonusId=null,p=>p.discoveries=[],p=>p.active.summary.qualified=false]){const corrupt=structuredClone(profile);mutate(corrupt);assert.equal(normalizeTourProfile(corrupt).active,null);}
- profile=beginBonus(profile,'rabbit-hole','rabbit-visit');profile.active.summary.bonusOffered=false;assert.equal(normalizeTourProfile(profile).active,null);
+ profile=beginBonus(profile,'rabbit-hole','rabbit-visit');
+ assert.equal(profile.active.summary.bonusOffered,false);
+ const store=createTourStore(memory());assert.equal(store.write(profile),true);
+ const loaded=store.read();assert.equal(loaded.active.summary.bonusOffered,false);assert.equal(loaded.active.bonus.visitId,'rabbit-visit');
+ const back=returnBonus(loaded);assert.equal(beginBonus(back,'rabbit-hole','reuse-after-reload'),back);
+ assert.equal(store.write(back),true);assert.equal(store.read().active.summary.bonusOffered,false);
+});
+
+test('pre-change entered visits consume their legacy offer without losing the visit or mutating the saved source',()=>{
+ const profile=invitedBonusVisit('rabbit-hole','legacy-entered');
+ profile.active.summary.bonusOffered=true;
+ const before=structuredClone(profile),loaded=normalizeTourProfile(profile);
+ assert.ok(loaded.active);assert.equal(loaded.active.bonus.visitId,'legacy-entered');
+ assert.equal(loaded.active.summary.bonusOffered,false);assert.deepEqual(profile,before);
+});
+
+test('an already-offered saved invitation survives the update once, then is consumed',()=>{
+ const profile=invitedBonusVisit('rabbit-hole','offered-before-update');
+ profile.active.bonus=null;profile.active.summary.bonusOffered=true;
+ const loaded=normalizeTourProfile(profile);assert.ok(loaded.active);
+ const entered=beginBonus(loaded,'rabbit-hole','after-update');assert.equal(entered.active.summary.bonusOffered,false);
+ const returned=returnBonus(entered);assert.equal(beginBonus(returned,'rabbit-hole','cannot-repeat'),returned);
 });
 
 test('the final Village detour restores earned Festival completion and returns to final results',()=>{
  const store=createTourStore(memory());let profile=createFestival(createTourProfile(),'whole-festival');
  for(const stageId of ROUTE){
-  const stage=smfPreviewStage(stageId);profile.active.scene=snapshot(stage,profile.active.id);assert.equal(store.write(profile),true,stageId);
+  const stage=stageForRun(profile.active);profile.active.scene=snapshot(stage,profile.active.id,profile.active);assert.equal(store.write(profile),true,stageId);
   profile=collectInvitation(profile);const round=createRound({},stage.timingId);round.runId=profile.active.id;
   while(round.pickups<stage.target)collect(round);advanceRound(round,round.remainingMs);
   profile=finishMain(profile,round);assert.equal(store.write(profile),true,stageId+' summary');
@@ -132,8 +154,8 @@ test('the final Village detour restores earned Festival completion and returns t
 
 test('real GameScene recovery preserves fractional time, long Flow, Wavy Colours and partial Bass Head while paused',()=>{
  const stage=smfPreviewStage('smf-living-room'),profile=createFestival(createTourProfile(),'live-snapshot');profile.active.perks=['moth','encore','sweet','battery'];
- const rules=rulesFor(profile.active.perks),scene=gameScene();scene.startRound({stage,rules,runId:profile.active.id,timingId:stage.timingId});
- scene.round.mystery.phase='waiting';scene.round.mystery.spawnAtMs=12000;advanceRound(scene.round,12000.25);
+ const rules=rulesFor(profile.active.perks,profile.active.scoringVersion),scene=gameScene();scene.startRound({stage,rules,runId:profile.active.id,timingId:stage.timingId});
+ scene.round.mystery=createMystery(()=>0,{rules,durationMs:scene.round.remainingMs});advanceRound(scene.round,12000.25);
  assert.equal(activateFlow(scene.round),true);assert.equal(scene.round.flowMs,10000);assert.equal(collectMystery(scene.round,()=>.99),'waves');assert.equal(scene.round.mystery.effectMs,7000);
  scene.round.bass=createBass(5000);assert.equal(activateBass(scene.round),true);collect(scene.round);
  profile.active.scene=scene.captureRecovery();const before=structuredClone(profile.active.scene),store=createTourStore(memory());
@@ -146,12 +168,12 @@ test('real GameScene recovery preserves fractional time, long Flow, Wavy Colours
 
 test('legacy six-dancer Garden and Ikigai visits keep checkpoint and ownership as crowds expand',()=>{
  for(const id of ['secret-garden','ikigai-mori']){
-  let p=createTourProfile();p.discoveries=[id];p.rewards=[BONUSES.find(b=>b.id===id).reward.id];
-  p=beginBonus(p,id,'legacy-visit',{explore:true});const config=bonusConfig(id),practice=bonusController(config);practice.start();
+  const p=legacyExploreVisit(id,'legacy-visit');p.rewards=[BONUSES.find(b=>b.id===id).reward.id];
+  const config=bonusConfig(id),practice=bonusController(config);practice.start();
   p.active.bonus.activity=practice.capture();p.active.bonus.activity.version=1;
   delete p.active.bonus.activity.state.blockedEncounterIds;delete p.active.bonus.activity.state.passEventIds;
   p.active.bonus.scene=snapshot(config.stage,'legacy-visit');p.active.bonus.scene.crowd=p.active.bonus.scene.crowd.slice(0,6);
-  p.active.bonus.scene.round.remainingMs-=1234;const before=structuredClone(p),loaded=normalizeTourProfile(p);
+  p.active.bonus.scene.round.remainingMs-=1234;p.active.bonus.scene.round.mystery.elapsedMs=1234;const before=structuredClone(p),loaded=normalizeTourProfile(p);
   assert.ok(loaded.active);assert.equal(loaded.active.bonus.scene.crowd.length,config.stage.crowdAnchors.length);
   assert.equal(loaded.active.bonus.scene.round.remainingMs,before.active.bonus.scene.round.remainingMs);
   assert.deepEqual(loaded.rewards,p.rewards);assert.deepEqual(p,before,'normalizing does not mutate source data');
@@ -168,7 +190,7 @@ function friendshipProfiles(){
  const main=playing();addFriendships(main.active.scene);
  const profiles=[{label:'main',profile:main,getScene:p=>p.active.scene}];
  for(const bonus of BONUSES){
-  let profile=createTourProfile();profile.discoveries=[bonus.id];profile=beginBonus(profile,bonus.id,`friends-${bonus.id}`,{explore:true});
+  const profile=invitedBonusVisit(bonus.id,`friends-${bonus.id}`);
   const config=bonusConfig(bonus.id),controller=bonusController(config);controller.start();controller.pause();
   profile.active.bonus.activity=controller.capture();
   profile.active.bonus.scene=addFriendships(snapshot(config.stage,profile.active.bonus.visitId));

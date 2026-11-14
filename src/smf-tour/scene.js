@@ -1,3 +1,4 @@
+import {CHALLENGES,normalizeChallenge} from '../../supabase/functions/_shared/challenges.js';
 import {GameScene} from '../GameScene.js';
 import {createSMFStageView} from '../editions/smf-stage-view.js';
 import {preloadSMFVenueArt} from '../editions/smf-venue-assets.js';
@@ -15,6 +16,7 @@ import {BONUSES,stageForRun} from './model.js';
 import {bonusConfig,bonusController,INVITATIONS} from './content.js';
 import {createSouvenirView} from './cosmetic-view.js';
 import {createFinishView} from './finish.js';
+import {pixelizeGraphics} from '../pixel-art/shapes.js';
 
 const bonusViews=[rabbit,garden,ikigai,villagio];
 export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRoundEnd,onAim}){
@@ -24,10 +26,10 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    this.stageRendererOptions={venueView:(s,stage)=>createSMFStageView(s,stage)||createAMPBackstageView(s,stage)||bonusViews.map(v=>v.createView(s,stage)).find(Boolean)};
    super.create();this.allSparks=this.sparks;this.souvenirView=createSouvenirView(this);this.finishView=createFinishView(this);
    this.invitation=this.add.container(0,0).setDepth(19).setVisible(false);
-   const seal=this.add.graphics();seal.fillStyle(0xffdea0,.12).fillCircle(0,0,34);
+   const seal=pixelizeGraphics(this.add.graphics());seal.fillStyle(0xffdea0,.12).fillCircle(0,0,34);
    seal.fillStyle(0x271e3c).fillRoundedRect(-18,-13,36,27,5);seal.lineStyle(2,0xffdea0).strokeRoundedRect(-18,-13,36,27,5).lineBetween(-17,-11,0,2).lineBetween(0,2,17,-11);
    seal.fillStyle(0xe9b2ed).fillCircle(0,1,5);this.invitation.add(seal);
-   this.invitation.add(this.add.text(0,33,'SEALED INVITE',{fontFamily:'Arial',fontSize:'12px',color:'#ffedc6',backgroundColor:'#211e30',padding:{x:4,y:3}}).setOrigin(.5));
+   this.invitation.add(this.add.text(0,31,'INVITE',{fontFamily:'Silkscreen, monospace',fontSize:'10px',color:'#ffedc6',backgroundColor:'#211e30',padding:{x:5,y:4}}).setOrigin(.5));
    this.game.events.on('round:end',r=>{this.endedRound=r;});
    this.pauseRound();onReady(this);
   }
@@ -42,7 +44,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    const b=a.bonus;
    this.config=b?bonusConfig(b.id):null;
    const stage=b?this.config.stage:stageForRun(a);
-   const options={stage,timingId:stage.timingId,rules:rulesFor(a.perks),outfit:p.outfit,bassChargeMs:b?0:a.bassChargeMs,runId:b?b.visitId:a.id,crowdEnabled:a.scoringVersion==='smf-v2'};
+   const options={stage,timingId:stage.timingId,rules:rulesFor(a.perks,b?null:a.scoringVersion),outfit:p.outfit,bassChargeMs:b?0:a.bassChargeMs,runId:b?b.visitId:a.id,crowdEnabled:a.scoringVersion!=='smf-v1',friendPasses:!b&&a.scoringVersion==='smf-v3'?CHALLENGES[normalizeChallenge(a.challenge)].friendPasses:4};
    const snapshot=b?b.scene:a.scene;
    if(snapshot)this.restoreRecovery(snapshot,options);else super.startRound(options);
    if(b){
@@ -90,7 +92,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    }
    this.souvenirView.update(profile().souvenir,elapsed,this.reducedMotion);
    const a=profile().active,secret=a?.mode!=='rush'&&!a?.bonus&&a?.status==='playing'&&BONUSES.find(b=>b.parentId===this.stage.id);
-   const show=secret&&!profile().discoveries.includes(secret.id)&&!a.pendingInvitation&&elapsed>=18000;
+   const show=secret&&!a.pendingInvitation&&elapsed>=18000;
    this.invitation.setVisible(!!show);
    if(show){const point=INVITATIONS[this.stage.id];this.invitation.setPosition(point.x,point.y);this.invitation.setScale(this.reducedMotion?1:1+Math.sin(elapsed*.003)*.05);}
   }

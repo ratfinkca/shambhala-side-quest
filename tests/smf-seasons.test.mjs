@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BONUSES,ROUTE,createTourProfile,createTourRun,stageForRun,beginBonus,endFestival,saveTourScore,closeResults} from '../src/smf-tour/model.js';
+import {BONUSES,ROUTE,createTourProfile,createTourRun,stageForRun,endFestival,saveTourScore,closeResults} from '../src/smf-tour/model.js';
 import {createTourStore,normalizeTourProfile} from '../src/smf-tour/store.js';
 import {boardsHTML,rulesHTML,summaryHTML} from '../src/smf-tour/view.js';
 import {smfRunFields,resumeSmfSubmission} from '../src/smf-tour/online.js';
@@ -8,21 +8,22 @@ import {createBoard} from '../src/online/board.js';
 import {createSmfTelemetry} from '../src/smf-tour/telemetry.js';
 import {createRound,advanceRound} from '../src/game.js';
 import {createEncounter} from '../src/festival.js';
+import {invitedBonusVisit} from './fixtures/smf-bonus-profile.mjs';
 
-const original='smf-v1',current='smf-v2';
+const original='smf-v1',crowd='smf-v2',current='smf-v3';
 const memory=()=>{const data=new Map();return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value)};};
-function localRow(id,score,scoringVersion,rushStageId){return {id,initials:'OLD',score,cleared:0,stagesCleared:0,...(scoringVersion?{scoringVersion}:{}),...(rushStageId?{rushStageId}:{})};}
+function localRow(id,score,scoringVersion,rushStageId){return {id,...(scoringVersion===current?{displayName:'NEW',challenge:'been-around'}:{initials:'OLD'}),score,cleared:0,stagesCleared:0,...(scoringVersion?{scoringVersion}:{}),...(rushStageId?{rushStageId}:{})};}
 
-test('new runs and all Explore visits use the crowd season; omitted saved seasons remain original',()=>{
+test('new runs and invited bonus visits use the crowd season; omitted saved seasons remain original',()=>{
  for(const mode of ['rush','festival','endless']){
   const p=createTourRun(createTourProfile(),mode,`new-${mode}`);
   assert.equal(p.active.scoringVersion,current);
   assert.equal(normalizeTourProfile(p).active.scoringVersion,current);
   delete p.active.scoringVersion;
   assert.equal(normalizeTourProfile(p).active.scoringVersion,original);
-  p.active.scoringVersion='smf-v3';assert.equal(normalizeTourProfile(p).active,null);
+  p.active.scoringVersion='smf-v4';assert.equal(normalizeTourProfile(p).active,null);
  }
- for(const bonus of BONUSES){const p=createTourProfile();p.discoveries=[bonus.id];assert.equal(beginBonus(p,bonus.id,`visit-${bonus.id}`,{explore:true}).active.scoringVersion,current);}
+ for(const bonus of BONUSES)assert.equal(invitedBonusVisit(bonus.id).active.scoringVersion,current);
 });
 
 test('legacy queued posts preserve their ticket, season, and exact payload across reload and retry',async()=>{
@@ -51,9 +52,9 @@ test('a parked original run keeps its clock, crowd layout, and unposted ticket t
 
 test('ticket and score fields follow the run season, including restored original Rush venue',()=>{
  assert.deepEqual(smfRunFields({mode:'rush'}),{scoringVersion:original,rushStageId:'smf-pagoda'});
- for(const scoringVersion of [original,current])for(const mode of ['festival','endless','rush']){
+ for(const scoringVersion of [original,crowd,current])for(const mode of ['festival','endless','rush']){
   const run={mode,scoringVersion,rushStageId:'smf-amp'};
-  assert.deepEqual(smfRunFields(run),{scoringVersion,...(mode==='rush'?{rushStageId:'smf-amp'}:{})});
+  assert.deepEqual(smfRunFields(run),{scoringVersion,...(mode==='rush'?{rushStageId:'smf-amp'}:{}),...(scoringVersion===current?{challenge:'been-around'}:{})});
  }
 });
 
@@ -80,7 +81,7 @@ test('local and online boards default to current and switch both sources togethe
  const board={mode:'rush',rushStageId:'smf-pagoda',scoringVersion:original,status:'ready',rows:[{...localRow('web',800,original),initials:'WEB'}]};
  let html=boardsHTML(p,{onlineEnabled:true,board});
  assert.match(html,/<select[^>]*id="tour-board-season"[^>]*data-board-season/);
- assert.match(html,/<option value="smf-v2" selected>Current crowd season<\/option>/);
+ assert.match(html,/<option value="smf-v3" selected>Challenge season<\/option>/);
  assert.match(html,/>NEW</);assert.doesNotMatch(html,/>OLD<|>WEB<|900 points/);assert.match(html,/Loading online scores/);
  html=boardsHTML(p,{boardVersion:original,onlineEnabled:true,board});
  assert.match(html,/<option value="smf-v1" selected>Original season<\/option>/);assert.match(html,/>OLD</);assert.match(html,/>WEB</);assert.doesNotMatch(html,/>NEW<|100 points/);
@@ -91,7 +92,7 @@ test('original saved runs explain original play and label their result season',(
  const p=createTourRun(createTourProfile(),'festival','saved');delete p.active.scoringVersion;
  const html=rulesHTML(p);assert.match(html,/Original season/);assert.match(html,/without crowd collisions or friendship/);assert.doesNotMatch(html,/Four clean passes/);
  assert.match(summaryHTML(endFestival(p)),/Original season/);
- p.active.scoringVersion=current;assert.match(rulesHTML(p),/Four clean passes/);assert.match(summaryHTML(endFestival(p)),/Current crowd season/);
+ p.active.scoringVersion=current;assert.match(rulesHTML(p),/(?:Four|4) clean passes/);assert.match(summaryHTML(endFestival(p)),/Challenge season/);
 });
 
 test('online board identity and cache include season, so late results cannot replace the selected season',async()=>{

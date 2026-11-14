@@ -3,19 +3,22 @@ import {createBass} from './bass-head.js';
 import { rulesFor } from './run.js';
 import { cycleAt } from './festival.js';
 import {createMystery,advanceMystery} from './mystery.js';
+import {createFlowSchedule,advanceFlow} from './flow.js';
 
 export function createRound(options = {}, timingId = 'generic-60-v1') {
   const timing=getTiming(timingId);
   const rules = {...rulesFor([]), ...options};
-  return { ...(timing===getTiming()?{}:{timingId:timing.id}),surferMs:0,scoreComponents:{sparks:Array(20).fill(0),passes:[0,0]}, rules, bass:createBass(), mystery:createMystery(), shieldsRemaining: rules.bumpShields, remainingMs: timing.durationMs, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, flowMs: 0, flowTaken: [], sincePickupMs: Infinity, ended: false };
+  return { ...(timing===getTiming()?{}:{timingId:timing.id}),surferMs:0,scoreComponents:{sparks:Array(20).fill(0),passes:[0,0]}, rules, bass:createBass(), mystery:createMystery(Math.random,{rules,durationMs:timing.durationMs}),...(rules.pickupSchedulerVersion===1?{flowSchedule:createFlowSchedule(rules)}:{}), shieldsRemaining: rules.bumpShields, remainingMs: timing.durationMs, score: 0, chain: 0, multiplier: 1, bestMultiplier: 1, pickups: 0, closePasses: 0, slowedMs: 0, flowMs: 0, flowTaken: [], sincePickupMs: Infinity, ended: false };
 }
 
 export function advanceRound(round, dtMs) {
   if (round.ended) return;
   if(roundTiming(round)!==getTiming())dtMs=Math.min(round.remainingMs,Math.max(0,dtMs));
+  const previousElapsed=elapsedMs(round);
+  if(round.flowSchedule)dtMs=Math.min(round.remainingMs,Math.max(0,dtMs));
   round.remainingMs = Math.max(0, round.remainingMs - Math.max(0, dtMs));
   round.surferMs = Math.max(0,round.surferMs-Math.max(0,dtMs));
-  round.flowMs = Math.max(0, round.flowMs - Math.max(0, dtMs));
+  advanceFlow(round,Math.max(0,dtMs),previousElapsed);
   round.sincePickupMs += Math.max(0, dtMs);
   round.slowedMs = Math.max(0, round.slowedMs - Math.max(0, dtMs));
   if (round.sincePickupMs > round.rules.comboGraceMs) { round.chain = 0; round.multiplier = 1; }

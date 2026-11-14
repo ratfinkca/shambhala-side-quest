@@ -1,6 +1,12 @@
+import {hasChallenge} from '../player-setup-view.js';
+import {isChallenge,normalizeChallenge} from '../../supabase/functions/_shared/challenges.js';
+import {validatePlayerName} from '../../supabase/functions/_shared/player-name.js';
+import {setTourPlayerName,saveTourCharacterSlot,loadTourCharacterSlot,deleteTourCharacterSlot} from './model.js';
+import '../player-setup.css';
 import {createInstallHelp} from '../install-app.js';
+import '../pickup-notice.css';
 import '../install-app.css';
-import {createCharacterOnboarding,mountCharacterWelcome} from '../onboarding.js';
+import {createCharacterOnboarding,mountCharacterWelcome,requiresCharacterSetup} from '../onboarding.js';
 import '../onboarding.css';
 import {openHowToDemo} from '../how-to-play.js';
 import '../how-to-play.css';
@@ -57,7 +63,7 @@ if(phonePreview)controls.update({mode:'stick',camera:'follow',zoom:1});
 const store=createTourStore(browserStorage,{key}),owner=createRecoveryOwner({locks:navigator.locks,name:key});
 let profile=store.read(),scene=null,view='title',paused=true,ready=false,disposed=false,saved=true,saveClock=0,preparing=false,loadFailed=false,ownership=null;
 let returnView='title',feedback='',boardMode='rush',submission=null,exitDestination=null,telemetryStageAllowed=false,telemetryRunAllowed=false,bassAction=null;
-let boardVenue=SMF_DEFAULT_RUSH_STAGE_ID,boardVersion=SMF_SCORING_VERSION;
+let boardVenue=SMF_DEFAULT_RUSH_STAGE_ID,boardVersion=SMF_SCORING_VERSION,boardChallenge=normalizeChallenge(profile.challengePreference);
 let renderedMenuKey='';
 let previewAvatar,previewReady=false,previewOutfit=null;
 let characterFacing='down';
@@ -69,7 +75,9 @@ const root=document.querySelector('.shell');root.className='shell smf-tour';root
 root.dataset.phonePreview=String(phonePreview);root.dataset.hand=controls.value.hand||'left';
 let activeTheme=applyTheme(profile.active?.themeId||resolveTheme(profile.themePreference==='surprise'?undefined:profile.themePreference));
 const $=s=>root.querySelector(s),text=(s,t)=>{const n=$(s);if(n&&n.textContent!==String(t))n.textContent=String(t);};
-const status=createTourStatus(message=>text('#tour-status',message));
+const status=createTourStatus((message,{kind}={})=>{text('#tour-status',message);$('#tour-status').dataset.kind=kind||'notice';});
+const statusClock=()=>scene?.config?.activity==='putt'?scene.practice.state.elapsedMs:undefined;
+function announce(message,{kind}={}){status.show(message,{round:scene?.round,kind,clockMs:statusClock()});}
 const arcadeConfig=lab?{}:readSmfArcadeConfig(import.meta.env),telemetryConfig=lab?{enabled:false}:readSmfTelemetryConfig(import.meta.env);
 const arcade=createSmfOnlineClient(arcadeConfig),board=createBoard(p=>arcade.getBoard({editionId:'smf',...p}));
 const telemetry=createSmfTelemetry({config:telemetryConfig,consent:()=>profile.playtestConsent==='accepted',getMovementMode:()=>controls.value.mode,getScoringVersion:()=>profile.active?.scoringVersion});
@@ -130,6 +138,7 @@ function enterStage(){
  persist();load();
 }
 function load({recovered=false}={}){
+ status.clear();
  view='run';preparing=true;loadFailed=false;
  try{scene.loadActive({paused:recovered});paused=recovered;}
  catch(error){loadFailed=true;scene.failed=true;paused=true;scene.pauseTour();console.error('Festival scene could not load',error);notice('This visit could not be opened. Finish or leave the visit to return safely.');}
@@ -139,9 +148,9 @@ function load({recovered=false}={}){
 }
 function hud(round){
  if(!scene||!profile.active)return;
- status.update(round,{paused});
+ status.update(round,{paused,clockMs:statusClock()});
  const a=profile.active,b=a.bonus,p=scene.practice,stage=b?scene.config.stage:stageForRun(a);
- root.dataset.bonus=String(!!b);root.dataset.invitation=String(!!a.pendingInvitation);
+ root.dataset.bonus=String(!!b);
  text('#tour-stage',b?`${scene.config.name} · ${scene.config.dj}`:a.mode==='rush'?`${stage.name} · Quick Rush`:a.mode==='endless'?`${stage.name} · Stage ${a.stageIndex+1} · Loop ${stage.loop}`:`${a.stageIndex+1} / 6 · ${stage.name}`);
  text('#tour-points',b?(scene.config.activity==='delivery'?`${p.state.delivered} / 3 delivered`:`${p.state.progress} / ${p.state.goal} ${scene.config.activity==='putt'?'holes':'found'}`):`${a.score+round.score} points · ${round.pickups}${a.mode==='rush'?'':` / ${stage.target}`} sparks`);
  const putt=b&&scene.config.activity==='putt';text('#tour-clock-label',putt?'SHOTS':'TIME LEFT');text('#tour-time',putt?`${p.state.strokes} / 8`:`${Math.ceil(round.remainingMs/1000)}s`);
@@ -154,11 +163,11 @@ function hud(round){
   const person=DELIVERY_RECIPIENTS.find(x=>x.id===p.state.recipientId),signature=`${person?.id}|${p.state.carrying}|${p.state.complete}`;
   if($('#tour-order').dataset.state!==signature){$('#tour-order').dataset.state=signature;$('#tour-order').innerHTML=p.state.complete?'<p>All deliveries made. Enjoy your grilled cheese!</p>':`${recipientPortrait(person?.id)}<p><strong>${person?.name} · ${person?.costume}</strong><br>${p.state.carrying?'Sandwich in hand. Smooth-pass this costume.':'Return to the vendor to pick up a sandwich.'}</p>`;}
  }else{
-  const message=putt?(p.state.phase==='walking'?`Walk onto green ${p.state.holeIndex+1} to putt. Explore the party on the way.`:p.state.phase==='between'?'In the cup! Head to the next green.':'Drag opposite your shot, then release. No time limit.'):b?scene.config.activity==='garden'&&p.state.carrying?'Seed in hand → smooth-pass into the garden bed.':scene.config.instruction:a.pendingInvitation?'Invitation found! Clear this stage to open it.':'Collect sparks · Clean passes score · B activates Bass Head';
+  const message=putt?(p.state.phase==='walking'?`Walk onto green ${p.state.holeIndex+1} to putt. Explore the party on the way.`:p.state.phase==='between'?'In the cup! Head to the next green.':'Drag opposite your shot, then release. No time limit.'):b?scene.config.activity==='garden'&&p.state.carrying?'Seed in hand → smooth-pass into the garden bed.':scene.config.instruction:'';
   if($('#tour-order').textContent!==message){$('#tour-order').textContent=message;delete $('#tour-order').dataset.state;}
  }
 }
-function menuOptions(){return {controls:controls.value,saved,themeId:activeTheme,onlineEnabled:!!arcadeConfig.baseUrl,playtestEnabled:telemetryConfig.enabled,noticeURL:telemetryConfig.notice||`${import.meta.env.BASE_URL}smf-playtest-data.html`,submission,boardMode,boardVenue,boardVersion,board,feedback};}
+function menuOptions(){return {controls:controls.value,saved,themeId:activeTheme,onlineEnabled:!!arcadeConfig.baseUrl,playtestEnabled:telemetryConfig.enabled,noticeURL:telemetryConfig.notice||`${import.meta.env.BASE_URL}smf-playtest-data.html`,submission,boardMode,boardVenue,boardVersion,boardChallenge,board,feedback};}
 function render(){
  $('#tour-menu').classList.remove('character-onboarding','character-expanded');
  menuAmbience.refresh();
@@ -204,7 +213,7 @@ function completeBonus({completed=false,won=false}={}){
 function activity(event){
  if(preparing||!isLive())return;
  const messages={'green-entered':'On the green. Pull back and release to putt.',pickup:'Picked up! Find the matching destination.',dropped:'Sandwich dropped. Pick up another at the vendor.',wrong:'You made their night! This delivery does not count.',delivered:'Delivery made! Back to the vendor.',planted:'A little more colour in the garden.',collected:'Found it. Follow the next glow.',greeted:'Good company!',shot:'Let it roll…',holed:'In the cup! Head to the next green.',settled:'Line up your next putt.',exhausted:'Eight shots played. Come back for another try.'};
- status.show(messages[event.type]||'');
+ announce(messages[event.type]||'',{kind:'bonus'});
  if(event.type==='complete'){completeBonus({won:true,completed:true});return;}
  if(event.type==='exhausted'){completeBonus();return;}
  if(event.type==='green-entered'){scene?.pauseRound();$('#tour-angle').value=scene.practice.state.holeIndex?'180':'0';}
@@ -217,13 +226,13 @@ const Scene=tourScene({profile:()=>profile,onReady:s=>{
  ready=true;render();
 },onFrame:round=>{
  if(!isLive()||preparing||loadFailed)return;hud(round);if(!paused){audio.sync(round,scene.stage.id);if(performance.now()-saveClock>=1000)checkpoint();}
-},onInvitation:()=>{profile=collectInvitation(profile);status.show('A sealed invitation! Clear this stage to reveal its party.');audio.closePass();checkpoint();},onActivity:activity,onRoundEnd:round=>{
+},onInvitation:()=>{profile=collectInvitation(profile);announce('INVITE FOUND · Clear this stage to visit.',{kind:'invite'});audio.closePass();checkpoint();},onActivity:activity,onRoundEnd:round=>{
  if(preparing||!isLive())return;
  if(profile.active.bonus){completeBonus({completed:scene.config.activity==='trail',won:scene.practice.state.complete});return;}
  const a=profile.active;
  if(telemetryStageAllowed)telemetry.record({type:'stage',mode:a.mode,...smfRushFields(a),stageIndex:a.stageIndex,stageId:scene.stage.id,pickups:round.pickups,closePasses:round.closePasses,bassUses:round.bassUses||0});
  hud(round);scene.pauseTour();paused=true;audio.stop();commit(finishMain(profile,round));if(profile.active.status==='results')trackRun(profile.active.summary?.qualified?'complete':'failed');else void telemetry.flush();feedback='';if(profile.active.summary?.qualified)audio.celebrate();showFinish('main');
-},onAim:v=>{if(v)status.show(`${Math.round(Math.hypot(v.x,v.y)*100)}% power`);else if(scene?.practice?.state.phase==='aim')status.show('Pull back and release.');}});
+},onAim:v=>{if(v)announce(`${Math.round(Math.hypot(v.x,v.y)*100)}% power`,{kind:'aim'});else if(scene?.practice?.state.phase==='aim')announce('Pull back and release.',{kind:'aim'});}});
 const game=new Phaser.Game({type:Phaser.CANVAS,parent:'game',width:960,height:640,banner:false,audio:{noAudio:true},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:Scene});
 const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'tour-avatar-preview',width:240,height:200,transparent:true,banner:false,audio:{noAudio:true},fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,profile.outfit);previewAvatar.setPosition(116,125).setScale(2.4);previewReady=true;render();},update(time){animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches,false);}}});
 let layoutPending=false,lastViewport=null;
@@ -252,7 +261,7 @@ function changeControls(field,value){
 function input(kind){const a=profile.active;if(!a||a.bonus||!isLive())return;if(['mouse','touch','keyboard'].includes(kind))a.inputType=a.inputType==='unknown'?kind:a.inputType===kind?kind:'mixed';}
 for(const [name,fn] of [['round:pickup',e=>audio.pickup(e.multiplier)],['round:closepass',()=>audio.closePass()],['round:flow',()=>{audio.celebrate();status.show('FLOW · Sparks come to you',{round:scene.round,kind:'flow'});}],['round:bass',()=>{scene.round.bassUses=(scene.round.bassUses||0)+1;audio.drop();}],['round:mystery',effect=>{status.show(`${MYSTERY_EFFECTS[effect].name} · ${effect==='dizzy'?'Steering is reversed!':effect==='speed'?'Hold on!':'Ride the colours.'}`,{round:scene.round,kind:'candy'});audio.drop();}],['round:phase',phase=>{if(phase==='drop')audio.drop();}],['round:input',e=>{if(e.runId===profile.active?.id)input(e.kind);} ]])game.events.on(name,fn);
 function buttonVector(){const a=Number($('#tour-angle').value)*Math.PI/180,p=Number($('#tour-power').value)/100;return {x:Math.cos(a)*p,y:Math.sin(a)*p};}
-async function loadBoard(mode){boardMode=mode;const pending=board.select(mode,boardVersion,mode==='rush'?boardVenue:undefined);render();await pending;if(view==='scores')render();}
+async function loadBoard(mode){boardMode=mode;const pending=board.select(mode,boardVersion,mode==='rush'?boardVenue:undefined,hasChallenge(boardVersion)?boardChallenge:undefined);render();await pending;if(view==='scores')render();}
 function viewMenu(next){if(isLive())setPaused(true);returnView=view;view=next;feedback='';previewOutfit=null;render();}
 function saveCharacterLook(next){
  if(view!=='wardrobe'||!canPlay())return;
@@ -268,16 +277,25 @@ function changeAppearance(key,value){
 }
 function startRun(mode){
  if(profile.active||!['rush','festival','endless'].includes(mode))return;
- if(!lab&&characterOnboarding.request(mode,profile.characterConfirmed)){returnView='title';view='wardrobe';render();return;}
- activeTheme=applyTheme(resolveTheme(profile.themePreference));commit(createTourRun(profile,mode,createRunId(),activeTheme));boardMode=mode;boardVersion=SMF_SCORING_VERSION;if(mode==='rush')boardVenue=profile.active.rushStageId;submission=null;telemetryRunAllowed=profile.playtestConsent==='accepted';view='rules';feedback='';render();
+ if(!lab&&characterOnboarding.request(mode,!requiresCharacterSetup(profile))){returnView='title';view='wardrobe';render();return;}
+ activeTheme=applyTheme(resolveTheme(profile.themePreference));commit(createTourRun(profile,mode,createRunId(),activeTheme,Math.random,profile.challengePreference));boardMode=mode;boardVersion=SMF_SCORING_VERSION;boardChallenge=normalizeChallenge(profile.active.challenge);if(mode==='rush')boardVenue=profile.active.rushStageId;submission=null;telemetryRunAllowed=profile.playtestConsent==='accepted';view='rules';feedback='';render();
 }
 function finishAndClose(){commit(closeResults(profile));submission=null;view='title';render();if(exitDestination){const mode=exitDestination;exitDestination=null;startRun(mode);}}
-function initials(){return ($('#tour-initials')?.value||profile.active?.initialsDraft||profile.initials||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);}
+function scoreName(){
+ const a=profile.active,value=$('#tour-initials')?.value??(hasChallenge(a?.scoringVersion)?a?.displayNameDraft??profile.playerName:a?.initialsDraft??profile.initials)??'';
+ return hasChallenge(a?.scoringVersion)?value:value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);
+}
+function saveName(){
+ if(view!=='wardrobe')return false;
+ const value=$('[data-player-name]')?.value??profile.playerName,valid=validatePlayerName(value);
+ if(!valid.ok){text('#player-name-feedback',valid.error||'Choose another rave name.');$('[data-player-name]')?.focus();return false;}
+ commit(setTourPlayerName(profile,valid.name));$('[data-player-name]').value=profile.playerName;text('#player-name-feedback',saved?'Name saved. Future scores can use it.':'Name set for this session.');return true;
+}
 async function postScore(){
  const a=profile.active;if(!a||a.bonus||a.status!=='results'||!submission||a.scoreOverflow||!a.scoreStages.length)return;
- const name=initials();if(!/^[A-Z0-9]{3}$/.test(name)){feedback='Enter three letters or numbers for your initials.';render();return;}
- a.initialsDraft=name;const current=submission,id=a.id;
- const pending=current.post({editionId:'smf',initials:name,mode:a.mode,...smfRunFields(a),buildId:a.buildId,inputType:a.inputType,totalScore:a.score,stagesCleared:a.cleared,stages:a.scoreStages},p=>arcade.submitScore(p));
+ const name=scoreName(),named=hasChallenge(a.scoringVersion),valid=named?validatePlayerName(name):{ok:/^[A-Z0-9]{3}$/.test(name),name};if(!valid.ok){feedback=valid.error||'Enter three letters or numbers for your initials.';render();return;}
+ a[named?'displayNameDraft':'initialsDraft']=valid.name;const current=submission,id=a.id;
+ const pending=current.post({editionId:'smf',...(named?{displayName:valid.name}:{initials:valid.name}),mode:a.mode,...smfRunFields(a),buildId:a.buildId,inputType:a.inputType,totalScore:a.score,stagesCleared:a.cleared,stages:a.scoreStages},p=>arcade.submitScore(p));
  saveSubmission();render();await pending;if(profile.active?.id!==id||submission!==current)return;saveSubmission();render();
 }
 function route(action,id,event){
@@ -287,15 +305,23 @@ function route(action,id,event){
   return;
  }
  if(!['fullscreen','back','home','title','settings','style','scores','catalogue','wardrobe','rules','show-demo','install'].includes(action)&&!canPlay())return;
+ if(action==='challenge'&&view==='title'&&!profile.active&&isChallenge(id)){profile.challengePreference=id;persist();render();return;}
+ if(action==='board-challenge'&&view==='scores'&&isChallenge(id)){boardChallenge=id;if(arcadeConfig.baseUrl)void loadBoard(boardMode);else render();return;}
+ if(action==='player-name-save'){saveName();return;}
+ if(['character-slot-save','character-slot-load','character-slot-delete'].includes(action)){
+  if(view!=='wardrobe')return;if(action==='character-slot-save'&&!saveName())return;
+  const fn={'character-slot-save':saveTourCharacterSlot,'character-slot-load':loadTourCharacterSlot,'character-slot-delete':deleteTourCharacterSlot}[action],next=fn(profile,Number(id)),accepted=next!==profile;
+  if(accepted)commit(next);render();const details=$('.character-slot-details');if(details)details.open=true;text('#player-name-feedback',!accepted?'That character slot could not be changed.':saved?'Character slot updated on this device.':'Character slot updated for this session.');return;
+ }
  if(action==='install'){installHelp.open();return;}
  if(action==='show-demo'){closeDemo?.();closeDemo=openHowToDemo({controls:controls.value});return;}
- if(action==='character-ready'){const mode=characterOnboarding.confirm();if(!mode||view!=='wardrobe')return;profile.characterConfirmed=true;persist();startRun(mode);return;}
+ if(action==='character-ready'){if(!saveName())return;const mode=characterOnboarding.confirm();if(!mode||view!=='wardrobe')return;profile.characterConfirmed=true;persist();startRun(mode);return;}
  if(action==='character-cancel'){characterOnboarding.cancel();view='title';render();return;}
  if(action==='character-customize'){const c=$('#tour-menu'),expanded=c.classList.toggle('character-expanded');const b=c.querySelector('[data-action=character-customize]');b.setAttribute('aria-expanded',String(expanded));b.textContent=expanded?'Keep it simple':'Make it mine';scheduleLayout();return;}
  if(action==='pause'){if(isLive())setPaused(!paused);return;}
  if(action==='home'||action==='title'){characterOnboarding.cancel();if(isLive())setPaused(true);view='title';audio.stop();render();return;}
  if(['settings','style','wardrobe','catalogue','scores'].includes(action)){
-  if(action==='scores'&&profile.active){boardMode=profile.active.mode;boardVersion=smfRunFields(profile.active).scoringVersion;if(boardMode==='rush')boardVenue=smfRushFields(profile.active).rushStageId;}
+  if(action==='scores'&&profile.active){boardMode=profile.active.mode;boardVersion=smfRunFields(profile.active).scoringVersion;boardChallenge=normalizeChallenge(profile.active.challenge);if(boardMode==='rush')boardVenue=smfRushFields(profile.active).rushStageId;}
   viewMenu(action);if(action==='scores'&&arcadeConfig.baseUrl)void loadBoard(boardMode);return;
  }
  if(action==='back'){characterOnboarding.cancel();view=returnView==='run'&&profile.active&&!profile.active.needsIntro?'run':'title';render();return;}
@@ -325,8 +351,8 @@ function route(action,id,event){
   const a=profile.active,replaced=action==='perk'?$('#tour-replace')?.value:null,next=choosePerk(profile,action==='keep'?null:id,replaced||undefined);
   if(next!==profile){if(telemetryStageAllowed)telemetry.record({type:'perk',mode:a.mode,stageIndex:a.stageIndex,action:action==='keep'?'keep':replaced?'swap':'take',perk:action==='keep'?null:id,replaced:replaced||null});commit(next);view='rules';render();}return;
  }
- if(action==='visit'||action==='explore'){
-  const next=beginBonus(profile,id,createRunId(),{explore:action==='explore'});
+ if(action==='visit'){
+  const next=beginBonus(profile,id,createRunId());
   if(next!==profile){commit(next);$('#tour-angle').value='0';$('#tour-power').value='50';status.clear();load();}return;
  }
  if(action==='skip'){profile.active.summary.bonusOffered=false;persist();render();return;}
@@ -337,7 +363,7 @@ function route(action,id,event){
  }
  if(action==='cancel-close'){view='run';exitDestination=null;render();return;}
  if(action==='confirm-close'){finishAndClose();return;}
- if(action==='save-score'){const next=saveTourScore(profile,initials());feedback=next===profile?'Enter three letters or numbers for your initials.':'';if(next!==profile){commit(next);feedback=saved?'Score saved on this device.':'Score kept for this session. Device saving is unavailable.';}render();return;}
+ if(action==='save-score'){const next=saveTourScore(profile,scoreName());feedback=next===profile?(hasChallenge(profile.active?.scoringVersion)?validatePlayerName(scoreName()).error||'This score is already saved.':'Enter three letters or numbers for your initials.'):'';if(next!==profile){commit(next);feedback=saved?'Score saved on this device.':'Score kept for this session. Device saving is unavailable.';}render();return;}
  if(action==='post-score'||action==='retry-score'){void postScore();return;}
  if(action==='board-mode'||action==='online-board'){if(['rush','festival','endless'].includes(id)){boardMode=id;if(arcadeConfig.baseUrl)void loadBoard(id);else render();}return;}
  if(action==='leave'){if(isLive())setPaused(true);view='confirm-leave';render();return;}
@@ -359,7 +385,7 @@ root.addEventListener('input',e=>{
  const element=e.target;
  if(element.matches('input[data-control-setting]'))changeControls(element.dataset.controlSetting,element.value);
  if(element.matches('#tour-angle,#tour-power'))scene?.puttingView?.setButtonAim(buttonVector());
- if(element.matches('#tour-initials')){element.value=element.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);if(profile.active){profile.active.initialsDraft=element.value;persist();}}
+ if(element.matches('#tour-initials')){if(!element.hasAttribute('data-rave-name'))element.value=element.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);if(profile.active){profile.active[hasChallenge(profile.active.scoringVersion)?'displayNameDraft':'initialsDraft']=element.value;persist();}}
  if(element.matches('#tour-music,#tour-fx')&&canPlay()){profile.audio[element.id==='tour-music'?'music':'effects']=Number(element.value)/100;persist();audio.setVolumes(profile.audio);if(element.id==='tour-fx')audio.pickup(1);}
 });
 root.addEventListener('change',e=>{

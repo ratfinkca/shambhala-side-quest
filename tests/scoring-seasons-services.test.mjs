@@ -18,10 +18,10 @@ function score(edition,version,mode='rush'){
 const run=score=>Object.fromEntries(['editionId','runId','mode','scoringVersion','buildId'].filter(key=>Object.hasOwn(score,key)).map(key=>[key,score[key]]));
 const request=body=>new Request('https://example.test',{method:'POST',headers:{origin:'https://example.test','content-type':'application/json'},body:JSON.stringify(body)});
 
-test('season exports select v2 while legacy rule identities remain stable',()=>{
+test('season exports select v3 while legacy rule identities remain stable',()=>{
  assert.equal(genericRules.GENERIC_RULES.id,'arcade-v1');assert.equal(smfRules.SMF_RULES.id,'smf-v1');
- assert.equal(genericRules.GENERIC_SCORING_VERSION,'arcade-v2');assert.equal(smfRules.SMF_SCORING_VERSION,'smf-v2');
- assert.deepEqual(genericRules.GENERIC_SCORING_VERSIONS,['arcade-v1','arcade-v2']);assert.deepEqual(smfRules.SMF_SCORING_VERSIONS,['smf-v1','smf-v2']);
+ assert.equal(genericRules.GENERIC_SCORING_VERSION,'arcade-v3');assert.equal(smfRules.SMF_SCORING_VERSION,'smf-v3');
+ assert.deepEqual(genericRules.GENERIC_SCORING_VERSIONS,['arcade-v1','arcade-v2','arcade-v3']);assert.deepEqual(smfRules.SMF_SCORING_VERSIONS,['smf-v1','smf-v2','smf-v3']);
  assert.equal(Object.isFrozen(genericRules.GENERIC_SCORING_VERSIONS),true);assert.equal(Object.isFrozen(smfRules.SMF_SCORING_VERSIONS),true);
 });
 
@@ -52,22 +52,22 @@ test('legacy and current HTTP routes forward the selected version without changi
 });
 
 test('generic telemetry accepts both seasons with unchanged schemas and wide friendship clearance',()=>{
- for(const scoringVersion of ['arcade-v1','arcade-v2'])for(const mode of ['rush','festival','endless']){
+ for(const scoringVersion of ['arcade-v1','arcade-v2','arcade-v3'])for(const mode of ['rush','festival','endless']){
   const e={schemaVersion:mode==='endless'?2:1,eventId:id,installationId:id,sessionId:id,runId:id,type:'stage_end',mode,buildId:'season-test',scoringVersion,theme:'forest-freakout',viewport:'small',inputType:'touch',payload:{stageIndex:0,activeMs:60000,bassMs:0,chargeMs:0,pickups:0,bumps:0,closePasses:1,clearanceBins:[0,0,1],minClearance:48,peakCombo:0,flowUses:0,bassUses:0,candies:{speed:0,dizzy:0,waves:0},score:15,qualified:mode==='rush',finished:true}};
   assert.equal(validatePlaytestBatch([e]).ok,true);
-  assert.equal(validatePlaytestBatch([{...e,scoringVersion:'arcade-v3'}]).ok,false);
+  assert.equal(validatePlaytestBatch([{...e,scoringVersion:'arcade-v4'}]).ok,false);
   assert.equal(validatePlaytestBatch([{...e,friendship:{id}}]).ok,false);
  }
 });
 
 test('SMF telemetry accepts legacy/current run and venue stage events without adding personal fields',()=>{
- for(const scoringVersion of ['smf-v1','smf-v2']){
+ for(const scoringVersion of ['smf-v1','smf-v2','smf-v3']){
   const base={editionId:'smf',scoringVersion,eventId:id,guestId:id,buildId:'season-test',mode:'rush',rushStageId:'smf-fractal',movementMode:'stick'};
   const stage={...base,type:'stage',stageIndex:0,stageId:'smf-fractal',pickups:1,closePasses:1,bassUses:0};
   const finished={...base,type:'run',outcome:'complete',stagesCleared:1,totalScore:25};
   for(const e of [stage,finished]){
    assert.equal(validSmfEvents([e]),true);
-   assert.equal(validSmfEvents([{...e,scoringVersion:'smf-v3'}]),false);
+   assert.equal(validSmfEvents([{...e,scoringVersion:'smf-v4'}]),false);
    assert.equal(validSmfEvents([{...e,friendId:id}]),false);
   }
  }

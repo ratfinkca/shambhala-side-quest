@@ -4,6 +4,9 @@ import {normalizeProgress} from './progression.js';
 import {normalizeThemePreference} from './themes.js';
 import {normalizeOutfit} from './wardrobe.js';
 import {normalizeCharacterConfirmed} from './onboarding.js';
+import {validatePlayerName} from '../supabase/functions/_shared/player-name.js';
+import {normalizeCharacterSlots} from './character-slots.js';
+import {CHALLENGE_IDS,isChallenge,normalizeChallenge} from '../supabase/functions/_shared/challenges.js';
 export const PROFILE_KEY=genericContext.profileKey;
 export const DEFAULT_AUDIO={enabled:true,music:.45,effects:.65};
 export function normalizeAudio(value={}){
@@ -11,10 +14,14 @@ export function normalizeAudio(value={}){
  return {enabled:typeof value?.enabled==='boolean'?value.enabled:true,music:volume('music'),effects:volume('effects')};
 }
 export const scoreSeason=e=>e?.scoringVersion??GENERIC_RULES.id;
-export function validScore(e,mode='rush'){return e&&GENERIC_SCORING_VERSIONS.includes(scoreSeason(e))&&typeof e.id==='string'&&e.id.length>0&&e.id.length<=100&&/^[A-Z0-9]{3}$/.test(e.initials)&&Number.isSafeInteger(e.score)&&e.score>=0&&Number.isInteger(e.stagesCleared)&&e.stagesCleared>=0&&(mode==='endless'?Number.isSafeInteger(e.stagesCleared):e.stagesCleared<=GENERIC_RULES.mainStageIds.length)&&Number.isFinite(e.completedAt)&&e.completedAt>=0;}
+export const scorePartition=e=>`${scoreSeason(e)}${scoreSeason(e)==='arcade-v3'?`:${normalizeChallenge(e.challenge)}`:''}`;
+export function validScore(e,mode='rush'){
+ const named=scoreSeason(e)==='arcade-v3';
+ return e&&GENERIC_SCORING_VERSIONS.includes(scoreSeason(e))&&typeof e.id==='string'&&e.id.length>0&&e.id.length<=100&&(named?validatePlayerName(e.displayName).ok&&(e.challenge===undefined||isChallenge(e.challenge)):/^[A-Z0-9]{3}$/.test(e.initials))&&Number.isSafeInteger(e.score)&&e.score>=0&&Number.isInteger(e.stagesCleared)&&e.stagesCleared>=0&&(mode==='endless'?Number.isSafeInteger(e.stagesCleared):e.stagesCleared<=GENERIC_RULES.mainStageIds.length)&&Number.isFinite(e.completedAt)&&e.completedAt>=0;
+}
 export function rankScores(entries,mode='rush'){
- const seen=new Set(),counts=new Map(),key=e=>`${scoreSeason(e)}:${e.id}`;
- return (Array.isArray(entries)?entries:[]).filter(e=>validScore(e,mode)&&!seen.has(key(e))&&seen.add(key(e))).map(e=>({id:e.id,scoringVersion:scoreSeason(e),initials:e.initials,score:e.score,stagesCleared:e.stagesCleared,completedAt:e.completedAt,inputType:['mouse','touch','keyboard','mixed'].includes(e.inputType)?e.inputType:'unknown',outfit:normalizeOutfit(e.outfit)})).sort((a,b)=>(mode==='endless'?b.stagesCleared-a.stagesCleared:0)||b.score-a.score||b.stagesCleared-a.stagesCleared||a.completedAt-b.completedAt).filter(e=>{const count=(counts.get(e.scoringVersion)??0)+1;counts.set(e.scoringVersion,count);return count<=10;});
+ const seen=new Set(),counts=new Map(),key=e=>`${scorePartition(e)}:${e.id}`;
+ return (Array.isArray(entries)?entries:[]).filter(e=>validScore(e,mode)&&!seen.has(key(e))&&seen.add(key(e))).map(e=>({id:e.id,scoringVersion:scoreSeason(e),...(scoreSeason(e)==='arcade-v3'?{displayName:validatePlayerName(e.displayName).name,challenge:normalizeChallenge(e.challenge)}:{initials:e.initials}),score:e.score,stagesCleared:e.stagesCleared,completedAt:e.completedAt,inputType:['mouse','touch','keyboard','mixed'].includes(e.inputType)?e.inputType:'unknown',outfit:normalizeOutfit(e.outfit)})).sort((a,b)=>(mode==='endless'?b.stagesCleared-a.stagesCleared:0)||b.score-a.score||b.stagesCleared-a.stagesCleared||a.completedAt-b.completedAt).filter(e=>{const partition=scorePartition(e),count=(counts.get(partition)??0)+1;counts.set(partition,count);return count<=10;});
 }
 export function readProfile(storage,context=genericContext){
  let raw,legacyBest=0,legacyBestPresent=false,legacySound;
@@ -24,5 +31,7 @@ export function readProfile(storage,context=genericContext){
  const bestRush=Number.isSafeInteger(best)&&best>=0?best:0;
  const bestRushBySeason=Object.fromEntries(GENERIC_SCORING_VERSIONS.map(version=>{const value=raw?.bestRushBySeason?.[version];return [version,Number.isSafeInteger(value)&&value>=0?value:version===GENERIC_RULES.id?bestRush:0];}));
  if(!raw&&['true','false'].includes(legacySound))audio.enabled=legacySound==='true';
- return {version:1,progress:normalizeProgress(raw?.progress,!!raw||legacyBestPresent||legacySound!==undefined&&legacySound!==null),playtestConsent:['accepted','declined'].includes(raw?.playtestConsent)?raw.playtestConsent:'unknown',playtestIdentity:raw?.playtestConsent==='accepted'&&typeof raw.playtestIdentity==='string'&&raw.playtestIdentity.length<=100?raw.playtestIdentity:null,themePreference:normalizeThemePreference(raw?.themePreference??(raw?'forest-freakout':undefined)),characterConfirmed:normalizeCharacterConfirmed(raw?.characterConfirmed,!!raw||legacyBestPresent||legacySound!=null),audio,outfit:normalizeOutfit(raw?.outfit),bestRush:bestRushBySeason[GENERIC_RULES.id],bestRushBySeason,boards:{rush:rankScores(raw?.boards?.rush),festival:rankScores(raw?.boards?.festival),endless:rankScores(raw?.boards?.endless,'endless')}};
+ const progress=normalizeProgress(raw?.progress,!!raw||legacyBestPresent||legacySound!==undefined&&legacySound!==null),name=validatePlayerName(raw?.playerName);
+ const bestRushByChallenge=Object.fromEntries(CHALLENGE_IDS.map(challenge=>{const value=raw?.bestRushByChallenge?.[challenge];return [challenge,Number.isSafeInteger(value)&&value>=0?value:0];}));
+ return {version:1,progress,playerName:name.ok?name.name:'',characterSlots:normalizeCharacterSlots(raw?.characterSlots,{progress}),challengePreference:normalizeChallenge(raw?.challengePreference),bestRushByChallenge,playtestConsent:['accepted','declined'].includes(raw?.playtestConsent)?raw.playtestConsent:'unknown',playtestIdentity:raw?.playtestConsent==='accepted'&&typeof raw.playtestIdentity==='string'&&raw.playtestIdentity.length<=100?raw.playtestIdentity:null,themePreference:normalizeThemePreference(raw?.themePreference??(raw?'forest-freakout':undefined)),characterConfirmed:normalizeCharacterConfirmed(raw?.characterConfirmed,!!raw||legacyBestPresent||legacySound!=null),audio,outfit:normalizeOutfit(raw?.outfit),bestRush:bestRushBySeason[GENERIC_RULES.id],bestRushBySeason,boards:{rush:rankScores(raw?.boards?.rush),festival:rankScores(raw?.boards?.festival),endless:rankScores(raw?.boards?.endless,'endless')}};
 }

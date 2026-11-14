@@ -22,8 +22,8 @@ export function createCrowdReactions(scene){
    if(!encounter.contactStarted&&!encounter.closePass||!friendship&&elapsed<(cooldowns.get(encounter.id)??-Infinity))continue;
    const person=people.find(person=>person.id===encounter.id);if(!person)continue;
    const contact=encounter.contactStarted,index=people.indexOf(person);
-   const text=friendship?friendship.befriended?'New friend! ♥':['Nice moves! · 1/4','Getting closer · 2/4','Almost friends · 3/4'][friendship.passes-1]:contact?['Oop!','All good!','Hey there!'][index%3]:['Nice moves!','Smooth!','Good flow!'][index%3];
-   const label=scene.add.text(person.node.x,person.node.y-37,text,{fontFamily:'Arial',fontSize:'12px',fontStyle:'bold',color:contact?'#f9ddae':'#c9ffdb',backgroundColor:'#123734',padding:{x:6,y:4}}).setOrigin(.5,1).setDepth(35);
+   const text=friendship?friendship.befriended?'New friend! ♥':`${friendship.passes===1?'Nice moves!':friendship.passes===(friendship.requiredPasses??4)-1?'Almost friends':'Getting closer'} · ${friendship.passes}/${friendship.requiredPasses??4}`:contact?['Oop!','All good!','Hey there!'][index%3]:['Nice moves!','Smooth!','Good flow!'][index%3];
+   const label=scene.add.text(person.node.x,person.node.y-37,text,{fontFamily:'Silkscreen, monospace',fontSize:'12px',fontStyle:'normal',color:contact?'#f9ddae':'#c9ffdb',backgroundColor:'#123734',padding:{x:6,y:4}}).setOrigin(.5,1).setDepth(35);
    active.push({id:person.id,label,started:elapsed});cooldowns.set(person.id,elapsed+8000);nextAt=elapsed+1200;break;
   }
  }

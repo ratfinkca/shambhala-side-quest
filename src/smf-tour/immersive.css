@@ -68,18 +68,17 @@
  position:absolute;z-index:5;left:50%;bottom:calc(var(--play-bottom) + 88px);transform:translateX(-50%);
  display:flex;flex-direction:column;align-items:center;gap:5px;width:min(520px,calc(100% - var(--play-left) - var(--play-right)));pointer-events:none;
 }
-.smf-tour[data-immersive=true] #tour-order,
-.smf-tour[data-immersive=true] #tour-status{
+.smf-tour[data-immersive=true] #tour-order{
  position:static;inset:auto;max-width:100%;min-height:0;margin:0;padding:6px 10px;border-radius:12px;
  background:#082028d9;color:#f3f5d7;font-size:12px;line-height:1.4;text-shadow:0 1px 2px #001419;
 }
 .smf-tour[data-immersive=true] #tour-order{display:none;gap:8px}
-.smf-tour[data-immersive=true][data-bonus=true] #tour-order,
-.smf-tour[data-immersive=true][data-invitation=true] #tour-order{display:flex}
+.smf-tour[data-immersive=true][data-bonus=true] #tour-order{display:flex}
 .smf-tour[data-immersive=true] #tour-order p{font-size:12px;line-height:1.4;color:#f3f5d7;margin:0}
 .smf-tour[data-immersive=true] #tour-order svg{width:40px;height:40px;flex:none}
 .smf-tour[data-immersive=true] #tour-status:empty,
 .smf-tour[data-immersive=true] #tour-order:empty{display:none}
+.smf-tour[data-immersive=true] #tour-status{position:static;inset:auto;max-width:100%;min-height:0;margin:0}
 .smf-tour[data-immersive=true] #tour-putt{
  position:absolute;z-index:8;left:50%;right:auto;bottom:var(--play-bottom);transform:translateX(-50%);
  width:min(330px,calc(100% - var(--play-left) - var(--play-right)));max-height:calc(var(--play-height,100dvh) - 160px);

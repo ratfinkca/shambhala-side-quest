@@ -1,20 +1,29 @@
 import {SMF_RULES,SMF_SCORING_VERSIONS,smfRuleStage,SMF_DEFAULT_RUSH_STAGE_ID,isSmfRushStageId} from './smf-rules.js';
+import {isChallenge} from './challenges.js';
+import {validatePlayerName} from './player-name.js';
 export const INPUTS=['mouse','touch','keyboard','mixed','unknown'];
 export const MODES=['rush','festival','endless'];
 export const MAX_ONLINE_STAGES=1440;
 export const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const exact=(o,keys)=>o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).length===keys.length&&keys.every(k=>Object.hasOwn(o,k));
 const integer=n=>Number.isSafeInteger(n)&&n>=0;
+const isV3=p=>p?.scoringVersion==='smf-v3';
+const versionKeys=(p,keys)=>isV3(p)?[...keys,'challenge']:keys;
+const nameKeys=(p,keys)=>versionKeys(p,keys.map(k=>k==='initials'&&isV3(p)?'displayName':k));
+const validIdentity=p=>isV3(p)?validatePlayerName(p.displayName).ok:typeof p.initials==='string'&&/^[A-Z0-9]{3}$/.test(p.initials);
+const validChallenge=p=>!isV3(p)||isChallenge(p.challenge);
+const validPerk=(id,p)=>['boots','noodle','moth','bracelet','surfer','battery','encore','sweet',...(isV3(p)?['candy-magnet','flow-finder']:[])].includes(id);
 const rushKeys=(p,keys)=>p&&Object.hasOwn(p,'rushStageId')?[...keys,'rushStageId']:keys;
 export const validRushSelection=p=>p&&(!Object.hasOwn(p,'rushStageId')||p.mode==='rush'&&isSmfRushStageId(p.rushStageId));
-export function validRun(p){return exact(p,rushKeys(p,['editionId','runId','mode','scoringVersion','buildId']))&&validRushSelection(p)&&p.editionId==='smf'&&typeof p.runId==='string'&&UUID.test(p.runId)&&MODES.includes(p.mode)&&SMF_SCORING_VERSIONS.includes(p.scoringVersion)&&typeof p.buildId==='string'&&/^[\w.-]{1,100}$/.test(p.buildId);}
+export function validRun(p){return exact(p,rushKeys(p,versionKeys(p,['editionId','runId','mode','scoringVersion','buildId'])))&&validChallenge(p)&&validRushSelection(p)&&p.editionId==='smf'&&typeof p.runId==='string'&&UUID.test(p.runId)&&MODES.includes(p.mode)&&SMF_SCORING_VERSIONS.includes(p.scoringVersion)&&typeof p.buildId==='string'&&/^[\w.-]{1,100}$/.test(p.buildId);}
 export function validateScore(p,ticket){
  const fail=code=>({ok:false,code});
- if(!exact(p,rushKeys(p,['editionId','runId','ticket','initials','mode','scoringVersion','buildId','inputType','totalScore','stagesCleared','stages']))||!validRushSelection(p)||!validRun({editionId:p.editionId,runId:p.runId,mode:p.mode,scoringVersion:p.scoringVersion,buildId:p.buildId})||typeof p.ticket!=='string'||!/^[a-f0-9]{64}$/.test(p.ticket)||typeof p.initials!=='string'||!/^[A-Z0-9]{3}$/.test(p.initials)||!INPUTS.includes(p.inputType)||!integer(p.totalScore)||!integer(p.stagesCleared)||!Array.isArray(p.stages)||p.stages.length<1||p.stages.length>(p.mode==='rush'?1:p.mode==='endless'?MAX_ONLINE_STAGES:SMF_RULES.route.length))return fail('invalid');
+ if(isV3(p)&&Object.hasOwn(p,'displayName')&&!validatePlayerName(p.displayName).ok)return fail('invalid_name');
+ if(!exact(p,rushKeys(p,nameKeys(p,['editionId','runId','ticket','initials','mode','scoringVersion','buildId','inputType','totalScore','stagesCleared','stages'])))||!validRushSelection(p)||!validRun({editionId:p.editionId,runId:p.runId,mode:p.mode,scoringVersion:p.scoringVersion,buildId:p.buildId,...(isV3(p)?{challenge:p.challenge}:{}),...(Object.hasOwn(p,'rushStageId')?{rushStageId:p.rushStageId}:{})})||typeof p.ticket!=='string'||!/^[a-f0-9]{64}$/.test(p.ticket)||!validIdentity(p)||!INPUTS.includes(p.inputType)||!integer(p.totalScore)||!integer(p.stagesCleared)||!Array.isArray(p.stages)||p.stages.length<1||p.stages.length>(p.mode==='rush'?1:p.mode==='endless'?MAX_ONLINE_STAGES:SMF_RULES.route.length))return fail('invalid');
  let total=0,cleared=0,previous=[];
  for(let i=0;i<p.stages.length;i++){
-  const s=p.stages[i],rule=smfRuleStage(p.mode,i,p.rushStageId);
-  if(!exact(s,['stageIndex','stageId','activeMs','pickups','closePasses','score','perks','sparks','passes'])||s.stageIndex!==i||s.stageId!==rule.id||s.activeMs!==rule.durationMs||![s.pickups,s.closePasses,s.score].every(integer)||s.pickups>100000||s.closePasses>100000||!Array.isArray(s.perks)||s.perks.length>Math.min(i,4)||new Set(s.perks).size!==s.perks.length||!s.perks.every(k=>['boots','noodle','moth','bracelet','surfer','battery','encore','sweet'].includes(k))||!validEndlessPerks(previous,s.perks)||!Array.isArray(s.sparks)||s.sparks.length!==20||!s.sparks.every(integer)||!Array.isArray(s.passes)||s.passes.length!==2||!s.passes.every(integer))return fail('invalid');
+  const s=p.stages[i],rule=smfRuleStage(p.mode,i,p.rushStageId,p.challenge,p.scoringVersion);
+  if(!exact(s,['stageIndex','stageId','activeMs','pickups','closePasses','score','perks','sparks','passes'])||s.stageIndex!==i||s.stageId!==rule.id||s.activeMs!==rule.durationMs||![s.pickups,s.closePasses,s.score].every(integer)||s.pickups>100000||s.closePasses>100000||!Array.isArray(s.perks)||s.perks.length>Math.min(i,4)||new Set(s.perks).size!==s.perks.length||!s.perks.every(k=>validPerk(k,p))||!validEndlessPerks(previous,s.perks)||!Array.isArray(s.sparks)||s.sparks.length!==20||!s.sparks.every(integer)||!Array.isArray(s.passes)||s.passes.length!==2||!s.passes.every(integer))return fail('invalid');
   let points=0,pickups=0;
   s.sparks.forEach((n,index)=>{const multiplier=Math.floor(index/4)+1,drop=Math.floor(index%4/2)+1,bass=index%2+1;points+=n*10*multiplier*drop*bass;pickups+=n;});
   // Each chain spends four pickups at 1x, then five at each of 2x–4x.
@@ -28,13 +37,14 @@ export function validateScore(p,ticket){
   previous=s.perks;total+=points;
  }
  if(total!==p.totalScore||cleared!==p.stagesCleared)return fail('invalid');
- if(ticket&&(ticket.mode!==p.mode||ticket.scoringVersion!==p.scoringVersion||ticket.runId!==p.runId||p.mode==='rush'&&(ticket.rushStageId??SMF_DEFAULT_RUSH_STAGE_ID)!==(p.rushStageId??SMF_DEFAULT_RUSH_STAGE_ID)||ticket.elapsedMs+5000<p.stages.reduce((sum,s)=>sum+s.activeMs,0)))return fail('invalid_ticket');
- return {ok:true,record:p};
+ if(ticket&&(isV3(p)&&ticket.challenge!==p.challenge||ticket.mode!==p.mode||ticket.scoringVersion!==p.scoringVersion||ticket.runId!==p.runId||p.mode==='rush'&&(ticket.rushStageId??SMF_DEFAULT_RUSH_STAGE_ID)!==(p.rushStageId??SMF_DEFAULT_RUSH_STAGE_ID)||ticket.elapsedMs+5000<p.stages.reduce((sum,s)=>sum+s.activeMs,0)))return fail('invalid_ticket');
+ return {ok:true,record:isV3(p)?{...p,displayName:validatePlayerName(p.displayName).name}:p};
 }
-export function validBoard(rows,mode,version,rushStageId){
+export function validBoard(rows,mode,version,rushStageId,challenge){
  if(rushStageId!==undefined&&(mode!=='rush'||!isSmfRushStageId(rushStageId)))return false;
- const keys=['editionId','initials','score','stagesCleared','inputType','mode','scoringVersion','receivedAt'];if(rushStageId!==undefined)keys.push('rushStageId');
- return Array.isArray(rows)&&rows.length<=50&&rows.every(r=>exact(r,keys)&&(rushStageId===undefined||r.rushStageId===rushStageId)&&typeof r.initials==='string'&&/^[A-Z0-9]{3}$/.test(r.initials)&&integer(r.score)&&integer(r.stagesCleared)&&r.stagesCleared<=(mode==='endless'?MAX_ONLINE_STAGES:SMF_RULES.route.length)&&INPUTS.includes(r.inputType)&&r.editionId==='smf'&&r.mode===mode&&r.scoringVersion===version&&typeof r.receivedAt==='string'&&Number.isFinite(Date.parse(r.receivedAt)));
+ const context={scoringVersion:version,challenge};if(!SMF_SCORING_VERSIONS.includes(version)||!validChallenge(context))return false;
+ const keys=nameKeys(context,['editionId','initials','score','stagesCleared','inputType','mode','scoringVersion','receivedAt']);if(rushStageId!==undefined)keys.push('rushStageId');
+ return Array.isArray(rows)&&rows.length<=50&&rows.every(r=>exact(r,keys)&&(rushStageId===undefined||r.rushStageId===rushStageId)&&validIdentity(r)&&(!isV3(context)||r.challenge===challenge)&&integer(r.score)&&integer(r.stagesCleared)&&r.stagesCleared<=(mode==='endless'?MAX_ONLINE_STAGES:SMF_RULES.route.length)&&INPUTS.includes(r.inputType)&&r.editionId==='smf'&&r.mode===mode&&r.scoringVersion===version&&typeof r.receivedAt==='string'&&Number.isFinite(Date.parse(r.receivedAt)));
 }
 
 function validEndlessPerks(previous,next){

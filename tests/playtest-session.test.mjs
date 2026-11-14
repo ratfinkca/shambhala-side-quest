@@ -6,14 +6,22 @@ const run={id:id(99),mode:'rush',themeId:'forest-freakout',stageIndex:0,stagesCl
 const setup=(enabled=true)=>{let n=0;const batches=[];const consent=createConsent({storage:createStorage(),uuid:()=>id(++n)});const s=createPlaytestSession({config:{enabled,buildId:'dev'},consent,uuid:()=>id(++n),width:()=>390,send:async es=>{batches.push(...es);return true;}});return {s,consent,batches}};
 test('playtest events retain each run season while menus describe the current game',async()=>{
  const {validatePlaytestBatch}=await import('../supabase/functions/_shared/playtest.js');
- for(const version of [undefined,'arcade-v1','arcade-v2']){
+ for(const version of [undefined,'arcade-v1','arcade-v2','arcade-v3']){
   const {s,batches}=setup();s.setConsent('accepted');
   const active={...run,...(version?{scoringVersion:version}:{})};
   s.start(active);s.stageStart(0);s.finishStage(0,{score:0,qualified:true});s.end(active);s.menu('instructions',run.themeId);await s.flush();
   assert.ok(batches.filter(e=>e.type!=='menu').every(e=>e.scoringVersion===(version??'arcade-v1')));
-  assert.equal(batches.find(e=>e.type==='menu').scoringVersion,'arcade-v2');
+  assert.equal(batches.find(e=>e.type==='menu').scoringVersion,'arcade-v3');
   assert.ok(batches.every(e=>validatePlaytestBatch([e]).ok));
  }
+});
+test('v3 sessions send frequency perks but never the run name, challenge, slots or appearance',async()=>{
+ const {validatePlaytestBatch}=await import('../supabase/functions/_shared/playtest.js');
+ const {s,batches}=setup();s.setConsent('accepted');
+ s.start({...run,mode:'festival',scoringVersion:'arcade-v3',displayName:'Private Name',challenge:'first-timer',characterSlots:[{displayName:'Secret Slot'}],outfit:{hat:'private'}});
+ s.perk('candy-magnet');s.perk('flow-finder');await s.flush();
+ assert.equal(batches.filter(e=>e.type==='perk').length,2);assert.ok(batches.every(e=>validatePlaytestBatch([e]).ok));
+ for(const field of ['displayName','challenge','characterSlots','outfit','Private Name','Secret Slot'])assert.equal(JSON.stringify(batches).includes(field),false);
 });
 test('accept mid-run waits for next run, opt-out stops immediately',async()=>{
  const {s,batches}=setup();s.start(run);s.setConsent('accepted');s.record('pickup',{chain:2});s.finishStage(0,{score:50,qualified:true});s.end(run);await s.flush();assert.equal(batches.length,0);

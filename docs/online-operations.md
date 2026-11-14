@@ -39,7 +39,7 @@ Analytics raw events remain private for29–30 days; daily cleanup deletes whole
 
 Arcade tickets last24 hours, issuance60/hour and submission120/hour. Submission bodies cap1 MiB; ticket/board bodies32 KiB; Endless online history1440 completed stages. Overflow disables online posting while local gameplay continues. Exact successful retries remain accepted after expiry; conflicting payloads fail. Expired unused tickets/hashes are cleaned hourly. Accepted score claims/receipts persist until owner removal/moderation.
 
-Public score fields: initials, score, stagesCleared, inputType, mode, scoringVersion, receivedAt. Endless order: clears descending → points descending → server time ascending → ID ascending. Rush/Festival: points → clears → time → ID. Boards cache30 seconds. Initials are not unique identities. New crowd runs use arcade-v2 / smf-v2. Original v1 boards remain available; existing runs, tickets and frozen retry payloads keep their original version. Versions separate gameplay rules, not presentation alone.
+Public score fields: displayName and challenge for v3; initials for legacy v1/v2; plus score, stagesCleared, inputType, mode, scoringVersion and receivedAt. SMF records also identify their edition, and Rush boards identify the venue. Endless order: clears descending → points descending → server time ascending → ID ascending. Rush/Festival: points → clears → time → ID. Boards cache30 seconds. Names and initials are not unique identities. New runs use arcade-v3 / smf-v3, partitioned by First-timer, Been-around or Seasoned-vet. Original v1 and crowd v2 boards remain available; existing runs, tickets and frozen retry payloads keep their original version. Versions separate gameplay rules, not presentation alone.
 
 ## Private reporting
 
@@ -50,6 +50,12 @@ Do not run maintenance merely to read a report: use the metrics view/current raw
 Private moderation: inspect reviewed entries using owner SQL, then set `hidden=true` on the specific IDs; set false to restore. Preserve score/receipt data. Never grant player direct table/RPC access. No production test score is needed for validator checks: valid synthetic payloads with deliberately nonexistent tickets must reach `invalid_ticket`, while tampered payloads fail earlier.
 
 ## Local checks and release
+
+### Names and challenge boards rollout (2026-11-13)
+
+Apply additive migration `202611130003_names_challenges.sql` before deploying all eight generic/SMF ticket, submission, leaderboard and playtest functions. V3 binds challenge to the ticket and stores a public name only on an explicitly posted score. Shared client/server filtering validates names; a definitive invalid-name response permits correction, while an uncertain network retry retains its frozen payload. Existing initials and receipts retain their original shapes.
+
+Four named character presets stay on the device and share progression; names and presets are excluded from playtest analytics. New perks unlock at ranks 3 and 4. Candy Magnet provides up to two candies; Flow Finder provides up to three opportunities and keeps an eight-second gap after actual Flow expiry. Bonus objectives remain unchanged. See the [implementation and validation plan](superpowers/plans/2026-11-13-rave-names-challenges.md).
 
 ### Crowd season rollout (2026-11-13)
 

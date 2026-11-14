@@ -1,3 +1,4 @@
+import {rulesFor} from '../src/run.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTourProfile,createTourRun,stageForRun,mainStageId,finishMain,endFestival,closeResults,saveTourScore} from '../src/smf-tour/model.js';
@@ -12,7 +13,7 @@ function selectedRun(stageId,id='rush-test'){
  return createTourRun(p,'rush',id,'forest-freakout',high);
 }
 function parkScene(p){
- const stage=stageForRun(p.active),round=createRound({},stage.timingId);round.runId=p.active.id;advanceRound(round,1234);delete round.rules;round.sincePickupMs=null;
+ const stage=stageForRun(p.active),round=createRound(rulesFor(p.active.perks,p.active.scoringVersion),stage.timingId);round.runId=p.active.id;advanceRound(round,1234);delete round.rules;round.sincePickupMs=null;
  p.active.needsIntro=false;p.active.scene={round,player:{...stage.spawn},sparks:Array.from({length:12},()=>({...stage.spawn})),candy:{placed:false,x:0,y:0},crowd:stage.crowdAnchors.map(()=>createEncounter())};return p;
 }
 const row=(rushStageId,index)=>({id:`${rushStageId}-${index}`,initials:'ABC',score:index,cleared:1,completedAt:index,...(rushStageId===undefined?{}:{rushStageId})});
@@ -92,7 +93,7 @@ test('invalid persisted Rush selection fails safe without losing permanent progr
 });
 
 test('saved Rush scores retain twenty entries for each venue and remain explicitly saved',()=>{
- let p=selectedRun('smf-grove','new-best');p.boards.rush=venues.flatMap(v=>Array.from({length:20},(_,i)=>({...row(v,i),scoringVersion:p.active.scoringVersion})));
+ let p=selectedRun('smf-grove','new-best');p.boards.rush=venues.flatMap(v=>Array.from({length:20},(_,i)=>({...row(v,i),scoringVersion:p.active.scoringVersion,displayName:'Raver',challenge:p.active.challenge})));
  p.active.score=999;p=endFestival(p);assert.equal(p.boards.rush.length,120);p=saveTourScore(p,'new');
  assert.equal(p.boards.rush.length,120);assert.equal(p.boards.rush.find(r=>r.id==='new-best').rushStageId,'smf-grove');
  assert.equal(p.boards.rush.filter(r=>r.rushStageId==='smf-grove').length,20);assert.equal(p.boards.rush.some(r=>r.id==='smf-grove-0'),false);
@@ -111,7 +112,7 @@ test('normalization keeps top twenty scores per venue and upgrades untagged rows
 test('Rush finish receipts and retry payloads stay bound to the selected venue',()=>{
  let p=selectedRun('smf-amp');const stage=stageForRun(p.active),round=createRound({},stage.timingId);round.runId=p.active.id;advanceRound(round,round.remainingMs);p=finishMain(p,round);
  assert.equal(p.active.scoreStages[0].stageId,'smf-amp');assert.equal(p.active.scoreStages[0].activeMs,54857);
- const a=p.active,ticket='a'.repeat(64);a.submission={runId:a.id,status:'error',code:'unavailable',ticket,expiresAt:123456,payload:{runId:a.id,ticket,mode:'rush',scoringVersion:a.scoringVersion,rushStageId:'smf-amp',buildId:a.buildId,totalScore:a.score,stagesCleared:a.cleared,stages:structuredClone(a.scoreStages)}};
+ const a=p.active,ticket='a'.repeat(64);a.submission={runId:a.id,status:'error',code:'unavailable',ticket,expiresAt:123456,payload:{runId:a.id,ticket,displayName:'Moon Dancer',challenge:a.challenge,mode:'rush',scoringVersion:a.scoringVersion,rushStageId:'smf-amp',buildId:a.buildId,totalScore:a.score,stagesCleared:a.cleared,stages:structuredClone(a.scoreStages)}};
  assert.deepEqual(normalizeTourProfile(p).active?.submission,a.submission);
  for(const value of ['smf-grove',undefined,null]){const corrupt=structuredClone(p);if(value===undefined)delete corrupt.active.submission.payload.rushStageId;else corrupt.active.submission.payload.rushStageId=value;assert.equal(normalizeTourProfile(corrupt).active,null);}
  const corrupt=structuredClone(p);corrupt.active.scoreStages[0].stageId='smf-pagoda';corrupt.active.submission=null;assert.equal(normalizeTourProfile(corrupt).active,null);

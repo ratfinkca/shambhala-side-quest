@@ -31,10 +31,10 @@ test('a real clean pass through a zero-radius friend remains counted and ingesti
  assert.equal(validatePlaytestBatch([e]).ok,true);
 });
 
-test('playtest ingestion accepts the eight known perks and rejects unknown IDs',async()=>{
+test('playtest ingestion accepts current perks and rejects unknown IDs',async()=>{
  const {PERKS}=await import('../src/run.js');
  for(const perk of [...Object.keys(PERKS),'unknown']){
-  const e={...event(),type:'perk',payload:{perk}};
+  const e={...event(),scoringVersion:'arcade-v3',type:'perk',payload:{perk}};
   assert.equal(validatePlaytestBatch([e]).ok,perk!=='unknown');
  }
 });
