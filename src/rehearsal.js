@@ -66,7 +66,7 @@ export function installRehearsal(getScene,isPlaying,{previewStage,previewReward,
    const select=document.createElement('select');select.setAttribute('aria-label','Reward demonstration');
    for(const [key,name]of [['hat:spore','Spore Sprout'],['totem:mixtape','Mixtape Totem'],['onesie:mycelium','Mycelium Threads'],['flair:aurora','Aurora Ribbons']]){const option=document.createElement('option');option.value=key;option.textContent=name;select.append(option);}
    const earn=document.createElement('button');earn.textContent='Demonstrate earning reward';earn.addEventListener('click',()=>{previewReward(rewardDemoStages(select.value),select.value);bar.open=false;});
-   const open=document.createElement('button');open.textContent='Open reward wardrobe';open.addEventListener('click',()=>{openRewards();bar.open=false;});
+   const open=document.createElement('button');open.textContent='Open Character rewards';open.addEventListener('click',()=>{openRewards();bar.open=false;});
    const note=document.createElement('p');note.textContent='Temporary reward profile. Real unlocks are untouched. Reload to reset demos. Scores and playtest sharing are disabled.';note.style.flexBasis='100%';
    controls.prepend(note,select,earn,open);openRewards();
   }

@@ -1,5 +1,6 @@
+import {pixelVenueTexture} from '../../pixel-art/venue-texture.js';
 // An original interpretation of the hidden Living Room party, not a venue survey.
-// Loaded only by the disposable SMF bonus rehearsal.
+// SMF-only pixel plate shared by the tour and disposable bonus rehearsal.
 const ART_KEY='bonus-rabbit-hole-art-v1';
 const LAMPS=[
  {x:126,y:72,color:0xffd37d}, {x:178,y:110,color:0xffa4bd},
@@ -8,7 +9,7 @@ const LAMPS=[
 ];
 
 export function preload(scene){
- if(!scene.textures.exists(ART_KEY))scene.load.image(ART_KEY,new URL('../assets/rabbit-hole-v1.jpg',import.meta.url).href);
+ if(!scene.textures.exists(ART_KEY))scene.load.image(ART_KEY,new URL('../assets/rabbit-hole-pixel-v1.webp',import.meta.url).href);
 }
 
 export function createView(scene,stage){
@@ -18,7 +19,7 @@ export function createView(scene,stage){
  if(scene.textures.exists(ART_KEY)){
   // The scenery lip sits above y=215; the dancefloor begins below it.
   // A small upward framing crop keeps the play area clear of the booth.
-  scene.add.image(0,-30,ART_KEY).setOrigin(0).setDisplaySize(960,640).setDepth(-4);
+  scene.add.image(0,-30,pixelVenueTexture(scene,ART_KEY)).setOrigin(0).setDisplaySize(960,640).setDepth(-4);
   const lower=scene.add.graphics().setDepth(-3);
   for(let y=560;y<610;y+=2)lower.fillStyle(0x142a35,(y-560)/50).fillRect(0,y,960,2);
   lower.fillStyle(0x142a35).fillRect(0,610,960,30);
@@ -75,7 +76,7 @@ export function createView(scene,stage){
    const a=Math.PI+i/31*Math.PI;
    const x=480+221*Math.cos(a),y=209+206*Math.sin(a);
    const chase=reducedMotion?.35:.22+.45*Math.pow(Math.max(0,Math.cos(i*.38-t*.75)),5);
-   decor.fillStyle(i%3?0xffbf76:0xf59fce,chase).fillCircle(x,y,1.5);
+   decor.fillStyle(i%3?0xffbf76:0xf59fce,chase).fillRect(Math.round(x)-1,Math.round(y)-1,3,3);
   }
   // The venue heartbeat is a gentle glow rather than a flash.
   const pulse=reducedMotion?.2:.14+(1-beat)*.08*energy;

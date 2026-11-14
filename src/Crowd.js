@@ -1,10 +1,12 @@
 import {getTiming,roundTiming,elapsedMs} from './stage-clock.js';
+import {createAvatar,setOutfit,animateAvatar} from './Avatar.js';
 import { STAGES } from './stages.js';
 import {bassOffset} from './bass-motion.js';
 import {cycleAt} from './festival.js';
 import { applyBump, awardClosePass, createEncounter, crowdPosition, updateEncounter } from './festival.js';
 
-const CLOTHES = [0xb59bdd, 0xdd9d83, 0x87bacc, 0xd09bb7, 0xa1b58a];
+const LOOKS=[['moth','flower'],['tiger','bucket'],['frog','headphones'],['cosmic','wizard'],['rainbow','cat'],['bee','none'],['patchwork','crown'],['skeleton','antenna']];
+export function setCrowdOutfit(person,outfit,options={}){if(person?.avatar)setOutfit(person.avatar,outfit,options);person?.body?.clear?.();}
 
 export class Crowd {
   constructor(scene) {
@@ -23,26 +25,13 @@ export class Crowd {
       const smooth = scene.add.container(0, 0, smoothRings).setAlpha(0);
       node.add(smooth);
       node.add(scene.add.ellipse(0, 13, 29, 11, 0x031619, .45));
-      const body = scene.add.graphics();
-      const color = CLOTHES[index % CLOTHES.length];
-      body.lineStyle(3, 0x899c9a).lineBetween(-4, 9, -6, 17).lineBetween(4, 9, 6, 17);
-      body.fillStyle(color).fillRoundedRect(-7, -5, 14, 18, 4);
-      body.lineStyle(3, color).lineBetween(-6, -1, -13, -9).lineBetween(6, -1, 13, -9);
-      body.fillStyle(index % 2 ? 0xb98467 : 0xe3b396).fillCircle(0, -11, 6);
-      if (index % 3 === 0) {
-        body.fillStyle(0x525578).fillEllipse(0, -15, 20, 6).fillRoundedRect(-6, -21, 12, 7, 3);
-      } else if (index % 3 === 1) {
-        body.fillStyle(0x544853).fillCircle(0, -17, 6);
-      } else {
-        body.lineStyle(3, 0xb2c7c0).lineBetween(-6, -12, 6, -12);
-      }
-      if (index === 3 || index === 7) {
-        body.lineStyle(2, 0x9ba790).lineBetween(13, -8, 13, -44);
-        body.lineStyle(2, color).strokeCircle(13, -47, 7);
-        body.lineStyle(1, color).lineBetween(13, -53, 13, -41).lineBetween(13, -46, 8, -42).lineBetween(13, -46, 18, -42);
-      }
-      node.add(body);
-      return { id: `dancer-${index}`, node, body, ring, smooth, smoothAt: -Infinity, smoothStrength: 0, encounter: createEncounter() };
+      // Keep the compatibility Graphics for bespoke bonus renderers while the
+      // shared avatar carries the real layered pixel wardrobe.
+      const body = scene.add.graphics();node.add(body);
+      const [onesie,hat]=LOOKS[index%LOOKS.length];
+      const avatar=createAvatar(scene,{onesie,hat,totem:index===3||index===7?'peace':'none',flair:'none'},{dancing:true,phase:index*173,skinTone:['light','medium','deep'][index%3]});
+      node.add(avatar);
+      return { id: `dancer-${index}`, node, body, avatar, ring, smooth, smoothAt: -Infinity, smoothStrength: 0, encounter: createEncounter() };
     });
     this.reset();
   }
@@ -53,6 +42,8 @@ export class Crowd {
       person.node.setPosition(position.x, position.y);
       person.body.setRotation(0);
       person.body.setPosition(0,0);
+      person.avatar?.setPosition(0,0);
+      if(person.avatar)animateAvatar(person.avatar,0,true);
       person.ring.setAlpha(0);
       person.smooth.setAlpha(0).setScale(1);
       person.smoothAt = -Infinity;
@@ -62,7 +53,7 @@ export class Crowd {
   }
 
   restoreRecovery(encounters,elapsed,timing=getTiming()) {
-    this.people.forEach((person,index)=>{const p=crowdPosition(index,elapsed,this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);person.node.setPosition(p.x,p.y);person.encounter=structuredClone(encounters[index]);});
+    this.people.forEach((person,index)=>{const p=crowdPosition(index,elapsed,this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);person.node.setPosition(p.x,p.y);person.encounter=structuredClone(encounters[index]);if(person.avatar)animateAvatar(person.avatar,elapsed,true);});
   }
 
   update(player, round, reducedMotion) {
@@ -70,9 +61,11 @@ export class Crowd {
     return this.people.map((person, index) => {
       const position = crowdPosition(index, elapsed, this.stage.crowdAnchors,this.stage.crowdSpeed??1,timing);
       person.node.setPosition(position.x, position.y);
-      person.body.rotation = reducedMotion ? 0 : Math.sin(elapsed * .005 + index) * .14;
+      person.body.rotation = 0;
       const shake=bassOffset(position,this.stage.obstacles,elapsed,cycleAt(elapsed,timing).phase,reducedMotion,timing);
-      person.body.setPosition(shake.x,shake.y);
+      person.body.setPosition(Math.round(shake.x),Math.round(shake.y));
+      person.avatar?.setPosition(Math.round(shake.x),Math.round(shake.y));
+      if(person.avatar)animateAvatar(person.avatar,elapsed,reducedMotion,cycleAt(elapsed,timing).phase==='drop');
       const distance = Math.hypot(player.x - position.x, player.y - position.y);
       person.ring.setAlpha(distance < 100 ? .7 : 0);
       const encounter = updateEncounter(person.encounter, player, position, elapsed, this.scene.crowdEncounterMeasurement?.(index));

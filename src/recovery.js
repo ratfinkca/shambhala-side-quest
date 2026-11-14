@@ -1,6 +1,6 @@
 import {GENERIC_RULES,GENERIC_SCORING_VERSIONS,genericTarget} from '../supabase/functions/_shared/edition-rules.js';
 import {PERKS,rulesFor,stageFor} from './run.js';
-import {WARDROBE} from './wardrobe.js';
+import {WARDROBE,normalizeOutfit} from './wardrobe.js';
 import {THEMES} from './themes.js';
 import {UUID,INPUTS,MAX_ONLINE_STAGES,validateScore} from '../supabase/functions/_shared/score.js';
 export const RECOVERY_VERSION=1,RECOVERY_RULES='endless-recovery-1',RECOVERY_LIMIT=2*1024*1024;
@@ -28,7 +28,7 @@ export function makeRecovery({run,screen,scene,summary=null,resultSnapshot=null,
  if(run?.mode!=='endless'||run.status==='ready'&&run.stageIndex===0)return null;
  const logical=scene?{round:pick(scene.round,roundKeys),player:scene.player,sparks:scene.sparks,candy:scene.candy,crowd:scene.crowd.map(e=>pick(e,encounterKeys))}:null;
  if(logical&&logical.round.sincePickupMs===Infinity)logical.round.sincePickupMs=null;
- return structuredClone({version:RECOVERY_VERSION,rules:RECOVERY_RULES,scoringVersion:run.scoringVersion??GENERIC_RULES.id,savedAt:now,run:{...pick(run,runKeys),scoringVersion:run.scoringVersion??GENERIC_RULES.id,buildId:run.buildId||buildId},screen:recoveryScreen(screen,run),scene:run.status==='playing'?logical:null,summary:summary?pick(summary,['qualified','pickups','target','score','totalScore']):null,resultSnapshot,progressReward,submission:submission?.snapshot?submission.snapshot():submission,inputType});
+ return structuredClone({version:RECOVERY_VERSION,rules:RECOVERY_RULES,scoringVersion:run.scoringVersion??GENERIC_RULES.id,savedAt:now,run:{...pick(run,runKeys),scoringVersion:run.scoringVersion??GENERIC_RULES.id,buildId:run.buildId||buildId},screen:recoveryScreen(screen,run),scene:run.status==='playing'?logical:null,summary:summary?pick(summary,['qualified','pickups','target','score','totalScore']):null,resultSnapshot:resultSnapshot?{...resultSnapshot,outfit:normalizeOutfit(resultSnapshot.outfit)}:null,progressReward,submission:submission?.snapshot?submission.snapshot():submission,inputType});
 }
 function historyOK(r){
  if(!Array.isArray(r.scoreStages))return false;
@@ -91,7 +91,7 @@ export function readRecovery(raw,{editionId='generic'}={}){
    if(['pending','succeeded'].includes(sub.status)&&!sub.payload)return fail('invalid');
   }
   const value=structuredClone(raw);value.scoringVersion??=GENERIC_RULES.id;value.run.scoringVersion??=GENERIC_RULES.id;
-  if(value.resultSnapshot)value.resultSnapshot.scoringVersion??=value.run.scoringVersion;
+  if(value.resultSnapshot){value.resultSnapshot.scoringVersion??=value.run.scoringVersion;value.resultSnapshot.outfit=normalizeOutfit(value.resultSnapshot.outfit);}
   return {ok:true,value};
  }catch{return fail('invalid');}
 }

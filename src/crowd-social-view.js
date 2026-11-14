@@ -1,4 +1,5 @@
 import {createCrowdReactions} from './crowd-reactions.js';
+import {pixelHeart,pixelEllipse} from './pixel-art/shapes.js';
 
 const colours={small:0x99e1cb,medium:0xefd58d,large:0xecb5ca},baselineColour=0xb2c5c1;
 
@@ -31,14 +32,14 @@ export function createCrowdSocialView(scene){
    rings[0]?.setRadius?.(r);rings[0]?.setVisible?.(r>0);
    rings[1]?.setRadius?.((r+48)/2);rings[2]?.setRadius?.(48);
    if(debug){
-    diagnostics.lineStyle(1,0xc8f7e7,.2).strokeCircle(x,y,48);
-    if(r>0)diagnostics.lineStyle(1.5,colour,.85).strokeCircle(x,y,r);
+    diagnostics.lineStyle(1,0xc8f7e7,.2).strokePoints(pixelEllipse(x,y,96,96),true);
+    if(r>0)diagnostics.lineStyle(1.5,colour,.85).strokePoints(pixelEllipse(x,y,r*2,r*2),true);
    }
    if(!enabled||!bond.passes)continue;
    if(bond.isFriend){
-    marks.fillStyle(0xbaf0cf,.95).fillCircle(x+13,y-28,3).fillCircle(x+18,y-28,3).fillTriangle(x+10,y-27,x+21,y-27,x+15.5,y-21);
+    pixelHeart(marks,x+16,y-39,1.4,0xf3a1b7,.95);
    }else if(near){
-    for(let i=0;i<4;i++)marks.fillStyle(i<bond.passes?0xbaf0cf:0x132e30,i<bond.passes?.95:.6).fillCircle(x-7.5+i*5,y+22,1.8);
+    for(let i=0;i<4;i++)marks.fillStyle(i<bond.passes?0xbaf0cf:0x132e30,i<bond.passes?.95:.6).fillRect(Math.round(x-9+i*5),Math.round(y+20),3,3);
    }
   }
   if(debug)diagnostics.fillStyle(0xffffff,.9).fillCircle(scene.dancer.x,scene.dancer.y,2);

@@ -39,7 +39,7 @@ test('discovery reveals only its own map card and earned souvenir equip choice',
 });
 
 test('title carries the edition artwork and restores an adventure instead of starting over',()=>{
- const fresh=titleHTML(createTourProfile());assert.match(fresh,/themes\/forest-freakout\/title\.webp/);assert.match(fresh,/data-action="start"/);
+ const fresh=titleHTML(createTourProfile());assert.match(fresh,/title-forest-freakout-v1\.webp/);assert.match(fresh,/data-action="start"/);
  const ongoing=titleHTML(createFestival(createTourProfile(),'view-test'));assert.match(ongoing,/data-action="resume"/);assert.match(ongoing,/resumes paused/);assert.doesNotMatch(ongoing,/data-action="start"/);
 });
 

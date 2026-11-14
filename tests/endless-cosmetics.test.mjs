@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {normalizeOutfit,WARDROBE} from '../src/wardrobe.js';
+import {normalizeOutfit,WARDROBE,DEFAULT_APPEARANCE} from '../src/wardrobe.js';
 import {normalizeProgress,awardStage} from '../src/progression.js';
 import {renderEndlessRewards} from '../src/progression-view.js';
 import {drawEndlessCosmetics} from '../src/endless-cosmetics.js';
 import {rewardDemoStages} from '../src/rehearsal.js';
 const outfit={onesie:'mycelium',hat:'spore',totem:'mixtape',flair:'aurora'};
 test('new earned cosmetics survive normalization and have named wardrobe previews',()=>{
- assert.deepEqual(normalizeOutfit(outfit),outfit);
+ assert.deepEqual(normalizeOutfit(outfit),{...outfit,appearance:DEFAULT_APPEARANCE});
  for(const [category,id]of Object.entries(outfit))assert.ok(WARDROBE[category].some(item=>item.id===id));
  const html=renderEndlessRewards(normalizeProgress());
  for(const name of ['Spore Sprout','Mixtape Totem','Mycelium Threads','Aurora Ribbons'])assert.ok(html.includes(`Preview ${name}`));

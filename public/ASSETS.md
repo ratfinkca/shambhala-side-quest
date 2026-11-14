@@ -36,3 +36,9 @@ Bass interface preview: cone-origin wavefronts and player pressure/protection ma
 The three `themes/*/title.webp` posters contain embedded Shambhala lettering and belong only to the SMF edition. Generic uses a neutral text title over a shared backdrop; final generic title art is deferred. The unused `themes/previews/*.webp` concept boards are excluded from both runtime artifacts. Backdrops and the four perk illustrations per theme are shared neutral artwork, as are local fonts and their licenses. `playtest-data.html` is shared development notice copy; its GitHub contact remains the project contact. `ASSETS.md` is source provenance, not a runtime download.
 
 `build/edition-assets.js` explicitly allowlists runtime public files for DEV and production; adding an asset requires assigning it to an edition there. CSS-imported neutral fonts are also emitted by Vite.
+
+## Pixel typography
+
+Silkscreen Regular by Jason Kottke is bundled under the SIL Open Font License.
+Source: https://github.com/google/fonts/tree/main/ofl/silkscreen
+The font and its license are in `public/fonts/Silkscreen-Regular.ttf` and `Silkscreen-OFL.txt`.

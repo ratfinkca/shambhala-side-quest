@@ -6,8 +6,9 @@ import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {assetsForEdition} from '../build/edition-assets.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const venueArt=['living-room-v1','fractal-forest-v1','grove-v1','amp-v1','pagoda-v1','village-v1','rabbit-hole-v1','secret-garden-v1','ikigai-mori-v1','villagio-v1'];
-const practiceOnly=/collision-practice-entry|Meet the crowd|collision-lab|bonus-select|bonus-help-copy|amp-delivery-entry|clock-practice-entry|control-practice-entry|control-stamina|Find your moves|Timing and instrument practice|clock-lab-select|Tour integration lab|Collect invitation \(lab\)|Clear current stage \(lab\)|Souvenir unlocked:|Club tour complete!/;
+const venues=['living-room','fractal-forest','grove','amp','pagoda','village','rabbit-hole','secret-garden','ikigai-mori','villagio'];
+const venueArt=venues.flatMap(name=>[`${name}-v1`,`${name}-pixel-v1`]);
+const practiceOnly=/Wardrobe fitting room|wardrobe-fit-stage|wardrobe-fit-lab|Pixel Afterparty|pixel-lab|pixel-raver|pixel-effects|collision-practice-entry|Meet the crowd|collision-lab|bonus-select|bonus-help-copy|amp-delivery-entry|clock-practice-entry|control-practice-entry|control-stamina|Find your moves|Timing and instrument practice|clock-lab-select|Tour integration lab|Collect invitation \(lab\)|Clear current stage \(lab\)|Souvenir unlocked:|Club tour complete!/;
 function excludes(text,pattern,message){const match=text.match(pattern);assert.ok(!match,`${message}${match?`: ${match[0]}`:''}`);}
 async function files(dir){return (await Promise.all((await readdir(dir,{withFileTypes:true})).map(async e=>e.isDirectory()?files(resolve(dir,e.name)):resolve(dir,e.name)))).flat();}
 function build(id,out){return spawnSync(process.execPath,['node_modules/vite/bin/vite.js','build','--outDir',out,'--emptyOutDir'],{cwd:root,env:{...process.env,VITE_EDITION:id},encoding:'utf8'});}
@@ -21,8 +22,9 @@ for(const id of ['generic','smf']){
  for(const path of allowed)await access(resolve(out,path));
  for(const path of paths){
   const relative=path.slice(out.length+1);
+  if(id==='generic')excludes(relative,/title-(?:forest-freakout|moonlit-mycelium|neon-field-trip)-v1/,'Generic includes SMF pixel title');
   if(id==='generic')for(const asset of venueArt)assert.ok(!relative.includes(asset),`Generic includes SMF venue art: ${relative}`);
-  excludes(relative,/(?:collision-practice-entry|clock-practice-entry|amp-delivery-entry|(?:^|\/)lab-)/,'Production includes development entry');
+  excludes(relative,/(?:pixel-lab|pixel-raver|pixel-effects|collision-practice-entry|clock-practice-entry|amp-delivery-entry|(?:^|\/)lab-)/,'Production includes development entry');
   if(!relative.startsWith('assets/')&&relative!=='index.html')assert.ok(allowed.includes(relative),`Unowned ${id} asset: ${relative}`);
   if(!/\.(css|html|js)$/.test(path))continue;
   const text=await readFile(path,'utf8');
@@ -42,7 +44,9 @@ for(const id of ['generic','smf']){
  }
  if(id==='smf'){
   assert.ok(shippedText.includes('FIVE HIDDEN PARTIES'),'SMF tour entry missing from production');
-  for(const asset of venueArt)assert.ok(paths.some(path=>path.includes(asset)),`SMF tour art missing: ${asset}`);
+  for(const venue of venues)assert.ok(paths.some(path=>path.includes(`${venue}-pixel-v1`)&&path.endsWith('.webp')),`SMF lossless pixel tour art missing: ${venue}`);
+  for(const theme of ['forest-freakout','moonlit-mycelium','neon-field-trip'])assert.ok(paths.some(path=>path.includes(`title-${theme}-v1`)&&path.endsWith('.webp')),`SMF lossless pixel title missing: ${theme}`);
+  for(const path of paths)assert.ok(!/(?:-pixel-v1|title-(?:forest-freakout|moonlit-mycelium|neon-field-trip)-v1)[^/]*\.png$/.test(path),'PNG artwork masters must not ship alongside lossless delivery files');
  }
  const html=await readFile(resolve(out,'index.html'),'utf8');assert.ok(html.includes(id==='generic'?'Festival Side Quest':'Shambhala Side Quest'));
  console.log(`${id}: build, asset allowlist and static references verified`);

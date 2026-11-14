@@ -2,6 +2,8 @@ import {createRunId} from '../run-id.js';
 import Phaser from 'phaser';
 import './style.css';
 import './immersive.css';
+import './pixel.css';
+import './character.css';
 import '../control-settings.css';
 import '../game-controls.css';
 import {createControlPreferences} from '../control-preferences.js';
@@ -12,7 +14,9 @@ import {bindActionButton} from '../action-button.js';
 import {applyTheme} from '../theme-view.js';
 import {resolveTheme,isThemePreference} from '../themes.js';
 import {createAvatar,setOutfit,animateAvatar} from '../Avatar.js';
-import {WARDROBE} from '../wardrobe.js';
+import {WARDROBE,CHARACTER_OPTIONS,CHARACTER_PRESETS,normalizeAppearance,applyCharacterPreset} from '../wardrobe.js';
+import {CHARACTER_FACINGS,updateCharacterControls} from '../character-view.js';
+import {mountCharacterPortraits} from '../character-portraits.js';
 import {requirement} from '../progression.js';
 import {createAudio} from '../audio.js';
 import {createFinishGate,finishHTML} from './finish.js';
@@ -47,6 +51,7 @@ let returnView='title',feedback='',boardMode='rush',submission=null,exitDestinat
 let boardVenue=SMF_DEFAULT_RUSH_STAGE_ID,boardVersion=SMF_SCORING_VERSION;
 let renderedMenuKey='';
 let previewAvatar,previewReady=false,previewOutfit=null;
+let characterFacing='down';
 const finishGate=createFinishGate();let finishKind=null,finishTimer=null,actionGuardUntil=0;
 const root=document.querySelector('.shell');root.className='shell smf-tour';root.innerHTML=shellHTML();
 root.dataset.phonePreview=String(phonePreview);root.dataset.hand=controls.value.hand||'left';
@@ -165,8 +170,9 @@ function render(){
  if(menuKey!==renderedMenuKey){$('#tour-menu').scrollTop=0;renderedMenuKey=menuKey;}
  renderPause();if(scene&&live&&!loadFailed&&(!a.bonus||scene.practice))hud(scene.round);
  root.querySelectorAll('[data-action="start"],[data-action="resume"],[data-action="explore"],[data-action="enter"]').forEach(b=>b.disabled=b.disabled||!canPlay());
- $('#tour-avatar-preview').hidden=view!=='wardrobe';$('#tour-avatar-preview-label').hidden=view!=='wardrobe';
+ $('#tour-character-preview').hidden=view!=='wardrobe';$('#tour-avatar-preview').hidden=view!=='wardrobe';$('#tour-avatar-preview-label').hidden=view!=='wardrobe';
  if(previewReady){if(view==='wardrobe'){setOutfit(previewAvatar,previewOutfit||profile.outfit);preview.loop.wake();}else preview.loop.sleep();}
+ if(view==='wardrobe'){updateCharacterControls($('#tour-menu'),profile.outfit,{facing:characterFacing});void mountCharacterPortraits($('#tour-menu'));}
  scheduleLayout();
 }
 function showFinish(kind){
@@ -232,6 +238,18 @@ for(const [name,fn] of [['round:pickup',e=>audio.pickup(e.multiplier)],['round:c
 function buttonVector(){const a=Number($('#tour-angle').value)*Math.PI/180,p=Number($('#tour-power').value)/100;return {x:Math.cos(a)*p,y:Math.sin(a)*p};}
 async function loadBoard(mode){boardMode=mode;const pending=board.select(mode,boardVersion,mode==='rush'?boardVenue:undefined);render();await pending;if(view==='scores')render();}
 function viewMenu(next){if(isLive())setPaused(true);returnView=view;view=next;feedback='';previewOutfit=null;render();}
+function saveCharacterLook(next){
+ if(view!=='wardrobe'||!canPlay())return;
+ profile.outfit=next;previewOutfit=null;persist();
+ if(previewReady)setOutfit(previewAvatar,profile.outfit);
+ updateCharacterControls($('#tour-menu'),profile.outfit,{facing:characterFacing});
+ text('#tour-avatar-preview-label','Your character');
+ text('#outfit-feedback',lab?'Character selected for this rehearsal.':saved?'Character saved on this device.':'Character selected for this session; browser storage is unavailable.');
+}
+function changeAppearance(key,value){
+ if(!CHARACTER_OPTIONS[key]?.some(option=>option.id===value))return;
+ saveCharacterLook({...profile.outfit,appearance:{...normalizeAppearance(profile.outfit.appearance),[key]:value}});
+}
 function startRun(mode){
  if(profile.active||!['rush','festival','endless'].includes(mode))return;
  activeTheme=applyTheme(resolveTheme(profile.themePreference));commit(createTourRun(profile,mode,createRunId(),activeTheme));boardMode=mode;boardVersion=SMF_SCORING_VERSION;if(mode==='rush')boardVenue=profile.active.rushStageId;submission=null;telemetryRunAllowed=profile.playtestConsent==='accepted';view='rules';feedback='';render();
@@ -271,6 +289,15 @@ function route(action,id,event){
  if(action==='equip'){if(!id||profile.rewards.includes(id)){profile.souvenir=id||null;persist();render();}return;}
  if(action==='preview-outfit'){
   const [category,value]=String(id).split(':');if(WARDROBE[category]?.some(o=>o.id===value)){previewOutfit={...profile.outfit,[category]:value};if(previewReady)setOutfit(previewAvatar,previewOutfit);text('#outfit-feedback','Preview only · not equipped.');text('#tour-avatar-preview-label',`Previewing ${WARDROBE[category].find(o=>o.id===value).name}`);}return;
+ }
+ if(action==='character-preset'){
+  if(view==='wardrobe'&&CHARACTER_PRESETS.some(preset=>preset.id===id))saveCharacterLook(applyCharacterPreset(profile.outfit,id));return;
+ }
+ if(action==='character-skin'){changeAppearance('skinTone',id);return;}
+ if(action==='character-facing'){
+  if(view!=='wardrobe'||!CHARACTER_FACINGS.some(option=>option.id===id))return;
+  characterFacing=id;if(previewAvatar)previewAvatar.pixelMotion.facing=id;
+  updateCharacterControls($('#tour-menu'),profile.outfit,{facing:characterFacing});return;
  }
  if(action==='perk'||action==='keep'){
   const a=profile.active,replaced=action==='perk'?$('#tour-replace')?.value:null,next=choosePerk(profile,action==='keep'?null:id,replaced||undefined);
@@ -315,6 +342,7 @@ root.addEventListener('input',e=>{
 });
 root.addEventListener('change',e=>{
  const element=e.target;
+ if(element.matches('[data-appearance]')){changeAppearance(element.dataset.appearance,element.value);return;}
  if(element.matches('[data-board-season]')&&SMF_SCORING_VERSIONS.includes(element.value)){
   boardVersion=element.value;if(arcadeConfig.baseUrl)void loadBoard(boardMode);else render();return;
  }

@@ -3,7 +3,7 @@ import {posix} from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {getEdition} from '../src/editions/registry.js';
 const themes=['forest-freakout','moonlit-mycelium','neon-field-trip'];
-const shared=Object.freeze(['fonts/LilitaOne-Regular.ttf','fonts/LilitaOne-OFL.txt','fonts/DMSans.ttf','fonts/DMSans-OFL.txt','playtest-data.html',...themes.flatMap(id=>['backdrop','boots','moth','noodle','bracelet'].map(name=>`themes/${id}/${name}.webp`))]);
+const shared=Object.freeze(['fonts/Silkscreen-Regular.ttf','fonts/Silkscreen-OFL.txt','fonts/LilitaOne-Regular.ttf','fonts/LilitaOne-OFL.txt','fonts/DMSans.ttf','fonts/DMSans-OFL.txt','playtest-data.html',...themes.flatMap(id=>['backdrop','boots','moth','noodle','bracelet'].map(name=>`themes/${id}/${name}.webp`))]);
 const publicRoot=fileURLToPath(new URL('../public/',import.meta.url)).replaceAll('\\','/');
 const mime=path=>path.endsWith('.webp')?'image/webp':path.endsWith('.ttf')?'font/ttf':path.endsWith('.html')?'text/html; charset=utf-8':'text/plain; charset=utf-8';
 export function assetsForEdition(id){

@@ -1,3 +1,4 @@
+import {pixelVenueTexture} from '../pixel-art/venue-texture.js';
 import {LIVING_ROOM_ART_KEY,FRACTAL_ART_KEY,GROVE_ART_KEY,AMP_ART_KEY,PAGODA_ART_KEY,VILLAGE_ART_KEY} from './smf-venue-assets.js';
 import {createSMFStageLighting} from './smf-stage-lighting.js';
 import {smfLightCue} from './smf-light-cues.js';
@@ -85,7 +86,7 @@ function livingRoomSketch(scene){
 }
 function livingRoom(scene){
  if(!scene.textures?.exists(LIVING_ROOM_ART_KEY))return livingRoomSketch(scene);
- scene.add.image(0,0,LIVING_ROOM_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ scene.add.image(0,0,pixelVenueTexture(scene,LIVING_ROOM_ART_KEY)).setOrigin(0).setDisplaySize(W,H);
  const ambience=scene.add.graphics().setDepth(.12);
  // Screen and lamp positions measured on the 1536 x 1024 illustration.
  // Water movement stays inside the tiny left-edge inlet, off the dancefloor.
@@ -175,7 +176,7 @@ function pagodaSketch(scene){
 }
 function pagoda(scene){
  if(!scene.textures?.exists(PAGODA_ART_KEY))return pagodaSketch(scene);
- scene.add.image(0,0,PAGODA_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ scene.add.image(0,0,pixelVenueTexture(scene,PAGODA_ART_KEY)).setOrigin(0).setDisplaySize(W,H);
  const mapping=scene.add.graphics().setDepth(.12);
  // Facade panels measured on the 1536 x 1024 plate. Keep projection out of
  // arched openings and off the balcony rails, porch and playable dancefloor.
@@ -268,7 +269,7 @@ function traceSection(g,path,start,span,width,colour,alpha){
 }
 function fractalForest(scene){
  if(!scene.textures?.exists(FRACTAL_ART_KEY))return fractalForestSketch(scene);
- scene.add.image(0,0,FRACTAL_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ scene.add.image(0,0,pixelVenueTexture(scene,FRACTAL_ART_KEY)).setOrigin(0).setDisplaySize(W,H);
  const neon=scene.add.graphics().setDepth(.12);
  const boothBars=[[[603,346],[735,346]],[[620,361],[735,361]],[[649,377],[735,377]],[[800,346],[934,346]],[[800,361],[917,361]],[[800,377],[888,377]]].map(points=>points.map(artPoint));
  return {lampPositions:[420,444,468,492,516,540].map(x=>[x,137]),update(elapsed,phase,reduced,timing,show){
@@ -355,7 +356,7 @@ function groveSketch(scene){
 
 function grove(scene){
  if(!scene.textures?.exists(GROVE_ART_KEY))return groveSketch(scene);
- scene.add.image(0,0,GROVE_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ scene.add.image(0,0,pixelVenueTexture(scene,GROVE_ART_KEY)).setOrigin(0).setDisplaySize(W,H);
  const projection=scene.add.graphics().setDepth(.12);
  // These outlines follow the illustrated timber inlays, in 1536 x 1024 art
  // coordinates. Moving colour belongs to the carving, with its texture visible.
@@ -439,7 +440,7 @@ function ampSketch(scene){
 
 function amp(scene){
  if(!scene.textures?.exists(AMP_ART_KEY))return ampSketch(scene);
- scene.add.image(0,0,AMP_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ scene.add.image(0,0,pixelVenueTexture(scene,AMP_ART_KEY)).setOrigin(0).setDisplaySize(W,H);
  const leds=scene.add.graphics().setDepth(.12);
  // Insets measured on the 1536 x 1024 plate keep motion inside the screens,
  // clear of carved corner brackets, speakers and the playable dancefloor.
@@ -499,7 +500,7 @@ function villageSketch(scene){
 
 function village(scene){
  if(!scene.textures?.exists(VILLAGE_ART_KEY))return villageSketch(scene);
- scene.add.image(0,0,VILLAGE_ART_KEY).setOrigin(0).setDisplaySize(W,H);
+ scene.add.image(0,0,pixelVenueTexture(scene,VILLAGE_ART_KEY)).setOrigin(0).setDisplaySize(W,H);
  const screens=scene.add.graphics().setDepth(.12);
  // Insets measured on the final 1536 x 1024 plate. Tower LEDs glow through
  // carved wooden masks; only the three booth panels are exposed screens.

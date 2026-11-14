@@ -1,0 +1,171 @@
+{
+  "versions": {
+    "aom": "3.15.1",
+    "archive": "3.8.9",
+    "cairo": "1.18.6",
+    "cgif": "0.5.4",
+    "exif": "0.6.26",
+    "expat": "2.8.5",
+    "ffi": "3.8.0",
+    "fontconfig": "2.18.3",
+    "freetype": "2.14.3",
+    "fribidi": "1.0.17",
+    "glib": "2.90.0",
+    "harfbuzz": "14.5.0",
+    "heif": "1.23.5",
+    "highway": "1.4.0",
+    "imagequant": "2.4.1",
+    "lcms": "2.19.1",
+    "mozjpeg": "0826579",
+    "pango": "1.58.2",
+    "pixman": "0.46.4",
+    "png": "1.6.58",
+    "proxy-libintl": "0.5",
+    "rsvg": "2.63.2",
+    "tiff": "4.7.2",
+    "uhdr": "2.0.2",
+    "vips": "8.18.7",
+    "webp": "1.6.0",
+    "xml2": "2.15.4",
+    "zlib-ng": "2.3.3",
+    "sharp": "0.35.5"
+  },
+  "options": {
+    "lossless": true,
+    "effort": 6
+  },
+  "pngBytes": 29401357,
+  "webpBytes": 24235306,
+  "assets": [
+    {
+      "source": "src/bonus-practice/assets/ikigai-mori-pixel-v1.png",
+      "output": "src/bonus-practice/assets/ikigai-mori-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "a92a13c7b84d97d84df03e56a7dbbc4ebe8d22cfcf9c1a86fa5634a26078bb1e",
+      "pngBytes": 1977292,
+      "webpBytes": 1610564
+    },
+    {
+      "source": "src/bonus-practice/assets/rabbit-hole-pixel-v1.png",
+      "output": "src/bonus-practice/assets/rabbit-hole-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "ee9742625ed8e3e92a5359e7210506a6495319ddb8c5a91402d4806cba8ad699",
+      "pngBytes": 2158576,
+      "webpBytes": 1820672
+    },
+    {
+      "source": "src/bonus-practice/assets/secret-garden-pixel-v1.png",
+      "output": "src/bonus-practice/assets/secret-garden-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "dfcbe80020512a51686cd8a0eef2941f23d9c224fb0e8e9521e12dc2b85fdcf0",
+      "pngBytes": 1940429,
+      "webpBytes": 1448082
+    },
+    {
+      "source": "src/bonus-practice/assets/villagio-pixel-v1.png",
+      "output": "src/bonus-practice/assets/villagio-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "390b20e9962771f6fd4d201c70a5c3f47cdd9ccc1f0b73056c2ff7d5a75d3f2b",
+      "pngBytes": 2571930,
+      "webpBytes": 2204840
+    },
+    {
+      "source": "src/editions/assets/amp-pixel-v1.png",
+      "output": "src/editions/assets/amp-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "ad28f7a782ff15b5ebb83088d5f81d261ba665351bbc07ba74e8d3056331fc61",
+      "pngBytes": 2109919,
+      "webpBytes": 1670730
+    },
+    {
+      "source": "src/editions/assets/fractal-forest-pixel-v1.png",
+      "output": "src/editions/assets/fractal-forest-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "4702b86876883290036a5233e27b3c99b69614594f44a2e581a48f54403caa09",
+      "pngBytes": 2151779,
+      "webpBytes": 1704550
+    },
+    {
+      "source": "src/editions/assets/grove-pixel-v1.png",
+      "output": "src/editions/assets/grove-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "c60ee2bd4d2c254d7f57716bd33a6dd5c22ffb653816949a47c46164890be99d",
+      "pngBytes": 2126562,
+      "webpBytes": 1643118
+    },
+    {
+      "source": "src/editions/assets/living-room-pixel-v1.png",
+      "output": "src/editions/assets/living-room-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "091072ee5712577c3fa95ae88930b1241f61adf3807b86b69ab401b76480bdf0",
+      "pngBytes": 2334292,
+      "webpBytes": 1828798
+    },
+    {
+      "source": "src/editions/assets/pagoda-pixel-v1.png",
+      "output": "src/editions/assets/pagoda-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "39824852b15c8d33b8f8c271be849c67f57e52f07c718657444f8343b5590034",
+      "pngBytes": 2310660,
+      "webpBytes": 1831506
+    },
+    {
+      "source": "src/editions/assets/village-pixel-v1.png",
+      "output": "src/editions/assets/village-pixel-v1.webp",
+      "width": 1536,
+      "height": 1024,
+      "channels": 3,
+      "decodedSha256": "d01791c314b651ddab2ea98a8e27bda37175a83a24120b572d9b97d6c869fb26",
+      "pngBytes": 1973591,
+      "webpBytes": 1565890
+    },
+    {
+      "source": "src/pixel-art/assets/title-forest-freakout-v1.png",
+      "output": "src/pixel-art/assets/title-forest-freakout-v1.webp",
+      "width": 1254,
+      "height": 1254,
+      "channels": 3,
+      "decodedSha256": "e1659bdbfb145cf028bc462758f0d73347e93236cb9ce498337fbeac5ad26313",
+      "pngBytes": 2846921,
+      "webpBytes": 2509248
+    },
+    {
+      "source": "src/pixel-art/assets/title-moonlit-mycelium-v1.png",
+      "output": "src/pixel-art/assets/title-moonlit-mycelium-v1.webp",
+      "width": 1254,
+      "height": 1254,
+      "channels": 3,
+      "decodedSha256": "d93b7a30ff66e90aec268375579a25eceaa09620757067b991d7001bf386a7ea",
+      "pngBytes": 2582254,
+      "webpBytes": 2272026
+    },
+    {
+      "source": "src/pixel-art/assets/title-neon-field-trip-v1.png",
+      "output": "src/pixel-art/assets/title-neon-field-trip-v1.webp",
+      "width": 1254,
+      "height": 1254,
+      "channels": 3,
+      "decodedSha256": "f5d631f2d07184e4a86f1e0418ffe906f561dfeef55c46b94b65ffdb1f2d1e1c",
+      "pngBytes": 2317152,
+      "webpBytes": 2125282
+    }
+  ]
+}

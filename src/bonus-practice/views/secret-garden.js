@@ -1,32 +1,35 @@
+import {pixelVenueTexture} from '../../pixel-art/venue-texture.js';
 // Original Secret Garden interpretation, not a surveyed 2026 venue replica.
-// Plate generated with ImageGen from the Grove illustration as a style reference.
+// Pixel plate redrawn with ImageGen from the original Garden illustration.
 const ART_KEY='bonus-secret-garden-v1';
 const COLOURS=[0x79f5cb,0xeaa0ff,0xffd991];
 const POTS=[[395,196],[480,200],[565,196]];
 
 export function preload(scene){
- if(!scene.textures.exists(ART_KEY))scene.load.image(ART_KEY,new URL('../assets/secret-garden-v1.png',import.meta.url).href);
+ if(!scene.textures.exists(ART_KEY))scene.load.image(ART_KEY,new URL('../assets/secret-garden-pixel-v1.webp',import.meta.url).href);
 }
 
 function flower(scene,x,y,colour,index){
  const node=scene.add.container(x,y).setDepth(.8);
  const g=scene.add.graphics();
- g.lineStyle(3,0x70c5a3,.95).strokePoints([{x:0,y:0},{x:-3,y:-12},{x:-2,y:-28},{x:0,y:-39}]);
- g.fillStyle(0x54b395,.95).fillEllipse(-8,-17,17,8).fillEllipse(7,-27,16,7);
- g.fillStyle(colour,.1).fillCircle(0,-41,25);
+ g.fillStyle(0x70c5a3,.95).fillRect(-2,-13,3,13).fillRect(-4,-28,3,15).fillRect(-2,-39,3,11);
+ g.fillStyle(0x54b395,.95).fillRect(-15,-21,9,4).fillRect(-12,-17,11,4).fillRect(2,-31,11,4).fillRect(2,-27,7,4);
+ g.fillStyle(colour,.1).fillRect(-17,-59,34,36).fillRect(-23,-53,46,24);
  for(let i=0;i<8;i++){
-  const angle=i*Math.PI/4,px=Math.cos(angle)*10,py=-41+Math.sin(angle)*10;
-  g.fillStyle(colour,.85).fillEllipse(px,py,12,15);
+  const angle=i*Math.PI/4,px=Math.round(Math.cos(angle)*10),py=Math.round(-41+Math.sin(angle)*10);
+  g.fillStyle(colour,.85).fillRect(px-4,py-7,8,14).fillRect(px-6,py-4,12,8);
+  g.fillStyle(0xffffff,.22).fillRect(px-3,py-6,3,5);
  }
- g.fillStyle(0xfff3c5).fillCircle(0,-41,6);
- g.lineStyle(1,0xffffff,.65).strokeCircle(0,-41,4);
+ g.fillStyle(0xffcf72).fillRect(-5,-46,10,10);
+ g.fillStyle(0xfff3c5).fillRect(-3,-46,6,8).fillRect(-5,-44,10,4);
+ g.fillStyle(0xffffff,.65).fillRect(-3,-44,3,3);
  node.add(g);node.setVisible(false);
  return {node,index,openedAt:0};
 }
 
 export function createView(scene,stage){
  if(stage.id!=='smf-secret-garden')return null;
- if(scene.textures.exists(ART_KEY))scene.add.image(480,320,ART_KEY).setDisplaySize(960,640).setDepth(0);
+ if(scene.textures.exists(ART_KEY))scene.add.image(480,320,pixelVenueTexture(scene,ART_KEY)).setDisplaySize(960,640).setDepth(0);
  else{
   // Legible fallback if a local art request is interrupted.
   scene.add.rectangle(480,320,960,640,0x083039).setDepth(0);
@@ -73,7 +76,7 @@ export function createView(scene,stage){
   for(let i=0;i<15;i++){
    const x=145+(i*89%674)+(reducedMotion?0:Math.sin(t*.3+i)*7);
    const y=38+(i*43%150)+(reducedMotion?0:Math.cos(t*.4+i*.9)*5);
-   lights.fillStyle(i%2?0xaff9b5:0xffda9d,reducedMotion?.45:.3+.2*Math.sin(t+i)).fillCircle(x,y,1.3);
+   lights.fillStyle(i%2?0xaff9b5:0xffda9d,reducedMotion?.45:.3+.2*Math.sin(t+i)).fillRect(Math.round(x)-1,Math.round(y)-1,2,2);
   }
   for(const f of flowers){
    if(f.index>=progress)continue;

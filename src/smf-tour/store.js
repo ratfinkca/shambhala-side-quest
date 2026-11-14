@@ -4,7 +4,7 @@ import {getTiming} from '../stage-clock.js';
 import {PERKS} from '../run.js';
 import {MAX_ONLINE_STAGES} from '../../supabase/functions/_shared/score.js';
 import {normalizeThemePreference,THEMES} from '../themes.js';
-import {WARDROBE} from '../wardrobe.js';
+import {normalizeOutfit} from '../wardrobe.js';
 import {createEncounter} from '../festival.js';
 import {isRushStageId,resolveRushStageId,normalizeRushRotation,lastRushStageId,limitRushBoard} from './rush-rotation.js';
 import {ORIGINAL_SMF_SCORING_VERSION,resolveSmfScoringVersion,limitSeasonBoard} from './seasons.js';
@@ -109,7 +109,7 @@ export function normalizeTourProfile(raw){
  // SMF does not inherit the generic edition's layout achievements.
  profile.progress.endless.smfVenues=unique(source.endless?.smfVenues,ROUTE);profile.progress.endless.bestCleared=count(source.endless?.bestCleared);profile.progress.endless.remixed=source.endless?.remixed===true;
  profile.progress.receipts=Array.isArray(source.receipts)?[...new Set(source.receipts.filter(value=>typeof value==='string'&&value.length>0&&value.length<150))].slice(-256):[];
- for(const key of Object.keys(profile.outfit)){if(WARDROBE[key]?.some(item=>item.id===raw.outfit?.[key]))profile.outfit[key]=raw.outfit[key];}
+ profile.outfit=normalizeOutfit(raw.outfit);
  profile.themePreference=normalizeThemePreference(raw.themePreference);
  if(object(raw.audio)){profile.audio.enabled=raw.audio.enabled!==false;for(const key of ['music','effects'])if(number(raw.audio[key],0,1))profile.audio[key]=raw.audio[key];}
  profile.initials=typeof raw.initials==='string'&&/^[A-Z0-9]{0,3}$/.test(raw.initials)?raw.initials:'';profile.playtestConsent=raw.playtestConsent===true||raw.playtestConsent==='accepted'?'accepted':raw.playtestConsent==='declined'?'declined':'unknown';
@@ -117,7 +117,7 @@ export function normalizeTourProfile(raw){
  for(const mode of ['rush','festival','endless'])if(Array.isArray(raw.boards?.[mode])){
   const rows=raw.boards[mode].filter(row=>object(row)&&resolveSmfScoringVersion(row.scoringVersion)!==null&&id(row.id)&&/^[A-Z0-9]{3}$/.test(row.initials)&&integer(row.score)&&integer(row.cleared??row.stagesCleared,0,1000000)&&boundedJSON(row)&&(mode==='rush'||!Object.hasOwn(row,'rushStageId')));
   if(mode==='rush')latestSavedRushStage=lastRushStageId({boards:{rush:rows}});
-  profile.boards[mode]=(mode==='rush'?limitRushBoard(rows):limitSeasonBoard(rows,mode)).map(row=>structuredClone(row));
+  profile.boards[mode]=(mode==='rush'?limitRushBoard(rows):limitSeasonBoard(rows,mode)).map(row=>({...structuredClone(row),outfit:normalizeOutfit(row.outfit)}));
  }
  try{if(raw.active!==null&&object(raw.active)){const defaults={mode:'festival',scoringVersion:ORIGINAL_SMF_SCORING_VERSION,themeId:'forest-freakout',scoreStages:[],initialsDraft:'',inputType:'unknown',submission:null,buildId:'dev',scoreSaved:false,needsIntro:false,remixPending:false};const active=upgradeBonusCrowd({...defaults,...raw.active});if(active.mode==='rush')active.rushStageId=resolveRushStageId(active.rushStageId);if(activeOK(active,profile.discoveries))profile.active=structuredClone(active);}}catch{}
  if(resultOK(raw.lastResult)){profile.lastResult={...structuredClone(raw.lastResult),scoringVersion:resolveSmfScoringVersion(raw.lastResult.scoringVersion)};if(profile.lastResult.mode==='rush')profile.lastResult.rushStageId=resolveRushStageId(profile.lastResult.rushStageId);}

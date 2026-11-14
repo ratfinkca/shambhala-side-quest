@@ -1,0 +1,14 @@
+@font-face{font-family:Silkscreen;src:url('../../public/fonts/Silkscreen-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+:root{--display:Silkscreen,monospace}
+:root[data-theme]{--display:Silkscreen,monospace;--pixel-edge:var(--accent,#f8c787)}
+/* Preserve the three palettes and readable body copy; give the shared UI the
+   same deliberate square edges as the characters and the festival scenery. */
+.shell .pixel-heading h1{font-size:30px;line-height:1.25;letter-spacing:-.05em}
+.shell :is(h1,h2,h3){font-family:var(--display);font-weight:400;letter-spacing:-.035em}
+.shell :is(.primary-button,.menu-button,.perk-card strong){font-family:var(--display);font-size:16px;line-height:1.3}
+.shell :is(.quiet-button,.primary-button,.menu-button,.perk-card,.menu-card,.game-frame){border-radius:3px}
+.shell :is(.primary-button,.menu-button,.perk-card){box-shadow:3px 3px 0 var(--ink,#071e24);border-width:2px}
+.shell :is(.primary-button,.menu-button,.perk-card):active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink,#071e24)}
+.shell :is(.hud strong,.result-total,.personal-best strong){font-family:var(--display);letter-spacing:-.04em;font-weight:400}
+@media(max-width:650px){.shell :is(.primary-button,.menu-button){font-size:14px}}
+@media(prefers-reduced-motion:reduce){.shell :is(.primary-button,.menu-button,.perk-card):active:not(:disabled){transform:none}}

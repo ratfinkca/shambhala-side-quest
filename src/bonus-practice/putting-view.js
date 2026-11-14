@@ -1,9 +1,10 @@
+import {pixelizeGraphics} from '../pixel-art/shapes.js';
 import {PUTTING_HOLES,isPuttingCloseUp} from './putting-state.js';
 import {createPuttingGesture} from './putting-input.js';
 import {createPuttingReward} from './putting-reward.js';
 
 export function createPuttingView(scene,practice,{onShot,onAim=()=>{}}){
- const ink=scene.add.graphics().setDepth(24),reward=createPuttingReward(scene);
+ const ink=pixelizeGraphics(scene.add.graphics()).setDepth(24),reward=createPuttingReward(scene);
  const gesture=createPuttingGesture(),canvas=scene.game.canvas,camera=scene.cameras.main;
  let captured=null,framing=null,buttonAim=null;
  const enabled=()=>practice.status==='playing'&&practice.state.phase==='aim';

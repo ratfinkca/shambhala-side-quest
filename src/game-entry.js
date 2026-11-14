@@ -11,7 +11,9 @@ import {awardStage} from './progression.js';
 import {resultsExitState} from './results-view.js';
 import {availablePerks} from './progression.js';
 import {renderReward} from './progression-view.js';
-import {WARDROBE} from './wardrobe.js';
+import {WARDROBE,CHARACTER_OPTIONS,CHARACTER_PRESETS,normalizeAppearance,applyCharacterPreset} from './wardrobe.js';
+import {CHARACTER_FACINGS,updateCharacterControls} from './character-view.js';
+import {mountCharacterPortraits} from './character-portraits.js';
 import {createOnlineClient,readArcadeConfig} from './online/client.js';
 import {createSubmission} from './online/submission.js';
 import {createBoard} from './online/board.js';
@@ -74,6 +76,7 @@ async function loadBoard(mode){const pending=board.select(mode,scoreSeason);rend
 let replayPending=false;
 let activeTheme=applyTheme(resolveTheme(saved.profile.themePreference==='surprise'?undefined:saved.profile.themePreference));
 let scene,run,summary,resultSnapshot,screen=createScreenState(),toastTimer,progressReward,previewAvatar,previewReady=false;
+let characterFacing='down';
 let runInputs=createInputTracker(),recoveryRecord=null,recoveredRun=false;
 if(ownership==='busy')screen={name:'recoveryBusy'};
 else if(recoveryOwner.held&&saved.recovery!==null){recoveryRecord=readRecovery(saved.recovery,{editionId:edition.id});screen={name:recoveryRecord.ok?'recovery':'recoveryInvalid'};}
@@ -101,7 +104,7 @@ const fmt=n=>String(n).padStart(3,'0');
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'game',width:960,height:640,backgroundColor:'#102430',scene:GameScene,scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true},audio:{noAudio:true},banner:false});
 const refreshLayout=setupResponsiveLayout(game,{getScene:()=>scene});
 const preview=new Phaser.Game({type:Phaser.CANVAS,parent:'avatar-preview',width:240,height:240,transparent:true,audio:{noAudio:true},banner:false,fps:{target:30},scene:{create(){previewAvatar=createAvatar(this,saved.profile.outfit);previewAvatar.setPosition(105,147).setScale(2.5);previewReady=true;},update(time){if(previewAvatar)animateAvatar(previewAvatar,time,window.matchMedia('(prefers-reduced-motion: reduce)').matches,cycleAt(time%60000).phase==='drop')}}});
-const menus=createScreens($('#menu'),{action,volume,outfit,controls:changeControls,initials:value=>{if(run){run.initialsDraft=value;recovery.save(true);}}});
+const menus=createScreens($('#menu'),{action,volume,outfit,appearance:changeAppearance,controls:changeControls,initials:value=>{if(run){run.initialsDraft=value;recovery.save(true);}}});
 function changeControls(field,value){
  const result=controls.update({[field]:value});scene?.setControlPreferences(result.value);
  scene?.playerCamera?.setOptions({mode:result.value.camera,zoom:result.value.zoom});
@@ -127,6 +130,7 @@ function render(){
  $('#avatar-preview-label').textContent='Your festival look';
  $('#avatar-preview').setAttribute('aria-label','Your festival look');
  menus.show(screen.name,{controls:controls.value,recovery:recoveryRecord,progressReward,onlineSubmission:submission,onlineInput:runInputs.inputType(),onlineBoard:arcadeConfig.baseUrl?board:null,playtestAvailable:onlineConfig.enabled,themeId:activeTheme,profile:{...saved.profile,bestRush:saved.bestFor(run?runScoringVersion(run):SCORING_VERSION)},scoreSeason,run,summary,stage:run?stageFor(run):STAGES[0],choices:run?upgradeChoices(run):[],returnTo:screen.returnTo});
+ if(screen.name==='wardrobe'){updateCharacterControls($('#menu'),saved.profile.outfit,{facing:characterFacing});void mountCharacterPortraits($('#menu'));}
  if(rewardLab&&screen.name==='wardrobe'){$('#outfit-feedback').textContent='Reward preview · temporary profile · reload to reset. Real progress is untouched.';if(progressReward)$('#outfit-feedback').insertAdjacentHTML('afterend',renderReward(progressReward));}
  if(screen.name==='results'&&run.submitted){$('#save-feedback').textContent=run.submissionMessage||'Score saved on this device.';$('#initials').value=run.initials;$('#initials').disabled=true;}
  if(screen.name==='results'&&submission?.initials){$('#initials').value=submission.initials;$('#initials').disabled=true;}
@@ -193,6 +197,13 @@ function action(name,value){
    setOutfit(previewAvatar,{...saved.profile.outfit,[key]:id});$('#avatar-preview-label').textContent=item.name;$('#avatar-preview').setAttribute('aria-label',`Previewing ${item.name}`);$('#outfit-feedback').textContent=`Previewing ${item.name} · not equipped. Choose an available item to return to your outfit.`;break;
   }
   case 'wardrobe':go('WARDROBE');break;
+  case 'character-preset':if(screen.name==='wardrobe'&&CHARACTER_PRESETS.some(preset=>preset.id===value))saveCharacterLook(applyCharacterPreset(saved.profile.outfit,value));break;
+  case 'character-skin':changeAppearance('skinTone',value);break;
+  case 'character-facing':{
+   if(screen.name!=='wardrobe'||!CHARACTER_FACINGS.some(option=>option.id===value))return;
+   characterFacing=value;if(previewAvatar)previewAvatar.pixelMotion.facing=value;
+   updateCharacterControls($('#menu'),saved.profile.outfit,{facing:characterFacing});break;
+  }
   case 'scores':if(run)scoreSeason=runScoringVersion(run);if(go('SCORES')&&arcadeConfig.baseUrl)void loadBoard(run?.mode||'rush');break;
   case 'score-season':if(screen.name==='scores'&&SCORING_VERSIONS.includes(value)){scoreSeason=value;if(arcadeConfig.baseUrl)void loadBoard(board.mode);else render();}break;
   case 'online-board':if(screen.name==='scores'&&['rush','festival','endless'].includes(value))void loadBoard(value);break;
@@ -237,7 +248,19 @@ function action(name,value){
  }
 }
 function volume(key,value){if(!recovery.canWrite)return;const settings={...saved.profile.audio,[key]:value};saved.saveAudio(settings);audio.setVolumes(settings);audio.setEnabled(settings.enabled);$(`#value-${key}`).textContent=`${Math.round(value*100)}%`;if(key==='effects')audio.pickup(1)}
-function outfit(key,value){if(!recovery.canWrite)return;const result=saved.saveOutfit({...saved.profile.outfit,[key]:value});if(result.accepted&&previewAvatar){setOutfit(previewAvatar,saved.profile.outfit);$('#avatar-preview-label').textContent=WARDROBE[key].find(o=>o.id===value)?.name||'Your festival look';$('#outfit-feedback').textContent=rewardLab?'Equipped in temporary reward profile.':result.persisted?'Outfit saved.':'Selected for this session; browser storage is unavailable.'}}
+function saveCharacterLook(next){
+ if(screen.name!=='wardrobe'||!recovery.canWrite)return;
+ const result=saved.saveOutfit(next);if(!result.accepted)return;
+ if(previewAvatar)setOutfit(previewAvatar,saved.profile.outfit);
+ updateCharacterControls($('#menu'),saved.profile.outfit,{facing:characterFacing});
+ $('#avatar-preview-label').textContent='Your character';$('#avatar-preview').setAttribute('aria-label','Your character');
+ $('#outfit-feedback').textContent=rehearsal?'Character selected in this rehearsal. Your saved look is unchanged.':result.persisted?'Character saved on this device.':'Character selected for this session; browser storage is unavailable.';
+}
+function changeAppearance(key,value){
+ if(!CHARACTER_OPTIONS[key]?.some(option=>option.id===value))return;
+ saveCharacterLook({...saved.profile.outfit,appearance:{...normalizeAppearance(saved.profile.outfit.appearance),[key]:value}});
+}
+function outfit(key,value){if(!recovery.canWrite)return;const result=saved.saveOutfit({...saved.profile.outfit,[key]:value});if(result.accepted&&previewAvatar){setOutfit(previewAvatar,saved.profile.outfit);$('#avatar-preview-label').textContent=WARDROBE[key].find(o=>o.id===value)?.name||'Your festival look';$('#outfit-feedback').textContent=rehearsal?'Equipped in this rehearsal. Your saved look is unchanged.':result.persisted?'Outfit saved.':'Selected for this session; browser storage is unavailable.'}}
 game.events.on('forest:ready',value=>{
  scene=value;scene.setControlPreferences(controls.value);
  scene.playerCamera=createPlayerCamera(scene,{mode:controls.value.camera,zoom:controls.value.zoom,isMobile:()=>phoneViewport(innerWidth,innerHeight)});
