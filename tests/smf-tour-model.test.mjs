@@ -67,7 +67,7 @@ test('a skipped detour stays discovered but needs a fresh invitation next run',(
  let p=parentSummary(0);
  p=choosePerk(p,null);
  assert.equal(p.active.stageIndex,1);assert.deepEqual(p.discoveries,['rabbit-hole']);
- assert.equal(collectInvitation(p),p); // Fractal has no bonus invitation.
+ assert.equal(collectInvitation(p).active.pendingInvitation,true);
  p=closeResults(endFestival(p));p=createFestival(p,'tour-two');
  const withoutInvite=clear(p);
  assert.equal(withoutInvite.active.summary.bonusId,null);assert.equal(withoutInvite.active.summary.bonusOffered,false);
@@ -108,8 +108,8 @@ test('original three souvenirs require a completed visit or win, not entry or ea
  }
 });
 
-test('AMP and Villagio prizes require actual wins; a full visit or timeout is insufficient',()=>{
- for(const [index,id,reward] of [[3,'amp-backstage','cheese-totem'],[5,'villagio','golden-chicken']]){
+test('Prism, AMP and Villagio prizes require actual wins; a full visit or timeout is insufficient',()=>{
+ for(const [index,id,reward] of [[1,'prism-party','prism-crown'],[3,'amp-backstage','cheese-totem'],[5,'villagio','golden-chicken']]){
   const visiting=beginBonus(parentSummary(index),id,`${id}-visit`);
   assert.deepEqual(finishBonus(visiting,{completed:true}).rewards,[]);
   assert.deepEqual(finishBonus(visiting).rewards,[]);
@@ -183,7 +183,7 @@ test('six venues follow the approved route and final Villagio returns to earned 
   if(i<5)p=choosePerk(p,null);
  }
  assert.deepEqual(visited,['smf-living-room','smf-fractal','smf-grove','smf-amp','smf-pagoda','smf-village']);
- assert.deepEqual(p.discoveries,['rabbit-hole','secret-garden','amp-backstage','ikigai-mori','villagio']);
+ assert.deepEqual(p.discoveries,['rabbit-hole','prism-party','secret-garden','amp-backstage','ikigai-mori','villagio']);
  assert.equal(p.active.status,'results');assert.equal(p.active.cleared,6);assert.equal(p.active.score,600);
  assert.equal(p.progress.totals.festivals,1);assert.equal(p.active.summary.bonusId,'villagio');
  const result=structuredClone(p.active);
@@ -209,9 +209,36 @@ test('voluntary finish discards current live progress and pending invitations',(
 });
 
 test('exported bonus metadata resolves every parent and permanent prize exactly once',()=>{
- assert.equal(new Set(BONUSES.map(b=>b.id)).size,5);assert.equal(new Set(BONUSES.map(b=>b.reward.id)).size,5);
+ assert.equal(new Set(BONUSES.map(b=>b.id)).size,6);assert.equal(new Set(BONUSES.map(b=>b.reward.id)).size,6);
  for(const b of BONUSES){
   assert.ok(ROUTE.includes(b.parentId));assert.equal(b.stageId,`smf-${b.id}`);
   assert.ok(b.name&&b.reward.name);assert.ok(['visit','challenge'].includes(b.kind));
  }
+});
+
+test('Prism consumes the Fractal invitation, parks the earned run, and awards its crown once',()=>{
+ let p=choosePerk(clear(fresh()),'boots');p=clear(collectInvitation(p));
+ assert.equal(p.active.summary.bonusId,'prism-party');
+ const parked=structuredClone(p),visit=beginBonus(p,'prism-party','first-prism');
+ assert.equal(visit.active.summary.bonusOffered,false);
+ assert.equal(choosePerk(visit,null),visit);
+ const won=finishBonus(visit,{won:true,completed:true});
+ assert.deepEqual(won.rewards,['prism-crown']);assert.equal(won.souvenir,'prism-crown');
+ assert.equal(finishBonus(won,{won:true}),won);
+ for(const key of ['score','cleared','perks','scoreStages','bassChargeMs'])assert.deepEqual(won.active[key],parked.active[key],key);
+ assert.deepEqual(won.progress,parked.progress);
+ const returned=returnBonus(won);assert.equal(beginBonus(returned,'prism-party','repeat'),returned);
+ const next=choosePerk(returned,null);assert.equal(next.active.stageIndex,2);assert.deepEqual(next.active.perks,['boots']);
+ p=closeResults(endFestival(returned));p=createFestival(p,'second-prism-run');
+ p=choosePerk(clear(p),null);p=clear(collectInvitation(p));p=finishBonus(beginBonus(p,'prism-party','second-prism'),{won:true,completed:true});
+ assert.equal(p.active.bonus.newReward,false);assert.deepEqual(p.rewards,['prism-crown']);
+});
+
+test('Prism discovery cannot bypass a new Fractal invitation on later Endless loops',()=>{
+ let p=createTourRun(createTourProfile(),'endless','prism-loops');
+ p=choosePerk(clear(p),null);p=returnBonus(finishBonus(beginBonus(clear(collectInvitation(p)),'prism-party','prism-loop-one')));
+ for(let i=0;i<6;i++){p=choosePerk(p,null);if(i<5)p=clear(p);}
+ assert.equal(p.active.stageIndex,7);assert.equal(clear(p).active.summary.bonusOffered,false);
+ p=clear(collectInvitation(p));assert.equal(p.active.summary.bonusId,'prism-party');
+ assert.equal(beginBonus(p,'prism-party','prism-loop-two').active.summary.bonusOffered,false);
 });

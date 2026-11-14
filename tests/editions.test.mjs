@@ -19,11 +19,11 @@ test('trusted edition identities default only when unset and are deeply immutabl
  assert.deepEqual(GENERIC_RULES.endless,{targetStep:3,targetCap:45,crowdStep:2,crowdCap:22,speedStep:.08,speedCap:.2});
  assert.throws(()=>g.mainStageIds.push('oops'));assert.throws(()=>GENERIC_RULES.targets[0]=1);
 });
-test('SMF catalogue contains the playable six-main route and five precise parent discoveries',()=>{
+test('SMF catalogue contains the playable six-main route and six precise parent discoveries',()=>{
  const s=getEdition('smf');assert.equal(s.playable,true);assert.equal(s.postingEnabled,false);assert.equal(s.rulesetId,null);
  assert.equal(s.profileKey,'sidequest.smf.profile.v1');assert.equal(s.lockName,s.profileKey);
- assert.deepEqual(s.catalogue.map(c=>c.id).sort(),['smf-amp','smf-fractal','smf-grove','smf-living-room','smf-pagoda','smf-village','smf-rabbit-hole','smf-secret-garden','smf-ikigai-mori','smf-amp-backstage','smf-villagio'].sort());
- assert.deepEqual(Object.fromEntries(s.catalogue.filter(c=>c.kind==='secret').map(c=>[c.id,c.parentId])),{'smf-rabbit-hole':'smf-living-room','smf-secret-garden':'smf-grove','smf-ikigai-mori':'smf-pagoda','smf-amp-backstage':'smf-amp','smf-villagio':'smf-village'});
+ assert.deepEqual(s.catalogue.map(c=>c.id).sort(),['smf-amp','smf-fractal','smf-grove','smf-living-room','smf-pagoda','smf-village','smf-rabbit-hole','smf-prism-party','smf-secret-garden','smf-ikigai-mori','smf-amp-backstage','smf-villagio'].sort());
+ assert.deepEqual(Object.fromEntries(s.catalogue.filter(c=>c.kind==='secret').map(c=>[c.id,c.parentId])),{'smf-rabbit-hole':'smf-living-room','smf-prism-party':'smf-fractal','smf-secret-garden':'smf-grove','smf-ikigai-mori':'smf-pagoda','smf-amp-backstage':'smf-amp','smf-villagio':'smf-village'});
  assert.deepEqual(s.mainStageIds,['smf-living-room','smf-fractal','smf-grove','smf-amp','smf-pagoda','smf-village']);
  assert.equal(s.mainStageIds.length,6);assert.ok(s.mainStageIds.every(id=>s.catalogue.find(c=>c.id===id)?.kind==='main'));
  assert.throws(()=>s.catalogue[0].name='oops');

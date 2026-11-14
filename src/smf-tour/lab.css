@@ -1,0 +1,5 @@
+/* Disposable test controls remain reachable after entering fullscreen play. */
+.smf-tour[data-immersive=true][data-paused=true] #tour-lab {
+ display:block;position:fixed;bottom:8px;left:8px;right:8px;z-index:60;
+ max-height:35dvh;overflow:auto;background:#171d2e;padding:8px;
+}

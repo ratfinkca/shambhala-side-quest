@@ -13,6 +13,7 @@ import {collectMystery,createMystery} from '../src/mystery.js';
 import {createBass,activateBass} from '../src/bass-head.js';
 import {registerHooks} from 'node:module';
 import {invitedBonusVisit,legacyExploreVisit} from './fixtures/smf-bonus-profile.mjs';
+import {PRISM_ZONES,createPrismPractice} from '../src/prism-practice/model.js';
 
 registerHooks({resolve(s,c,next){return s==='phaser'?{url:'test:smf-store-phaser',shortCircuit:true}:next(s,c);},load(url,c,next){return url==='test:smf-store-phaser'?{format:'module',source:'export default {Scene: class {}}',shortCircuit:true}:next(url,c);}});
 const {GameScene}=await import('../src/GameScene.js');
@@ -87,7 +88,7 @@ test('oversized or cyclic records cannot replace an existing save',()=>{
 });
 
 test('all five bonus activities preserve legacy Explore checkpoints without reopening catalogue entry',()=>{
- for(const bonus of BONUSES){
+ for(const bonus of BONUSES.filter(b=>b.id!=='prism-party')){
   const profile=legacyExploreVisit(bonus.id,`visit-${bonus.id}`);
   const config=bonusConfig(bonus.id),controller=bonusController(config);controller.start();
   profile.active.bonus.activity=controller.capture();profile.active.bonus.scene=snapshot(config.stage,profile.active.bonus.visitId);
@@ -96,6 +97,66 @@ test('all five bonus activities preserve legacy Explore checkpoints without reop
   assert.equal(bonusController(config).restore(restored.active.bonus.activity),true);
   profile.active.bonus.activity.state.untrusted=true;assert.equal(normalizeTourProfile(profile).active,null,'controller rejects malformed state');
  }
+});
+
+function prismAdvance(practice,milliseconds,zone=null){
+ for(let remaining=milliseconds;remaining>0;remaining-=Math.min(50,remaining)){
+  const deltaMs=Math.min(50,remaining),previous=zone===null?{x:480,y:475}:PRISM_ZONES[zone].center;
+  practice.step({previous,player:zone===null?previous:{x:previous.x+deltaMs/25,y:previous.y},deltaMs});
+ }
+}
+function prismCheckpoint({celebrating=false,complete=false,long=false}={}){
+ const profile=invitedBonusVisit('prism-party','saved-prism'),practice=createPrismPractice();practice.start();
+ practice.step({previous:{x:480,y:500},player:{x:480,y:498},deltaMs:20});
+ if(celebrating||complete){
+  prismAdvance(practice,3000,0);prismAdvance(practice,5000);prismAdvance(practice,3000,1);prismAdvance(practice,5000);prismAdvance(practice,3000,2);
+  prismAdvance(practice,complete?3500:1250);
+ }else{prismAdvance(practice,1250,0);if(long)prismAdvance(practice,90000);}
+ const scene=snapshot(bonusConfig('prism-party').stage,'saved-prism');
+ scene.player={x:480,y:475};scene.round.remainingMs=64000-(practice.state.partyMs+practice.state.celebrationMs)%64000;
+ scene.round.mystery.elapsedMs=64000-scene.round.remainingMs;
+ profile.active.bonus.scene=scene;profile.active.bonus.activity=practice.capture();
+ return complete?finishBonus(profile,{won:true,completed:true}):profile;
+}
+
+test('Prism checkpoints preserve the spent invitation and parked run across partial, looped and finale recovery',()=>{
+ for(const options of [{},{long:true},{celebrating:true},{complete:true}]){
+  const profile=prismCheckpoint(options),store=createTourStore(memory());
+  assert.equal(store.write(profile),true,JSON.stringify(options));const loaded=store.read();
+  assert.deepEqual(loaded.active,profile.active);assert.equal(loaded.active.summary.bonusOffered,false);
+  assert.equal(loaded.active.score,200);assert.equal(loaded.active.cleared,2);
+  const controller=createPrismPractice();assert.equal(controller.restore(loaded.active.bonus.activity),true);
+  assert.equal(controller.status,options.complete?'complete':'paused');
+  assert.deepEqual(controller.state,profile.active.bonus.activity.state);
+ }
+});
+
+test('Prism rejects impossible scene positions, mismatched clocks and forged wins without replacing the parked save',()=>{
+ const profile=prismCheckpoint(),mem=memory(),store=createTourStore(mem);
+ assert.equal(store.write(profile),true);const saved=mem.getItem(KEY);
+ const changes=[
+  p=>p.active.bonus.scene.player={x:200,y:520},
+  p=>{p.active.bonus.scene.round.remainingMs-=1;p.active.bonus.scene.round.mystery.elapsedMs+=1;},
+  p=>{p.active.bonus.scene.round.remainingMs=0;p.active.bonus.scene.round.ended=true;p.active.bonus.scene.round.mystery.elapsedMs=64000;},
+  p=>Object.assign(p.active.bonus,{status:'result',completed:true,won:true,rewardId:'prism-crown',newReward:true}),
+  p=>Object.assign(p.active.bonus,{status:'result',completed:false,won:false,rewardId:'prism-crown',newReward:true}),
+  p=>{p.active.bonus.activity=null;p.active.bonus.scene=null;Object.assign(p.active.bonus,{status:'result',completed:true,won:true,rewardId:'prism-crown',newReward:true});},
+ ];
+ for(const change of changes){const bad=structuredClone(profile);change(bad);assert.equal(store.write(bad),false);assert.equal(mem.getItem(KEY),saved);}
+ const completed=prismCheckpoint({complete:true});completed.active.bonus.won=false;
+ assert.equal(store.write(completed),false);assert.equal(mem.getItem(KEY),saved);
+ const exited=finishBonus(profile);assert.equal(store.write(exited),true);
+ assert.deepEqual(store.read().rewards,[]);assert.equal(store.read().active.bonus.rewardId,null);
+});
+
+test('empty and original five-bonus profiles remain valid after adding the Prism Crown',()=>{
+ const store=createTourStore(memory());assert.equal(store.write(createTourProfile()),true);
+ assert.deepEqual(store.read().discoveries,[]);assert.deepEqual(store.read().rewards,[]);
+ const old=createTourProfile();old.discoveries=['rabbit-hole','secret-garden','amp-backstage','ikigai-mori','villagio'];
+ old.rewards=['rabbit-ears','glow-blossom','cheese-totem','lantern-totem','golden-chicken'];old.souvenir='golden-chicken';
+ assert.equal(store.write(old),true);assert.deepEqual(store.read().rewards,old.rewards);assert.equal(store.read().souvenir,'golden-chicken');
+ const owned=prismCheckpoint({complete:true});assert.equal(store.write(owned),true);
+ assert.deepEqual(store.read().rewards,['prism-crown']);assert.equal(store.read().souvenir,'prism-crown');
 });
 
 test('partial bonus checkpoints cannot reset an activity or its remaining time on reload',()=>{

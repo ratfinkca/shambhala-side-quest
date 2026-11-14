@@ -1,5 +1,7 @@
 # Development roadmap
 
+**Current release candidate — 2026-11-14:** Fractal Prism Party completes the six-parent bonus lineup. Collect a fresh invitation at Fractal, clear its set, then optionally enter the pyramid. Charge three faces through movement to earn the permanent Prism Crown; progress resumes paused and main-run scoring stays unchanged. [Integration plan](superpowers/plans/2026-11-14-prism-integration.md). The older milestone snapshots below describe their original release boundaries.
+
 **Character follow-up — local preview:** fitted hat and hand sockets now anchor
 wardrobe layers to the animation. The Character screen adds mixable starter
 looks, face, hair and skin choices while keeping existing clothes and earned

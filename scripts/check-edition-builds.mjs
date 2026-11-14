@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {assetsForEdition} from '../build/edition-assets.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const venues=['living-room','fractal-forest','grove','amp','pagoda','village','rabbit-hole','secret-garden','ikigai-mori','villagio'];
+const venues=['living-room','fractal-forest','grove','amp','pagoda','village','rabbit-hole','secret-garden','ikigai-mori','villagio','prism-party'];
 const venueArt=venues.flatMap(name=>[`${name}-v1`,`${name}-pixel-v1`]);
 const practiceOnly=/Wardrobe fitting room|wardrobe-fit-stage|wardrobe-fit-lab|Pixel Afterparty|pixel-lab|pixel-raver|pixel-effects|collision-practice-entry|Meet the crowd|collision-lab|bonus-select|bonus-help-copy|amp-delivery-entry|clock-practice-entry|control-practice-entry|control-stamina|Find your moves|Timing and instrument practice|clock-lab-select|Tour integration lab|Collect invitation \(lab\)|Clear current stage \(lab\)|Souvenir unlocked:|Club tour complete!/;
 function excludes(text,pattern,message){const match=text.match(pattern);assert.ok(!match,`${message}${match?`: ${match[0]}`:''}`);}
@@ -30,9 +30,10 @@ for(const id of ['generic','smf']){
   const text=await readFile(path,'utf8');
   shippedText+=text;
   excludes(text,practiceOnly,'Production includes development practice');
+  excludes(text,/prism-lab|prism-menu-button|prism-density|Fractal Forest · first feel preview/,'Production includes isolated Prism preview');
   if(id==='generic'){
    excludes(text,/themes\/(?:forest-freakout|moonlit-mycelium|neon-field-trip)\/title\.webp/,'Generic references SMF title art');
-   excludes(text,/Golden Chicken Totem|tour-menu|tour-map-stop|SIX STAGES · FIVE HIDDEN PARTIES|Sister cedars · river reflections|twin lanes · follow the returning pulse/,'Generic includes SMF tour gameplay');
+   excludes(text,/Prism Crown|All three faces lit|Golden Chicken Totem|tour-menu|tour-map-stop|SIX STAGES · SIX HIDDEN PARTIES|Sister cedars · river reflections|twin lanes · follow the returning pulse/,'Generic includes SMF tour gameplay');
    for(const asset of venueArt)assert.ok(!text.includes(asset),`Generic references SMF venue art: ${asset}`);
   }
   if(/\.(css|html)$/.test(path)){
@@ -43,7 +44,7 @@ for(const id of ['generic','smf']){
   }
  }
  if(id==='smf'){
-  assert.ok(shippedText.includes('FIVE HIDDEN PARTIES'),'SMF tour entry missing from production');
+  assert.ok(shippedText.includes('SIX HIDDEN PARTIES'),'SMF tour entry missing from production');
   for(const venue of venues)assert.ok(paths.some(path=>path.includes(`${venue}-pixel-v1`)&&path.endsWith('.webp')),`SMF lossless pixel tour art missing: ${venue}`);
   for(const theme of ['forest-freakout','moonlit-mycelium','neon-field-trip'])assert.ok(paths.some(path=>path.includes(`title-${theme}-v1`)&&path.endsWith('.webp')),`SMF lossless pixel title missing: ${theme}`);
   for(const path of paths)assert.ok(!/(?:-pixel-v1|title-(?:forest-freakout|moonlit-mycelium|neon-field-trip)-v1)[^/]*\.png$/.test(path),'PNG artwork masters must not ship alongside lossless delivery files');

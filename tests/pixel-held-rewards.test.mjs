@@ -8,12 +8,12 @@ import {playerAvatarAnchors} from '../src/pixel-art/player-anchors.js';
 function harness(){
  const nodes=[],scene={textures:{exists:()=>false}};
  const display=()=>{
-  let n;const value={scene,active:true,visible:true,x:0,y:0,depth:0,scaleX:1,scaleY:1,alpha:1,list:[],rects:[],parent:null,pixelActor:false,pixelExternalCarry:false,pixelTextureReady:false,pixelBodyKey:null,
-   clear(){this.rects=[];return n;},fillStyle(colour){this.colour=colour;return n;},fillRect(x,y,w,h){this.rects.push({x,y,w,h,colour:this.colour});return n;},
+  let n;const value={scene,active:true,visible:true,x:0,y:0,depth:0,scaleX:1,scaleY:1,alpha:1,list:[],rects:[],parent:null,destroyed:0,pixelActor:false,pixelExternalCarry:false,pixelTextureReady:false,pixelBodyKey:null,
+   clear(){this.rects=[];return n;},fillStyle(colour,alpha=1){this.colour=colour;this.fillAlpha=alpha;return n;},fillRect(x,y,w,h){this.rects.push({x,y,w,h,colour:this.colour,alpha:this.fillAlpha});return n;},
    setVisible(visible){this.visible=visible;return n;},setPosition(x,y){this.x=x;this.y=y;return n;},setDepth(depth){this.depth=depth;return n;},
    setScale(x,y=x){this.scaleX=x;this.scaleY=y;return n;},setAlpha(alpha){this.alpha=alpha;return n;},
    add(items){for(const item of Array.isArray(items)?items:[items]){this.list.push(item);item.parent=this;}return n;},
-   destroy(){this.active=false;this.scene=null;this.list.forEach(item=>item.destroy());},
+   destroy(){this.destroyed++;this.active=false;this.scene=null;this.list.forEach(item=>item.destroy());},
   };
   n=new Proxy(value,{get:(target,key)=>key in target?target[key]:(...args)=>n});nodes.push(n);return n;
  };
@@ -103,4 +103,49 @@ test('glow blossom attaches to the measured hair crown and narrows in profile',(
   scene.avatar.pixelPose=pose;scene.souvenirView.update('glow-blossom',0,true);const fit=playerAvatarAnchors(scene).headwear;
   assert.equal(blossom.y,Math.round(fit.crown.y+4));assert.equal(blossom.scaleX,fit.side?.8:1);assert.equal(blossom.propSize,17);
  }
+});
+
+test('Prism Crown follows the measured head band across front, back and mirrored side poses',()=>{
+ const {scene,nodes}=harness(),saved=structuredClone(scene.avatar.outfit);
+ scene.souvenirView=createSouvenirView(scene);
+ const crown=nodes.find(n=>n.pixelProp==='blossom').parent.list[0];
+ for(const pose of [{row:0,index:0},{row:2,index:2},{row:4,index:0},{row:8,index:0,facingFlipX:false},{row:8,index:0,facingFlipX:true}]){
+  scene.avatar.pixelPose=pose;scene.souvenirView.update('prism-crown',0,true);
+  const fit=playerAvatarAnchors(scene).headwear,cx=Math.round(fit.x),base=Math.round(fit.y);
+  assert.ok(crown.rects.some(r=>r.y===base-2&&r.h===3&&r.x<cx&&r.x+r.w>cx),'crown band overlaps the measured cap opening');
+  assert.ok(crown.rects.every(r=>r.y>=base-12&&r.y+r.h<=base+1),'crown stays compact above the head');
+  for(const colour of [0x78e8dd,0xed8bce,0xffca79])assert.ok(crown.rects.some(r=>r.colour===colour),'each face retains its crystal colour');
+  assert.deepEqual(scene.avatar.outfit,saved,'edition souvenir leaves generic wardrobe and aura selection intact');
+  assert.equal(scene.avatar.pixelExternalCarry,false);
+ }
+ scene.avatar.pixelPose={row:8,index:0,facingFlipX:false};scene.souvenirView.update('prism-crown',0,true);
+ const right=crown.rects.map(r=>({...r})),rx=Math.round(playerAvatarAnchors(scene).headwear.x);
+ scene.avatar.pixelPose={row:8,index:0,facingFlipX:true};scene.souvenirView.update('prism-crown',0,true);
+ const lx=Math.round(playerAvatarAnchors(scene).headwear.x);
+ crown.rects.forEach((r,i)=>assert.equal(r.x-lx,-(right[i].x-rx)-r.w,'left crystal profile mirrors around its own head socket'));
+});
+
+test('Prism Crown chases only tiny crystal highlights and stays still in reduced motion',()=>{
+ const {scene,nodes}=harness();scene.souvenirView=createSouvenirView(scene);
+ const crown=nodes.find(n=>n.pixelProp==='blossom').parent.list[0];
+ scene.souvenirView.update('prism-crown',0,false);const first=structuredClone(crown.rects);
+ scene.souvenirView.update('prism-crown',450,false);const next=structuredClone(crown.rects);
+ assert.ok(first.length>0);assert.notDeepEqual(next,first,'normal motion chases the crystal highlights');
+ assert.deepEqual(next.filter(r=>r.colour!==0xf2f8e0),first.filter(r=>r.colour!==0xf2f8e0),'band and crystals never flash or move');
+ assert.ok(next.filter(r=>r.colour===0xf2f8e0).every(r=>r.w*r.h<=2),'animated area is a tiny glint');
+ scene.souvenirView.update('prism-crown',0,true);const still=structuredClone(crown.rects);
+ scene.souvenirView.update('prism-crown',19000,true);assert.deepEqual(crown.rects,still);
+ scene.souvenirView.update(null,20000,false);assert.deepEqual(crown.rects,[],'unequipping clears the crown');
+});
+
+test('Prism Crown inherits player visibility and disposal prevents later drawing',()=>{
+ const {scene,nodes}=harness();scene.dancer.setScale(2).setAlpha(.6);scene.avatar.setAlpha(.5);
+ scene.souvenirView=createSouvenirView(scene);const head=nodes.find(n=>n.pixelProp==='blossom').parent,crown=head.list[0];
+ scene.souvenirView.update('prism-crown',100,true);
+ assert.ok(crown.rects.length>0);assert.equal(head.scaleX,2);assert.equal(head.alpha,.3);assert.equal(head.depth,23);
+ scene.avatar.setVisible(false);scene.souvenirView.update('prism-crown',200,false);assert.equal(head.visible,false);
+ scene.souvenirView.destroy();scene.souvenirView.destroy();
+ assert.equal(head.destroyed,1);assert.equal(crown.destroyed,1);
+ scene.avatar.setVisible(true);scene.souvenirView.update('prism-crown',300,false);
+ assert.deepEqual(crown.rects,[],'disposed head ornament does not draw after teardown');
 });

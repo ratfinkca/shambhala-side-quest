@@ -10,6 +10,8 @@ import * as rabbit from '../bonus-practice/views/rabbit-hole.js';
 import * as garden from '../bonus-practice/views/secret-garden.js';
 import * as ikigai from '../bonus-practice/views/ikigai-mori.js';
 import * as villagio from '../bonus-practice/views/villagio.js';
+import * as prism from '../prism-practice/view.js';
+import {PRISM,clampPrismPoint} from '../prism-practice/model.js';
 import {elapsedMs,getTiming,phaseAt} from '../stage-clock.js';
 import {rulesFor} from '../run.js';
 import {BONUSES,stageForRun} from './model.js';
@@ -18,7 +20,7 @@ import {createSouvenirView} from './cosmetic-view.js';
 import {createFinishView} from './finish.js';
 import {pixelizeGraphics} from '../pixel-art/shapes.js';
 
-const bonusViews=[rabbit,garden,ikigai,villagio];
+const bonusViews=[rabbit,garden,ikigai,villagio,prism];
 export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRoundEnd,onAim}){
  return class TourScene extends GameScene{
   preload(){preloadAMPBackstageArt(this);preloadSMFVenueArt(this);bonusViews.forEach(v=>v.preload(this));}
@@ -36,6 +38,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
   clearVisit(){
    this.finishView?.stop();
    this.puttingView?.destroy();this.puttingView=null;this.activityView?.destroy();this.activityView=null;
+   this.playerCamera?.focus(null);this.prismFrameKey=null;this.prismDrivenSpeed=0;
    this.practice=null;this.config=null;this.endedRound=null;this.pendingActivity=null;this.sparks=this.allSparks;
    this.allSparks.forEach(s=>s.setVisible(true));this.dancer.setVisible(true);this.invitation.setVisible(false);
   }
@@ -55,7 +58,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
     this.sparks=[];this.allSparks.forEach(s=>s.setVisible(false));
     if(this.config.activity==='putt'){
      this.pauseRound();this.puttingView=createPuttingView(this,this.practice,{onShot:v=>this.shoot(v),onAim});
-    }else this.activityView=this.config.activity==='delivery'?createDeliveryView(this):createActivityView(this,this.config);
+    }else if(this.config.activity!=='prism')this.activityView=this.config.activity==='delivery'?createDeliveryView(this):createActivityView(this,this.config);
     if(b.status==='result')this.practice.finish();
    }
    if(paused||snapshot||b?.status==='result')this.pauseTour();else this.resumeTour();
@@ -75,9 +78,24 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    const event=attemptPuttingShot(this.practice,vector,()=>this.puttingView.cancelAim());if(event)onActivity(event);
   }
   onCrowdEncounters(encounters){
-   if(!this.practice)return;
+   if(!this.practice||this.config.activity==='prism')return;
    const event=this.config.activity==='delivery'?this.practice.step({atVendor:Math.hypot(this.dancer.x-VENDOR_POINT.x,this.dancer.y-VENDOR_POINT.y)<=VENDOR_POINT.radius,encounters}):this.practice.step({player:this.dancer,encounters});
    if(event){if(event.type==='green-entered')this.pauseRound();this.pendingActivity=event;}
+  }
+  setControlPreferences(value){super.setControlPreferences(value);this.tourCameraMode=value?.camera??this.tourCameraMode??'auto';}
+  framePrism(){
+   if(this.config?.activity!=='prism'||!this.playerCamera)return;
+   const {width=960,height=640}=this.game.scale?.gameSize??{},entered=this.practice.state.entered;
+   const key=`${width}:${height}:${entered}:${this.tourCameraMode}`;if(key===this.prismFrameKey)return;this.prismFrameKey=key;
+   const short=height<500;
+   this.playerCamera.focus(entered&&width>=height&&this.tourCameraMode!=='overview'?{x:480,y:short?420:400,width:780,height:short?360:490}:null);
+  }
+  movePlayer(delta){
+   if(this.config?.activity!=='prism')return super.movePlayer(delta);
+   const previous={x:this.dancer.x,y:this.dancer.y},direction=super.movePlayer(delta),point=clampPrismPoint(this.dancer,previous);
+   if(point.x!==this.dancer.x||point.y!==this.dancer.y){this.dancer.setPosition(point.x,point.y);this.target=null;}
+   this.prismDrivenSpeed=this.gameControls?.motion.actualSpeed??((direction.x||direction.y)&&delta>0?Math.hypot(point.x-previous.x,point.y-previous.y)*1000/Math.min(PRISM.maxDeltaMs,delta):0);
+   return direction;
   }
   effect(x,y,color,points,celebrate,label){if(this.practice&&label?.startsWith('SMOOTH'))return;super.effect(x,y,color,points,celebrate,label);}
   paint(){
@@ -91,6 +109,7 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
     this.background.venueView?.setProgress?.(this.practice.state);
    }
    this.souvenirView.update(profile().souvenir,elapsed,this.reducedMotion);
+   this.framePrism();
    const a=profile().active,secret=a?.mode!=='rush'&&!a?.bonus&&a?.status==='playing'&&BONUSES.find(b=>b.parentId===this.stage.id);
    const show=secret&&!a.pendingInvitation&&elapsed>=18000;
    this.invitation.setVisible(!!show);
@@ -100,7 +119,27 @@ export function tourScene({profile,onReady,onFrame,onInvitation,onActivity,onRou
    if(!this.allSparks||this.failed)return;
    this.reducedMotion=this.motionQuery?.matches??this.reducedMotion;
    const a=profile().active;if(!a)return;
-   if(this.config?.activity==='putt'){
+   if(this.config?.activity==='prism'&&this.running){
+    const step=Math.min(PRISM.maxDeltaMs,Math.max(0,delta)),previous={x:this.dancer.x,y:this.dancer.y};
+    const timing=getTiming(this.config.timingId),next=(elapsedMs(this.round)+step)%timing.durationMs;
+    // Borrow the shared movement/crowd frame without letting its ordinary
+    // timed-round end finish this untimed activity.
+    this.round.remainingMs=timing.durationMs-next+step;this.round.ended=false;
+    super.update(time,step);
+    const events=this.practice.step({player:this.dancer,previous,deltaMs:step,drivenSpeed:this.prismDrivenSpeed});
+    const state=this.practice.state,position=(state.entered?state.partyMs+state.celebrationMs:state.elapsedMs)%timing.durationMs;
+    this.round.remainingMs=timing.durationMs-position;this.round.mystery.elapsedMs=position;this.round.ended=false;
+    if(events.some(event=>event.type==='entered')){
+     // The first musical cue begins at the ramp crossing. Repaint the crowd
+     // at that same instant; the shared wrap handling keeps learned friends.
+     this.crowdSocial?.suspend(position);
+     this.crowd.restoreRecovery(this.crowd.people.map(person=>person.encounter),position,timing);
+    }
+    if(events.some(event=>event.type==='complete'))this.pauseTour();
+    this.background.venueView?.setProgress(state);
+    if(events.some(event=>event.type==='entered'||event.type==='complete'))this.background.update(position,phaseAt(position,timing).phase,this.reducedMotion,timing);
+    this.dropWash.setAlpha(0);events.forEach(onActivity);
+   }else if(this.config?.activity==='putt'){
     const event=this.practice.advance(delta);if(event)onActivity(event);
     const elapsed=this.practice.state.elapsedMs,timing=getTiming(this.config.timingId),position=elapsed%timing.durationMs;
     if(this.practice.status==='playing'&&this.practice.state.phase==='walking'){

@@ -20,6 +20,9 @@ import {PUTTING_HOLES,PUTTING_PHYSICS} from '../src/bonus-practice/putting-state
 import * as rabbit from '../src/bonus-practice/views/rabbit-hole.js';
 import * as garden from '../src/bonus-practice/views/secret-garden.js';
 import * as ikigai from '../src/bonus-practice/views/ikigai-mori.js';
+import * as prism from '../src/prism-practice/view.js';
+import {isOpen} from '../src/geometry.js';
+import {smfPreviewStage} from '../src/editions/smf-stages.js';
 
 const splineURL=new URL('../node_modules/phaser/src/curves/SplineCurve.js',import.meta.url).href;
 registerHooks({resolve(s,c,next){return s==='phaser'?{url:'test:tour-scene-phaser',shortCircuit:true}:next(s,c);},load(url,c,next){return url==='test:tour-scene-phaser'?{format:'module',source:`import Spline from ${JSON.stringify(splineURL)};export default {Scene: class {},Curves:{Spline},Math:{Distance:{Between:(x,y,a,b)=>Math.hypot(x-a,y-b)},Between:(a,b)=>(a+b)/2}}`,shortCircuit:true}:next(url,c);}});
@@ -39,8 +42,8 @@ function display(scene,x=0,y=0){
  node=new Proxy(value,{get:(target,key)=>key in target?target[key]:(...args)=>node});return node;
 }
 function harness(initial){
- let profile=initial,frames=0,invitations=0;const canvasListeners=new Map(),textLabels=[],graphics=[];
- const Scene=tourScene({profile:()=>profile,onReady(){},onFrame(){frames++;},onInvitation(){invitations++;profile=collectInvitation(profile);},onActivity(){},onRoundEnd(){},onAim(){}}),scene=new Scene();
+ let profile=initial,frames=0,invitations=0;const canvasListeners=new Map(),textLabels=[],graphics=[],activities=[],roundEnds=[];
+ const Scene=tourScene({profile:()=>profile,onReady(){},onFrame(){frames++;},onInvitation(){invitations++;profile=collectInvitation(profile);},onActivity(event){activities.push(event);},onRoundEnd(round){roundEnds.push(round);},onAim(){}}),scene=new Scene();
  scene.add=new Proxy({},{get:(_,kind)=>(x=0,y=0,content)=>{
   const node=display(scene,typeof x==='number'?x:0,typeof y==='number'?y:0);
   if(kind==='text'){node.text=content;textLabels.push(node);}
@@ -52,13 +55,13 @@ function harness(initial){
  scene.game={events:new EventEmitter(),canvas:{addEventListener(name,fn){if(!canvasListeners.has(name))canvasListeners.set(name,new Set());canvasListeners.get(name).add(fn);},removeEventListener(name,fn){canvasListeners.get(name)?.delete(fn);},hasPointerCapture:()=>false}};
  scene.input={keyboard:{resetKeys(){}}};scene.keys=Object.fromEntries('W A S D UP DOWN LEFT RIGHT'.split(' ').map(k=>[k,{isDown:false}]));
  scene.effects={clear(){},add(){}};scene.tweens={killAll(){},pauseAll(){},resumeAll(){},add(){}};scene.reducedMotion=true;
- scene.background={fireflies:[],show(stage){this.venueView=createSMFStageView(scene,stage)||createAMPBackstageView(scene,stage)||[rabbit,garden,ikigai,villagio].map(v=>v.createView(scene,stage)).find(Boolean);},update(...args){this.venueView?.update(...args);}};
+ scene.background={fireflies:[],show(stage){this.venueView=createSMFStageView(scene,stage)||createAMPBackstageView(scene,stage)||[rabbit,garden,ikigai,villagio,prism].map(v=>v.createView(scene,stage)).find(Boolean);},update(...args){this.venueView?.update(...args);}};
  scene.fireflies=[];scene.crowd=new Crowd(scene);scene.dancer=display(scene);scene.avatar=createAvatar(scene);scene.bassFeedback=display(scene);scene.halo=display(scene);scene.dropWash=display(scene);
  scene.sparks=Array.from({length:12},(_,i)=>Object.assign(display(scene,120+i*50,570),{art:display(scene)}));scene.allSparks=scene.sparks;
  scene.flowPickup=display(scene);scene.mysteryView={reset(){},update(){},pickup:display(scene),art:display(scene),placed:false};scene.invitation=display(scene);scene.souvenirView=createSouvenirView(scene);
  scene.placeSpark=()=>{};
  scene.crowdSocial=createCrowdSocial(scene,{getOptions:()=>scene.crowdOptions()});
- return {scene,textLabels,graphics,get profile(){return profile;},set profile(v){profile=v;},get frames(){return frames;},get invitations(){return invitations;},listenerCount:()=>[...canvasListeners.values()].reduce((n,set)=>n+set.size,0)};
+ return {scene,textLabels,graphics,activities,roundEnds,get profile(){return profile;},set profile(v){profile=v;},get frames(){return frames;},get invitations(){return invitations;},listenerCount:()=>[...canvasListeners.values()].reduce((n,set)=>n+set.size,0)};
 }
 function visit(id){return invitedBonusVisit(id);}
 function memory(){const data=new Map();return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value)};}
@@ -256,4 +259,109 @@ test('Villagio temporarily frames the whole green and returns to the selected mo
  scene.practice.state.phase='between';scene.paint();
  assert.equal(scene.cameras.main.zoom,844/960,'leaving the green restores follow framing');
  scene.clearVisit();assert.equal(scene.cameras.main.zoom,844/960);
+});
+
+test('Fractal invitation is reachable in an unobstructed side lane',()=>{
+ const stage=smfPreviewStage('smf-fractal'),point=INVITATIONS[stage.id];
+ assert.ok(point,'Fractal has an invitation');
+ assert.ok(point.x>=stage.playBounds.minX+32&&point.x<=stage.playBounds.maxX-32);
+ assert.ok(point.y>=stage.playBounds.minY+32&&point.y<=stage.playBounds.maxY-32);
+ assert.ok(isOpen(point,32,stage.obstacles));
+ assert.ok(stage.flowSpawns.every(flow=>Math.hypot(point.x-flow.x,point.y-flow.y)>80));
+});
+
+function enterPrism(scene){
+ scene.dancer.setPosition(480,510);scene.target={x:480,y:490};advanceScene(scene,50);
+ assert.equal(scene.practice.state.phase,'party');
+}
+
+test('Prism uses its own cues and keeps the party running through the music wrap',()=>{
+ assert.doesNotThrow(()=>bonusConfig('prism-party'),'Prism has production content');
+ const h=harness(visit('prism-party')),scene=h.scene;scene.loadActive();
+ assert.equal(scene.stage.id,'smf-prism-party');assert.equal(scene.crowd.people.length,9);
+ assert.equal(scene.activityView,null,'the Prism venue owns its face cues');
+ assert.equal(typeof scene.background.venueView.setProgress,'function');
+ advanceScene(scene,1000);enterPrism(scene);
+ assert.deepEqual(h.activities.map(event=>event.type),['entered']);
+ assert.ok(elapsedMs(scene.round)<50,'entry restarts the music at the exact ramp crossing');
+ assert.equal(elapsedMs(scene.round),scene.practice.state.partyMs);
+ scene.target=null;advanceScene(scene,65000);
+ assert.equal(scene.running,true);assert.equal(scene.round.ended,false);assert.equal(h.roundEnds.length,0);
+ assert.equal(scene.practice.state.progress,0);assert.equal(scene.practice.state.phase,'party');
+ assert.equal(h.activities.filter(event=>event.type==='phrase').length,8);
+ assert.equal(elapsedMs(scene.round),scene.practice.state.partyMs%64000);
+ assert.equal(scene.round.mystery.elapsedMs,elapsedMs(scene.round));
+});
+
+test('Prism checkpoints resume with the same musical cue and recover paused',()=>{
+ const h=harness(visit('prism-party')),scene=h.scene;scene.loadActive();advanceScene(scene,1000);enterPrism(scene);
+ scene.target=null;advanceScene(scene,9700);scene.pauseTour();const saved=scene.capture();
+ h.profile.active.bonus.scene=saved.scene;h.profile.active.bonus.activity=saved.activity;
+ const store=createTourStore(memory());assert.equal(store.write(h.profile),true);h.profile=store.read();assert.ok(h.profile.active?.bonus);
+ scene.loadActive({paused:true});assert.deepEqual(scene.capture(),saved);assert.equal(scene.running,false);assert.equal(scene.practice.status,'paused');
+ advanceScene(scene,2000);assert.deepEqual(scene.capture(),saved);
+ scene.resumeTour();advanceScene(scene,50);assert.equal(elapsedMs(scene.round),scene.practice.state.partyMs%64000);
+});
+
+test('Prism confines movement to the ramp and removes both bounds and camera focus on return',()=>{
+ const h=harness(visit('prism-party')),scene=h.scene;scene.game.scale={gameSize:{width:844,height:390}};
+ scene.playerCamera=createPlayerCamera(scene,{mode:'follow'});scene.loadActive();
+ scene.dancer.setPosition(300,550);scene.target={x:300,y:470};advanceScene(scene,100);
+ assert.equal(scene.dancer.y,540,'the floor cannot be entered through a side wall');assert.equal(scene.practice.state.entered,false);
+ enterPrism(scene);assert.equal(scene.cameras.main.zoom,844/780,'short landscape frames the floor after entry');
+ scene.game.scale.gameSize={width:390,height:844};scene.playerCamera.resize();scene.paint();
+ assert.equal(scene.cameras.main.zoom,844/640,'portrait resumes player following');
+ scene.game.scale.gameSize={width:844,height:390};scene.playerCamera.resize();scene.paint();assert.equal(scene.cameras.main.zoom,844/780);
+ h.profile=createFestival(createTourProfile(),'after-prism');scene.loadActive();
+ assert.equal(scene.cameras.main.zoom,844/960,'main venue restores the chosen follow camera');
+ scene.dancer.setPosition(300,550);scene.target={x:300,y:470};advanceScene(scene,100);
+ assert.ok(scene.dancer.y<540,'main venue does not retain pyramid walls');
+});
+
+function lightPrismFaces(scene){
+ enterPrism(scene);
+ // Use an original-season visit so this focused completion/recovery test
+ // measures player motion without a randomly timed crowd bump changing it.
+ const centers=[{x:370,y:410},{x:590,y:410},{x:480,y:465}];
+ for(let face=0;face<3;face++){
+  const center=centers[face];scene.dancer.setPosition(center.x,center.y);
+  for(let frame=0;frame<60;frame++){
+   scene.target={x:center.x+(frame%2?-20:20),y:center.y};advanceScene(scene,50);
+  }
+  assert.equal(scene.practice.state.progress,face+1);
+  scene.target=null;
+  if(face<2)advanceScene(scene,(face+1)*8000-scene.practice.state.partyMs);
+ }
+ assert.equal(scene.practice.state.phase,'celebrating');
+}
+
+test('Prism finale recovers paused and completes once after its remaining celebration',()=>{
+ const profile=visit('prism-party');profile.active.scoringVersion='smf-v1';
+ const h=harness(profile),scene=h.scene;scene.loadActive();lightPrismFaces(scene);
+ assert.equal(h.activities.filter(event=>event.type==='finale').length,1);assert.equal(h.activities.some(event=>event.type==='complete'),false);
+ advanceScene(scene,1000);scene.pauseTour();const checkpoint=scene.capture();
+ h.profile.active.bonus.scene=checkpoint.scene;h.profile.active.bonus.activity=checkpoint.activity;
+ const store=createTourStore(memory());assert.equal(store.write(h.profile),true);h.profile=store.read();assert.ok(h.profile.active?.bonus);
+ scene.loadActive({paused:true});assert.deepEqual(scene.capture(),checkpoint);advanceScene(scene,4000);assert.deepEqual(scene.capture(),checkpoint);
+ scene.resumeTour();advanceScene(scene,2499);assert.equal(scene.practice.state.complete,false);assert.equal(scene.running,true);
+ advanceScene(scene,1);assert.equal(scene.practice.state.complete,true);assert.equal(scene.running,false);assert.equal(h.activities.filter(event=>event.type==='complete').length,1);
+ advanceScene(scene,5000);assert.equal(h.activities.filter(event=>event.type==='complete').length,1);assert.equal(h.roundEnds.length,0);
+ assert.equal(elapsedMs(scene.round),scene.practice.state.partyMs+3500);
+});
+
+test('Prism respects overview mode while the player is inside the pyramid',()=>{
+ const {scene}=harness(visit('prism-party'));scene.game.scale={gameSize:{width:844,height:390}};
+ scene.setControlPreferences({mode:'tap',camera:'overview'});scene.playerCamera=createPlayerCamera(scene,{mode:'overview'});
+ scene.loadActive();enterPrism(scene);assert.equal(scene.cameras.main.zoom,390/640);
+});
+
+test('a tiny movement beyond the Prism boundary is clipped and remains recoverable',()=>{
+ const h=harness(visit('prism-party')),scene=h.scene;scene.loadActive();
+ scene.dancer.setPosition(300,540);scene.target={x:300,y:539.995};scene.update(16,16);
+ scene.pauseTour();const checkpoint=scene.capture();
+ h.profile.active.bonus.scene=checkpoint.scene;h.profile.active.bonus.activity=checkpoint.activity;
+ const store=createTourStore(memory());assert.equal(store.write(h.profile),true,'a clipped wall movement must remain a valid saved visit');
+ assert.deepEqual(checkpoint.scene.player,{x:300,y:540});assert.equal(scene.target,null);
+ h.profile=store.read();assert.ok(h.profile.active?.bonus);scene.loadActive({paused:true});
+ assert.deepEqual(scene.capture(),checkpoint);assert.equal(scene.running,false);
 });

@@ -11,6 +11,7 @@ export default deepFreeze({
   {id:'smf-pagoda',name:'The Pagoda',kind:'main',parentId:null},
   {id:'smf-village',name:'The Village',kind:'main',parentId:null},
   {id:'smf-rabbit-hole',name:'Rabbit Hole',kind:'secret',parentId:'smf-living-room'},
+  {id:'smf-prism-party',name:'Prism Party',kind:'secret',parentId:'smf-fractal'},
   {id:'smf-secret-garden',name:'Secret Garden',kind:'secret',parentId:'smf-grove'},
   {id:'smf-ikigai-mori',name:'Ikigai Mori',kind:'secret',parentId:'smf-pagoda'},
   {id:'smf-amp-backstage',name:'AMP backstage',kind:'secret',parentId:'smf-amp'},
